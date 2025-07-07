@@ -1,5 +1,5 @@
 
-namespace SocialGamesHoster;
+namespace SocialGamesHoster.API;
 
 public class Program
 {

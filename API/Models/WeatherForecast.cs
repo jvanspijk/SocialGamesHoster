@@ -1,4 +1,4 @@
-namespace SocialGamesHoster.Models;
+namespace SocialGamesHoster.API.Models;
 
 public class WeatherForecast
 {

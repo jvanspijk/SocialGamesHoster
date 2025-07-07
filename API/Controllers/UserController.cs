@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SocialGamesHoster.Models;
+using SocialGamesHoster.API.Models;
 
-namespace SocialGamesHoster.Controllers;
+namespace SocialGamesHoster.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
