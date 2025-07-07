@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using SocialGamesHoster.API.Models;
+using API.Models;
 
-namespace SocialGamesHoster.API.Controllers;
-
+namespace API.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class WeatherForecastController : ControllerBase

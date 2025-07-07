@@ -8,22 +8,30 @@ EXPOSE 8080
 
 
 # This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS with-node
+RUN apt-get update
+RUN apt-get install curl
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
+RUN apt-get -y install nodejs
+
+
+FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["SocialGamesHoster/SocialGamesHoster.csproj", "SocialGamesHoster/"]
-RUN dotnet restore "./SocialGamesHoster/SocialGamesHoster.csproj"
+COPY ["API/API.csproj", "API/"]
+COPY ["Web/Web.esproj", "Web/"]
+RUN dotnet restore "./Web/Web.Server/Web.Server.csproj"
 COPY . .
-WORKDIR "/src/SocialGamesHoster"
-RUN dotnet build "./SocialGamesHoster.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/API"
+RUN dotnet build "./API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./SocialGamesHoster.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SocialGamesHoster.dll"]
+ENTRYPOINT ["dotnet", "API.dll"]

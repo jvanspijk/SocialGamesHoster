@@ -1,4 +1,4 @@
-﻿namespace SocialGamesHoster.API.Models;
+﻿namespace API.Models;
 
 public class Round
 {

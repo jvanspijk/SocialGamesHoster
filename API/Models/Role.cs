@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SocialGamesHoster.API.Models;
+namespace API.Models;
 
 [Serializable]
 public class Role
