@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using API.Models;
+﻿using API.Models;
+using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace API.Controllers;
 
@@ -10,10 +11,19 @@ public class UserController : ControllerBase
     private readonly List<User> _users = [];
     public UserController() 
     {
-        List<string> testUserNames = ["Bob", "Jan", "Kees"];
+        Random rnd = new Random();
+        List<Role> roles = [
+            new Role { Name = "Rol 1", Description = "Je kan eigenlijk niet zo veel." },
+            new Role { Name = "Rol 2", Description = "Je kan nog minder." },
+            new Role { Name = "Rol 3", Description = "Heel nuttig ben je niet."},
+        ];
+
+        List<string> testUserNames = ["Bob", "Jan", "Kees", "Piet", "Jaap", "Jeroen"];
         foreach(string name in testUserNames)
         {
-            _users.Add(new User { Name = name });
+            int randomIndex = rnd.Next(roles.Count);
+            Role assignedRole = roles[randomIndex];
+            _users.Add(new User { Name = name, Role = assignedRole });
         }
         
     }

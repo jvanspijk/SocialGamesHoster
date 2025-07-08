@@ -1,0 +1,42 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./API/Dockerfile.dev
+    ports:
+      - "32678:8080"                    
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:     
+      - ./API:/src/API
+      - nuget_packages:/root/.nuget/packages
+    command: dotnet watch run --urls http://0.0.0.0:8080
+    networks:
+      - social-games-network
+
+  web:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "51144:51144" 
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8080
+      - NODE_ENV=development
+      - DEV_SERVER_PORT=51144
+    volumes:
+      - ./Web:/app 
+      - node_modules:/app/node_modules
+    networks:
+      - social-games-network
+
+volumes:
+  node_modules:
+  nuget_packages:  
+    
+networks:
+  social-games-network:
+    driver: bridge
