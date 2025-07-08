@@ -1,4 +1,23 @@
-﻿#root {
+﻿
+@import "tailwindcss";
+
+body {
+    background-image: url('./assets/papyrus_bg.jpg'); /* Adjust path if your CSS file is elsewhere relative to assets */
+    background-size: cover; /* Cover the entire viewport */
+    background-repeat: no-repeat; /* Don't repeat the image */
+    background-attachment: fixed; /* Keep the background fixed when scrolling */
+    background-position: center center; /* Center the image */
+    /* Ensure text color is readable over the papyrus */
+    /* You might need to adjust this depending on the papyrus image's brightness */
+    color: #333333; /* A very dark gray/almost black for text on a lighter background */
+    /* Or a dark reddish-brown for a more thematic look: */
+    /* color: #4A2B1A; */ /* Example: a dark brown */
+    /* Reset min-height if App.jsx handles it for content, but often good here */
+    min-height: 100vh;
+    margin: 0;
+}
+
+#root {
     max-width: 1280px;
     margin: 0 auto;
     padding: 2rem;

@@ -1,4 +1,5 @@
 ﻿using API.Models;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
@@ -8,38 +9,39 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly List<User> _users = [];
-    public UserController() 
+    private readonly UserService _userService;
+    public UserController(UserService userService) 
     {
-        Random rnd = new Random();
-        List<Role> roles = [
-            new Role { Name = "Rol 1", Description = "Je kan eigenlijk niet zo veel." },
-            new Role { Name = "Rol 2", Description = "Je kan nog minder." },
-            new Role { Name = "Rol 3", Description = "Heel nuttig ben je niet."},
-        ];
+        _userService = userService;        
+    }
 
-        List<string> testUserNames = ["Bob", "Jan", "Kees", "Piet", "Jaap", "Jeroen"];
-        foreach(string name in testUserNames)
+    // Post /User/login/{name}
+    [HttpPost("login/{name}", Name = "LoginUser")]
+    public ActionResult<User> LogIn(string name)
+    {
+        try
         {
-            int randomIndex = rnd.Next(roles.Count);
-            Role assignedRole = roles[randomIndex];
-            _users.Add(new User { Name = name, Role = assignedRole });
+            _userService.LogIn(name);
+            return Ok();
         }
-        
+        catch (Exception ex)
+        {
+            return BadRequest(ex);
+        }                
     }
 
     // GET /User
     [HttpGet(Name = "GetAllUsers")]
     public IEnumerable<User> Get()
     {
-        return _users;
+        return _userService.GetUsers();
     }
 
     // GET /User/{name}
     [HttpGet("{name}", Name = "GetUserByName")]
     public ActionResult<User> GetUserByName(string name)
     {
-        var user = _users.FirstOrDefault(u => u.Name.ToLower() == name.ToLower());
+        var user = _userService.GetUser(name);
         if (user == null)
         {
             return NotFound($"User {name} not found.");
@@ -50,19 +52,17 @@ public class UserController : ControllerBase
 
     // POST /User
     [HttpPost]
-    public ActionResult<User> CreateUser([FromBody] User newUser)
+    public ActionResult<User> CreateUser(string username)
     {
-        if (string.IsNullOrWhiteSpace(newUser.Name))
+        try
         {
-            return BadRequest("User name cannot be empty.");
+            var user = _userService.AddUser(username);
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex);
         }
 
-        if (_users.Any(u => u.Name.ToLower() == newUser.Name.ToLower()))
-        {
-            return BadRequest($"User with name '{newUser.Name}' already exists.");
-        }
-
-        _users.Add(newUser);
-        return Ok(newUser);
     }
 }

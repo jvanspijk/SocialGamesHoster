@@ -3,13 +3,10 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "composeLaunchAction": "LaunchBrowser",
-      "composeLaunchServiceName": "api",
-      "composeLaunchUrl": "http://localhost:51144/",
-        "serviceActions": {
-            "api": "StartWithoutDebugging",
-            "web": "StartWithoutDebugging"
-        }
+      "serviceActions": {
+        "api": "StartWithoutDebugging",
+        "web": "StartWithoutDebugging"
+      }
     }
   }
 }
