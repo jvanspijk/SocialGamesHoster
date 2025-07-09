@@ -48,7 +48,7 @@ public class UserService
         return _users.Where(u => u.IsOnline).ToList();
     }
 
-    public void LogIn(string username)
+    public User LogIn(string username)
     {
         var user = GetUser(username);
         if (user == null)
@@ -56,6 +56,7 @@ public class UserService
             throw new UserDoesNotExistException($"Can't find {username}.");
         }
         user.LogIn();
+        return user;
     }
 
     public void LogOut(string username)

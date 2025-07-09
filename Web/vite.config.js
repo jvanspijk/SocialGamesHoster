@@ -32,17 +32,18 @@ export default defineConfig({
         }
     },
     server: {
-        proxy: {
-            '^/weatherforecast': {
-                target,
-                secure: false
-            },
-            '^/user': {
-                target,
-                secure: false,
-                changeOrigin: true
-            }
-        },
+        // The following is only valid in dev environments, so we need to find another way for production.
+        //proxy: {
+        //    '^/weatherforecast': {
+        //        target,
+        //        secure: false
+        //    },
+        //    '^/user': {
+        //        target,
+        //        secure: false,
+        //        changeOrigin: true
+        //    },            
+        //},
         port: parseInt(env.DEV_SERVER_PORT || '51144'),
         host: '0.0.0.0',
         watch: {

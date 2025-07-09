@@ -21,12 +21,12 @@ public class UserController : ControllerBase
     {
         try
         {
-            _userService.LogIn(name);
-            return Ok();
+            User user = _userService.LogIn(name);
+            return Ok(user);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex);
+            return BadRequest(new { error = ex.Message });
         }                
     }
 
