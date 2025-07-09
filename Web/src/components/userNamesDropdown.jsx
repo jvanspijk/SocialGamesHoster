@@ -1,9 +1,17 @@
 import React from 'react';
 
-const UserNamesDropdown = ({ users }) => {
+const UserNamesDropdown = ({ users, selectedUsername, onUsernameChange }) => {
     if (!users) {
         return null;
     }
+
+    if (!Array.isArray(users)) {
+        return null;
+    }
+
+    const handleChange = (event) => {
+        onUsernameChange(event.target.value);
+    };
 
     return (
         <div className="
@@ -35,6 +43,8 @@ const UserNamesDropdown = ({ users }) => {
                         appearance-none
                         pr-8
                     "
+                    value={selectedUsername}
+                    onChange={handleChange}
                 >
                     <option value="" className="bg-gray-800 text-red-300">Select your name...</option>
                     {users.map(user => (
