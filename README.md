@@ -2,13 +2,16 @@
 Project to host social deduction games on your local network.
 
 ## User setup
-Install docker engine or docker desktop.
-Run the docker-compose-prod.yaml.
-You might have to change your firewall settings to allow connections to the web app.
-For Windows, go into "Windows Defender with Firewall with Advanced Security" and add an inbound TCP rule for port 8081 on private networks.
+1. Install docker engine or docker desktop.
+2. Run the docker-compose-prod.yaml.
+3. You might have to change your firewall settings to allow connections to the web app.
+
+(For Windows, go into "Windows Defender with Firewall with Advanced Security" and 
+add an inbound TCP rule for port 8081 on private networks.)
 
 ## Developer setup
-Run the docker-compose.yaml.
+1. Run the docker-compose.yaml.
+
 Both the API and web app use hot reloading, so code changes appear instantly for ease of development.
 Swagger documentation can be found on http://localhost:8080/swagger/
 
@@ -31,7 +34,8 @@ The API and Web app are separate projects for the following reasons:
 - It enforces decoupling between the back end and front end (e.g. front ends can be changed without affecting the back end)
 - Multiple front ends can be made (e.g. a separate project for an admin panel).
 
-The API has a monolithic structure to keep things simple. It's designed to be mostly stateless, to keep the logic simple and prevent data loss if the network is down.
+The API has a monolithic structure to keep things simple. It's designed to be mostly stateless, to keep the logic simple 
+and prevent data loss if the network is down.
 The API uses Entity Framework to easily store and retrieve C# objects in a database.
 
 ### TODO:
@@ -39,3 +43,5 @@ The API uses Entity Framework to easily store and retrieve C# objects in a datab
 - improve design
 - interfaces for the repositories, so that they can be overridden for testing
 - Logging
+- READMEs for both the API and WEB project.
+- const correctness (const or readonly)
