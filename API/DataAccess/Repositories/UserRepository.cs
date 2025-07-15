@@ -11,13 +11,18 @@ public class UserRepository
     private readonly List<User> _users = [];
     public UserRepository()
     {
-        List<Role> roles = [
-            new Role { Id = 1, Name = "Rol 1", Description = "Je kan eigenlijk niet zo veel." },
-            new Role { Id = 2, Name = "Rol 2", Description = "Je kan nog minder." },
-            new Role { Id = 3, Name = "Rol 3", Description = "Heel nuttig ben je niet."},
-        ];
+        List<Role> roles = new(8);
 
-        List<string> testUserNames = ["Bob", "Jan", "Kees", "Piet", "Jaap"];
+        for (int i = 1; i <= 8; i++)
+        {
+            roles.Add(new Role { Id = i, Name = i.ToString() });
+        }
+
+        List<string> testUserNames = [            
+            "Alice", "John", "Emily", "Michael", "Sarah",
+            "Jessica", "David", "Ashley", "Matthew", "Amanda",
+            "Joshua", "Jennifer", "Daniel", "Elizabeth", "James"
+        ];
 
         Random rnd = new();
 
@@ -32,7 +37,7 @@ public class UserRepository
         // This is for testing purposes and should not
         // be used in production since it can cause
         // a deadlock.
-        Task.Run(() => LogInAsync("Kees")).Wait();
+        Task.Run(() => LogInAsync("James")).Wait();
     }
 
     public async Task<Result<User>> GetUserAsync(string name)
