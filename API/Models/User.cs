@@ -1,18 +1,17 @@
 ﻿
+using Microsoft.AspNetCore.Identity;
+using System.Text.Json.Serialization;
+using API.Validation;
+
 namespace API.Models;
 
-public enum LifeStatus
-{
-    Alive,
-    Ghost,
-    Dead,
-}
 public class User
 {
-    public required string Name { get; set; } // We assume names are unique
-    public Role? Role { get; set; }
-    //public LifeStatus LifeStatus { get; set; } = LifeStatus.Alive;
+    public required string Name { get; set; }
     public bool IsOnline { get; private set; } = false;
+
+    [JsonIgnore]
+    public Role? Role { get; set; }
     public static string NormalizeName(string userName)
     {
         return userName.ToLowerInvariant().Normalize();
