@@ -1,7 +1,9 @@
-﻿using API.Models;
-using API.Services;
+﻿using API.DataAccess.Repositories;
+using API.Models;
+using LanguageExt.Common;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 
 namespace API.Controllers;
 
@@ -9,60 +11,34 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly UserService _userService;
-    public UserController(UserService userService) 
+    private readonly UserRepository _userRepository;
+    public UserController(UserRepository userRepository) 
     {
-        _userService = userService;        
-    }
-
-    // Post /User/login/{name}
-    [HttpPost("login/{name}", Name = "LoginUser")]
-    public ActionResult<User> LogIn(string name)
-    {
-        try
-        {
-            User user = _userService.LogIn(name);
-            return Ok(user);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }                
+        _userRepository = userRepository;        
     }
 
     // GET /User
-    [HttpGet(Name = "GetAllUsers")]
-    public IEnumerable<User> Get()
+    [HttpGet]
+    public async Task<IActionResult> Get()
     {
-        return _userService.GetUsers();
+        Result<IEnumerable<User>> result = await _userRepository.GetUsersAsync();
+        return result.ToActionResult();
     }
 
     // GET /User/{name}
-    [HttpGet("{name}", Name = "GetUserByName")]
-    public ActionResult<User> GetUserByName(string name)
+    [HttpGet("{name}")]
+    public async Task<IActionResult> GetUserByName(string name)
     {
-        var user = _userService.GetUser(name);
-        if (user == null)
-        {
-            return NotFound($"User {name} not found.");
-        }
-
-        return Ok(user);
+        Result<User> result = await _userRepository.GetUserAsync(name);
+        return result.ToActionResult();
     }
 
     // POST /User
     [HttpPost]
-    public ActionResult<User> CreateUser(string username)
+    public async Task<IActionResult> CreateUser(string username)
     {
-        try
-        {
-            var user = _userService.AddUser(username);
-            return Ok(user);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex);
-        }
+        Result<User> user = await _userRepository.AddUserAsync(username);
+        return user.ToActionResult();
 
     }
 }
