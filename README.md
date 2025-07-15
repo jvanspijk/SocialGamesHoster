@@ -25,11 +25,12 @@ The docker compose consists of three services:
 
 ## Architecture
 The API and Web app are separate projects for the following reasons:
-	- Dedicated front-end tools (like React) offer a better and more comprehensive developer experience
-	- A SPA provides a snappy feel without reloads, which is good for user experience in a gaming setting.
-	- A dedicated front-end gives more control over the design.
-	- It enforces decoupling between the back end and front end (e.g. front ends can be changed without affecting the back end)
-	- Multiple front ends can be made (e.g. a separate project for an admin panel).
+- Dedicated front-end tools (like React) offer a better and more comprehensive developer experience
+- A SPA provides a snappy feel without reloads, which is good for user experience in a gaming setting.
+- A dedicated front-end gives more control over the design.
+- It enforces decoupling between the back end and front end (e.g. front ends can be changed without affecting the back end)
+- Multiple front ends can be made (e.g. a separate project for an admin panel).
+
 The API has a monolithic structure to keep things simple. It's designed to be mostly stateless, to keep the logic simple and prevent data loss if the network is down.
 The API uses Entity Framework to easily store and retrieve C# objects in a database.
 
