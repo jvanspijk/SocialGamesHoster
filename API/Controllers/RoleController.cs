@@ -6,6 +6,8 @@ using LanguageExt.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace API.Controllers;
 
@@ -25,18 +27,21 @@ public class RoleController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetRoleFromName(string username)
     {
+        Claim? usernameClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (usernameClaim == null)
+        {
+            return Unauthorized("User claim not found in token.");
+        }
+        if(usernameClaim.Value != username)
+        {
+            return Forbid("You are not allowed to access this user's role.");
+        }
+
         Result<User> userResult = await _userRepository.GetUserAsync(username);
 
         if (!userResult.IsSuccess) return userResult.ToActionResult();
 
-        User user = userResult.Match(
-            Succ: u => u,
-            Fail: _ => throw new ExceptionalException(
-                "An error occurred while retrieving the user. " +
-                "This should never happen.",
-                new NotFoundException("User retrieval failed.")
-            )
-        );
+        User user = userResult.ToObjectUnsafe();
 
         if (user.Role == null) return NotFound("User does not have a role assigned.");
 

@@ -47,6 +47,7 @@ function LoginPage() {
             const data = await response.json();
             localStorage.setItem('jwt-token', data.token);
             navigate(`/user/${selectedUsername}`);
+            return;
         } catch (error) {
             console.error("Error during login: ", error);
         }

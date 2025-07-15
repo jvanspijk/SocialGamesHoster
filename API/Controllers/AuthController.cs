@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
         {
             return NotFound("User not found.");
         }
-        var token = GenerateJwtToken(username);
+        string token = GenerateJwtToken(username);
         return Ok(new { token });
     }
 

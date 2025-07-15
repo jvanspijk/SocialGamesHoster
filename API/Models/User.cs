@@ -12,6 +12,7 @@ public class User
 
     [JsonIgnore]
     public Role? Role { get; set; }
+
     public static string NormalizeName(string userName)
     {
         return userName.ToLowerInvariant().Normalize();

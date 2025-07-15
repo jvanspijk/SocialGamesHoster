@@ -66,6 +66,7 @@ public class Program
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
+            options.MapInboundClaims = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -86,6 +87,7 @@ public class Program
         services.AddSingleton<RoleRepository>();
         services.AddSingleton<AuthService>();
         services.AddSingleton<UserRepository>();
+        services.AddSingleton<RoundRepository>();
 
         var app = builder.Build();
         app.UseCors("CorsPolicy");

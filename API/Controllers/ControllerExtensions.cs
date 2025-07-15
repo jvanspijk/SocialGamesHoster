@@ -1,5 +1,6 @@
 ﻿using API.Validation;
 using LanguageExt.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -22,6 +23,14 @@ public static class ControllerExtensions
                 }
                 return new StatusCodeResult(500);
             }
+        );
+    }
+
+    public static T ToObjectUnsafe<T>(this Result<T> result)
+    {
+        return result.Match(
+            Succ: value => value,
+            Fail: ex => throw ex
         );
     }
 }
