@@ -37,11 +37,3 @@ The API and Web app are separate projects for the following reasons:
 The API has a monolithic structure to keep things simple. It's designed to be mostly stateless, to keep the logic simple 
 and prevent data loss if the network is down.
 The API uses Entity Framework to easily store and retrieve C# objects in a database.
-
-### TODO:
-- add global timer
-- improve design
-- interfaces for the repositories, so that they can be overridden for testing
-- Logging
-- READMEs for both the API and WEB project.
-- const correctness (const or readonly)
