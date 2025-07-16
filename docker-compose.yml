@@ -11,6 +11,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ASPNETCORE_ENVIRONMENT=Development
       - DOTNET_WATCH_RELOAD_ENABLED=true
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=socialgamesdb;Username=dbuser;dbpassword
     volumes:     
       - ./API:/src/API
       - nuget_packages:/root/.nuget/packages
@@ -29,11 +30,10 @@ services:
     depends_on:
       - api
     environment:
-      - VITE_API_URL=http://api:8080
+      - VITE_API_URL=http://localhost:8080 # This is the URL the web app will use to communicate with the API, but vite requires that environment variables are prefixed with VITE_.
       - NODE_ENV=development
       - DEV_SERVER_PORT=8081
-      - WATCHPACK_POLLING=true 
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=socialgamesdb;Username=dbuser;dbpassword
+      - WATCHPACK_POLLING=true
     volumes:
       - ./Web:/app 
       - /app/node_modules

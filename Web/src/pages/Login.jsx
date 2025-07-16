@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 import UserNamesDropdown from '../components/userNamesDropdown';
 import LoginButton from '../components/loginButton';
 import { useNavigate } from "react-router";
+import { ThemeProvider } from 'styled-components'
+import Theme from '../styles/Theme.jsx'
 import '../styles/App.css';
-// TODO: Use environment variable for target URL
-const apiUrl = "http://localhost:8080";
+
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 function LoginPage() {
     const [users, setUsers] = useState([]);
@@ -67,6 +69,7 @@ function LoginPage() {
     }
 
     return (
+        <ThemeProvider theme ={Theme}>
         <div className="min-h-screen text-gray-300 flex flex-col items-center justify-center py-8">
             <h1 id="tableLabel" className="text-4xl font-bold mb-4 text-gray-200">Login</h1>
             {users ? (
@@ -75,7 +78,8 @@ function LoginPage() {
                 <p>Loading users...</p>
             )}
             {<LoginButton onClick={loginSelectedUser} disabled={!selectedUsername} />}
-        </div>
+            </div>
+        </ThemeProvider>
     );
 }
 

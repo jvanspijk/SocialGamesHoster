@@ -1,11 +1,12 @@
 import React from 'react';
+import { StyledLoginButton } from './component-styles/LoginButton';
 
-const LoginButton = ({ onClick, children }) => {
-  return (
-    <button className="login-button" onClick={onClick}>
-      {children || 'Log In'}
-    </button>
-  );
+const LoginButton = ({ onClick, children, disabled }) => {
+    return (
+        <StyledLoginButton onClick={onClick} disabled={disabled}>
+            {children || 'Log In'}
+        </StyledLoginButton>
+    );
 };
 
 export default LoginButton;

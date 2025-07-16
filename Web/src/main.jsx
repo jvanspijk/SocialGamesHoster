@@ -6,8 +6,6 @@ import LoginPage from './pages/Login.jsx'
 import MyDetails from './pages/MyDetails.jsx'
 import NotFoundPage from "./pages/NotFound.jsx";
 
-
-
 const root = document.getElementById("root");
 
 ReactDOM.createRoot(root).render(
