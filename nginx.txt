@@ -1,0 +1,50 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server {
+        listen 80; # Nginx listens on host port 80
+
+        # Serve the React frontend application
+        location / {
+            proxy_pass http://web:8081;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            # This is necessary for client-side routing in React apps
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy API requests to the backend service
+        location /api/ {
+            # Remove '/api/' prefix before forwarding to the backend
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://api:8080; # 'api' is the service name, '8080' is its internal port
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            # For WebSockets
+            # proxy_http_version 1.1;
+            # proxy_set_header Upgrade $http_upgrade;
+            # proxy_set_header Connection "upgrade";
+        }
+
+        # Proxy Swagger UI requests to the backend service
+        location /swagger/ {
+            proxy_pass http://api:8080/swagger/; # Forward directly to backend's Swagger path
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}

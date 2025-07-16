@@ -24,11 +24,16 @@ export default defineConfig({
         }
     },
     server: {
-        port: parseInt(env.DEV_SERVER_PORT || '51144'),
+        port: parseInt(env.DEV_SERVER_PORT || '8081'),
         host: '0.0.0.0',
         watch: {
             usePolling: true,
             interval: 1000, //in ms
+        },
+        hmr: {
+            clientPort: 80,
+            host: 'localhost',
+            overlay: false
         }
     }
-})
+});

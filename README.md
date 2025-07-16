@@ -7,7 +7,7 @@ Project to host social deduction games on your local network.
 3. You might have to change your firewall settings to allow connections to the web app.
 
 (For Windows, go into "Windows Defender with Firewall with Advanced Security" and 
-add an inbound TCP rule for port 8081 on private networks.)
+add an inbound TCP rule for port 80 on private networks.)
 
 ## Developer setup
 1. Run the docker-compose.yaml.

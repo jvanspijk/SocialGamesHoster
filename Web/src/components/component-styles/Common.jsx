@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const MainTitle = styled.h1`
-    font-size: ${props => props.theme.typography.fontSizeXl};
+    font-size: ${props => props.theme.typography.fontSizeLg};
     color: ${props => props.theme.colors.primary};
     text-shadow: 3px 3px 5px ${props => props.theme.colors.shadowMedium};
     margin: 0;
@@ -15,7 +15,7 @@ const PageContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: ${props => props.theme.spacing.xl};
+    padding: ${props => props.theme.spacing.sm};
     font-family: ${props => props.theme.typography.fontFamilyBase};
     font-size: ${props => props.theme.typography.fontSizeBase};
     color: ${props => props.theme.colors.textPrimary};
@@ -24,8 +24,9 @@ const PageContainer = styled.div`
 const StyledHeader = styled.header`
     text-align: center;
     margin-bottom: 0;
-    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+    padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.sm};
     border-radius: ${props => props.theme.borderRadius.lg};
+    font-size: ${props => props.theme.typography.fontSizeMd};
 `;
 
 const ScrollBox = styled.article`
@@ -34,8 +35,8 @@ const ScrollBox = styled.article`
     box-shadow:
         0px 5px 15px ${props => props.theme.colors.shadowLight},
         inset 0 0 15px rgba(210, 180, 140, 0.2); 
-    padding: 2.5em 3em;
-    margin: ${props => props.theme.spacing.lg} 0;
+    padding: 1em 1em;
+    margin: ${props => props.theme.spacing.md} 0;
     width: 600px;
     max-width: 90%;
     box-sizing: border-box;
@@ -46,6 +47,7 @@ const ScrollBox = styled.article`
     h2, h3 {
         color: ${props => props.theme.colors.textSecondary};
         margin-top: 0;
+        margin-bottom: ${props => props.theme.spacing.sm}
         text-shadow: 1px 1px 2px ${props => props.theme.colors.shadowLight};
     }
 
@@ -62,8 +64,8 @@ const ScrollBox = styled.article`
     }
 
     li {
-        margin-bottom: ${props => props.theme.spacing.sm}; 
-        font-size: ${props => props.theme.typography.fontSizeSm};
+        margin-bottom: 0; 
+        font-size: ${props => props.theme.typography.fontSizeBase};
     }
 `;
 

@@ -1,5 +1,3 @@
-// src/theme/Theme.jsx
-
 const colors = {
     primary: '#8B4513', // SaddleBrown
     secondary: '#D2B48C', // Tan
@@ -15,29 +13,29 @@ const colors = {
 };
 
 const spacing = {
-    xs: '0.25em',
-    sm: '0.5em',
-    md: '1em',
-    lg: '1.5em',
-    xl: '2em',
-    xxl: '4em',
+    xs: '0rem',
+    sm: '0.1rem',
+    md: '0.5rem',
+    lg: '1rem',
+    xl: '1.5rem',
+    xxl: '2rem',
 };
 
 const typography = {
     fontFamilyBase: `'Old Standard TT', serif`,
     fontFamilyHeadings: `'IM Fell DW Pica', serif`,
-    fontSizeSm: '1em',
-    fontSizeBase: '1.2em',
-    fontSizeMd: '2em',
-    fontSizeLg: '2em',
-    fontSizeXl: '3.5em',
-    lineHeightBase: 1.6,
+    fontSizeSm: '0.75em',
+    fontSizeBase: '1em',
+    fontSizeMd: '1.5em',
+    fontSizeLg: '1.75em',
+    fontSizeXl: '2.5em',
+    lineHeightBase: 1.5,
 };
 
 const borderRadius = {
-    sm: '4px',
-    md: '8px',
-    lg: '10px',
+    sm: '2px',
+    md: '4px',
+    lg: '5px',
     circle: '50%',
 };
 
