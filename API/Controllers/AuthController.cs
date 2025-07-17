@@ -12,8 +12,8 @@ namespace API.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly UserRepository _userRepository;
-    public AuthController(UserRepository userRepository)
+    private readonly PlayerRepository _userRepository;
+    public AuthController(PlayerRepository userRepository)
     {
         _userRepository = userRepository;
     }
@@ -21,10 +21,11 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] string username)
     {
-        Result<User> user = await _userRepository.GetUserAsync(username);
-        if (!user.IsSuccess)
+        Result<Player> result = await _userRepository.GetPlayerAsync(username);
+        if (!result.IsSuccess)
         {
-            return NotFound("User not found.");
+            Console.WriteLine($"{result}");
+            return result.ToActionResult();
         }
         string token = GenerateJwtToken(username);
         return Ok(new { token });

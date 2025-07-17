@@ -8,7 +8,7 @@ import { ThemeProvider } from 'styled-components'
 import Theme from '../styles/Theme.jsx'
 
 function MyDetails() {
-    const { username } = useParams();
+    const { name } = useParams();
     const navigate = useNavigate();
 
     return (
@@ -17,10 +17,10 @@ function MyDetails() {
                 <RoundTimer />
 
                 <StyledHeader>
-                    <MainTitle>{username}</MainTitle>
+                    <MainTitle>{name}</MainTitle>
                 </StyledHeader>
 
-                <RoleDescription username={username} navigate={navigate}>
+                <RoleDescription username={name} navigate={navigate}>
                     {(role, loadingRole) => (
                         !loadingRole && role && role.abilities && role.abilities.length > 0 && (
                             <RoleAbilities abilities={role.abilities} />

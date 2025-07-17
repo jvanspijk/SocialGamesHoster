@@ -10,8 +10,8 @@ import '../styles/App.css';
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 function LoginPage() {
-    const [users, setUsers] = useState([]);
-    const [selectedUsername, setSelectedUsername] = useState('');
+    const [players, setPlayers] = useState([]);
+    const [selectedName, setSelectedName] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -19,17 +19,17 @@ function LoginPage() {
     }, []);
 
     useEffect(() => {
-        if (users.length > 0 && !selectedUsername) {
-            setSelectedUsername(users[0].name);
+        if (players.length > 0 && !selectedName) {
+            setSelectedName(players[0].name);
         }
-    }, [users, selectedUsername]);
+    }, [players, selectedName]);
 
-    async function loginSelectedUser() {
+    async function loginSelectedPlayer() {
         if (!apiUrl) {
             console.error("API URL is not defined.");
             return;
         }
-        if (!selectedUsername) {
+        if (!selectedName) {
             console.error("No username selected for login.");
             return;
         }
@@ -39,7 +39,7 @@ function LoginPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(selectedUsername),
+                body: JSON.stringify(selectedName),
             });
             if (!response.ok) {
                 const errorBody = await response.text();
@@ -48,7 +48,7 @@ function LoginPage() {
             }
             const data = await response.json();
             localStorage.setItem('jwt-token', data.token);
-            navigate(`/user/${selectedUsername}`);
+            navigate(`/Player/${selectedName}`);
             return;
         } catch (error) {
             console.error("Error during login: ", error);
@@ -57,13 +57,14 @@ function LoginPage() {
 
     async function populateUserData() {
         try {
-            const response = await fetch(`${apiUrl}/User`);
+            const response = await fetch(`${apiUrl}/Player`);
+            console.log(`result from ${apiUrl}/Player: `)
+            console.log(response);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            console.log(response);
             const data = await response.json();
-            setUsers(data);
+            setPlayers(data);
         } catch (error) {
             console.error("Error fetching users: ", error);
         }
@@ -73,12 +74,12 @@ function LoginPage() {
         <ThemeProvider theme ={Theme}>
         <div className="min-h-screen text-gray-300 flex flex-col items-center justify-center py-8">
             <h1 id="tableLabel" className="text-4xl font-bold mb-4 text-gray-200">Login</h1>
-            {users ? (
-                <UserNamesDropdown users={users} selectedUsername={selectedUsername} onUsernameChange={setSelectedUsername} />
+            {players ? (
+                <UserNamesDropdown users={players} selectedUsername={selectedName} onUsernameChange={setSelectedName} />
             ) : (
                 <p>Loading users...</p>
             )}
-            {<LoginButton onClick={loginSelectedUser} disabled={!selectedUsername} />}
+            {<LoginButton onClick={loginSelectedPlayer} disabled={!selectedName} />}
             </div>
         </ThemeProvider>
     );

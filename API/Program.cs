@@ -2,13 +2,12 @@
 using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Hubs;
-using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace API;
 
@@ -38,16 +37,10 @@ public class Program
             options.Cookie.IsEssential = true;
         });
 
-        //services.AddIdentity<User, IdentityRole>(options =>
-        //{
-        //    options.Password.RequiredLength = 0;
-        //    options.Password.RequireUppercase = false;
-        //    options.Password.RequireLowercase = false;
-        //    options.Password.RequireDigit = false;
-        //})
-        //.AddEntityFrameworkStores<APIDatabaseContext>();
+        services.AddControllers().AddJsonOptions(o => 
+            o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
+        );
 
-        services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
@@ -78,21 +71,38 @@ public class Program
             };
         });
 
-
         // We use signalR for websockets
         // To track if users are online/offline
         // And to send updates if the admin performs actions
         services.AddSignalR();
 
-        services.AddSingleton<RoleRepository>();
-        services.AddSingleton<AuthService>();
-        services.AddSingleton<UserRepository>();
+        services.AddScoped<RoleRepository>();
+        services.AddScoped<AuthService>();
+        services.AddScoped<PlayerRepository>();
         services.AddSingleton<RoundRepository>();
 
         var app = builder.Build();
+
+        // Apply database migrations on startup
+        using (var scope = app.Services.CreateScope())
+        {
+            var serviceProvider = scope.ServiceProvider;
+            try
+            {
+                var context = serviceProvider.GetRequiredService<APIDatabaseContext>();
+                Console.WriteLine("Applying database migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Database migrations applied successfully.");
+            }
+            catch (Exception ex)
+            {
+                ILogger logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occurred while applying database migrations.");
+                throw;
+            }
+        }
+
         app.UseCors("CorsPolicy");
-
-
 
         app.UseDefaultFiles();
 

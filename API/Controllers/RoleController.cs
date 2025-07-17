@@ -16,11 +16,11 @@ namespace API.Controllers;
 public class RoleController : ControllerBase
 {
     private readonly RoleRepository _roleRepository;
-    private readonly UserRepository _userRepository;
-    public RoleController(RoleRepository roleRepository, UserRepository userRepository)
+    private readonly PlayerRepository _playerRepository;
+    public RoleController(RoleRepository roleRepository, PlayerRepository playerRepository)
     {
         _roleRepository = roleRepository;
-        _userRepository = userRepository;
+        _playerRepository = playerRepository;
     }
 
     [HttpGet("{username}")]
@@ -37,15 +37,12 @@ public class RoleController : ControllerBase
             return Forbid("You are not allowed to access this user's role.");
         }
 
-        Result<User> userResult = await _userRepository.GetUserAsync(username);
+        Result<Role> roleResult = await _roleRepository.GetFromPlayerAsync(username);
 
-        if (!userResult.IsSuccess) return userResult.ToActionResult();
+        //Role test = roleResult.ToObjectUnsafe();
+        //Console.WriteLine($"Role: {test.Name}, Id: {test.Id}");
+        //Console.WriteLine($"Abilities: {string.Join(", ", test.AbilityAssociations.Select(a => a.Ability.Name))}");
 
-        User user = userResult.ToObjectUnsafe();
-
-        if (user.Role == null) return NotFound("User does not have a role assigned.");
-
-        Result<Role> roleResult = await _roleRepository.GetFromIdAsync(user.Role.Id);
-        return roleResult.ToActionResult();
+        return roleResult.ToActionResult();      
     }
 }

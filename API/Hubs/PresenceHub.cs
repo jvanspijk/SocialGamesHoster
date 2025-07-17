@@ -8,8 +8,8 @@ namespace API.Hubs;
 
 public class PresenceHub : Hub
 {
-    private readonly UserRepository _userService;
-    public PresenceHub(UserRepository userService)
+    private readonly PlayerRepository _userService;
+    public PresenceHub(PlayerRepository userService)
     {
         _userService = userService;
     }

@@ -1,10 +1,14 @@
-﻿namespace API.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-[Serializable]
+namespace API.Models;
+
 public class Role
 {
-    public required int Id { get; init; }
+    [Key]
+    public required int Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
-    public List<Ability> Abilities { get; set; } = [];
+    public ICollection<RoleAbility> AbilityAssociations { get; set; } = [];
+    public ICollection<Ability> Abilities => AbilityAssociations.Select(ra => ra.Ability).ToList();
 }

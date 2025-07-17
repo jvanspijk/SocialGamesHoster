@@ -13,7 +13,7 @@ ReactDOM.createRoot(root).render(
         <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="login" element={<LoginPage />} />
-            <Route path="user/:username" element={<MyDetails />} />
+            <Route path="player/:name" element={<MyDetails />} />
             <Route path="not-found" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

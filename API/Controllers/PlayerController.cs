@@ -9,19 +9,19 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UserController : ControllerBase
+public class PlayerController : ControllerBase
 {
-    private readonly UserRepository _userRepository;
-    public UserController(UserRepository userRepository) 
+    private readonly PlayerRepository _playerRepository;
+    public PlayerController(PlayerRepository playerRepository) 
     {
-        _userRepository = userRepository;        
+        _playerRepository = playerRepository;        
     }
 
     // GET /User
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        Result<IEnumerable<User>> result = await _userRepository.GetUsersAsync();
+        Result<IEnumerable<Player>> result = await _playerRepository.GetPlayersAsync();
         return result.ToActionResult();
     }
 
@@ -29,7 +29,7 @@ public class UserController : ControllerBase
     [HttpGet("{name}")]
     public async Task<IActionResult> GetUserByName(string name)
     {
-        Result<User> result = await _userRepository.GetUserAsync(name);
+        Result<Player> result = await _playerRepository.GetPlayerAsync(name);
         return result.ToActionResult();
     }
 
@@ -37,7 +37,7 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateUser(string username)
     {
-        Result<User> user = await _userRepository.AddUserAsync(username);
+        Result<Player> user = await _playerRepository.AddPlayerAsync(username);
         return user.ToActionResult();
 
     }
