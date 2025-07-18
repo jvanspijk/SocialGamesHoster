@@ -81,6 +81,8 @@ public class Program
         services.AddScoped<PlayerRepository>();
         services.AddSingleton<RoundRepository>();
 
+        services.AddSingleton<JwtTokenService>();
+
         var app = builder.Build();
 
         // Apply database migrations on startup

@@ -23,7 +23,7 @@ export const TimerCircle = styled.div`
   width: 100px;
   height: 100px;
   border-radius: ${Theme.borderRadius.circle};
-  background-color: ${(props) => props.background || Theme.colors.background};
+  background-color: ${(props) => props.$background || Theme.colors.background};
   display: flex;
   align-items: center;
   justify-content: center;

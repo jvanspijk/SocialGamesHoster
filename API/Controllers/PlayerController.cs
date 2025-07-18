@@ -12,9 +12,26 @@ namespace API.Controllers;
 public class PlayerController : ControllerBase
 {
     private readonly PlayerRepository _playerRepository;
-    public PlayerController(PlayerRepository playerRepository) 
+    private readonly JwtTokenService _tokenService;
+    public PlayerController(PlayerRepository playerRepository, JwtTokenService tokenService) 
     {
-        _playerRepository = playerRepository;        
+        _playerRepository = playerRepository;
+        _tokenService = tokenService;
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] string username)
+    {
+        Result<Player> result = await _playerRepository.GetPlayerAsync(username);
+
+        if (!result.IsSuccess)
+        {
+            Console.WriteLine($"{result}");
+            return result.ToActionResult();
+        }
+
+        string token = _tokenService.GeneratePlayerToken(username);
+        return Ok(new { token });
     }
 
     // GET /User

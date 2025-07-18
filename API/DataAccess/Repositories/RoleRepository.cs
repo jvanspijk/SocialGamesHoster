@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using API.DTO;
+using API.Models;
 using API.Validation;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
@@ -26,30 +27,34 @@ public class RoleRepository
         return role;
     }
 
-    public async Task<Result<Role>> GetFromPlayerAsync(string username)
+    public async Task<Result<RoleDTO>> GetFromPlayerAsync(string username)
     {
         try
         {
-        Role? role = await _context.Players
-            .Where(p => p.Name.ToLower() == username.ToLower() && p.RoleId != null)
-            .Include(p => p.Role)
-                .ThenInclude(r => r.AbilityAssociations)
-                .ThenInclude(ra => ra.Ability)
-            .Select(p => p.Role)
-            .FirstOrDefaultAsync();
+            Role? role = await _context.Players
+                .Where(p => p.Name.ToLower() == username.ToLower() && p.RoleId != null)
+                .Include(p => p.Role)
+                    .ThenInclude(r => r.AbilityAssociations)
+                        .ThenInclude(ra => ra.Ability)
+                .Select(p => p.Role)
+                .FirstOrDefaultAsync();
 
-            if (role != null)
+            if (role == null)
             {
-                return new Result<Role>(role);
+                return new Result<RoleDTO>(new NotFoundException($"Role for player '{username}' not found."));
             }
-            else
+
+            RoleDTO? roleDto = RoleDTO.FromModel(role);
+            if (roleDto == null)
             {
-                return new Result<Role>(new NotFoundException($"Role for player '{username}' not found."));
+                return new Result<RoleDTO>(new Exception($"Role DTO for player '{username}' could not be created."));
             }
+
+            return new Result<RoleDTO>(roleDto);
         }
         catch (Exception ex)
         {
-            return new Result<Role>(ex);
+            return new Result<RoleDTO>(ex);
         }
     }
 }

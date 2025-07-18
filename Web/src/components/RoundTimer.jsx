@@ -75,7 +75,7 @@ export function RoundTimer() {
         <ScrollBox>
             <TimerContainer>
                 <TimerLabel>Time left in current round:</TimerLabel>
-                <TimerCircle background={Theme.colors.background}>
+                <TimerCircle $background={Theme.colors.background}>
                     <TimeDisplay>{formatTime(remainingTime)}</TimeDisplay>
                 </TimerCircle>
             </TimerContainer>

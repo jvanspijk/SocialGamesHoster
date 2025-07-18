@@ -20,7 +20,7 @@ function MyDetails() {
                     <MainTitle>{name}</MainTitle>
                 </StyledHeader>
 
-                <RoleDescription username={name} navigate={navigate}>
+                <RoleDescription username={name}>
                     {(role, loadingRole) => (
                         !loadingRole && role && role.abilities && role.abilities.length > 0 && (
                             <RoleAbilities abilities={role.abilities} />

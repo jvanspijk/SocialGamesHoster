@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace API.Models;
 
@@ -10,5 +9,6 @@ public class Role
     public required string Name { get; set; }
     public string? Description { get; set; }
     public ICollection<RoleAbility> AbilityAssociations { get; set; } = [];
-    public ICollection<Ability> Abilities => AbilityAssociations.Select(ra => ra.Ability).ToList();
+    // public ICollection<Ability> Abilities => AbilityAssociations.Select(ra => ra.Ability).ToList();
 }
+

@@ -1,4 +1,5 @@
 ﻿using API.DataAccess.Repositories;
+using API.DTO;
 using API.Models;
 using API.Validation;
 using LanguageExt;
@@ -16,18 +17,22 @@ namespace API.Controllers;
 public class RoleController : ControllerBase
 {
     private readonly RoleRepository _roleRepository;
-    private readonly PlayerRepository _playerRepository;
-    public RoleController(RoleRepository roleRepository, PlayerRepository playerRepository)
+    public RoleController(RoleRepository roleRepository)
     {
         _roleRepository = roleRepository;
-        _playerRepository = playerRepository;
     }
 
+    /// <summary>
+    /// Currently, you can only retrieve your own role.
+    /// </summary>
+    /// <param name="username"></param>
+    /// <returns></returns>
     [HttpGet("{username}")]
     [Authorize]
     public async Task<IActionResult> GetRoleFromName(string username)
     {
         Claim? usernameClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+
         if (usernameClaim == null)
         {
             return Unauthorized("User claim not found in token.");
@@ -37,11 +42,7 @@ public class RoleController : ControllerBase
             return Forbid("You are not allowed to access this user's role.");
         }
 
-        Result<Role> roleResult = await _roleRepository.GetFromPlayerAsync(username);
-
-        //Role test = roleResult.ToObjectUnsafe();
-        //Console.WriteLine($"Role: {test.Name}, Id: {test.Id}");
-        //Console.WriteLine($"Abilities: {string.Join(", ", test.AbilityAssociations.Select(a => a.Ability.Name))}");
+        Result<RoleDTO> roleResult = await _roleRepository.GetFromPlayerAsync(username);        
 
         return roleResult.ToActionResult();      
     }

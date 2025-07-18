@@ -34,7 +34,7 @@ function LoginPage() {
             return;
         }
         try {
-            const response = await fetch(`${apiUrl}/Auth/login`, {
+            const response = await fetch(`${apiUrl}/Player/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ function LoginPage() {
             }
             const data = await response.json();
             localStorage.setItem('jwt-token', data.token);
-            navigate(`/Player/${selectedName}`);
+            navigate(`/game/Player/${selectedName}`);
             return;
         } catch (error) {
             console.error("Error during login: ", error);
@@ -58,8 +58,6 @@ function LoginPage() {
     async function populateUserData() {
         try {
             const response = await fetch(`${apiUrl}/Player`);
-            console.log(`result from ${apiUrl}/Player: `)
-            console.log(response);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

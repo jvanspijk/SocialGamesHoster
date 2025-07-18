@@ -1,10 +1,12 @@
-// RoleDescription.jsx
 import React, { useState, useEffect } from 'react';
 import { ScrollBox } from './component-styles/Common.jsx';
+import { useNavigate } from 'react-router';
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-export function RoleDescription({ username, navigate, children }) {
+export function RoleDescription({ username, children }) {
+    const navigate = useNavigate();
+
     const [role, setRole] = useState(null);
     const [loadingRole, setLoadingRole] = useState(true);
 
