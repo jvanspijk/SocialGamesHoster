@@ -2,7 +2,7 @@
 
 namespace API.DTO;
 
-public class AdminLoginRequestDTO
+public record AdminLoginRequestDTO
 {
     [Required]
     public required string Username { get; set; }

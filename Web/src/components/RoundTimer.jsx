@@ -35,7 +35,7 @@ export function RoundTimer() {
     useEffect(() => {
         async function fetchEndTime() {
             try {
-                const response = await fetch(`${apiUrl}/Round/end-time`, {
+                const response = await fetch(`${apiUrl}/Rounds/end-time`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

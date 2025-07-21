@@ -48,7 +48,8 @@ function LoginPage() {
             }
             const data = await response.json();
             localStorage.setItem('jwt-token', data.token);
-            navigate(`/game/Player/${selectedName}`);
+            const uriEncodedName = encodeURIComponent(selectedName);
+            navigate(`/game/Players/${uriEncodedName}`);
             return;
         } catch (error) {
             console.error("Error during login: ", error);
@@ -57,14 +58,14 @@ function LoginPage() {
 
     async function populateUserData() {
         try {
-            const response = await fetch(`${apiUrl}/Player`);
+            const response = await fetch(`${apiUrl}/Players`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
             setPlayers(data);
         } catch (error) {
-            console.error("Error fetching users: ", error);
+            console.error("Error fetching players: ", error);
         }
     }
 

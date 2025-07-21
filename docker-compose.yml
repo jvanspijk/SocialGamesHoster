@@ -12,8 +12,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DOTNET_WATCH_RELOAD_ENABLED=true
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=socialgamesdb;Username=dbuser;Password=dbpassword
-    volumes:     
+    volumes:         
       - ./API:/src/API
+      - ./settings.ini:/src/API/settings.ini
       - nuget_packages:/root/.nuget/packages
     command: dotnet watch run --urls http://0.0.0.0:8080
     networks:

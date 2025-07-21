@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 const AdminLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+
+    const navigate = useNavigate();
 
     async function attemptLogin(e) {
         e.preventDefault();
@@ -56,7 +59,7 @@ const AdminLogin = () => {
             }
             if (data.token) {
                 localStorage.setItem('jwt-token', data.token);
-                alert("Login successful!");
+                navigate('/admin/dashboard', { replace: true });
                 setError('');
             } else {
                 setError("Login failed: No token returned.");

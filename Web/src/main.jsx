@@ -5,7 +5,12 @@ import LoginPage from './pages/Login.jsx'
 import MyDetails from './pages/MyDetails.jsx'
 import NotFoundPage from "./pages/NotFound.jsx";
 import App from "./App.jsx"
+
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import PlayerManagement from "./pages/admin/PlayerManagement.jsx";
+import RoleManagement from "./pages/admin/RoleManagement.jsx";
+import AbilityManagement from "./pages/admin/AbilityManagement.jsx";
 
 const root = document.getElementById("root");
 
@@ -23,8 +28,10 @@ ReactDOM.createRoot(root).render(
 
             <Route path="admin">
                 <Route index element={<AdminLogin />} />
-                {/*<Route path="players" element={<Players />} />*/}
-                {/*<Route path="roles" element={<Roles />} />*/}
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="players" element={<PlayerManagement />} />
+                <Route path="roles" element={<RoleManagement />} />
+                <Route path="abilities" element={<AbilityManagement />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />

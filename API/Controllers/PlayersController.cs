@@ -4,19 +4,20 @@ using LanguageExt.Common;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using API.Services;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class PlayerController : ControllerBase
+public class PlayersController : ControllerBase
 {
     private readonly PlayerRepository _playerRepository;
-    private readonly JwtTokenService _tokenService;
-    public PlayerController(PlayerRepository playerRepository, JwtTokenService tokenService) 
+    private readonly AuthService _authService;
+    public PlayersController(PlayerRepository playerRepository, AuthService authService) 
     {
         _playerRepository = playerRepository;
-        _tokenService = tokenService;
+        _authService = authService;
     }
 
     [HttpPost("login")]
@@ -30,7 +31,7 @@ public class PlayerController : ControllerBase
             return result.ToActionResult();
         }
 
-        string token = _tokenService.GeneratePlayerToken(username);
+        string token = _authService.GeneratePlayerToken(username);
         return Ok(new { token });
     }
 

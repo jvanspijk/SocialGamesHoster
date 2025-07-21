@@ -1,4 +1,5 @@
 ﻿using API.Models;
+using API.Validation;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,16 @@ public class PlayerRepository
     {
         try
         {
-            return await _context.Players.FirstAsync(
+            Player? player = await _context.Players.SingleAsync(
                 p => p.Name == name
             );
+            if (player == null)
+            {
+                return new Result<Player>(
+                    new NotFoundException($"Player with name '{name}' not found.")
+                );
+            }
+            return player;
         }
         catch (Exception ex)
         {

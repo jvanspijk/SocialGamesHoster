@@ -19,7 +19,7 @@ export function RoleDescription({ username, children }) {
             }
             const token = localStorage.getItem('jwt-token');
             try {
-                const response = await fetch(`${apiUrl}/Role/${username}`, {
+                const response = await fetch(`${apiUrl}/Roles/${username}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

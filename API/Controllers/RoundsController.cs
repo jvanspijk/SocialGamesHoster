@@ -7,10 +7,10 @@ namespace API.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-public class RoundController : ControllerBase
+public class RoundsController : ControllerBase
 {
     private readonly RoundRepository _roundRepository;
-    public RoundController(RoundRepository roundRepository)
+    public RoundsController(RoundRepository roundRepository)
     {
         _roundRepository = roundRepository;
     }

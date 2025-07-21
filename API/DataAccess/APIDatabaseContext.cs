@@ -42,15 +42,15 @@ public class APIDatabaseContext : DbContext
 
     private void SeedData(ModelBuilder builder)
     {
-        SeedPlayers(builder);
-        SeedRolesAndAbilities(builder);
+
+        List<Role> roles = SeedRolesAndAbilities(builder);
+        SeedPlayers(builder, roles);
     }
 
-    private void SeedPlayers(ModelBuilder builder)
+    private void SeedPlayers(ModelBuilder builder, List<Role> roles)
     {
-        Random random = new();
-        int amountOfRoles = 8; // Ugly hardcoded, but this is just for testing purposes
-        
+        int amountOfRoles = roles.Count;
+
         List<string> testUserNames = [
            "Alice", "John", "Emily", "Michael", "Sarah",
            "Jessica", "David", "Ashley", "Matthew", "Amanda",
@@ -58,15 +58,19 @@ public class APIDatabaseContext : DbContext
            "Charlie", "Kyle", "Bob", "Megan", "Laura",
         ];
 
-        List<Player> players = new(testUserNames.Count);
-        for (int i = 0; i < testUserNames.Count; i++)
+        int amountOfTestPlayers = testUserNames.Count;
+
+        List<Player> players = new(amountOfTestPlayers);
+        for (int i = 0; i < amountOfTestPlayers; i++)
         {
-            int roleId = random.Next(1, amountOfRoles + 1);
+            int roleId = (i % amountOfRoles) + 1; // Cycle through roles
+
+            string name = testUserNames[i] + " " + roles[i % amountOfRoles].Name;
 
             players.Add(new Player
             {
                 Id = i + 1,
-                Name = testUserNames[i],
+                Name = name,
                 RoleId = roleId
             });
         }
@@ -74,7 +78,7 @@ public class APIDatabaseContext : DbContext
         builder.Entity<Player>().HasData(players);
     }
 
-    private void SeedRolesAndAbilities(ModelBuilder builder)
+    private List<Role> SeedRolesAndAbilities(ModelBuilder builder)
     {
         var basicVote = new Ability { Id = 1, Name = "Vote", Description = "Participate in daily voting to lynch a suspect." };
         var defense = new Ability { Id = 3, Name = "Defense", Description = "Can defend themselves against night attacks." };
@@ -107,7 +111,12 @@ public class APIDatabaseContext : DbContext
         var jester = new Role { Id = 7, Name = "Jester", Description = "Your only goal is to be lynched by the town." };
         var executioner = new Role { Id = 8, Name = "Executioner", Description = "You have a specific target you must get lynched to win." };
 
-        builder.Entity<Role>().HasData(
+        // Set roles visible to each other
+        godfather.RolesVisibleToRole = [godfather.Id, mafioso.Id];
+        mafioso.RolesVisibleToRole = [godfather.Id, mafioso.Id];
+
+        List<Role> roles = new()
+        {
             townie,
             doctor,
             investigator,
@@ -116,7 +125,9 @@ public class APIDatabaseContext : DbContext
             godfather,
             jester,
             executioner
-        );
+        };
+
+        builder.Entity<Role>().HasData(roles);
 
         builder.Entity<RoleAbility>().HasData(
             // Townie abilities
@@ -151,5 +162,7 @@ public class APIDatabaseContext : DbContext
             new RoleAbility { RoleId = executioner.Id, AbilityId = basicVote.Id },
             new RoleAbility { RoleId = executioner.Id, AbilityId = targetElimination.Id }
         );
+
+        return roles;
     }
 }

@@ -7,6 +7,7 @@ const UserNamesDropdown = ({ users, selectedUsername, onUsernameChange }) => {
     }
 
     const handleChange = (event) => {
+        console.log("Selected username:", event.target.value);
         onUsernameChange(event.target.value);
     };
 

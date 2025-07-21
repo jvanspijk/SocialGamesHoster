@@ -2,7 +2,7 @@
 
 namespace API.DTO;
 
-public class AbilityDTO
+public record AbilityDTO
 {
     public required string Name { get; set; }
     public required string Description { get; set; }

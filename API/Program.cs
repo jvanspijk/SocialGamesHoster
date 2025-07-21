@@ -79,9 +79,10 @@ public class Program
         services.AddScoped<RoleRepository>();
         services.AddScoped<AuthService>();
         services.AddScoped<PlayerRepository>();
+        services.AddScoped<AbilityRepository>();
         services.AddSingleton<RoundRepository>();
 
-        services.AddSingleton<JwtTokenService>();
+        services.AddSingleton<AuthService>();
 
         var app = builder.Build();
 

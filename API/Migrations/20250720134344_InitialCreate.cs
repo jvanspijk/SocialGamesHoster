@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -34,7 +35,8 @@ namespace API.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true)
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    RolesVisibleToRole = table.Column<int[]>(type: "integer[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -48,7 +50,8 @@ namespace API.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    RoleId = table.Column<int>(type: "integer", nullable: true)
+                    RoleId = table.Column<int>(type: "integer", nullable: true),
+                    PlayersVisibleToPlayer = table.Column<List<int>>(type: "integer[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -102,44 +105,44 @@ namespace API.Migrations
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "Id", "Description", "Name" },
+                columns: new[] { "Id", "Description", "Name", "RolesVisibleToRole" },
                 values: new object[,]
                 {
-                    { 1, "A regular citizen of the town. Your goal is to eliminate all threats.", "Townie" },
-                    { 2, "You are a medical professional dedicated to saving lives.", "Doctor" },
-                    { 3, "You seek the truth and uncover secrets hidden in the town.", "Investigator" },
-                    { 4, "You take justice into your own hands, even if it means getting your hands dirty.", "Vigilante" },
-                    { 5, "A loyal member of the Mafia. You carry out the family's nightly kills.", "Mafioso" },
-                    { 6, "The cunning leader of the Mafia. You are immune to basic investigations.", "Godfather" },
-                    { 7, "Your only goal is to be lynched by the town.", "Jester" },
-                    { 8, "You have a specific target you must get lynched to win.", "Executioner" }
+                    { 1, "A regular citizen of the town. Your goal is to eliminate all threats.", "Townie", new int[0] },
+                    { 2, "You are a medical professional dedicated to saving lives.", "Doctor", new int[0] },
+                    { 3, "You seek the truth and uncover secrets hidden in the town.", "Investigator", new int[0] },
+                    { 4, "You take justice into your own hands, even if it means getting your hands dirty.", "Vigilante", new int[0] },
+                    { 5, "A loyal member of the Mafia. You carry out the family's nightly kills.", "Mafioso", new[] { 6, 5 } },
+                    { 6, "The cunning leader of the Mafia. You are immune to basic investigations.", "Godfather", new[] { 6, 5 } },
+                    { 7, "Your only goal is to be lynched by the town.", "Jester", new int[0] },
+                    { 8, "You have a specific target you must get lynched to win.", "Executioner", new int[0] }
                 });
 
             migrationBuilder.InsertData(
                 table: "Players",
-                columns: new[] { "Id", "Name", "RoleId" },
+                columns: new[] { "Id", "Name", "PlayersVisibleToPlayer", "RoleId" },
                 values: new object[,]
                 {
-                    { 1, "Alice", 1 },
-                    { 2, "John", 3 },
-                    { 3, "Emily", 1 },
-                    { 4, "Michael", 4 },
-                    { 5, "Sarah", 8 },
-                    { 6, "Jessica", 3 },
-                    { 7, "David", 7 },
-                    { 8, "Ashley", 4 },
-                    { 9, "Matthew", 8 },
-                    { 10, "Amanda", 2 },
-                    { 11, "Joshua", 5 },
-                    { 12, "Jennifer", 4 },
-                    { 13, "Daniel", 2 },
-                    { 14, "Elizabeth", 7 },
-                    { 15, "James", 4 },
-                    { 16, "Charlie", 3 },
-                    { 17, "Kyle", 5 },
-                    { 18, "Bob", 8 },
-                    { 19, "Megan", 5 },
-                    { 20, "Laura", 3 }
+                    { 1, "Alice Townie", new List<int>(), 1 },
+                    { 2, "John Doctor", new List<int>(), 2 },
+                    { 3, "Emily Investigator", new List<int>(), 3 },
+                    { 4, "Michael Vigilante", new List<int>(), 4 },
+                    { 5, "Sarah Mafioso", new List<int>(), 5 },
+                    { 6, "Jessica Godfather", new List<int>(), 6 },
+                    { 7, "David Jester", new List<int>(), 7 },
+                    { 8, "Ashley Executioner", new List<int>(), 8 },
+                    { 9, "Matthew Townie", new List<int>(), 1 },
+                    { 10, "Amanda Doctor", new List<int>(), 2 },
+                    { 11, "Joshua Investigator", new List<int>(), 3 },
+                    { 12, "Jennifer Vigilante", new List<int>(), 4 },
+                    { 13, "Daniel Mafioso", new List<int>(), 5 },
+                    { 14, "Elizabeth Godfather", new List<int>(), 6 },
+                    { 15, "James Jester", new List<int>(), 7 },
+                    { 16, "Charlie Executioner", new List<int>(), 8 },
+                    { 17, "Kyle Townie", new List<int>(), 1 },
+                    { 18, "Bob Doctor", new List<int>(), 2 },
+                    { 19, "Megan Investigator", new List<int>(), 3 },
+                    { 20, "Laura Vigilante", new List<int>(), 4 }
                 });
 
             migrationBuilder.InsertData(

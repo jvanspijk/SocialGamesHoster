@@ -1,6 +1,7 @@
 ﻿using API.DTO;
 using API.Models;
 using API.Validation;
+using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,19 +33,19 @@ public class RoleRepository
         try
         {
             Role? role = await _context.Players
-                .Where(p => p.Name.ToLower() == username.ToLower() && p.RoleId != null)
+                .AsNoTracking()
                 .Include(p => p.Role)
                     .ThenInclude(r => r.AbilityAssociations)
                         .ThenInclude(ra => ra.Ability)
-                .Select(p => p.Role)
-                .FirstOrDefaultAsync();
+                .SingleAsync(p => p.RoleId != null && p.Name == username)
+                .Select(p => p.Role);
 
             if (role == null)
             {
                 return new Result<RoleDTO>(new NotFoundException($"Role for player '{username}' not found."));
             }
 
-            RoleDTO? roleDto = RoleDTO.FromModel(role);
+            RoleDTO roleDto = RoleDTO.FromModel(role);
             if (roleDto == null)
             {
                 return new Result<RoleDTO>(new Exception($"Role DTO for player '{username}' could not be created."));
@@ -55,6 +56,24 @@ public class RoleRepository
         catch (Exception ex)
         {
             return new Result<RoleDTO>(ex);
+        }
+    }
+
+    public async Task<Result<ICollection<RoleDTO>>> GetAllAsync()
+    {
+        _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        try
+        {
+            var roles = await _context.Roles
+                .Include(r => r.AbilityAssociations)
+                    .ThenInclude(ra => ra.Ability)
+                .ToListAsync();
+            var roleDtos = roles.Select(RoleDTO.FromModel).ToList();
+            return new Result<ICollection<RoleDTO>>(roleDtos);
+        }
+        catch (Exception ex)
+        {
+            return new Result<ICollection<RoleDTO>>(ex);
         }
     }
 }
