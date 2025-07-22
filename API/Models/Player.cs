@@ -14,7 +14,6 @@ public class Player
     [RegularExpression(@"^[a-zA-Z0-9 ]+$", ErrorMessage = "Player name can only contain alphanumeric characters and spaces.")]
     public required string Name { get; set; }
 
-    [JsonIgnore]
     public Role? Role { get; set; }
 
     /// <summary>
@@ -24,15 +23,11 @@ public class Player
     //public Role? DisguisedRole { get; set; }
 
     [JsonIgnore]
-    public int? RoleId { get; set; } // This is used by EF to set the foreign key relationship
+    public int? RoleId { get; set; }
     [JsonIgnore]
 
-    public List<int> PlayersVisibleToPlayer { get; set; } = [];
-
-    public static string NormalizeName(string userName)
-    {
-        return userName.ToLowerInvariant().Normalize();
-    }
+    public ICollection<PlayerVisibility> CanSee { get; set; } = [];
+    public ICollection<PlayerVisibility> CanBeSeenBy { get; set; } = [];
 }
 
 

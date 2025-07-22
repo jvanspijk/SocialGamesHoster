@@ -1,4 +1,7 @@
 ﻿using API;
+using API.DataAccess.Repositories;
+using API.Models;
+using LanguageExt.Common;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,7 +19,9 @@ public class AuthService
     private readonly string _adminUserName;
     private readonly string _adminPassword;
 
-    public AuthService()
+    private readonly PlayerRepository _playerRepository;
+
+    public AuthService(PlayerRepository playerRepository)
     {
         if (!IniParser.ParseIniFile("settings.ini").TryGetValue("Admin", out var adminSettings))
         {
@@ -30,6 +35,8 @@ public class AuthService
 
         _adminUserName = username;
         _adminPassword = password;
+
+        _playerRepository = playerRepository;
     }
 
     public bool AdminCredentialsAreValid(string username, string passwordHash)
@@ -76,5 +83,21 @@ public class AuthService
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<Result<bool>> CanSeePlayer(Claim? usernameClaim, Claim? roleClaim, string targetPlayerName)
+    {
+        if(roleClaim == null || usernameClaim == null)
+        {
+            return new Result<bool>(new UnauthorizedAccessException("Role or username claim is missing."));
+        }
+
+        bool isAdmin = string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
+        if (isAdmin)
+        {
+            return true;
+        }
+       
+        return await _playerRepository.IsVisibleToPlayer(usernameClaim.Value, targetPlayerName);
     }
 }

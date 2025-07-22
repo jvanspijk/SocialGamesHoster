@@ -3,7 +3,7 @@ using LanguageExt.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.Controllers;
+namespace API;
 
 
 /// <summary>
@@ -27,10 +27,10 @@ public static class ResultExtensions
             {
                 var errorDetails = new
                 {
-                    Message = "An unexpected error occurred.",
+                    Message = ex.Message,
                     ExceptionType = ex.GetType().FullName,
                     ExceptionMessage = ex.Message,
-                    StackTrace = ex.StackTrace // We should be careful with exposing stack traces in production
+                    ex.StackTrace // We should be careful with exposing stack traces in production
                 };
 
                 if (ex is CustomException || ex is ValidationException)
@@ -53,7 +53,7 @@ public static class ResultExtensions
     /// <typeparam name="T"></typeparam>
     /// <param name="result"></param>
     /// <returns>T</returns>
-    public static T ToObjectUnsafe<T>(this Result<T> result)
+    public static T GetValueOrThrow<T>(this Result<T> result)
     {
         return result.Match(
             Succ: value => value,

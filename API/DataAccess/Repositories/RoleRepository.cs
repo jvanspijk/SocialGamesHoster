@@ -11,51 +11,80 @@ public class RoleRepository
 {
     private readonly APIDatabaseContext _context;
 
-    public RoleRepository(APIDatabaseContext context) {
+    public RoleRepository(APIDatabaseContext context) 
+    {
         _context = context;
     }
 
-    public async Task<Result<Role>> GetFromIdAsync(int id)
-    {        
-        Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == id);
-
-        if (role == null)
-        {
-            var exception = new NotFoundException($"Role with id {id} not found.");
-            return new Result<Role>(exception);
-        }
-
-        return role;
-    }
-
-    public async Task<Result<RoleDTO>> GetFromPlayerAsync(string username)
+    public async Task<Result<List<Player>>> GetPlayersWithRoleAsync(int roleId)
     {
         try
         {
-            Role? role = await _context.Players
-                .AsNoTracking()
-                .Include(p => p.Role)
-                    .ThenInclude(r => r.AbilityAssociations)
-                        .ThenInclude(ra => ra.Ability)
-                .SingleAsync(p => p.RoleId != null && p.Name == username)
-                .Select(p => p.Role);
+            var role = await _context.Roles
+                .Include(r => r.PlayersWithRole)
+                .SingleOrDefaultAsync(r => r.Id == roleId);
 
-            if (role == null)
+            if (role == null || !role.PlayersWithRole.Any())
             {
-                return new Result<RoleDTO>(new NotFoundException($"Role for player '{username}' not found."));
+                return new Result<List<Player>>(
+                    new NotFoundException($"No players found for role with id {roleId}.")
+                );
             }
 
-            RoleDTO roleDto = RoleDTO.FromModel(role);
-            if (roleDto == null)
-            {
-                return new Result<RoleDTO>(new Exception($"Role DTO for player '{username}' could not be created."));
-            }
-
-            return new Result<RoleDTO>(roleDto);
+            return role.PlayersWithRole.ToList();
         }
         catch (Exception ex)
         {
-            return new Result<RoleDTO>(ex);
+            // TODO: Log exception and explicitly handle known ones
+            return new Result<List<Player>>(ex);
+        }
+    }
+
+    public async Task<Result<Role>> GetFromNameAsync(string name)
+    {
+        try
+        {
+            Role? role = await _context.Roles
+                .Include(r => r.AbilityAssociations)
+                    .ThenInclude(ra => ra.Ability)
+                .Include(r => r.CanSee)
+                .Include(r => r.CanBeSeenBy)
+                .SingleOrDefaultAsync(r => r.Name == name);
+            if (role == null)
+            {
+                return new Result<Role>(new NotFoundException($"Role with name '{name}' not found."));
+            }
+            return role;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Log exception and explicitly handle known ones
+            return new Result<Role>(ex);
+        }
+    }
+
+    public async Task<Result<Role>> GetFromIdAsync(int id)
+    {
+        try
+        {
+            Role? role = await _context.Roles
+                .Include(r => r.AbilityAssociations)
+                    .ThenInclude(ra => ra.Ability)
+                .Include(r => r.CanSee)
+                .Include(r => r.CanBeSeenBy)
+                .SingleOrDefaultAsync(r => r.Id == id);
+
+            if (role == null)
+            {
+                return new Result<Role>(new NotFoundException($"Role with id {id} not found."));
+            }
+
+            return role;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Log exception and explicitly handle known ones
+            return new Result<Role>(ex);
         }
     }
 
@@ -73,7 +102,35 @@ public class RoleRepository
         }
         catch (Exception ex)
         {
+            // TODO: Log exception and explicitly handle known ones
             return new Result<ICollection<RoleDTO>>(ex);
+        }
+    }
+
+    public async Task<Result<Role>> GetRoleByPlayerNameAsync(string playerName)
+    {
+        try
+        {
+            Role? role = await _context.Roles
+             .Include(r => r.AbilityAssociations).ThenInclude(ra => ra.Ability)
+             .Include(r => r.CanSee)
+             .Include(r => r.CanBeSeenBy)
+             .Where(r => r.PlayersWithRole.Any(p => p.Name == playerName))
+             .SingleOrDefaultAsync();
+
+            if (role == null)
+            {
+                return new Result<Role>(
+                    new NotFoundException($"Role not found for player {playerName}.")
+                );
+            }
+
+            return role;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Log exception and explicitly handle known ones
+            return new Result<Role>(ex);
         }
     }
 }

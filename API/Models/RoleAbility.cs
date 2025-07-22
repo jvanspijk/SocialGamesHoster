@@ -1,5 +1,4 @@
 ﻿namespace API.Models;
-// Collection of many-to-many classes needed for EF
 public class RoleAbility
 {
     public int RoleId { get; init; }

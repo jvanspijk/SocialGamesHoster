@@ -80,9 +80,10 @@ public class Program
         services.AddScoped<AuthService>();
         services.AddScoped<PlayerRepository>();
         services.AddScoped<AbilityRepository>();
+        services.AddScoped<AuthService>();
         services.AddSingleton<RoundRepository>();
 
-        services.AddSingleton<AuthService>();
+
 
         var app = builder.Build();
 

@@ -32,7 +32,7 @@ public class AbilitiesController : ControllerBase
         {
             return abilityResult.ToActionResult();
         }
-        var ability = abilityResult.ToObjectUnsafe();
+        var ability = abilityResult.GetValueOrThrow();
         if (ability == null)
         {
             return NotFound($"Ability with id {id} not found.");

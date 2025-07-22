@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-export function RoleDescription({ username, children }) {
+export function RoleDescription({ playerName, children }) {
     const navigate = useNavigate();
 
     const [role, setRole] = useState(null);
@@ -12,14 +12,14 @@ export function RoleDescription({ username, children }) {
 
     useEffect(() => {
         async function fetchRole() {
-            if (!username) {
-                console.error("Username is not provided.");
+            if (!playerName) {
+                console.error("Player name is not provided.");
                 setLoadingRole(false);
                 return;
             }
             const token = localStorage.getItem('jwt-token');
             try {
-                const response = await fetch(`${apiUrl}/Roles/${username}`, {
+                const response = await fetch(`${apiUrl}/Players/${playerName}/Role`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export function RoleDescription({ username, children }) {
             }
         }
         fetchRole();
-    }, [username, navigate]);
+    }, [playerName, navigate]);
 
     if (loadingRole) {
         return (

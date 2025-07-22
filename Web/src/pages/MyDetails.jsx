@@ -9,18 +9,17 @@ import Theme from '../styles/Theme.jsx'
 
 function MyDetails() {
     const { name } = useParams();
-    const navigate = useNavigate();
 
     return (
         <ThemeProvider theme={Theme}>
             <PageContainer>
-                <RoundTimer />
+                <RoundTimer/>
 
                 <StyledHeader>
                     <MainTitle>{name}</MainTitle>
                 </StyledHeader>
 
-                <RoleDescription username={name}>
+                <RoleDescription playerName={name}>
                     {(role, loadingRole) => (
                         !loadingRole && role && role.abilities && role.abilities.length > 0 && (
                             <RoleAbilities abilities={role.abilities} />

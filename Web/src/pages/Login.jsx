@@ -34,7 +34,7 @@ function LoginPage() {
             return;
         }
         try {
-            const response = await fetch(`${apiUrl}/Player/login`, {
+            const response = await fetch(`${apiUrl}/Players/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ function LoginPage() {
             const data = await response.json();
             localStorage.setItem('jwt-token', data.token);
             const uriEncodedName = encodeURIComponent(selectedName);
-            navigate(`/game/Players/${uriEncodedName}`);
+            navigate(`/game/player/${uriEncodedName}`);
             return;
         } catch (error) {
             console.error("Error during login: ", error);

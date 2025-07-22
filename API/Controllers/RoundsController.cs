@@ -23,7 +23,7 @@ public class RoundsController : ControllerBase
         {
             return result.ToActionResult();
         }
-        var endTime = result.ToObjectUnsafe().EndTime;
+        var endTime = result.GetValueOrThrow().EndTime;
         return Ok(endTime);
     }
 }

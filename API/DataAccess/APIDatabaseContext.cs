@@ -1,5 +1,6 @@
 ﻿using API.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace API.DataAccess;
 
@@ -20,6 +21,36 @@ public class APIDatabaseContext : DbContext
 
     private void ConfigureEntityRelationships(ModelBuilder builder)
     {
+        builder.Entity<RoleVisibility>()
+            .HasKey(rv => new { rv.RoleId, rv.VisibleRoleId });
+
+        builder.Entity<RoleVisibility>()
+            .HasOne(rv => rv.Role)
+            .WithMany(r => r.CanSee)
+            .HasForeignKey(rv => rv.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<RoleVisibility>()
+            .HasOne(rv => rv.VisibleRole)
+            .WithMany(r => r.CanBeSeenBy)
+            .HasForeignKey(rv => rv.VisibleRoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PlayerVisibility>()
+            .HasKey(pv => new { pv.PlayerId, pv.VisiblePlayerId });
+
+        builder.Entity<PlayerVisibility>()
+            .HasOne(pv => pv.Player)
+            .WithMany(p => p.CanSee)
+            .HasForeignKey(pv => pv.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PlayerVisibility>()
+            .HasOne(pv => pv.VisiblePlayer)
+            .WithMany(p => p.CanBeSeenBy)
+            .HasForeignKey(pv => pv.VisiblePlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<RoleAbility>()
             .HasKey(ra => new { ra.RoleId, ra.AbilityId });
 
@@ -35,7 +66,7 @@ public class APIDatabaseContext : DbContext
 
         builder.Entity<Player>()
             .HasOne(p => p.Role)
-            .WithMany()
+            .WithMany(r => r.PlayersWithRole)
             .HasForeignKey(p => p.RoleId)
             .IsRequired(false);
     }
@@ -111,9 +142,10 @@ public class APIDatabaseContext : DbContext
         var jester = new Role { Id = 7, Name = "Jester", Description = "Your only goal is to be lynched by the town." };
         var executioner = new Role { Id = 8, Name = "Executioner", Description = "You have a specific target you must get lynched to win." };
 
-        // Set roles visible to each other
-        godfather.RolesVisibleToRole = [godfather.Id, mafioso.Id];
-        mafioso.RolesVisibleToRole = [godfather.Id, mafioso.Id];
+        builder.Entity<RoleVisibility>().HasData(
+            new RoleVisibility { RoleId = godfather.Id, VisibleRoleId = mafioso.Id },
+            new RoleVisibility { RoleId = mafioso.Id, VisibleRoleId = godfather.Id }
+        );
 
         List<Role> roles = new()
         {

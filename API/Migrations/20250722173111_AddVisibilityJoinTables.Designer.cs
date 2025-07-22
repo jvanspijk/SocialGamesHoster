@@ -3,6 +3,7 @@ using System;
 using API.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(APIDatabaseContext))]
-    partial class APIDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250722173111_AddVisibilityJoinTables")]
+    partial class AddVisibilityJoinTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -459,7 +462,7 @@ namespace API.Migrations
             modelBuilder.Entity("API.Models.Player", b =>
                 {
                     b.HasOne("API.Models.Role", "Role")
-                        .WithMany("PlayersWithRole")
+                        .WithMany()
                         .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
@@ -541,8 +544,6 @@ namespace API.Migrations
                     b.Navigation("CanBeSeenBy");
 
                     b.Navigation("CanSee");
-
-                    b.Navigation("PlayersWithRole");
                 });
 #pragma warning restore 612, 618
         }

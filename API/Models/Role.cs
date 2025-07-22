@@ -12,7 +12,8 @@ public class Role
     [StringLength(512)]
     public string? Description { get; set; }
     public ICollection<RoleAbility> AbilityAssociations { get; set; } = [];
-    // public ICollection<Ability> Abilities => AbilityAssociations.Select(ra => ra.Ability).ToList();
-    public List<int> RolesVisibleToRole { get; set; } = [];
+    public ICollection<RoleVisibility> CanSee { get; set; } = new List<RoleVisibility>();
+    public ICollection<RoleVisibility> CanBeSeenBy { get; set; } = new List<RoleVisibility>();
+    public ICollection<Player> PlayersWithRole { get; set; } = new List<Player>();
 }
 

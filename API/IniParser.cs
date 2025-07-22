@@ -9,8 +9,19 @@ public class IniParser
         {
             return _iniData; // Return cached data if already parsed
         }
+
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"The specified INI file does not exist: {filePath}");
+        }
+
         var iniData = new Dictionary<string, Dictionary<string, string>>();
-        string currentSection = null;
+        string? currentSection = null;
         foreach (var line in File.ReadLines(filePath))
         {
             var trimmedLine = line.Trim();
