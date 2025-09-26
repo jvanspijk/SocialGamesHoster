@@ -21,22 +21,13 @@ public class AbilitiesController : ControllerBase
     {
         var abilitiesResult = await _abilityRepository.GetAllAbilitiesAsync();
         Console.WriteLine($"Abilities result: {abilitiesResult}");
-        return abilitiesResult.ToActionResult();
+        return abilitiesResult.AsActionResult();
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAbility(int id)
     {
-        var abilityResult = await _abilityRepository.GetAbilityAsync(id);
-        if (abilityResult.IsFaulted)
-        {
-            return abilityResult.ToActionResult();
-        }
-        var ability = abilityResult.GetValueOrThrow();
-        if (ability == null)
-        {
-            return NotFound($"Ability with id {id} not found.");
-        }
-        return Ok(ability);
+        var abilityResult = await _abilityRepository.GetAbilityAsync(id);        
+        return abilityResult.AsActionResult();       
     }
 }

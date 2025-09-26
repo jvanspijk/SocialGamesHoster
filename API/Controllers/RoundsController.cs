@@ -1,7 +1,6 @@
 ﻿using API.DataAccess.Repositories;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
-using LanguageExt.Common;
 
 namespace API.Controllers;
 
@@ -19,11 +18,11 @@ public class RoundsController : ControllerBase
     public async Task<IActionResult> GetEndTime()
     {
         Result<Round> result = await _roundRepository.GetCurrentRound();
-        if (result.IsFaulted)
+        if (!result.HasValue)
         {
-            return result.ToActionResult();
+            return result.AsActionResult();
         }
-        var endTime = result.GetValueOrThrow().EndTime;
+        var endTime = result.Value.EndTime;
         return Ok(endTime);
     }
 }

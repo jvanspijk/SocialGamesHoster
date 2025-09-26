@@ -2,7 +2,6 @@
 using API.DTO;
 using API.Models;
 using API.Services;
-using LanguageExt.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -32,14 +31,13 @@ public class PlayersController : ControllerBase
     {
         Result<Player> result = await _playerRepository.GetPlayerByNameAsync(username);
 
-        if (!result.IsSuccess)
+        if(result.HasValue)
         {
-            Console.WriteLine($"Login failed for user {username}: {result.ToString()}");
-            return result.ToActionResult();
+            string token = _authService.GeneratePlayerToken(username);
+            return Ok(new { token });
         }
-
-        string token = _authService.GeneratePlayerToken(username);
-        return Ok(new { token });
+        
+        return result.AsActionResult();
     }
 
     // GET /Players
@@ -47,7 +45,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         Result<IEnumerable<Player>> result = await _playerRepository.GetPlayersAsync();
-        return result.ToActionResult();
+        return result.AsActionResult();
     }
 
     // GET /Players/{name}
@@ -55,7 +53,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> GetByName(string name)
     {
         Result<Player> result = await _playerRepository.GetPlayerByNameAsync(name);
-        return result.ToActionResult();
+        return result.AsActionResult();
     }
 
     // POST /Players
@@ -63,7 +61,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> Create(string username)
     {
         Result<Player> user = await _playerRepository.AddPlayerAsync(username);
-        return user.ToActionResult();
+        return user.AsActionResult();
 
     }
 
@@ -72,7 +70,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         Result<Player> result = await _playerRepository.DeletePlayerAsync(id);
-        return result.ToActionResult();
+        return result.AsActionResult();
     }
 
     // PATCH /Players/{name}/Role
@@ -82,7 +80,7 @@ public class PlayersController : ControllerBase
     {
         //bool isAdmin = _authService.IsAdmin(User);
         Result<Player> updatedPlayerResult = await _playerRepository.UpdateRole(name, roleId);
-        return updatedPlayerResult.ToActionResult();
+        return updatedPlayerResult.AsActionResult();
     }
 
     // GET /Players/{name}/Role
@@ -94,21 +92,21 @@ public class PlayersController : ControllerBase
         Claim? roleClaim = User.FindFirst(ClaimTypes.Role);
 
         Result<bool> authResult = await _authService.CanSeePlayer(usernameClaim, roleClaim, name);
-        if (!authResult.IsSuccess)
+        if (!authResult.HasValue)
         {
-            return authResult.ToActionResult();
+            return authResult.AsActionResult();
         }
 
-        bool canSeeRole = authResult.GetValueOrThrow();
+        bool canSeeRole = authResult.Value;
         if(!canSeeRole)
         {
             return Unauthorized("You are not allowed to see this player.");
         }
        
         Result<Role> roleResult = await _roleRepository.GetRoleByPlayerNameAsync(name);
-        if (!roleResult.IsSuccess)
+        if (!roleResult.HasValue)
         {
-            return roleResult.ToActionResult();
+            return roleResult.AsActionResult();
         }
 
         return Ok(RoleDTO.FromModel(roleResult.GetValueOrThrow()));
@@ -120,6 +118,6 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> GetPlayersVisibleToPlayer(string name)
     {
         Result<List<Player>> result = await _playerRepository.GetPlayersVisibleToPlayerAsync(name);
-        return result.ToActionResult();
+        return result.AsActionResult();
     }
 }

@@ -3,8 +3,6 @@ using API.DTO;
 using API.Models;
 using API.Services;
 using API.Validation;
-using LanguageExt;
-using LanguageExt.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -43,10 +41,9 @@ public class RolesController : ControllerBase
         if(!isAdmin)
         {
             return Unauthorized("You are not allowed to see all roles.");
-        }
+        }        
         
-        Result<ICollection<RoleDTO>> rolesResult;
-        rolesResult = await _roleRepository.GetAllAsync();
-        return rolesResult.ToActionResult();
+        var rolesResult = await _roleRepository.GetAllAsync();
+        return rolesResult.AsActionResult();
     }
 }
