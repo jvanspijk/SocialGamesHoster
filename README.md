@@ -1,4 +1,5 @@
 # SocialGamesHoster
+**N.B. This is a work in progress.**
 Project to host social deduction games on your local network.
 
 ## User setup
@@ -19,21 +20,22 @@ Swagger documentation can be found on http://localhost:8080/swagger/
 Docker compose was used for the following reasons:
 - So that users and hosts don't have to fiddle with dependencies.
 - Hosts just need to install Docker Desktop/Engine and then copy-paste a single line into their terminal to get everything set up.
-- To keep the development environment identical to the host environment, to prevent environment specific bugs.
+- To keep the development environment identical to the host environment and thus to prevent environment specific bugs.
 
-The docker compose consists of three services:
+The docker compose consists of four services:
 - The API (ASP.NET)
 - The Web app (React)
 - A database (Postgres)
+- nginx
 
 ## Architecture
 The API and Web app are separate projects for the following reasons:
-- Dedicated front-end tools (like React) offer a better and more comprehensive developer experience
-- A SPA provides a snappy feel without reloads, which is good for user experience in a gaming setting.
-- A dedicated front-end gives more control over the design.
-- It enforces decoupling between the back end and front end (e.g. front ends can be changed without affecting the back end)
-- Multiple front ends can be made (e.g. a separate project for an admin panel).
+- React offers a better and more comprehensive developer experience
+- A single page application provides a snappy feel without reloads, which is good for user experience in a gaming setting.
+- It enforces decoupling between the back end and front end
+- Multiple front ends can be made. For example a separate project for an admin panel.
+- To flex.
 
-The API has a monolithic structure to keep things simple. It's designed to be mostly stateless, to keep the logic simple 
+The API has a monolithic structure to keep things simple. It's designed to be mostly stateless to keep the logic simple 
 and prevent data loss if the network is down.
 The API uses Entity Framework to easily store and retrieve C# objects in a database.
