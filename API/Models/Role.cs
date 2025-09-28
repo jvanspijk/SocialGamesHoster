@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace API.Models;
 
@@ -10,7 +11,8 @@ public class Role
     [StringLength(32, MinimumLength = 3, ErrorMessage = "Role name must be between 3 and 32 characters long.")]
     public required string Name { get; set; }
     [StringLength(512)]
-    public string? Description { get; set; }
+    [DefaultValue("")]
+    public string Description { get; set; } = "";
     public ICollection<RoleAbility> AbilityAssociations { get; set; } = [];
     public ICollection<RoleVisibility> CanSee { get; set; } = new List<RoleVisibility>();
     public ICollection<RoleVisibility> CanBeSeenBy { get; set; } = new List<RoleVisibility>();

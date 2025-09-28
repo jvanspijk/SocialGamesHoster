@@ -1,6 +1,5 @@
 ﻿using API.Models;
 using API.Validation;
-using LanguageExt.Common;
 
 namespace API.DataAccess.Repositories;
 

@@ -4,8 +4,6 @@ using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -30,21 +28,18 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> Login([FromBody] string username)
     {
         Result<Player> result = await _playerRepository.GetPlayerByNameAsync(username);
-
-        if(result.HasValue)
+        return result.AsActionResult(player =>
         {
             string token = _authService.GeneratePlayerToken(username);
-            return Ok(new { token });
-        }
-        
-        return result.AsActionResult();
+            return new { token };
+        });
     }
 
     // GET /Players
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        Result<IEnumerable<Player>> result = await _playerRepository.GetPlayersAsync();
+        Result<List<Player>> result = await _playerRepository.GetPlayersAsync();
         return result.AsActionResult();
     }
 
@@ -92,24 +87,22 @@ public class PlayersController : ControllerBase
         Claim? roleClaim = User.FindFirst(ClaimTypes.Role);
 
         Result<bool> authResult = await _authService.CanSeePlayer(usernameClaim, roleClaim, name);
-        if (!authResult.HasValue)
+        if (!authResult.Ok)
         {
             return authResult.AsActionResult();
         }
 
         bool canSeeRole = authResult.Value;
-        if(!canSeeRole)
+        if (!canSeeRole)
         {
             return Unauthorized("You are not allowed to see this player.");
         }
-       
-        Result<Role> roleResult = await _roleRepository.GetRoleByPlayerNameAsync(name);
-        if (!roleResult.HasValue)
-        {
-            return roleResult.AsActionResult();
-        }
 
-        return Ok(RoleDTO.FromModel(roleResult.GetValueOrThrow()));
+        Result<Role> roleResult = await _roleRepository.GetRoleByPlayerNameAsync(name);
+        return roleResult.AsActionResult(roleValue =>
+        {
+            return Ok(new RoleDTO(roleValue));
+        });        
     }
 
     // GET /Players/{name}/VisiblePlayers

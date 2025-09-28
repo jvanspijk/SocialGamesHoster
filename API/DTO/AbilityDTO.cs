@@ -2,22 +2,7 @@
 
 namespace API.DTO;
 
-public record AbilityDTO
+public sealed record AbilityDTO(string Name, string Description)
 {
-    public required string Name { get; set; }
-    public required string Description { get; set; }
-
-    public static AbilityDTO FromModel(Ability? ability)
-    {
-        if (ability == null)
-        {
-            return null!;
-        }
-
-        return new AbilityDTO
-        {
-            Name = ability.Name,
-            Description = ability.Description
-        };
-    }
+    public AbilityDTO(Ability ability) : this(ability.Name, ability.Description) { }
 }

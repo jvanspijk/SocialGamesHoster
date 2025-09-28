@@ -17,12 +17,13 @@ public class RoundsController : ControllerBase
     [HttpGet("end-time")]
     public async Task<IActionResult> GetEndTime()
     {
-        Result<Round> result = await _roundRepository.GetCurrentRound();
-        if (!result.HasValue)
+        Result<Round> result = await _roundRepository.GetCurrentRound(); 
+
+        if (!result.Ok)
         {
             return result.AsActionResult();
         }
-        var endTime = result.Value.EndTime;
+        DateTime endTime = result.Value.EndTime;
         return Ok(endTime);
     }
 }

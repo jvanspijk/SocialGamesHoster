@@ -1,7 +1,5 @@
-﻿using API;
-using API.Models;
+﻿using API.Models;
 using API.Validation;
-using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
@@ -15,82 +13,53 @@ public class PlayerRepository
     }
 
     public async Task<Result<Player>> GetPlayerByIdAsync(int id)
-    {
-        try
+    { 
+        Player? player = await _context.Players.SingleOrDefaultAsync(
+            p => p.Id == id
+        );
+        if (player == null)
         {
-            Player? player = await _context.Players.SingleOrDefaultAsync(
-                p => p.Id == id
-            );
-            if (player == null)
-            {
-                return new Result<Player>(
-                    new NotFoundException($"Player with id '{id}' not found.")
-                );
-            }
-            return player;
+            return Errors.ResourceNotFound("Player", id.ToString());
         }
-        catch (Exception ex)
-        {
-            //TODO:
-            //Log the exception, and add exception type to the function to handle
-            //it explicitely
-            return new Result<Player>(ex);
-        }
+        return player;
     }
 
     public async Task<Result<Player>> GetPlayerByNameAsync(string name)
-    {
-        try
-        {
-            Player? player = await _context.Players
-                .SingleOrDefaultAsync(p => p.Name == name);
+    {        
+        Player? player = await _context.Players
+            .SingleOrDefaultAsync(p => p.Name == name);
 
-            if (player == null)
-            {
-                return new Result<Player>(
-                    new NotFoundException($"Player with name '{name}' not found.")
-                );
-            }
-            return player;
-        }
-        catch (Exception ex)
+        if (player == null)
         {
-            //TODO:
-            //Log the exception, and add exception type to the function to handle
-            //it explicitely
-            return new Result<Player>(ex);
+            return Errors.ResourceNotFound("Player", name.ToString());
+
         }
+        return player;       
     }
 
     public async Task<Result<Role>> GetRoleFromPlayerAsync(string playerName)
-    {
-        try
-        {
-            Role? role = await _context.Players
-                .Where(p => p.Name == playerName && p.Role != null)
-                .Select(p => p.Role!)
-                .Include(r => r.AbilityAssociations)
-                    .ThenInclude(ra => ra.Ability)
-                .Include(r => r.CanSee)
-                .Include(r => r.CanBeSeenBy)
-                .SingleOrDefaultAsync();
+    {        
+        Role? role = await _context.Players
+            .Where(p => p.Name == playerName && p.Role != null)
+            .Select(p => p.Role!)
+            .Include(r => r.AbilityAssociations)
+                .ThenInclude(ra => ra.Ability)
+            .Include(r => r.CanSee)
+            .Include(r => r.CanBeSeenBy)
+            .SingleOrDefaultAsync();
 
-            if (role == null)
-            {
-                return new Result<Role>(new NotFoundException($"Role for player '{playerName}' not found."));
-            }
-
-            return role;
-        }
-        catch (Exception ex)
+        if (role == null)
         {
-            return new Result<Role>(ex);
+            return Errors.ResourceNotFound($"Could not find role for {playerName}.");
         }
+
+        return role;
     }
 
-    public async Task<Result<IEnumerable<Player>>> GetPlayersAsync()
+    public async Task<Result<List<Player>>> GetPlayersAsync()
     {
-        return await _context.Players.Include(p => p.Role).ToListAsync();
+        List<Player> players = await _context.Players.Include(p => p.Role).ToListAsync() ?? [];
+        return players;
     }
 
     public async Task<Result<Player>> AddPlayerAsync(string name)
@@ -105,18 +74,19 @@ public class PlayerRepository
 
     public async Task<Result<Player>> UpdateRole(string playerName, int newRoleId)
     {
-        Console.WriteLine($"123Updating role for player {playerName} to role ID {newRoleId}");
         Result<Player> playerResult = await GetPlayerByNameAsync(playerName);
-        if (!playerResult.IsSuccess)
+        if (!playerResult.Ok)
         {
-            return playerResult;
+            return playerResult.Error.Value;
         }
-        Player player = playerResult.GetValueOrThrow();
+
+        Player player = playerResult.Value;
         Role? newRole = await _context.Roles.FindAsync(newRoleId);
         if (newRole == null)
         {
-            return new Result<Player>(new NotFoundException($"Role with id {newRoleId} not found."));
+            return Errors.ResourceNotFound("Role", newRoleId.ToString());
         }
+
         player.RoleId = newRoleId;
         player.Role = newRole;
         await _context.SaveChangesAsync();        
@@ -126,12 +96,12 @@ public class PlayerRepository
     public async Task<Result<Player>> DeletePlayerAsync(int id)
     {
         Result<Player> playerResult = await GetPlayerByIdAsync(id);
-        if (!playerResult.IsSuccess)
+        if (!playerResult.Ok)
         {
-            return playerResult;
+            return Errors.ResourceNotFound("Player", id.ToString());
         }
         
-        Player player = playerResult.GetValueOrThrow();
+        Player player = playerResult.Value;
         _context.Players.Remove(player);
         await _context.SaveChangesAsync();
         
@@ -141,12 +111,12 @@ public class PlayerRepository
     public async Task<Result<bool>> IsVisibleToPlayer(string playerName, string targetName)
     {
         var playerResult = await GetPlayerByNameAsync(playerName);
-        if (!playerResult.IsSuccess)
+        if (!playerResult.Ok)
         {
-            return new Result<bool>(new NotFoundException($"{playerName} not found."));
+            return playerResult.Error.Value;
         }
 
-        Player player = playerResult.GetValueOrThrow();
+        Player player = playerResult.Value!;
         int? playerRoleId = player.RoleId;
 
         bool isVisible = await _context.Players
@@ -165,12 +135,12 @@ public class PlayerRepository
     public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(string playerName)
     {
         Result<Player> playerResult = await GetPlayerByNameAsync(playerName);
-        if (!playerResult.IsSuccess)
+        if (!playerResult.Ok)
         {
-            return new Result<List<Player>>(new NotFoundException($"{playerName} not found."));
+            return playerResult.Error.Value;
         }
 
-        Player player = playerResult.GetValueOrThrow();
+        Player player = playerResult.Value;
 
         IQueryable<Player> query =
             from p in _context.Players.Include(p => p.Role)

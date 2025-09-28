@@ -1,10 +1,9 @@
 ﻿using API.DataAccess.Repositories;
-using API.DTO;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
+
 [Route("[controller]")]
 [ApiController]
 public class AbilitiesController : ControllerBase
@@ -20,7 +19,6 @@ public class AbilitiesController : ControllerBase
     public async Task<IActionResult> GetAllAbilities()
     {
         var abilitiesResult = await _abilityRepository.GetAllAbilitiesAsync();
-        Console.WriteLine($"Abilities result: {abilitiesResult}");
         return abilitiesResult.AsActionResult();
     }
 

@@ -1,7 +1,7 @@
 ﻿using API;
 using API.DataAccess.Repositories;
 using API.Models;
-using LanguageExt.Common;
+using API.Validation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -63,7 +63,7 @@ public class AuthService
     /// <summary>
     /// Generates a JWT token
     /// </summary>
-    private string GenerateToken(string username, string role)
+    private static string GenerateToken(string username, string role)
     {
         Claim[] claims =
         {
@@ -89,7 +89,7 @@ public class AuthService
     {
         if(roleClaim == null || usernameClaim == null)
         {
-            return new Result<bool>(new UnauthorizedAccessException("Role or username claim is missing."));
+            return Errors.ResourceNotFound("Role or username claim is missing."); // TODO: error for missing claim
         }
 
         bool isAdmin = string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);

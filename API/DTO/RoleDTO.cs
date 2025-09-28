@@ -2,31 +2,21 @@
 
 namespace API.DTO;
 
-public record RoleDTO
+public sealed record RoleDTO(int Id, string Name, string Description)
 {
-    public int Id { get; set; }
-    public required string Name { get; set; }
-    public string? Description { get; set; }
+    public RoleDTO(Role roleEntity) : this(roleEntity.Id, roleEntity.Name, roleEntity.Description)
+    {       
+        VisibleRoleIds = roleEntity.CanSee?
+            .Select(rv => rv.VisibleRoleId)
+            .ToList() ?? [];
+
+        Abilities = roleEntity.AbilityAssociations?
+            .Select(ra => new AbilityDTO(ra.Ability!))
+            .ToList() ?? [];
+    }  
 
     public List<int> VisibleRoleIds { get; set; } = [];
 
-    public List<AbilityDTO> Abilities { get; set; } = [];
-
-    public static RoleDTO FromModel(Role roleEntity)
-    {
-        return new RoleDTO
-        {
-            Id = roleEntity.Id,
-            Name = roleEntity.Name,
-            Description = roleEntity.Description,
-            VisibleRoleIds = roleEntity.CanSee?
-                .Select(rv => rv.VisibleRoleId)
-                .ToList() ?? [],
-
-            Abilities = roleEntity.AbilityAssociations?
-                .Select(ra => AbilityDTO.FromModel(ra.Ability))
-                .ToList() ?? []
-        };
-    }
+    public List<AbilityDTO> Abilities { get; set; } = [];    
 }
 

@@ -1,9 +1,8 @@
 ﻿using API.DTO;
 using API.Models;
 using API.Validation;
-using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
-
+using Npgsql;
 namespace API.DataAccess.Repositories;
 
 public class AbilityRepository
@@ -16,32 +15,17 @@ public class AbilityRepository
 
     public async Task<Result<AbilityDTO>> GetAbilityAsync(int id)
     {
-        try
+        Ability? ability = await _context.Abilities.FindAsync(id);
+        if (ability == null)
         {
-            Ability? ability = await _context.Abilities.FindAsync(id);
-            if (ability == null)
-            {
-                return new Result<AbilityDTO>(new NotFoundException($"Ability with id {id} not found."));
-            }
-            return AbilityDTO.FromModel(ability);
+            return Errors.ResourceNotFound("Ability", id.ToString());
         }
-        catch (Exception ex)
-        {
-            return new Result<AbilityDTO>(ex);
-        }
+        return new AbilityDTO(ability);
     }
 
     public async Task<Result<IEnumerable<AbilityDTO>>> GetAllAbilitiesAsync()
     {
-        try
-        {
-            IEnumerable<Ability> abilities = await _context.Abilities.ToListAsync();
-            return abilities.Select(a => AbilityDTO.FromModel(a)).ToList();
-        }
-        catch (Exception ex)
-        {
-            return new Result<IEnumerable<AbilityDTO>>(ex);
-        }
+        IEnumerable<Ability> abilities = await _context.Abilities.ToListAsync();
+        return abilities.Select(static a => new AbilityDTO(a)).ToList();
     }
-
 }
