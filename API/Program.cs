@@ -1,9 +1,10 @@
-
 using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Hubs;
+using API.Logging;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -22,6 +23,27 @@ public class Program
         Console.WriteLine("Booting up app");
         var builder = WebApplication.CreateBuilder(args);
         var services = builder.Services;
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.AddFileLogger("logs/api.log", 10);
+
+        services.AddHttpLogging(options =>
+        {
+            options.LoggingFields = HttpLoggingFields.RequestMethod
+                                  | HttpLoggingFields.RequestPath
+                                  | HttpLoggingFields.RequestQuery
+                                  | HttpLoggingFields.RequestBody
+                                  | HttpLoggingFields.ResponseStatusCode
+                                  | HttpLoggingFields.ResponseBody;
+
+            options.RequestBodyLogLimit = 4096;
+            options.ResponseBodyLogLimit = 4096;
+            options.RequestHeaders.Clear();
+            options.ResponseHeaders.Clear();
+            options.CombineLogs = true;
+        });
 
         // Add services to the container.
 
@@ -83,8 +105,6 @@ public class Program
         services.AddScoped<AuthService>();
         services.AddSingleton<RoundRepository>();
 
-
-
         var app = builder.Build();
 
         // Apply database migrations on startup
@@ -115,9 +135,13 @@ public class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseHttpLogging();
+            app.UseDeveloperExceptionPage();
         }
-
-        app.UseExceptionHandler("/Error");
+        else
+        {
+            app.UseExceptionHandler("/Error");
+        }
 
         app.UseRouting();
 
