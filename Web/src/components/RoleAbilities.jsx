@@ -4,6 +4,7 @@ import { ScrollBox } from './component-styles/Common.jsx';
 
 export function RoleAbilities({ abilities }) {
     if (!abilities || abilities.length === 0) {
+        console.warn("RoleAbilities component used but abilities array was null or empty.")
         return null;
     }
 

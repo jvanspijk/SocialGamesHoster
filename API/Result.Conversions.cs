@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace API;
 public readonly partial record struct Result<T>
@@ -9,13 +10,14 @@ public readonly partial record struct Result<T>
         {
             return new OkObjectResult(Value);
         }
+
         return Error.Value.AsActionResult();
     }
 
     /// <summary>
     /// Use a mapping function for the success case.
     /// </summary>
-    /// <typeparam name="TResult"></typeparam>
+    /// <typeparam name="T"></typeparam>
     /// <param name="mapSuccess"></param>
     /// <returns></returns>
     public readonly IActionResult AsActionResult<TResult>(Func<T, TResult> mapSuccess)

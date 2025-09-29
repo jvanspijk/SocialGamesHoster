@@ -99,10 +99,7 @@ public class PlayersController : ControllerBase
         }
 
         Result<Role> roleResult = await _roleRepository.GetRoleByPlayerNameAsync(name);
-        return roleResult.AsActionResult(roleValue =>
-        {
-            return Ok(new RoleDTO(roleValue));
-        });        
+        return roleResult.AsActionResult(roleValue => new RoleDTO(roleValue));       
     }
 
     // GET /Players/{name}/VisiblePlayers

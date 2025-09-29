@@ -60,6 +60,7 @@ const AbilityManagement = () => {
             .finally(() => setLoading(false));
     };
 
+    // Each child in a list should have a unique "key" prop.
     return (
         <div>
             <h1>Ability Management</h1>

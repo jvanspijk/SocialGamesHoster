@@ -26,6 +26,6 @@ public class AbilitiesController : ControllerBase
     public async Task<IActionResult> GetAbility(int id)
     {
         var abilityResult = await _abilityRepository.GetAbilityAsync(id);        
-        return abilityResult.AsActionResult();       
+        return abilityResult.AsActionResult();
     }
 }
