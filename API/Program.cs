@@ -99,11 +99,14 @@ public class Program
         services.AddSignalR();
 
         services.AddScoped<RoleRepository>();
-        services.AddScoped<AuthService>();
         services.AddScoped<PlayerRepository>();
         services.AddScoped<AbilityRepository>();
-        services.AddScoped<AuthService>();
         services.AddSingleton<RoundRepository>();
+
+        services.AddScoped<AbilityService>();
+        services.AddScoped<AuthService>();
+        services.AddScoped<PlayerService>();
+        services.AddScoped<RoleService>();
 
         var app = builder.Build();
 

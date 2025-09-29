@@ -13,19 +13,18 @@ public class AbilityRepository
         _context = context;
     }
 
-    public async Task<Result<AbilityDTO>> GetAbilityAsync(int id)
+    public async Task<Result<Ability>> GetAbilityAsync(int id)
     {
         Ability? ability = await _context.Abilities.FindAsync(id);
         if (ability == null)
         {
             return Errors.ResourceNotFound("Ability", id.ToString());
         }
-        return new AbilityDTO(ability);
+        return ability;
     }
 
-    public async Task<Result<IEnumerable<AbilityDTO>>> GetAllAbilitiesAsync()
+    public async Task<Result<IEnumerable<Ability>>> GetAllAsync()
     {
-        IEnumerable<Ability> abilities = await _context.Abilities.ToListAsync();
-        return abilities.Select(static a => new AbilityDTO(a)).ToList();
+        return await _context.Abilities.ToListAsync();        
     }
 }

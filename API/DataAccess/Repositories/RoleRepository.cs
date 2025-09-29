@@ -44,7 +44,7 @@ public class RoleRepository
         return role;
     }
 
-    public async Task<Result<Role>> GetFromIdAsync(int id)
+    public async Task<Result<Role>> GetAsync(int id)
     {       
         Role? role = await _context.Roles
             .Include(r => r.AbilityAssociations)
@@ -61,20 +61,19 @@ public class RoleRepository
         return role;        
     }
 
-    public async Task<Result<ICollection<RoleDTO>>> GetAllAsync()
+    public async Task<Result<ICollection<Role>>> GetAllAsync()
     {
         _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
-        var roles = await _context.Roles
+        return await _context.Roles
             .Include(r => r.AbilityAssociations)
                 .ThenInclude(ra => ra.Ability)
             .ToListAsync();
-        var roleDtos = roles.Select(static a => new RoleDTO(a)).ToList();
-        return roleDtos;
     }
 
     // TODO: is this not the same as GetFromName?
-    public async Task<Result<Role>> GetRoleByPlayerNameAsync(string playerName)
+    // And then player repository has GetRoleFromPlayer?
+    public async Task<Result<Role>> GetFromPlayerNameAsync(string playerName)
     {
         Role? role = await _context.Roles
             .Include(r => r.AbilityAssociations).ThenInclude(ra => ra.Ability)
@@ -89,5 +88,5 @@ public class RoleRepository
         }
 
         return role;
-    }
+    }    
 }

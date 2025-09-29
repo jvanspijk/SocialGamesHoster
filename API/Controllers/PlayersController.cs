@@ -1,5 +1,4 @@
-﻿using API.DataAccess.Repositories;
-using API.DTO;
+﻿using API.DTO;
 using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,21 +12,18 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class PlayersController : ControllerBase
 {
-    private readonly PlayerRepository _playerRepository;
-    private readonly RoleRepository _roleRepository;
+    private readonly PlayerService _playerService;
     private readonly AuthService _authService;
-    public PlayersController(PlayerRepository playerRepository, 
-        RoleRepository roleRepository, AuthService authService) 
+    public PlayersController(PlayerService playerService, AuthService authService) 
     {
-        _playerRepository = playerRepository;
-        _roleRepository = roleRepository;
+        _playerService = playerService;
         _authService = authService;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] string username)
     {
-        Result<Player> result = await _playerRepository.GetPlayerByNameAsync(username);
+        Result<Player> result = await _playerService.GetByNameAsync(username);
         return result.AsActionResult(player =>
         {
             string token = _authService.GeneratePlayerToken(username);
@@ -39,7 +35,7 @@ public class PlayersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        Result<List<Player>> result = await _playerRepository.GetPlayersAsync();
+        Result<List<Player>> result = await _playerService.GetAllAsync();
         return result.AsActionResult();
     }
 
@@ -47,7 +43,7 @@ public class PlayersController : ControllerBase
     [HttpGet("{name}")]
     public async Task<IActionResult> GetByName(string name)
     {
-        Result<Player> result = await _playerRepository.GetPlayerByNameAsync(name);
+        Result<Player> result = await _playerService.GetByNameAsync(name);
         return result.AsActionResult();
     }
 
@@ -55,7 +51,7 @@ public class PlayersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(string username)
     {
-        Result<Player> user = await _playerRepository.AddPlayerAsync(username);
+        Result<Player> user = await _playerService.CreateAsync(username);
         return user.AsActionResult();
 
     }
@@ -64,7 +60,7 @@ public class PlayersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        Result<Player> result = await _playerRepository.DeletePlayerAsync(id);
+        Result<Player> result = await _playerService.DeleteAsync(id);
         return result.AsActionResult();
     }
 
@@ -74,7 +70,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> UpdateRole(string name, [FromBody] int roleId)
     {
         //bool isAdmin = _authService.IsAdmin(User);
-        Result<Player> updatedPlayerResult = await _playerRepository.UpdateRole(name, roleId);
+        Result<Player> updatedPlayerResult = await _playerService.UpdateRole(name, roleId);
         return updatedPlayerResult.AsActionResult();
     }
 
@@ -98,7 +94,7 @@ public class PlayersController : ControllerBase
             return Unauthorized("You are not allowed to see this player.");
         }
 
-        Result<Role> roleResult = await _roleRepository.GetRoleByPlayerNameAsync(name);
+        Result<Role> roleResult = await _playerService.GetRoleFromPlayerAsync(name);
         return roleResult.AsActionResult(roleValue => new RoleDTO(roleValue));       
     }
 
@@ -107,7 +103,7 @@ public class PlayersController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetPlayersVisibleToPlayer(string name)
     {
-        Result<List<Player>> result = await _playerRepository.GetPlayersVisibleToPlayerAsync(name);
+        Result<List<Player>> result = await _playerService.GetPlayersVisibleToPlayerAsync(name);
         return result.AsActionResult();
     }
 }

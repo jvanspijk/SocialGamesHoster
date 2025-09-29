@@ -1,4 +1,4 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,24 +8,24 @@ namespace API.Controllers;
 [ApiController]
 public class AbilitiesController : ControllerBase
 {
-    private readonly AbilityRepository _abilityRepository;
-    public AbilitiesController(AbilityRepository abilityRepository)
+    private readonly AbilityService _abilityService;
+    public AbilitiesController(AbilityService abilityService)
     {
-        _abilityRepository = abilityRepository;
+        _abilityService = abilityService;
     }
 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAllAbilities()
     {
-        var abilitiesResult = await _abilityRepository.GetAllAbilitiesAsync();
+        var abilitiesResult = await _abilityService.GetAllAsync();
         return abilitiesResult.AsActionResult();
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAbility(int id)
     {
-        var abilityResult = await _abilityRepository.GetAbilityAsync(id);        
+        var abilityResult = await _abilityService.GetAsync(id);        
         return abilityResult.AsActionResult();
     }
 }

@@ -13,7 +13,7 @@ public sealed record RoleDTO(int Id, string Name, string Description)
         Abilities = roleEntity.AbilityAssociations?
             .Select(ra => new AbilityDTO(ra.Ability!))
             .ToList() ?? [];
-    }  
+    }
 
     public List<int> VisibleRoleIds { get; set; } = [];
 

@@ -1,5 +1,4 @@
-﻿using API.DataAccess.Repositories;
-using API.DTO;
+﻿using API.DTO;
 using API.Models;
 using API.Services;
 using API.Validation;
@@ -15,15 +14,11 @@ namespace API.Controllers;
 [ApiController]
 public class RolesController : ControllerBase
 {
-    private readonly RoleRepository _roleRepository;
-    private readonly PlayerRepository _playerRepository;
-    private readonly AuthService _authService;
-    public RolesController(RoleRepository roleRepository, 
-        PlayerRepository playerRepository, AuthService authService)
+    private readonly RoleService _roleService;
+
+    public RolesController(RoleService roleService)
     {
-        _roleRepository = roleRepository;
-        _playerRepository = playerRepository;
-        _authService = authService;
+        _roleService = roleService;
     }
 
     [HttpGet]
@@ -34,7 +29,7 @@ public class RolesController : ControllerBase
 
         if (roleClaim == null)
         {
-            return BadRequest("Role claim are missing.");
+            return BadRequest("Role claim is missing.");
         }
 
         bool isAdmin = string.Equals(roleClaim?.Value, "admin", StringComparison.OrdinalIgnoreCase);
@@ -43,7 +38,7 @@ public class RolesController : ControllerBase
             return Unauthorized("You are not allowed to see all roles.");
         }        
         
-        var rolesResult = await _roleRepository.GetAllAsync();
+        var rolesResult = await _roleService.GetAllAsync();
         return rolesResult.AsActionResult();
     }
 }
