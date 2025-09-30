@@ -2,7 +2,7 @@
 
 namespace API.DTO;
 
-public sealed record RoleDTO(int Id, string Name, string Description)
+public sealed record class RoleDTO(int Id, string Name, string Description)
 {
     public RoleDTO(Role roleEntity) : this(roleEntity.Id, roleEntity.Name, roleEntity.Description)
     {       
@@ -15,8 +15,8 @@ public sealed record RoleDTO(int Id, string Name, string Description)
             .ToList() ?? [];
     }
 
-    public List<int> VisibleRoleIds { get; set; } = [];
+    public IReadOnlyList<int> VisibleRoleIds { get; init; } = [];
 
-    public List<AbilityDTO> Abilities { get; set; } = [];    
+    public IReadOnlyList<AbilityDTO> Abilities { get; init; } = [];    
 }
 

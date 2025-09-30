@@ -2,11 +2,5 @@
 
 namespace API.DTO;
 
-public record AdminLoginRequestDTO
-{
-    [Required]
-    public required string Username { get; set; }
+public readonly record struct AdminLoginRequestDTO(string Username, string Password);
 
-    [Required]
-    public required string Password { get; set; }
-}
