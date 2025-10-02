@@ -1,5 +1,6 @@
 ﻿using API.DataAccess.Repositories;
 using API.Models;
+using API.Validation;
 
 namespace API.Features.Players;
 
@@ -15,12 +16,22 @@ public class PlayerService
 
     public async Task<Result<Player>> GetAsync(int id)
     {
-        return await _playerRepository.GetAsync(id);
+        var player = await _playerRepository.GetByIdAsync(id);
+        if(player is null)
+        {
+            return Errors.ResourceNotFound("Player", id);
+        }
+        return player;
     }
 
-    public async Task<Result<Player>> GetByNameAsync(string username)
+    public async Task<Result<Player>> GetByNameAsync(string playerName)
     {
-        return await _playerRepository.GetByNameAsync(username);
+        var player = await _playerRepository.GetByNameAsync(playerName);
+        if (player is null)
+        {
+            return Errors.ResourceNotFound($"Player with username {playerName} not found.");
+        }
+        return player;
     }
 
     public async Task<Result<Player>> CreateAsync(string username)
@@ -34,23 +45,22 @@ public class PlayerService
 
     public async Task<Result<Player>> UpdateRoleAsync(string playerName, int newRoleId)
     {
-        var playerResult = await _playerRepository.GetByNameAsync(playerName);
-        if (!playerResult.IsSuccess)
+        Player? player = await _playerRepository.GetByNameAsync(playerName);
+        if (player is null)
         {
-            return playerResult;
+            return Errors.ResourceNotFound($"Player with username {playerName} not found.");
         }
 
-        var roleResult = await _roleRepository.GetAsync(newRoleId);
-        if (!roleResult.IsSuccess)
+        Role? role = await _roleRepository.GetByIdAsync(newRoleId);
+        if (role is null)
         {
-            return roleResult.Error;
+            return Errors.ResourceNotFound("Role", newRoleId);
         }
-
-        Player player = playerResult.Value;
-        Role role = roleResult.Value;
+       
         player.RoleId = newRoleId;
         player.Role = role;
-        return await _playerRepository.UpdateAsync(player);
+        await _playerRepository.UpdateAsync(player);
+        return player;
     }
 
     public async Task<Result<List<Player>>> GetAllAsync()
@@ -58,25 +68,44 @@ public class PlayerService
         return await _playerRepository.GetAllAsync();
     }
 
-    public async Task<Result<Player>> DeleteAsync(int id)
+    public async Task<Result<bool>> DeleteAsync(int id)
     {
-        return await _playerRepository.DeletePlayerAsync(id);
+        Player? player = await _playerRepository.GetByIdAsync(id);
+        if (player is null)
+        {
+            return Errors.ResourceNotFound("Player", id);
+        }
+        await _playerRepository.DeleteAsync(player);
+        return true;
     }
 
     public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(string playerName)
     {
-        return await _playerRepository.GetByNameAsync(playerName)
-            .ThenAsync(_playerRepository.GetPlayersVisibleToPlayerAsync);       
+        Player? player = await _playerRepository.GetByNameAsync(playerName);
+        if(player is null)
+        {
+            return Errors.ResourceNotFound($"Player with username {playerName} not found.");
+        }
+        return await _playerRepository.GetPlayersVisibleToPlayerAsync(player);       
     }
 
     public async Task<Result<List<Player>>> GetPlayersWithRoleAsync(int roleId)
     {
-        var repositoryResult = await _roleRepository.GetAsync(roleId);
-        return repositoryResult.Map(static r => r.PlayersWithRole.ToList());
+        Role? role = await _roleRepository.GetByIdAsync(roleId);
+        if(role is null)
+        {
+            return Errors.ResourceNotFound("Role", roleId);
+        }
+        return role.PlayersWithRole.ToList();
     }
 
     public async Task<Result<Role>> GetRoleFromPlayerAsync(string playerName)
     {
-        return await _playerRepository.GetRoleFromPlayerAsync(playerName);
+        Role? role = await _roleRepository.GetByPlayerNameAsync(playerName);
+        if (role is null)
+        {
+            return Errors.ResourceNotFound($"Role of player {playerName} not found.");
+        }
+        return role;
     }
 }

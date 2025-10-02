@@ -1,103 +1,44 @@
 ﻿using API.Models;
 using API.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace API.DataAccess.Repositories;
 
-public class PlayerRepository
+public class PlayerRepository : IRepository<Player>
 {
     private readonly APIDatabaseContext _context;
     public PlayerRepository(APIDatabaseContext context)
     {
         _context = context;
     }
-    public async Task<Result<Player>> GetAsync(int id)
+    // Create
+    public async Task<Player> CreateAsync(Player player)
+    {
+        _context.Players.Add(player);
+        await _context.SaveChangesAsync();
+        return player;
+    }
+    // Read
+    public async Task<Player?> GetByIdAsync(int id)
     { 
-        Player? player = await _context.Players.SingleOrDefaultAsync(
+        return await _context.Players.SingleOrDefaultAsync(
             p => p.Id == id
-        );
-        if (player == null)
-        {
-            return Errors.ResourceNotFound("Player", id.ToString());
-        }
-        return player;
+        );       
     }
-
-    public async Task<Result<Player>> GetByNameAsync(string name)
+    public async Task<Player?> GetByNameAsync(string name)
     {        
-        Player? player = await _context.Players
-            .SingleOrDefaultAsync(p => p.Name == name);
-
-        if (player == null)
-        {
-            return Errors.ResourceNotFound("Player", name.ToString());
-
-        }
-        return player;       
+        return await _context.Players
+            .SingleOrDefaultAsync(p => p.Name == name);           
     }
 
-    public async Task<Result<Role>> GetRoleFromPlayerAsync(string playerName)
-    {        
-        Role? role = await _context.Players
-            .Where(p => p.Name == playerName && p.Role != null)
-            .Select(p => p.Role!)
-            .Include(r => r.AbilityAssociations)
-                .ThenInclude(ra => ra.Ability)
-            .Include(r => r.CanSee)
-            .Include(r => r.CanBeSeenBy)
-            .SingleOrDefaultAsync();
-
-        if (role == null)
-        {
-            return Errors.ResourceNotFound($"Could not find role for {playerName}.");
-        }
-
-        return role;
-    }
-
-    public async Task<Result<List<Player>>> GetAllAsync()
+    public async Task<List<Player>> GetAllAsync()
     {
-        List<Player> players = await _context.Players.Include(p => p.Role).ToListAsync() ?? [];
-        return players;
+        return await _context.Players.Include(p => p.Role).ToListAsync();
     }
 
-    public async Task<Result<Player>> CreateAsync(Player player)
+    public async Task<bool> IsVisibleToPlayerAsync(Player source, Player target)
     {
-        _context.Players.Add(player);       
-        await _context.SaveChangesAsync();
-        return await GetByNameAsync(player.Name);
-    }
-
-    public async Task<Result<Player>> UpdateAsync(Player updatedPlayer)
-    {
-        Result<Player> playerResult = await GetAsync(updatedPlayer.Id);
-        if (!playerResult.TryGetValue(out Player? player))
-        {
-            return playerResult;
-        }
-        
-        player.Name = updatedPlayer.Name;
-        player.RoleId = updatedPlayer.RoleId;
-        await _context.SaveChangesAsync();        
-        return player;
-    }   
-
-    public async Task<Result<Player>> DeletePlayerAsync(int id)
-    {
-        Result<Player> playerResult = await GetAsync(id);
-        if (!playerResult.TryGetValue(out Player? player))
-        {
-            return Errors.ResourceNotFound("Player", id.ToString());
-        }        
-        
-        _context.Players.Remove(player);
-        await _context.SaveChangesAsync();
-        
-        return player;
-    }
-
-    public async Task<Result<bool>> IsVisibleToPlayerAsync(Player source, Player target)
-    {       
         int? playerRoleId = source.RoleId;
 
         return await _context.Players
@@ -111,7 +52,7 @@ public class PlayerRepository
             .AnyAsync();
     }
 
-    public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(Player player)
+    public async Task<List<Player>> GetPlayersVisibleToPlayerAsync(Player player)
     {
         IQueryable<Player> query =
             from p in _context.Players.Include(p => p.Role)
@@ -124,5 +65,22 @@ public class PlayerRepository
 
         return await query.ToListAsync();
     }
+
+    // Update
+    public async Task UpdateAsync(Player updatedPlayer)
+    {
+        _context.Entry(updatedPlayer).State = EntityState.Modified;
+        _context.Players.Update(updatedPlayer);
+        await _context.SaveChangesAsync();
+    }   
+
+    // Delete
+    public async Task DeleteAsync(Player player)
+    {
+        _context.Entry(player).State = EntityState.Modified;
+        _context.Players.Remove(player);
+        await _context.SaveChangesAsync();
+    }  
+    
 
 }

@@ -1,6 +1,7 @@
 ﻿using API.DataAccess.Repositories;
 using API.Features.Roles.Responses;
 using API.Models;
+using API.Validation;
 
 namespace API.Features.Roles;
 public class RoleService
@@ -12,14 +13,16 @@ public class RoleService
     }
     public async Task<Result<List<RoleResponse>>> GetAllAsync()
     {
-        var repositoryResult = await _roleRepository.GetAllAsync();
-        return repositoryResult.Map(roles =>
-            roles.Select(static r => new RoleResponse(r)).ToList());
-        
+        List<Role> roles = await _roleRepository.GetAllAsync();
+        return roles.Select(role => new RoleResponse(role)).ToList();
     }
     public async Task<Result<RoleResponse>> GetRoleAsync(int id)
     {
-        var repositoryResult = await _roleRepository.GetAsync(id);
-        return repositoryResult.Map(static r => new RoleResponse(r));
+        Role? role = await _roleRepository.GetByIdAsync(id);
+        if(role is null)
+        {
+            return Errors.ResourceNotFound("Role", id);
+        }
+        return new RoleResponse(role);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using API.DataAccess.Repositories;
+using API.Models;
 using API.Validation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -96,12 +97,16 @@ public class AuthService
             return true;
         }
 
-        return await _playerRepository.GetByNameAsync(usernameClaim.Value)
-        .ThenAsync(sourcePlayer =>
-            _playerRepository.GetByNameAsync(targetPlayerName)
-                .ThenAsync(targetPlayer =>
-                    _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer)
-                )
-        );
+        Player? sourcePlayer = await _playerRepository.GetByNameAsync(usernameClaim.Value);
+        if (sourcePlayer == null)
+        {
+            return Errors.ResourceNotFound($"Player with name {usernameClaim.Value} not found.");
+        }
+        Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName);
+        if (targetPlayer == null)
+        {
+            return Errors.ResourceNotFound($"Player with name {targetPlayerName} not found.");
+        }
+        return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
     }
 }

@@ -17,10 +17,12 @@ public class RoundsController : ControllerBase
     [HttpGet("end-time")]
     public async Task<IActionResult> GetEndTime()
     {
-        var roundResult = await _roundRepository.GetCurrentRound();
-        return roundResult.Match(
-                round => Ok(round.EndTime), 
-                error => error.AsActionResult()
-        );        
+        Round? round = await _roundRepository.GetCurrentRound();
+        if(round == null)
+        {
+            return NotFound("No current round found.");
+        }
+
+        return Ok(round.EndTime);    
     }
 }

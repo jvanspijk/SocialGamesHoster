@@ -3,26 +3,41 @@ using API.Validation;
 using Microsoft.EntityFrameworkCore;
 namespace API.DataAccess.Repositories;
 
-public class AbilityRepository
+public class AbilityRepository : IRepository<Ability>
 {
     private readonly APIDatabaseContext _context;
     public AbilityRepository(APIDatabaseContext context)
     {
         _context = context;
     }
-
-    public async Task<Result<Ability>> GetAbilityAsync(int id)
+    public async Task<Ability> CreateAsync(Ability ability)
     {
-        Ability? ability = await _context.Abilities.FindAsync(id);
-        if (ability == null)
-        {
-            return Errors.ResourceNotFound("Ability", id.ToString());
-        }
+        _context.Abilities.Add(ability);
+        await _context.SaveChangesAsync();
         return ability;
     }
+    
+    public async Task<Ability?> GetByIdAsync(int id)
+    {
+        return await _context.Abilities.FindAsync(id);        
+    }
 
-    public async Task<Result<List<Ability>>> GetAllAsync()
+    public async Task<List<Ability>> GetAllAsync()
     {
         return await _context.Abilities.ToListAsync();        
+    }    
+
+    public async Task UpdateAsync(Ability ability)
+    {
+        _context.Entry(ability).State = EntityState.Modified;
+        _context.Abilities.Update(ability);
+        await _context.SaveChangesAsync();        
+    }
+
+    public async Task DeleteAsync(Ability ability)
+    {
+        _context.Entry(ability).State = EntityState.Modified;
+        _context.Abilities.Remove(ability);
+        await _context.SaveChangesAsync();
     }
 }

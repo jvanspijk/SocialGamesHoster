@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
 
-public class RoleRepository
+public class RoleRepository : IRepository<Role>
 {
     private readonly APIDatabaseContext _context;
 
@@ -12,60 +12,76 @@ public class RoleRepository
     {
         _context = context;
     }
-
-    public async Task<Result<List<Player>>> GetPlayersWithRoleAsync(int roleId)
+    // Create
+    public async Task<Role> CreateAsync(Role role)
     {
-        var role = await _context.Roles
-            .Include(r => r.PlayersWithRole)
-            .SingleOrDefaultAsync(r => r.Id == roleId);
-
-        if(role == null)
-        {
-            return Errors.ResourceNotFound("Role", roleId.ToString());
-        }
-
-        return role.PlayersWithRole.ToList();
+        _context.Roles.Add(role);
+        await _context.SaveChangesAsync();
+        return role;
     }
 
-    public async Task<Result<Role>> GetFromNameAsync(string name)
+    // Read
+
+    public async Task<Role?> GetByIdAsync(int roleId)
     {
-        Role? role = await _context.Roles
+        return await _context.Roles
+            .Include(r => r.AbilityAssociations)
+                .ThenInclude(ra => ra.Ability)
+            .Include(r => r.CanSee)
+            .Include(r => r.CanBeSeenBy)
+            .SingleOrDefaultAsync(r => r.Id == roleId);
+    }
+
+    public async Task<Role?> GetByNameAsync(string name)
+    {
+        return await _context.Roles
             .Include(r => r.AbilityAssociations)
                 .ThenInclude(ra => ra.Ability)
             .Include(r => r.CanSee)
             .Include(r => r.CanBeSeenBy)
             .SingleOrDefaultAsync(r => r.Name == name);
-        if (role == null)
-        {
-            return Errors.ResourceNotFound($"Role for player {name} not found");
-        }
-        return role;
     }
 
-    public async Task<Result<Role>> GetAsync(int id)
-    {       
-        Role? role = await _context.Roles
+    public async Task<Role?> GetByPlayerNameAsync(string playerName)
+    {
+        return await _context.Players
+            .Where(p => p.Name == playerName && p.Role != null)
+            .Select(p => p.Role!)
             .Include(r => r.AbilityAssociations)
                 .ThenInclude(ra => ra.Ability)
             .Include(r => r.CanSee)
             .Include(r => r.CanBeSeenBy)
-            .SingleOrDefaultAsync(r => r.Id == id);
-
-        if (role == null)
-        {
-            return Errors.ResourceNotFound("Role", id.ToString());
-        }
-
-        return role;        
+            .SingleOrDefaultAsync();
     }
 
-    public async Task<Result<ICollection<Role>>> GetAllAsync()
+    public async Task<List<Role>> GetAllAsync()
     {
         _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
         return await _context.Roles
             .Include(r => r.AbilityAssociations)
                 .ThenInclude(ra => ra.Ability)
+            .Include(r => r.CanSee)
+            .Include(r => r.CanBeSeenBy)
             .ToListAsync();
-    }    
+    }
+
+    // Update
+
+    public async Task UpdateAsync(Role role)
+    {
+        _context.Entry(role).State = EntityState.Modified;
+        _context.Roles.Update(role);
+        await _context.SaveChangesAsync();
+    }
+
+    // Delete
+    public async Task DeleteAsync(Role role)
+    {
+        _context.Entry(role).State = EntityState.Modified;
+        _context.Roles.Remove(role);
+        await _context.SaveChangesAsync();
+    }
+
+
 }

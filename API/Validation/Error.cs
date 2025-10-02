@@ -41,7 +41,7 @@ public static partial class Errors
     public static Error UserNotOnline(string message = "User is not online and cannot log out.") =>
         new(ErrorType.UserNotOnline, message, HttpStatusCode.Conflict);
 
-    public static Error ResourceNotFound(string resourceName, string id) =>
+    public static Error ResourceNotFound(string resourceName, int id) =>
         new(ErrorType.NotFound, $"{resourceName} with ID '{id}' was not found.", HttpStatusCode.NotFound);
 
     public static Error ResourceNotFound(string message = "Resource not found.") =>

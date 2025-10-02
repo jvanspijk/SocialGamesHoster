@@ -1,5 +1,7 @@
 ﻿using API.DataAccess.Repositories;
 using API.Features.Abilities.Responses;
+using API.Models;
+using API.Validation;
 
 namespace API.Features.Abilities;
 
@@ -12,13 +14,17 @@ public class AbilityService
     }
     public async Task<Result<AbilityResponse>> GetAsync(int id)
     {
-        var ability = await _repository.GetAbilityAsync(id);
-        return ability.Map(a => new AbilityResponse(a));        
+        Ability? ability = await _repository.GetByIdAsync(id);
+        if(ability is null)
+        {
+            return Errors.ResourceNotFound("Ability", id);
+        }
+        return new AbilityResponse(ability);        
     }
 
-    public async Task<Result<IEnumerable<AbilityResponse>>> GetAllAsync()
+    public async Task<Result<List<AbilityResponse>>> GetAllAsync()
     {
-        var abilities = await _repository.GetAllAsync();
-        return abilities.Map(ab => ab.Select(a => new AbilityResponse(a)));
+        List<Ability> abilities = await _repository.GetAllAsync();
+        return abilities.Select(ab => new AbilityResponse(ab)).ToList();
     }
 }
