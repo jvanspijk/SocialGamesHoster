@@ -34,7 +34,7 @@ function LoginPage() {
             return;
         }
         try {
-            const response = await fetch(`${apiUrl}/Players/login`, {
+            const response = await fetch(`${apiUrl}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -13,7 +13,10 @@ services:
       - DOTNET_WATCH_RELOAD_ENABLED=true
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=socialgamesdb;Username=dbuser;Password=dbpassword
     volumes:         
+      - ./API.Domain:/src/API.Domain
+      - ./API.DataAccess:/src/API.DataAccess
       - ./API:/src/API
+      - ./logs:/src/logs
       - ./settings.ini:/src/API/settings.ini
       - nuget_packages:/root/.nuget/packages
     command: dotnet watch run --urls http://0.0.0.0:8080

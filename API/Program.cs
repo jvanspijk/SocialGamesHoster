@@ -41,8 +41,8 @@ public class Program
                                   | HttpLoggingFields.ResponseStatusCode
                                   | HttpLoggingFields.ResponseBody;
 
-            options.RequestBodyLogLimit = 4096;
-            options.ResponseBodyLogLimit = 4096;
+            options.RequestBodyLogLimit = 2048;
+            options.ResponseBodyLogLimit = 2048;
             options.RequestHeaders.Clear();
             options.ResponseHeaders.Clear();
             options.CombineLogs = true;

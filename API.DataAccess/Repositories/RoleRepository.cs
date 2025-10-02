@@ -43,14 +43,19 @@ public class RoleRepository : IRepository<Role>
 
     public async Task<Role?> GetByPlayerNameAsync(string playerName)
     {
-        return await _context.Players
-            .Where(p => p.Name == playerName && p.Role != null)
-            .Select(p => p.Role!)
-            .Include(r => r.AbilityAssociations)
-                .ThenInclude(ra => ra.Ability)
-            .Include(r => r.CanSee)
-            .Include(r => r.CanBeSeenBy)
+        var playerQuery = _context.Players
+            .Where(player => player.Name == playerName && player.Role != null)
+            .Include(player => player.Role!)
+                .ThenInclude(role => role.AbilityAssociations)
+                    .ThenInclude(ra => ra.Ability)
+            .Include(player => player.Role!)
+                .ThenInclude(role => role.CanSee)
+            .Include(player => player.Role!)
+                .ThenInclude(role => role.CanBeSeenBy)
             .SingleOrDefaultAsync();
+
+        var player = await playerQuery;
+        return player?.Role;
     }
 
     public async Task<List<Role>> GetAllAsync()

@@ -20,13 +20,18 @@ public class PlayerRepository : IRepository<Player>
     // Read
     public async Task<Player?> GetByIdAsync(int id)
     { 
-        return await _context.Players.SingleOrDefaultAsync(
-            p => p.Id == id
-        );       
+        return await _context.Players
+            .Include(p => p.Role)
+            .Include(p => p.CanSee)
+            .Include(p => p.CanBeSeenBy)
+            .SingleOrDefaultAsync(p => p.Id == id);       
     }
     public async Task<Player?> GetByNameAsync(string name)
-    {        
+    {
         return await _context.Players
+            .Include(p => p.Role)
+            .Include(p => p.CanSee)
+            .Include(p => p.CanBeSeenBy)
             .SingleOrDefaultAsync(p => p.Name == name);           
     }
 

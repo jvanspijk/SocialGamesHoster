@@ -5,6 +5,7 @@ using API.Features.Players;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Features.Authentication;
+
 [Route("[controller]")]
 [ApiController]
 public class LoginController : ControllerBase
@@ -17,7 +18,7 @@ public class LoginController : ControllerBase
         _playerService = playerService;
     }
 
-    [HttpPost("login")]
+    [HttpPost]
     public async Task<IActionResult> Login([FromBody] string username)
     {
         Result<Player> result = await _playerService.GetByNameAsync(username);
