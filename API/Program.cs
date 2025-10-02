@@ -98,15 +98,15 @@ public class Program
         // And to send updates if the admin performs actions
         services.AddSignalR();
 
-        services.AddScoped<RoleRepository>();
-        services.AddScoped<PlayerRepository>();
-        services.AddScoped<AbilityRepository>();
-        services.AddSingleton<RoundRepository>();
+        services.AddScoped<RoleRepository>()
+            .AddScoped<PlayerRepository>()
+            .AddScoped<AbilityRepository>()
+            .AddSingleton<RoundRepository>();
 
-        services.AddScoped<AbilityService>();
-        services.AddScoped<AuthService>();
-        services.AddScoped<PlayerService>();
-        services.AddScoped<RoleService>();
+        services.AddScoped<AbilityService>()
+            .AddScoped<AuthService>()
+            .AddScoped<PlayerService>()
+            .AddScoped<RoleService>();
 
         var app = builder.Build();
 
