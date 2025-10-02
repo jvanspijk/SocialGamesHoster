@@ -1,8 +1,7 @@
-﻿using API.Validation;
-using Microsoft.OpenApi.Any;
+﻿using API.Domain.Validation;
 using System.Diagnostics.CodeAnalysis;
 
-namespace API;
+namespace API.Domain;
 
 /// <summary>
 /// Result type of <typeparamref name="T"/>, <see cref="Error"/>.

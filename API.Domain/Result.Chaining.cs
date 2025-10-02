@@ -1,7 +1,7 @@
-﻿using API.Validation;
+﻿using API.Domain.Validation;
 using System.Threading.Tasks;
 
-namespace API;
+namespace API.Domain;
 
 /// <summary>
 /// Chains operations on <see cref="Result{T}"/> types, enabling functional-style composition of success and failure flows.
@@ -114,8 +114,7 @@ public static class ResultAsyncChainingExtensions
     where TOut : notnull
 
     {
-        return MatchAsync(
-            sourceTask,
+        return sourceTask.MatchAsync(
             onSuccess: next,
             onFailure: error => Task.FromResult<Result<TOut>>(error)
         );

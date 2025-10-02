@@ -1,7 +1,8 @@
 ﻿using API.DataAccess.Repositories;
+using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using API.Features.Roles.Responses;
-using API.Models;
-using API.Validation;
 
 namespace API.Features.Roles;
 public class RoleService
@@ -24,5 +25,27 @@ public class RoleService
             return Errors.ResourceNotFound("Role", id);
         }
         return new RoleResponse(role);
+    }
+
+    public async Task<Result<RoleResponse>> CreateAsync(string name, string description)
+    {
+        Role newRole = new() { Name = name, Description = description };
+        Role? createdRole = await _roleRepository.CreateAsync(newRole);
+        if (createdRole is null)
+        {
+            return Errors.FailedToCreate("Role", name);
+        }
+        return new RoleResponse(createdRole);
+    }
+
+    public async Task<Result<bool>> DeleteAsync(int id)
+    {
+        Role? role = await _roleRepository.GetByIdAsync(id);
+        if (role is null)
+        {
+            return Errors.ResourceNotFound("Role", id);
+        }
+        await _roleRepository.DeleteAsync(role);
+        return true;
     }
 }

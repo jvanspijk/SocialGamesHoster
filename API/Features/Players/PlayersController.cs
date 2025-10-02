@@ -1,6 +1,7 @@
-﻿using API.Features.Authentication;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Features.Authentication;
 using API.Features.Roles.Responses;
-using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;

@@ -1,17 +1,15 @@
-﻿using API.DataAccess.Repositories;
-using API.Models;
+﻿using API.Features.Players;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+
 
 namespace API.Hubs;
 
 public class PresenceHub : Hub
 {
-    private readonly PlayerRepository _userService;
-    public PresenceHub(PlayerRepository userService)
+    private readonly PlayerService _playerService;
+    public PresenceHub(PlayerService playerService)
     {
-        _userService = userService;
+        _playerService = playerService;
     }
     public override async Task OnConnectedAsync()
     {

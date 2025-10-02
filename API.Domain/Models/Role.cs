@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.Models;
+namespace API.Domain.Models;
 
 public class Role
 {
     [Key]
-    public required int Id { get; set; }
+    public int Id { get; set; }
     [Required]
     [StringLength(32, MinimumLength = 3, ErrorMessage = "Role name must be between 3 and 32 characters long.")]
     public required string Name { get; set; }

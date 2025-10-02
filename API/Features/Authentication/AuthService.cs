@@ -1,6 +1,7 @@
 ﻿using API.DataAccess.Repositories;
-using API.Models;
-using API.Validation;
+using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

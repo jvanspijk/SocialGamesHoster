@@ -1,5 +1,4 @@
-﻿using API.Models;
-using API.Validation;
+﻿using API.Domain.Models;
 
 namespace API.DataAccess.Repositories;
 

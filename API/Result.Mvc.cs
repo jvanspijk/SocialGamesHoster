@@ -1,4 +1,5 @@
-﻿using API.Validation;
+﻿using API.Domain;
+using API.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API;
@@ -18,26 +19,17 @@ public static class ResultMvcExtensions
         Func<Error, IActionResult>? onFailure = null
     ) where T : notnull
     {
-        return result switch
-        {
-            Failure<T> failure => onFailure != null
-                ? onFailure(failure.Error)
-                : new ObjectResult(failure.Error.Message) { StatusCode = (int)failure.Error.StatusCode },
-            Success<T> success => onSuccess != null
-                ? onSuccess(success.Value)
-                : new OkObjectResult(success.Value),
-            _ => throw new InvalidOperationException("Unrecognized Result type"),
-        };
+        onSuccess ??= val => new OkObjectResult(val);
+        onFailure ??= err => new ObjectResult(err.Message) { StatusCode = (int)err.StatusCode };
+        return result.Match(onSuccess, onFailure);        
     }
 
     public static IResult AsIResult<T>(this Result<T> result) where T : notnull
     {
-        return result switch
-        {
-            Failure<T> failure => Results.Problem(failure.Error.Message, statusCode: (int)failure.Error.StatusCode),
-            Success<T> success => Results.Ok(success.Value),
-            _ => throw new InvalidOperationException("Unrecognized Result type"),
-        };
+        return result.Match(
+            val => Results.Ok(val), 
+            err => Results.Problem(err.Message, statusCode: (int)err.StatusCode)
+        );        
     }
 }
 

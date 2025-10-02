@@ -1,6 +1,7 @@
 ﻿using API.DataAccess.Repositories;
-using API.Models;
-using API.Validation;
+using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 
 namespace API.Features.Players;
 

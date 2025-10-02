@@ -1,8 +1,7 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace API.Models;
+namespace API.Domain.Models;
 //TODO we should use DTO's so that we can hide some fields for players but not for admins
 public class Player
 {

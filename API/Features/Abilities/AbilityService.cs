@@ -1,7 +1,8 @@
 ﻿using API.DataAccess.Repositories;
+using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using API.Features.Abilities.Responses;
-using API.Models;
-using API.Validation;
 
 namespace API.Features.Abilities;
 

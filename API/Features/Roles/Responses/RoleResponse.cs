@@ -1,5 +1,5 @@
-﻿using API.Features.Abilities.Responses;
-using API.Models;
+﻿using API.Domain.Models;
+using API.Features.Abilities.Responses;
 
 namespace API.Features.Roles.Responses;
 

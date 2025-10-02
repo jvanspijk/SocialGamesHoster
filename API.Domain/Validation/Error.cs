@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net;
+﻿using System.Net;
 
-namespace API.Validation;
+namespace API.Domain.Validation;
 
 public enum ErrorType
 {
@@ -13,6 +12,7 @@ public enum ErrorType
     UserAlreadyLoggedIn,        
     UserNotOnline, 
     NotFound,
+    FailedToCreate,
 
     Validation_EmptyName,
     Validation_InvalidGuid
@@ -54,4 +54,6 @@ public static partial class Errors
     public static Error InvalidGuid(string message = "Provided GUID is invalid.") =>
         new(ErrorType.Validation_InvalidGuid, message, HttpStatusCode.BadRequest);
 
+    public static Error FailedToCreate(string resourceName, string? name = null) =>
+        new(ErrorType.FailedToCreate, $"Failed to create {resourceName}{(name is not null ? $" with name {name}" : string.Empty)}.", HttpStatusCode.BadRequest);
 }

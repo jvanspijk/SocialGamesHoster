@@ -1,6 +1,7 @@
-﻿using API.Features.Authentication.Requests;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Features.Authentication.Requests;
 using API.Features.Players;
-using API.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Features.Authentication;

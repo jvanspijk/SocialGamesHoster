@@ -1,8 +1,8 @@
 ﻿using API.DataAccess.Repositories;
-using API.Models;
+using API.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Rounds;
+namespace API.Features.Rounds;
 
 [Route("[controller]")]
 [ApiController]

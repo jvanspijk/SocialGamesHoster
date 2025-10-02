@@ -1,5 +1,4 @@
-﻿using API.Models;
-using API.Validation;
+﻿using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 namespace API.DataAccess.Repositories;
 

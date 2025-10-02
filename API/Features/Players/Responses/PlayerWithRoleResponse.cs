@@ -1,5 +1,5 @@
-﻿using API.Features.Roles.Responses;
-using API.Models;
+﻿using API.Domain.Models;
+using API.Features.Roles.Responses;
 
 namespace API.Features.Players.Responses;
 /// <summary>

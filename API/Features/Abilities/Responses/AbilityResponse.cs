@@ -1,4 +1,4 @@
-﻿using API.Models;
+﻿using API.Domain.Models;
 
 namespace API.Features.Abilities.Responses;
 

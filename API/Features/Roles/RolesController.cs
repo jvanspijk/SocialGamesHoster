@@ -1,9 +1,8 @@
-﻿using API.Models;
-using API.Validation;
+﻿using API.Domain;
+using API.Features.Roles.Requests;
+using API.Features.Roles.Responses;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace API.Features.Roles;
@@ -38,5 +37,22 @@ public class RolesController : ControllerBase
         
         var rolesResult = await _roleService.GetAllAsync();
         return rolesResult.AsActionResult();
+    }
+
+    // POST /Roles
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateRoleRequest roleRequest)
+    {
+        var result = await _roleService.CreateAsync(roleRequest.Name, roleRequest.Description);
+        return result.AsActionResult();
+
+    }
+
+    // DELETE /Players/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        Result<bool> result = await _roleService.DeleteAsync(id);
+        return result.AsActionResult();
     }
 }
