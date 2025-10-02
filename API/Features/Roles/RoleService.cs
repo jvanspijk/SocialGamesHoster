@@ -1,8 +1,8 @@
 ﻿using API.DataAccess.Repositories;
+using API.Features.Roles.Responses;
 using API.Models;
-using API.Models.Requests;
 
-namespace API.Services;
+namespace API.Features.Roles;
 public class RoleService
 {
     private readonly RoleRepository _roleRepository;
@@ -10,16 +10,16 @@ public class RoleService
     {
         _roleRepository = roleRepository;
     }
-    public async Task<Result<List<RoleDTO>>> GetAllAsync()
+    public async Task<Result<List<RoleResponse>>> GetAllAsync()
     {
         var repositoryResult = await _roleRepository.GetAllAsync();
         return repositoryResult.Map(roles =>
-            roles.Select(static r => new RoleDTO(r)).ToList());
+            roles.Select(static r => new RoleResponse(r)).ToList());
         
     }
-    public async Task<Result<RoleDTO>> GetRoleAsync(int id)
+    public async Task<Result<RoleResponse>> GetRoleAsync(int id)
     {
         var repositoryResult = await _roleRepository.GetAsync(id);
-        return repositoryResult.Map(static r => new RoleDTO(r));
+        return repositoryResult.Map(static r => new RoleResponse(r));
     }
 }

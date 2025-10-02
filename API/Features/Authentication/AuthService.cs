@@ -1,13 +1,11 @@
-﻿using API;
-using API.DataAccess.Repositories;
-using API.Models;
+﻿using API.DataAccess.Repositories;
 using API.Validation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace API.Services;
+namespace API.Features.Authentication;
 
 public class AuthService
 {

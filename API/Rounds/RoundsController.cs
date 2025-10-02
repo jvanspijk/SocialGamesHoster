@@ -2,7 +2,7 @@
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Controllers;
+namespace API.Rounds;
 
 [Route("[controller]")]
 [ApiController]

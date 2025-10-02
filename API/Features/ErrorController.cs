@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Controllers;
+namespace API.Features;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]

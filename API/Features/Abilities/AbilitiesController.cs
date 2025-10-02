@@ -1,8 +1,7 @@
-﻿using API.Services;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Controllers;
+namespace API.Features.Abilities;
 
 [Route("[controller]")]
 [ApiController]

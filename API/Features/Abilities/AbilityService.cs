@@ -1,7 +1,7 @@
 ﻿using API.DataAccess.Repositories;
-using API.Models.Requests;
+using API.Features.Abilities.Responses;
 
-namespace API.Services;
+namespace API.Features.Abilities;
 
 public class AbilityService
 {
@@ -10,15 +10,15 @@ public class AbilityService
     {
         _repository = abilityRepository;
     }
-    public async Task<Result<AbilityDTO>> GetAsync(int id)
+    public async Task<Result<AbilityResponse>> GetAsync(int id)
     {
         var ability = await _repository.GetAbilityAsync(id);
-        return ability.Map(a => new AbilityDTO(a));        
+        return ability.Map(a => new AbilityResponse(a));        
     }
 
-    public async Task<Result<IEnumerable<AbilityDTO>>> GetAllAsync()
+    public async Task<Result<IEnumerable<AbilityResponse>>> GetAllAsync()
     {
         var abilities = await _repository.GetAllAsync();
-        return abilities.Map(ab => ab.Select(a => new AbilityDTO(a)));
+        return abilities.Map(ab => ab.Select(a => new AbilityResponse(a)));
     }
 }

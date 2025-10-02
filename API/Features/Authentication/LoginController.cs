@@ -1,20 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using API.Services;
-using API.Models.Requests;
+using API.Features.Authentication.Requests;
 
-namespace API.Controllers;
+namespace API.Features.Authentication;
 [Route("[controller]")]
 [ApiController]
-public class AdminController : ControllerBase
+public class LoginController : ControllerBase
 {
     private readonly AuthService _authService;
-    public AdminController(AuthService authService)
+    public LoginController(AuthService authService)
     {
         _authService = authService;        
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] AdminLoginRequestDTO request)
+    public async Task<IActionResult> AdminLogin([FromBody] AdminLoginRequest request)
     {
         if (!ModelState.IsValid)
         {

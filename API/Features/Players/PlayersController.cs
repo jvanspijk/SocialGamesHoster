@@ -1,13 +1,12 @@
-﻿using API.DTO;
+﻿using API.Features.Authentication;
+using API.Features.Roles.Responses;
 using API.Models;
-using API.Services;
-using API.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace API.Controllers;
+namespace API.Features.Players;
 
 [ApiController]
 [Route("[controller]")]
@@ -101,7 +100,7 @@ public class PlayersController : ControllerBase
             return roleResult.AsActionResult();
         }            
 
-        return Ok(new RoleDTO(role));
+        return Ok(new RoleResponse(role));
     }
 
     // GET /Players/{name}/VisiblePlayers

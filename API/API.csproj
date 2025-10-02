@@ -33,7 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Features\Abilities\Requests\" />
+    <Folder Include="Features\Authentication\Responses\" />
+    <Folder Include="Features\Players\Requests\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Features\Roles\Requests\" />
+    <Folder Include="Rounds\Responses\" />
+    <Folder Include="Rounds\Requests\" />
   </ItemGroup>
 
 </Project>

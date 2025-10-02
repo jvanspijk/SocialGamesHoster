@@ -1,6 +1,4 @@
-﻿using API.DTO;
-using API.Models;
-using API.Services;
+﻿using API.Models;
 using API.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace API.Controllers;
+namespace API.Features.Roles;
 
 [Route("[controller]")]
 [ApiController]

@@ -1,7 +1,7 @@
 ﻿using API.DataAccess.Repositories;
 using API.Models;
 
-namespace API.Services;
+namespace API.Features.Players;
 
 public class PlayerService
 {
