@@ -84,9 +84,12 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<Result<bool>> CanSeePlayerAsync(Claim? usernameClaim, Claim? roleClaim, string targetPlayerName)
+    public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, string targetPlayerName)
     {
-        if(roleClaim == null || usernameClaim == null)
+        Claim? usernameClaim = userClaim.FindFirst(JwtRegisteredClaimNames.Sub);
+        Claim? roleClaim = userClaim.FindFirst(ClaimTypes.Role);
+
+        if (roleClaim == null || usernameClaim == null)
         {
             return Errors.ResourceNotFound("Role or username claim is missing."); // TODO: error for missing claim
         }
@@ -102,11 +105,23 @@ public class AuthService
         {
             return Errors.ResourceNotFound($"Player with name {usernameClaim.Value} not found.");
         }
+
         Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName);
         if (targetPlayer == null)
         {
             return Errors.ResourceNotFound($"Player with name {targetPlayerName} not found.");
         }
+
         return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
+    }
+
+    public Result<bool> IsAdmin(ClaimsPrincipal user)
+    {
+        var roleClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+        if (roleClaim == null)
+        {
+            return Errors.ResourceNotFound("Role claim is missing."); // TODO: error for missing claim
+        }
+        return string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
     }
 }

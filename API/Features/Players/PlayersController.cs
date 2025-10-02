@@ -18,19 +18,7 @@ public class PlayersController : ControllerBase
     {
         _playerService = playerService;
         _authService = authService;
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] string username)
-    {
-        Result<Player> result = await _playerService.GetByNameAsync(username);
-        if(!result.IsSuccess)
-        {
-            return result.AsActionResult();
-        }
-        string token = _authService.GeneratePlayerToken(username);
-        return Ok(new { token });        
-    }
+    }    
 
     // GET /Players
     [HttpGet]
@@ -70,7 +58,15 @@ public class PlayersController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateRole(string name, [FromBody] int roleId)
     {
-        //bool isAdmin = _authService.IsAdmin(User);
+        var isAdminResult = _authService.IsAdmin(User);
+        if (!isAdminResult.TryGetValue(out bool isAdmin))
+        {
+            return isAdminResult.AsActionResult();
+        }
+        if (!isAdmin)
+        {
+            return Unauthorized("Only admins can change roles.");
+        }
         Result<Player> updatedPlayerResult = await _playerService.UpdateRoleAsync(name, roleId);
         return updatedPlayerResult.AsActionResult();
     }
@@ -80,10 +76,7 @@ public class PlayersController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetRoleFromName(string name)
     {
-        Claim? usernameClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
-        Claim? roleClaim = User.FindFirst(ClaimTypes.Role);
-
-        var canSeeResult = await _authService.CanSeePlayerAsync(usernameClaim, roleClaim, name);
+        var canSeeResult = await _authService.CanSeePlayerAsync(User, name);
         if (!canSeeResult.TryGetValue(out bool canSee))
         {
             return canSeeResult.AsActionResult();

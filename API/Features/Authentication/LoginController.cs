@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using API.Features.Authentication.Requests;
+﻿using API.Features.Authentication.Requests;
+using API.Features.Players;
+using API.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Features.Authentication;
 [Route("[controller]")]
@@ -7,12 +9,26 @@ namespace API.Features.Authentication;
 public class LoginController : ControllerBase
 {
     private readonly AuthService _authService;
-    public LoginController(AuthService authService)
+    private readonly PlayerService _playerService;
+    public LoginController(AuthService authService, PlayerService playerService)
     {
-        _authService = authService;        
+        _authService = authService;   
+        _playerService = playerService;
     }
 
     [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] string username)
+    {
+        Result<Player> result = await _playerService.GetByNameAsync(username);
+        if (!result.IsSuccess)
+        {
+            return result.AsActionResult();
+        }
+        string token = _authService.GeneratePlayerToken(username);
+        return Ok(new { token });
+    }
+
+    [HttpPost("admin/login")]
     public async Task<IActionResult> AdminLogin([FromBody] AdminLoginRequest request)
     {
         if (!ModelState.IsValid)
