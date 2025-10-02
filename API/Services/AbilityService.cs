@@ -1,5 +1,5 @@
 ﻿using API.DataAccess.Repositories;
-using API.DTO;
+using API.Models.Requests;
 
 namespace API.Services;
 

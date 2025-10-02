@@ -2,7 +2,6 @@
 using API.Models;
 using API.Validation;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 namespace API.DataAccess.Repositories;
 
 public class AbilityRepository
@@ -23,7 +22,7 @@ public class AbilityRepository
         return ability;
     }
 
-    public async Task<Result<IEnumerable<Ability>>> GetAllAsync()
+    public async Task<Result<List<Ability>>> GetAllAsync()
     {
         return await _context.Abilities.ToListAsync();        
     }

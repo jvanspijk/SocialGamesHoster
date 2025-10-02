@@ -1,29 +1,53 @@
-﻿using API.Models;
-using API.Validation;
+﻿using API.Validation;
+using Microsoft.OpenApi.Any;
 using System.Diagnostics.CodeAnalysis;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace API;
 
 /// <summary>
-/// Result type of <typeparamref name="T"/>, <see cref="APIError"/>.
-/// It will contain a <typeparamref name="T"/> Value or <see cref="APIError"/> Error, but never both.
+/// Result type of <typeparamref name="T"/>, <see cref="Error"/>.
+/// It will contain a <typeparamref name="T"/> Value or <see cref="Error"/> Error, but never both.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public readonly partial record struct Result<T> where T : notnull
+public abstract partial record Result<T> where T : notnull
 {
+    public T? Value { get; init; }
+    public Error Error { get; init; }
+    protected Result(T? value, Error error, bool isSuccess)
+    {       
+        Value = value;
+        Error = error;
+        IsSuccess = isSuccess;
+    }
+    public static implicit operator Result<T>(T value) => value != null ? new Success<T>(value) : new Failure<T>(Errors.ResourceNotFound());
+    public static implicit operator Result<T>(Error error) => new Failure<T>(error);    
+
+    /// <summary>
+    /// True if the result is successful.
+    /// </summary>
     [MemberNotNullWhen(true, nameof(Value))]
     [MemberNotNullWhen(false, nameof(Error))]
-    public readonly bool Ok => _value != null && _value is T;
-    public readonly T? Value => _value is T value ? value : default;
-    public readonly APIError? Error => _value is APIError error ? error : null;
+    public bool IsSuccess { get; init; }
+    public bool IsFailure => !IsSuccess;
 
-    private readonly object _value;
-    public Result(T value) { _value = value; }
-    public Result(APIError error) { _value = error; }
+    public bool TryGetValue([MaybeNullWhen(false)] out T value)
+    {
+        value = IsSuccess ? Value : default;
+        return IsSuccess;
+    }
 
-    // Implicit operator overrides so that you can return Result<T> objects as T or error
-    // e,g, public Result<Player> Player => new Player();
-    public static implicit operator Result<T>(T value) { return new(value); }
-    public static implicit operator Result<T>(APIError error) { return new Result<T>(error); }
+    public bool TryGetError([MaybeNullWhen(false)] out Error error)
+    {
+        error = !IsSuccess ? Error : default;
+        return !IsSuccess;
+    }
 }
+
+internal record Success<T>(T Value) : Result<T>(Value, default, Value != null) where T : notnull
+{
+    public new T Value => base.Value!; // Ensures that the linter knows Value is not null here
+}
+internal record Failure<T>(Error Error) : Result<T>(default, Error, false) where T : notnull;
+
+
+

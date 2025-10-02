@@ -1,6 +1,6 @@
-﻿using API.DTO;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using API.Services;
+using API.Models.Requests;
 
 namespace API.Controllers;
 [Route("[controller]")]
@@ -26,7 +26,7 @@ public class AdminController : ControllerBase
             return Unauthorized("Invalid credentials.");
         }
 
-        string token = _authService.GenerateAdminToken(request.Username);
+        string token = await Task.FromResult(_authService.GenerateAdminToken(request.Username));
         return Ok(new { token });
     }
 }

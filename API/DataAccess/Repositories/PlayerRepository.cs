@@ -11,7 +11,6 @@ public class PlayerRepository
     {
         _context = context;
     }
-
     public async Task<Result<Player>> GetAsync(int id)
     { 
         Player? player = await _context.Players.SingleOrDefaultAsync(
@@ -72,11 +71,11 @@ public class PlayerRepository
     public async Task<Result<Player>> UpdateAsync(Player updatedPlayer)
     {
         Result<Player> playerResult = await GetAsync(updatedPlayer.Id);
-        if (!playerResult.Ok)
+        if (!playerResult.TryGetValue(out Player? player))
         {
-            return playerResult.Error.Value;
+            return playerResult;
         }
-        Player player = playerResult.Value;
+        
         player.Name = updatedPlayer.Name;
         player.RoleId = updatedPlayer.RoleId;
         await _context.SaveChangesAsync();        
@@ -86,19 +85,18 @@ public class PlayerRepository
     public async Task<Result<Player>> DeletePlayerAsync(int id)
     {
         Result<Player> playerResult = await GetAsync(id);
-        if (!playerResult.Ok)
+        if (!playerResult.TryGetValue(out Player? player))
         {
             return Errors.ResourceNotFound("Player", id.ToString());
-        }
+        }        
         
-        Player player = playerResult.Value;
         _context.Players.Remove(player);
         await _context.SaveChangesAsync();
         
         return player;
     }
 
-    public async Task<Result<bool>> IsVisibleToPlayer(Player source, Player target)
+    public async Task<Result<bool>> IsVisibleToPlayerAsync(Player source, Player target)
     {       
         int? playerRoleId = source.RoleId;
 

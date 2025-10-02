@@ -25,32 +25,32 @@ public class PlayerService
 
     public async Task<Result<Player>> CreateAsync(string username)
     {
-        Player newPlayer = new Player
+        Player newPlayer = new()
         {
             Name = username
         };
         return await _playerRepository.CreateAsync(newPlayer);
     }
 
-    public async Task<Result<Player>> UpdateRole(string playerName, int newRoleId)
+    public async Task<Result<Player>> UpdateRoleAsync(string playerName, int newRoleId)
     {
-        Result<Player> playerResult = await GetByNameAsync(playerName);
-        if (!playerResult.Ok)
+        var playerResult = await _playerRepository.GetByNameAsync(playerName);
+        if (!playerResult.IsSuccess)
         {
-            return playerResult.Error.Value;
+            return playerResult;
         }
-        
-        var newRole = await _roleRepository.GetAsync(newRoleId);
-        if (!newRole.Ok)
+
+        var roleResult = await _roleRepository.GetAsync(newRoleId);
+        if (!roleResult.IsSuccess)
         {
-            return newRole.Error.Value;
+            return roleResult.Error;
         }
 
         Player player = playerResult.Value;
+        Role role = roleResult.Value;
         player.RoleId = newRoleId;
-        player.Role = newRole.Value;
-        var updatedPlayer = await _playerRepository.UpdateAsync(player);
-        return updatedPlayer;
+        player.Role = role;
+        return await _playerRepository.UpdateAsync(player);
     }
 
     public async Task<Result<List<Player>>> GetAllAsync()
@@ -65,18 +65,14 @@ public class PlayerService
 
     public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(string playerName)
     {
-        var playerResult = await _playerRepository.GetByNameAsync(playerName);
-        if (!playerResult.Ok)
-        {
-            return playerResult.Error.Value;
-        }
-        return await _playerRepository.GetPlayersVisibleToPlayerAsync(playerResult.Value);
+        return await _playerRepository.GetByNameAsync(playerName)
+            .ThenAsync(_playerRepository.GetPlayersVisibleToPlayerAsync);       
     }
 
     public async Task<Result<List<Player>>> GetPlayersWithRoleAsync(int roleId)
     {
-        var role = await _roleRepository.GetAsync(roleId);
-        return role.Map(r => r.PlayersWithRole.ToList());
+        var repositoryResult = await _roleRepository.GetAsync(roleId);
+        return repositoryResult.Map(static r => r.PlayersWithRole.ToList());
     }
 
     public async Task<Result<Role>> GetRoleFromPlayerAsync(string playerName)

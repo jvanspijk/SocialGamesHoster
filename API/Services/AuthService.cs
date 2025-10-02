@@ -85,7 +85,7 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<Result<bool>> CanSeePlayer(Claim? usernameClaim, Claim? roleClaim, string targetPlayerName)
+    public async Task<Result<bool>> CanSeePlayerAsync(Claim? usernameClaim, Claim? roleClaim, string targetPlayerName)
     {
         if(roleClaim == null || usernameClaim == null)
         {
@@ -97,7 +97,13 @@ public class AuthService
         {
             return true;
         }
-       
-        return await _playerRepository.IsVisibleToPlayer(usernameClaim.Value, targetPlayerName);
+
+        return await _playerRepository.GetByNameAsync(usernameClaim.Value)
+        .ThenAsync(sourcePlayer =>
+            _playerRepository.GetByNameAsync(targetPlayerName)
+                .ThenAsync(targetPlayer =>
+                    _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer)
+                )
+        );
     }
 }

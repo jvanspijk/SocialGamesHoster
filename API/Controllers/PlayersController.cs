@@ -1,6 +1,7 @@
 ﻿using API.DTO;
 using API.Models;
 using API.Services;
+using API.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -24,11 +25,12 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> Login([FromBody] string username)
     {
         Result<Player> result = await _playerService.GetByNameAsync(username);
-        return result.AsActionResult(player =>
+        if(!result.IsSuccess)
         {
-            string token = _authService.GeneratePlayerToken(username);
-            return new { token };
-        });
+            return result.AsActionResult();
+        }
+        string token = _authService.GeneratePlayerToken(username);
+        return Ok(new { token });        
     }
 
     // GET /Players
@@ -70,7 +72,7 @@ public class PlayersController : ControllerBase
     public async Task<IActionResult> UpdateRole(string name, [FromBody] int roleId)
     {
         //bool isAdmin = _authService.IsAdmin(User);
-        Result<Player> updatedPlayerResult = await _playerService.UpdateRole(name, roleId);
+        Result<Player> updatedPlayerResult = await _playerService.UpdateRoleAsync(name, roleId);
         return updatedPlayerResult.AsActionResult();
     }
 
@@ -82,20 +84,24 @@ public class PlayersController : ControllerBase
         Claim? usernameClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
         Claim? roleClaim = User.FindFirst(ClaimTypes.Role);
 
-        Result<bool> authResult = await _authService.CanSeePlayer(usernameClaim, roleClaim, name);
-        if (!authResult.Ok)
+        var canSeeResult = await _authService.CanSeePlayerAsync(usernameClaim, roleClaim, name);
+        if (!canSeeResult.TryGetValue(out bool canSee))
         {
-            return authResult.AsActionResult();
+            return canSeeResult.AsActionResult();
         }
 
-        bool canSeeRole = authResult.Value;
-        if (!canSeeRole)
+        if (!canSee)
         {
             return Unauthorized("You are not allowed to see this player.");
         }
 
-        Result<Role> roleResult = await _playerService.GetRoleFromPlayerAsync(name);
-        return roleResult.AsActionResult(roleValue => new RoleDTO(roleValue));       
+        var roleResult = await _playerService.GetRoleFromPlayerAsync(name);
+        if (!roleResult.TryGetValue(out var role))
+        {
+            return roleResult.AsActionResult();
+        }            
+
+        return Ok(new RoleDTO(role));
     }
 
     // GET /Players/{name}/VisiblePlayers

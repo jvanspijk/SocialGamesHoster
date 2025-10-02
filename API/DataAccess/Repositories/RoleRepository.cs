@@ -1,8 +1,6 @@
-﻿using API.DTO;
-using API.Models;
+﻿using API.Models;
 using API.Validation;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 
 namespace API.DataAccess.Repositories;
 
@@ -69,24 +67,5 @@ public class RoleRepository
             .Include(r => r.AbilityAssociations)
                 .ThenInclude(ra => ra.Ability)
             .ToListAsync();
-    }
-
-    // TODO: is this not the same as GetFromName?
-    // And then player repository has GetRoleFromPlayer?
-    public async Task<Result<Role>> GetFromPlayerNameAsync(string playerName)
-    {
-        Role? role = await _context.Roles
-            .Include(r => r.AbilityAssociations).ThenInclude(ra => ra.Ability)
-            .Include(r => r.CanSee)
-            .Include(r => r.CanBeSeenBy)
-            .Where(r => r.PlayersWithRole.Any(p => p.Name == playerName))
-            .SingleOrDefaultAsync();
-
-        if (role == null)
-        {
-            return Errors.ResourceNotFound($"Role for player {playerName} not found");
-        }
-
-        return role;
     }    
 }

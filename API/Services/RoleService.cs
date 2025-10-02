@@ -1,5 +1,6 @@
 ﻿using API.DataAccess.Repositories;
-using API.DTO;
+using API.Models;
+using API.Models.Requests;
 
 namespace API.Services;
 public class RoleService
@@ -11,13 +12,14 @@ public class RoleService
     }
     public async Task<Result<List<RoleDTO>>> GetAllAsync()
     {
-        var rolesResult = await _roleRepository.GetAllAsync();
-        return rolesResult.Map(static roles =>
+        var repositoryResult = await _roleRepository.GetAllAsync();
+        return repositoryResult.Map(roles =>
             roles.Select(static r => new RoleDTO(r)).ToList());
+        
     }
     public async Task<Result<RoleDTO>> GetRoleAsync(int id)
     {
-        var role = await _roleRepository.GetAsync(id);
-        return role.Map(static r => new RoleDTO(r));
+        var repositoryResult = await _roleRepository.GetAsync(id);
+        return repositoryResult.Map(static r => new RoleDTO(r));
     }
 }
