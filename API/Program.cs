@@ -119,7 +119,8 @@ public class Program
             var serviceProvider = scope.ServiceProvider;
             try
             {
-                var context = serviceProvider.GetRequiredService<APIDatabaseContext>();
+                APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>() 
+                    ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
                 Console.WriteLine("Applying database migrations...");
                 context.Database.Migrate();
                 Console.WriteLine("Database migrations applied successfully.");
