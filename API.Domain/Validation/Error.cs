@@ -14,8 +14,7 @@ public enum ErrorType
     NotFound,
     FailedToCreate,
 
-    Validation_EmptyName,
-    Validation_InvalidGuid
+    Validation,
 }
 
 public readonly record struct Error(ErrorType Type, string Message, HttpStatusCode StatusCode, string DebugMessage = "");
@@ -47,13 +46,12 @@ public static partial class Errors
     public static Error ResourceNotFound(string message = "Resource not found.") =>
         new(ErrorType.NotFound, message, HttpStatusCode.NotFound);
 
-    // -----------
-    public static Error EmptyName(string message = "Provided name is empty.") =>
-        new(ErrorType.Validation_EmptyName, message, HttpStatusCode.BadRequest);
-
-    public static Error InvalidGuid(string message = "Provided GUID is invalid.") =>
-        new(ErrorType.Validation_InvalidGuid, message, HttpStatusCode.BadRequest);
+    // -----------    
 
     public static Error FailedToCreate(string resourceName, string? name = null) =>
         new(ErrorType.FailedToCreate, $"Failed to create {resourceName}{(name is not null ? $" with name {name}" : string.Empty)}.", HttpStatusCode.BadRequest);
+
+    public static Error Validation(string field, string message) =>
+        new(ErrorType.Validation, $"Validation error on field '{field}': {message}", HttpStatusCode.BadRequest);
+
 }
