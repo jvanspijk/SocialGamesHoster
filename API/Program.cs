@@ -14,7 +14,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 namespace API;
-
+// TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
 public class Program
 {
     public static void Main(string[] args)
@@ -41,8 +41,8 @@ public class Program
                                   | HttpLoggingFields.ResponseStatusCode
                                   | HttpLoggingFields.ResponseBody;
 
-            options.RequestBodyLogLimit = 2048;
-            options.ResponseBodyLogLimit = 2048;
+            options.RequestBodyLogLimit = 1024;
+            options.ResponseBodyLogLimit = 1024;
             options.RequestHeaders.Clear();
             options.ResponseHeaders.Clear();
             options.CombineLogs = true;
