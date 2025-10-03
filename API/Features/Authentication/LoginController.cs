@@ -1,6 +1,7 @@
 ﻿using API.Domain;
 using API.Domain.Models;
 using API.Features.Authentication.Requests;
+using API.Features.Authentication.Responses;
 using API.Features.Players;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,15 +20,16 @@ public class LoginController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login([FromBody] string username)
+    public async Task<IActionResult> Login([FromBody] PlayerLoginRequest request)
     {
-        Result<Player> result = await _playerService.GetByNameAsync(username);
+        string name = request.Name;
+        Result<Player> result = await _playerService.GetByNameAsync(name);
         if (!result.IsSuccess)
         {
             return result.AsActionResult();
         }
-        string token = _authService.GeneratePlayerToken(username);
-        return Ok(new { token });
+        string token = _authService.GeneratePlayerToken(name);
+        return Ok(new LoginTokenResponse(token));
     }
 
     [HttpPost("admin/login")]
@@ -38,12 +40,13 @@ public class LoginController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        if (!_authService.AdminCredentialsAreValid(request.Username, request.Password))
+        bool credentialsAreValid = await _authService.AdminCredentialsAreValid(request.Username, request.Password);
+        if (!credentialsAreValid)
         {
             return Unauthorized("Invalid credentials.");
         }
 
-        string token = await Task.FromResult(_authService.GenerateAdminToken(request.Username));
-        return Ok(new { token });
+        string token = _authService.GenerateAdminToken(request.Username);
+        return Ok(new LoginTokenResponse(token));
     }
 }

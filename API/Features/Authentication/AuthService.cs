@@ -39,9 +39,10 @@ public class AuthService
         _playerRepository = playerRepository;
     }
 
-    public bool AdminCredentialsAreValid(string username, string passwordHash)
+    public Task<bool> AdminCredentialsAreValid(string username, string passwordHash)
     {
-        return username == _adminUserName && passwordHash == _adminPassword;
+        // Pretend this is an async operation because it probably will be in the future
+        return Task.FromResult(username == _adminUserName && passwordHash == _adminPassword);
     }
 
     /// <summary>
