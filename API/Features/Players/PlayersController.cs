@@ -1,6 +1,7 @@
 ﻿using API.Domain;
 using API.Domain.Models;
 using API.Features.Authentication;
+using API.Features.Players.Requests;
 using API.Features.Roles.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,9 +40,9 @@ public class PlayersController : ControllerBase
 
     // POST /Players
     [HttpPost]
-    public async Task<IActionResult> Create(string username)
+    public async Task<IActionResult> Create(CreatePlayerRequest request)
     {
-        Result<Player> user = await _playerService.CreateAsync(username);
+        Result<Player> user = await _playerService.CreateAsync(request);
         return user.AsActionResult();
 
     }

@@ -2,6 +2,7 @@
 using API.Domain;
 using API.Domain.Models;
 using API.Domain.Validation;
+using API.Features.Players.Requests;
 
 namespace API.Features.Players;
 
@@ -35,11 +36,11 @@ public class PlayerService
         return player;
     }
 
-    public async Task<Result<Player>> CreateAsync(string username)
+    public async Task<Result<Player>> CreateAsync(CreatePlayerRequest createPlayerRequest)
     {
         Player newPlayer = new()
         {
-            Name = username
+            Name = createPlayerRequest.Name,
         };
         return await _playerRepository.CreateAsync(newPlayer);
     }
@@ -69,8 +70,9 @@ public class PlayerService
         return await _playerRepository.GetAllAsync();
     }
 
-    public async Task<Result<bool>> DeleteAsync(int id)
+    public async Task<Result<bool>> DeleteAsync(DeletePlayerRequest deletePlayerRequest)
     {
+        int id = deletePlayerRequest.Id;
         Player? player = await _playerRepository.GetByIdAsync(id);
         if (player is null)
         {

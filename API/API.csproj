@@ -27,10 +27,6 @@
 
   <ItemGroup>
     <Folder Include="Features\Abilities\Requests\" />
-    <Folder Include="Features\Authentication\Responses\" />
-    <Folder Include="Features\Players\Requests\" />
-    <Folder Include="Features\Rounds\Responses\" />
-    <Folder Include="Features\Rounds\Requests\" />
   </ItemGroup>
 
   <ItemGroup>
