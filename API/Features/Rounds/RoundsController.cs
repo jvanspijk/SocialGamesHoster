@@ -1,5 +1,6 @@
 ﻿using API.DataAccess.Repositories;
 using API.Domain.Models;
+using API.Features.Rounds.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Features.Rounds;
@@ -22,7 +23,6 @@ public class RoundsController : ControllerBase
         {
             return NotFound("No current round found.");
         }
-
-        return Ok(round.EndTime);    
+        return Ok(new GetEndTimeResponse() { EndTimeUTC = round.EndTime }); 
     }
 }
