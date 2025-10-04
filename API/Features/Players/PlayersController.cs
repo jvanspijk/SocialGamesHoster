@@ -49,9 +49,9 @@ public class PlayersController : ControllerBase
 
     // DELETE /Players/{id}
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(DeletePlayerRequest request)
     {
-        Result<bool> result = await _playerService.DeleteAsync(id);
+        Result<bool> result = await _playerService.DeleteAsync(request);
         return result.AsActionResult();
     }
 
