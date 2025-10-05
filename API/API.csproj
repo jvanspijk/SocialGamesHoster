@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Features\Abilities\Requests\**" />
+    <Content Remove="Features\Abilities\Requests\**" />
+    <EmbeddedResource Remove="Features\Abilities\Requests\**" />
+    <None Remove="Features\Abilities\Requests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="9.0.9">
       <PrivateAssets>all</PrivateAssets>
@@ -26,12 +33,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Abilities\Requests\" />
+    <ProjectReference Include="..\API.DataAccess\API.DataAccess.csproj" />
+    <ProjectReference Include="..\API.Domain\API.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\API.DataAccess\API.DataAccess.csproj" />
-    <ProjectReference Include="..\API.Domain\API.Domain.csproj" />
+    <Folder Include="AdminFeatures\Players\Requests\" />
   </ItemGroup>
 
 </Project>
