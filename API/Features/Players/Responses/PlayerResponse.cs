@@ -7,7 +7,7 @@ namespace API.Features.Players.Responses;
 /// </summary>
 /// <param name="Id"></param>
 /// <param name="Name"></param>
-public readonly record struct PlayerWithoutRoleResponse(int Id, string Name)
+public readonly record struct PlayerResponse(int Id, string Name)
 {
-    public PlayerWithoutRoleResponse(Player player) : this(player.Id, player.Name) { }
+    public PlayerResponse(Player player) : this(player.Id, player.Name) { }
 }

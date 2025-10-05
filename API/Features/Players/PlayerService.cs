@@ -2,7 +2,6 @@
 using API.Domain;
 using API.Domain.Models;
 using API.Domain.Validation;
-using API.Features.Players.Requests;
 
 namespace API.Features.Players;
 
@@ -36,51 +35,10 @@ public class PlayerService
         return player;
     }
 
-    public async Task<Result<Player>> CreateAsync(CreatePlayerRequest createPlayerRequest)
-    {
-        Player newPlayer = new()
-        {
-            Name = createPlayerRequest.Name,
-        };
-        return await _playerRepository.CreateAsync(newPlayer);
-    }
-
-    public async Task<Result<Player>> UpdateRoleAsync(string playerName, int newRoleId)
-    {
-        Player? player = await _playerRepository.GetByNameAsync(playerName);
-        if (player is null)
-        {
-            return Errors.ResourceNotFound($"Player with username {playerName} not found.");
-        }
-
-        Role? role = await _roleRepository.GetByIdAsync(newRoleId);
-        if (role is null)
-        {
-            return Errors.ResourceNotFound("Role", newRoleId);
-        }
-       
-        player.RoleId = newRoleId;
-        player.Role = role;
-        await _playerRepository.UpdateAsync(player);
-        return player;
-    }
-
     public async Task<Result<List<Player>>> GetAllAsync()
     {
         return await _playerRepository.GetAllAsync();
-    }
-
-    public async Task<Result<bool>> DeleteAsync(DeletePlayerRequest deletePlayerRequest)
-    {
-        int id = deletePlayerRequest.Id;
-        Player? player = await _playerRepository.GetByIdAsync(id);
-        if (player is null)
-        {
-            return Errors.ResourceNotFound("Player", id);
-        }
-        await _playerRepository.DeleteAsync(player);
-        return true;
-    }
+    }  
 
     public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(string playerName)
     {

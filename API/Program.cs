@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 
 namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
+// And: https://blog.variant.no/moving-from-controllers-to-minimal-api-bda56a223cc8
 public class Program
 {
     public static void Main(string[] args)
@@ -62,9 +63,10 @@ public class Program
             options.Cookie.IsEssential = true;
         });
 
-        services.AddControllers().AddJsonOptions(o => 
-            o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
-        );
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
@@ -154,11 +156,18 @@ public class Program
 
         app.UseSession();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapControllers();
+        var apiGroup = app.MapGroup("/api");
+        apiGroup.MapGameEndpoints();
 
-        app.MapHub<PresenceHub>("/presenceHub");
+        var adminGroup = apiGroup.MapGroup("/admin").WithTags("Admin").RequireAuthorization("AdminPolicy"); //TODO: add the admin policy authorization
+        adminGroup.MapAdminEndpoints();
+
+        apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
+
+        // apiGroup.MapHub<PresenceHub>("/presenceHub");
 
         app.Run();
         Console.WriteLine("Done booting up");
