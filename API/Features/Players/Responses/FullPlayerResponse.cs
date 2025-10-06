@@ -3,11 +3,10 @@ using API.Domain.Models;
 using System.Linq.Expressions;
 
 namespace API.Features.Players.Responses;
-
-public record struct AbilityResponse(int Id, string Name, string Description) : IProjectable<Ability, AbilityResponse>
+public record struct PlayerAbilityResponse(int Id, string Name, string Description) : IProjectable<Ability, PlayerAbilityResponse>
 {
-    public static Expression<Func<Ability, AbilityResponse>> Projection =>
-        ability => new AbilityResponse(ability.Id, ability.Name, ability.Description);
+    public static Expression<Func<Ability, PlayerAbilityResponse>> Projection =>
+        ability => new PlayerAbilityResponse(ability.Id, ability.Name, ability.Description);
 }
 public record struct RoleWithoutAbilities(int Id, string Name, string Description) : IProjectable<Role, RoleWithoutAbilities>
 {
@@ -18,7 +17,7 @@ public record struct RoleWithoutAbilities(int Id, string Name, string Descriptio
         role.Description
     );
 }
-public record struct RoleWithAbilities(int Id, string Name, string Description, List<AbilityResponse> Abilities) : IProjectable<Role, RoleWithAbilities>
+public record struct RoleWithAbilities(int Id, string Name, string Description, List<PlayerAbilityResponse> Abilities) : IProjectable<Role, RoleWithAbilities>
 {
     public static Expression<Func<Role, RoleWithAbilities>> Projection =>
         role => new RoleWithAbilities(
@@ -27,7 +26,7 @@ public record struct RoleWithAbilities(int Id, string Name, string Description, 
             role.Description,
             role.Abilities
                 .AsQueryable()
-                .Select(AbilityResponse.Projection)
+                .Select(PlayerAbilityResponse.Projection)
                 .ToList()
         );
 }

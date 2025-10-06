@@ -1,16 +1,10 @@
 ﻿using API.AdminFeatures.Players.Responses;
-using API.DataAccess;
 using API.DataAccess.Repositories;
-using API.Domain;
-using API.Domain.Models;
-using System.Linq;
-using System.Linq.Expressions;
 
 namespace API.AdminFeatures.Players.Endpoints;
 
 public static class GetPlayer
 {
-    
     public static async Task<IResult> HandleByIdAsync(PlayerRepository repository, int id)
     {
         FullPlayerResponse? result = await repository.GetAsync<FullPlayerResponse>(id);

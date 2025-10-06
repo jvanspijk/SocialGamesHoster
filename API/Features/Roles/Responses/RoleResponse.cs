@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace API.Features.Roles.Responses;
 
-public record struct AbilityResponse(int Id, string Name, string Description) : IProjectable<Ability, AbilityResponse>
+public record struct RoleAbilityResponse(int Id, string Name, string Description) : IProjectable<Ability, RoleAbilityResponse>
 {
-    public static Expression<Func<Ability, AbilityResponse>> Projection => ability => new AbilityResponse(ability.Id, ability.Name, ability.Description);
+    public static Expression<Func<Ability, RoleAbilityResponse>> Projection => ability => new RoleAbilityResponse(ability.Id, ability.Name, ability.Description);
 }
 
 /// <summary>
@@ -16,10 +16,10 @@ public record struct AbilityResponse(int Id, string Name, string Description) : 
 /// <param name="Name"></param>
 /// <param name="Description"></param>
 /// <param name="Abilities"></param>
-public record struct RoleResponse(int Id, string Name, string Description, List<AbilityResponse> Abilities) : IProjectable<Role, RoleResponse>
+public record struct RoleResponse(int Id, string Name, string Description, List<RoleAbilityResponse> Abilities) : IProjectable<Role, RoleResponse>
 {
     public static Expression<Func<Role, RoleResponse>> Projection =>
         role => new RoleResponse(role.Id, role.Name, role.Description, 
-            role.Abilities.AsQueryable().Select(AbilityResponse.Projection).ToList());
+            role.Abilities.AsQueryable().Select(RoleAbilityResponse.Projection).ToList());
 }
 
