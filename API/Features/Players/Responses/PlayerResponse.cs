@@ -1,13 +1,10 @@
-﻿using API.Domain.Models;
+﻿using API.DataAccess;
+using API.Domain.Models;
+using System.Linq.Expressions;
 
 namespace API.Features.Players.Responses;
 
-/// <summary>
-/// Player DTO without their role information.
-/// </summary>
-/// <param name="Id"></param>
-/// <param name="Name"></param>
-public readonly record struct PlayerResponse(int Id, string Name)
+public readonly record struct PlayerResponse(int Id, string Name) : IProjectable<Player, PlayerResponse>
 {
-    public PlayerResponse(Player player) : this(player.Id, player.Name) { }
+    public static Expression<Func<Player, PlayerResponse>> Projection => p => new PlayerResponse(p.Id, p.Name);
 }

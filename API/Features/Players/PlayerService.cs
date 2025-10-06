@@ -1,7 +1,9 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.Features.Players.Responses;
+using API.DataAccess.Repositories;
 using API.Domain;
 using API.Domain.Models;
 using API.Domain.Validation;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Features.Players;
 
@@ -15,19 +17,28 @@ public class PlayerService
         _roleRepository = roleRepository;
     }
 
-    public async Task<Result<Player>> GetAsync(int id)
+    public async Task<Result<PlayerResponse>> GetAsync(int id)
     {
-        var player = await _playerRepository.GetByIdAsync(id);
-        if(player is null)
+        PlayerResponse? player = await _playerRepository.AsQueryable()
+            .Where(p => p.Id == id)
+            .Select(p => new PlayerResponse(p.Id, p.Name))
+            .FirstOrDefaultAsync();
+
+        if (player is null)
         {
             return Errors.ResourceNotFound("Player", id);
         }
+
         return player;
     }
 
-    public async Task<Result<Player>> GetByNameAsync(string playerName)
+    public async Task<Result<PlayerResponse>> GetByNameAsync(string playerName)
     {
-        var player = await _playerRepository.GetByNameAsync(playerName);
+        PlayerResponse? player = await _playerRepository.AsQueryable()
+            .Where(p => p.Name == playerName)
+            .Select(PlayerResponse.Projection)
+            .FirstOrDefaultAsync();
+
         if (player is null)
         {
             return Errors.ResourceNotFound($"Player with username {playerName} not found.");
@@ -35,38 +46,62 @@ public class PlayerService
         return player;
     }
 
-    public async Task<Result<List<Player>>> GetAllAsync()
+    public async Task<Result<List<PlayerResponse>>> GetAllAsync()
     {
-        return await _playerRepository.GetAllAsync();
-    }  
+        List<PlayerResponse> players = await _playerRepository.AsQueryable()
+            .Select(PlayerResponse.Projection)
+            .ToListAsync();
+        return players;
+    }     
 
-    public async Task<Result<List<Player>>> GetPlayersVisibleToPlayerAsync(string playerName)
+    public async Task<Result<List<PlayerResponse>>> GetPlayersBelongingToRoleAsync(int roleId)
     {
-        Player? player = await _playerRepository.GetByNameAsync(playerName);
-        if(player is null)
-        {
-            return Errors.ResourceNotFound($"Player with username {playerName} not found.");
-        }
-        return await _playerRepository.GetPlayersVisibleToPlayerAsync(player);       
-    }
+        Role? role = await _roleRepository.AsQueryable().Where(r => r.Id == roleId)
+            .Include(r => r.PlayersWithRole)
+            .FirstOrDefaultAsync();
 
-    public async Task<Result<List<Player>>> GetPlayersWithRoleAsync(int roleId)
-    {
-        Role? role = await _roleRepository.GetByIdAsync(roleId);
-        if(role is null)
+        if (role is null)
         {
             return Errors.ResourceNotFound("Role", roleId);
         }
-        return role.PlayersWithRole.ToList();
+
+        return role.PlayersWithRole.Select(p => new PlayerResponse(p.Id, p.Name)).ToList();
     }
 
-    public async Task<Result<Role>> GetRoleFromPlayerAsync(string playerName)
+    public async Task<Result<FullPlayerResponse>> GetFullPlayer(int id)
     {
-        Role? role = await _roleRepository.GetByPlayerNameAsync(playerName);
-        if (role is null)
+        var roleQuery = _playerRepository.AsQueryable()
+                                     .Select(p => p.Role);
+        var abilityQuery = roleQuery
+            .SelectMany(r => r != null ? r.AbilityAssociations : new List<AbilityResponse>())
+            .Select(ra => ra.Ability);
+
+        FullPlayerResponse? player = await _playerRepository.AsQueryable()
+            .Where(p => p.Id == id)
+            .Select(p => new FullPlayerResponse(
+                p.Id,
+                p.Name,
+                p.Role != null ? new RoleResponse(p.Role.Id, p.Role.Name, p.Role.Description, p.Role.AbilityAssociations) : null,
+                p.CanSee.Select(ps => new PlayerResponse(ps.Id, ps.Name)).ToList(),
+                p.CanBeSeenBy.Select(ps => new PlayerResponse(ps.Id, ps.Name)).ToList()
+            )).FirstOrDefaultAsync();
+    }
+
+    public async Task<Result<bool>> CanPlayerSeeAsync(string sourcePlayerName, string targetPlayerName)
+    {
+        Player? source = await _playerRepository.GetByNameAsync(sourcePlayerName);
+        if (source is null)
         {
-            return Errors.ResourceNotFound($"Role of player {playerName} not found.");
+            return Errors.ResourceNotFound($"Source player with username {sourcePlayerName} not found.");
         }
-        return role;
+
+        Player? target = await _playerRepository.GetByNameAsync(targetPlayerName);
+        if (target is null)
+        {
+            return Errors.ResourceNotFound($"Target player with username {targetPlayerName} not found.");
+        }
+
+        bool canSee = await _playerRepository.IsVisibleToPlayerAsync(source, target);
+        return canSee;
     }
 }
