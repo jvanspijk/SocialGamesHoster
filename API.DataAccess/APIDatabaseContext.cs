@@ -86,6 +86,9 @@ public class APIDatabaseContext : DbContext
             });
         }
 
+        Player playerWithoutRole = new() { Id = amountOfTestPlayers + 1, Name = "User without role" };
+        players.Add(playerWithoutRole);
+
         builder.Entity<Player>().HasData(players);
     }
 
