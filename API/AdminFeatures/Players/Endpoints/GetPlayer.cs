@@ -1,19 +1,33 @@
-﻿using API.Domain;
-using API.Features.Players.Responses;
+﻿using API.AdminFeatures.Players.Responses;
+using API.DataAccess;
+using API.DataAccess.Repositories;
+using API.Domain;
+using API.Domain.Models;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace API.AdminFeatures.Players.Endpoints;
 
 public static class GetPlayer
 {
-    public static async Task<IResult> HandleByIdAsync(AdminPlayerService playerService, int id)
+    
+    public static async Task<IResult> HandleByIdAsync(PlayerRepository repository, int id)
     {
-        var result = await playerService.GetAsync(id);
-        return result.AsIResult();
+        FullPlayerResponse? result = await repository.GetAsync<FullPlayerResponse>(id);
+        if(result == null)
+        {
+            return Results.NotFound($"Player with id {id} not found.");
+        }
+        return Results.Ok(result);
     }
 
-    public static async Task<IResult> HandleByNameAsync(AdminPlayerService playerService, string name)
+    public static async Task<IResult> HandleByNameAsync(PlayerRepository repository, string name)
     {
-        var result = await playerService.GetByNameAsync(name);
-        return result.AsIResult();
-    }
+        FullPlayerResponse? result = await repository.GetByNameAsync<FullPlayerResponse>(name);
+        if (result == null)
+        {
+            return Results.NotFound($"Player with name '{name}' not found.");
+        }
+        return Results.Ok(result);
+    }    
 }
