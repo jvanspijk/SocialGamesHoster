@@ -21,18 +21,18 @@ public class PlayerRepository : IRepository<Player>
         return player;
     }
     // Read
-    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Player, TProjection>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Player, TProjectable>
     {
         return await _context.Players
             .Where(a => a.Id == id)
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Player, TProjection>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Player, TProjectable>
     {
         return await _context.Players
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .ToListAsync();
     }
 

@@ -4,8 +4,8 @@ public interface IRepository<T> where T : class
 {
     IQueryable<T> AsQueryable();
     // Read
-    Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<T, TProjection>;
-    Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<T, TProjection>;
+    Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<T, TProjectable>;
+    Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<T, TProjectable>;
     // Create
     Task<T> CreateAsync(T entity);
     // Update

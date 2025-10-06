@@ -22,23 +22,22 @@ public class RoleRepository : IRepository<Role>
         return role;
     }
 
-    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Role, TProjection>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Role, TProjectable>
     {
         return await _context.Roles
             .Where(a => a.Id == id)
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Role, TProjection>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Role, TProjectable>
     {
         return await _context.Roles
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
     // Update
-
     public async Task UpdateAsync(Role role)
     {
         _context.Entry(role).State = EntityState.Modified;

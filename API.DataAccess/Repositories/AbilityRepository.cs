@@ -12,18 +12,18 @@ public class AbilityRepository : IRepository<Ability>
 
     public IQueryable<Ability> AsQueryable() => _context.Abilities.AsNoTracking();
 
-    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Ability, TProjection>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Ability, TProjectable>
     {
         return await _context.Abilities
             .Where(a => a.Id == id)
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Ability, TProjection>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Ability, TProjectable>
     {
         return await _context.Abilities
-            .Select(TProjection.Projection)
+            .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
