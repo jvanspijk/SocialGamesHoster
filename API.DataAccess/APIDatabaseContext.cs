@@ -11,7 +11,7 @@ public class APIDatabaseContext : DbContext
     {
         base.OnModelCreating(builder);
         ConfigureEntityRelationships(builder);
-        SeedData(builder);
+        SeedGame(builder);
     }
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -75,9 +75,9 @@ public class APIDatabaseContext : DbContext
             .IsRequired(false);
     }
 
-    private void SeedData(ModelBuilder builder)
+    private static void SeedGame(ModelBuilder builder)
     {
-        List<Role> roles = SeedTownOfSalem(builder);
+        List<Role> roles = SeedRoles(builder);
         SeedPlayers(builder, roles);
     }
 
@@ -112,7 +112,7 @@ public class APIDatabaseContext : DbContext
         builder.Entity<Player>().HasData(players);
     }
 
-    private static List<Role> SeedTownOfSalem(ModelBuilder builder)
+    private static List<Role> SeedRoles(ModelBuilder builder)
     {
         var basicVote = new Ability { Id = 1, Name = "Vote", Description = "Participate in daily voting to lynch a suspect." };
         var defense = new Ability { Id = 3, Name = "Defense", Description = "Can defend themselves against night attacks." };
