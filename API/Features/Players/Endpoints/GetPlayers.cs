@@ -1,12 +1,13 @@
-﻿using API.Features.Players.Responses;
+﻿using API.DataAccess.Repositories;
+using API.Features.Players.Responses;
 
 namespace API.Features.Players.Endpoints;
 
 public static class GetPlayers
 {
-    public static async Task<IResult> HandleAsync(PlayerService playerService)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository)
     {
-        var result = await playerService.GetAllAsync();
-        return result.AsIResult();
+        List<PlayerResponse> result = await repository.GetAllAsync<PlayerResponse>();
+        return Results.Ok(result);
     }
 }

@@ -29,6 +29,14 @@ public class PlayerRepository : IRepository<Player>
             .FirstOrDefaultAsync();
     }
 
+    public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name) where TProjectable : IProjectable<Player, TProjectable>
+    {
+        return await _context.Players
+            .Where(a => a.Name == name)
+            .Select(TProjectable.Projection)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Player, TProjectable>
     {
         return await _context.Players

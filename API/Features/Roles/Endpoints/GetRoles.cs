@@ -1,10 +1,13 @@
-﻿namespace API.Features.Roles.Endpoints;
+﻿using API.DataAccess.Repositories;
+using API.Features.Roles.Responses;
+
+namespace API.Features.Roles.Endpoints;
 
 public class GetRoles
 {
-    public static async Task<IResult> HandleAsync(RoleService roleService)
+    public static async Task<IResult> HandleAsync(RoleRepository repository)
     {
-        var result = await roleService.GetAllAsync();
-        return result.AsIResult();
+        List<RoleResponse> result = await repository.GetAllAsync<RoleResponse>();
+        return Results.Ok(result);
     }
 }

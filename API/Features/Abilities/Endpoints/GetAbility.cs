@@ -10,7 +10,7 @@ public class GetAbility
         AbilityResponse? result = await repository.GetAsync<AbilityResponse>(id);
         if (result == null)
         {
-            return Results.NotFound();
+            return Results.NotFound($"Ability with id {id} not found.");
         }
         return Results.Ok(result);
     }
