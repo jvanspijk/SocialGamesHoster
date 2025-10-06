@@ -10,6 +10,9 @@ public class PlayerRepository : IRepository<Player>
     {
         _context = context;
     }
+
+    public IQueryable<Player> AsQueryable() => _context.Players.AsNoTracking();
+
     // Create
     public async Task<Player> CreateAsync(Player player)
     {
@@ -30,6 +33,7 @@ public class PlayerRepository : IRepository<Player>
     {
         return await _context.Players
             .Include(p => p.Role)
+                .ThenInclude(r => r.Abilities)
             .Include(p => p.CanSee)
             .Include(p => p.CanBeSeenBy)
             .SingleOrDefaultAsync(p => p.Name == name);           
@@ -44,13 +48,25 @@ public class PlayerRepository : IRepository<Player>
     {
         int? playerRoleId = source.RoleId;
 
+        Player sourcePlayer = await _context.Players
+            .Include(p => p.Role)
+            .Include(p => p.CanSee)
+            .SingleOrDefaultAsync(p => p.Id == source.Id)
+            ?? throw new ArgumentException($"Source player with Id {source.Id} not found.");
+
+        Player targetPlayer = await _context.Players
+            .Include(p => p.Role)
+            .Include(p => p.CanBeSeenBy)
+            .SingleOrDefaultAsync(p => p.Id == target.Id)
+            ?? throw new ArgumentException($"Target player with Id {target.Id} not found.");
+
         return await _context.Players
             .Where(p => p.Name == target.Name)
             .Where(p =>
                 p.Name == source.Name ||
-                p.CanBeSeenBy.Any(v => v.Player.Name == source.Name) ||
+                p.CanBeSeenBy.Any(p => p.Name == source.Name) ||
                 (p.Role != null &&
-                 p.Role.CanBeSeenBy.Any(rv => rv.RoleId == playerRoleId))
+                 p.Role.CanBeSeenBy.Any(r => r.Id == playerRoleId))
             )
             .AnyAsync();
     }
@@ -61,9 +77,9 @@ public class PlayerRepository : IRepository<Player>
             from p in _context.Players.Include(p => p.Role)
             where
                 p.Id == player.Id ||
-                p.CanBeSeenBy.Any(v => v.PlayerId == player.Id) ||
+                p.CanBeSeenBy.Any(p => p.Id == player.Id) ||
                 (p.Role != null &&
-                 p.Role.CanBeSeenBy.Any(rv => rv.RoleId == player.RoleId))
+                 p.Role.CanBeSeenBy.Any(r => r.Id == player.RoleId))
             select p;
 
         return await query.ToListAsync();
@@ -83,7 +99,5 @@ public class PlayerRepository : IRepository<Player>
         _context.Entry(player).State = EntityState.Modified;
         _context.Players.Remove(player);
         await _context.SaveChangesAsync();
-    }  
-    
-
+    }
 }

@@ -19,49 +19,15 @@ public class APIDatabaseContext : DbContext
 
     private static void ConfigureEntityRelationships(ModelBuilder builder)
     {
-        // Many to many self-referencing relationship for Role visibility
         builder.Entity<Role>()
             .HasMany(r => r.CanSee)
             .WithMany(r => r.CanBeSeenBy)
-            .UsingEntity<Dictionary<string, object>>(
-                "RoleVisibility",
-                j => j
-                    .HasOne<Role>()
-                    .WithMany()
-                    .HasForeignKey("VisibleRoleId")
-                    .OnDelete(DeleteBehavior.Restrict),
-                j => j
-                    .HasOne<Role>()
-                    .WithMany()
-                    .HasForeignKey("RoleId")
-                    .OnDelete(DeleteBehavior.Restrict),
-                j =>
-                {
-                    j.HasKey("RoleId", "VisibleRoleId");
-                    j.ToTable("RoleVisibility");
-                });
+            .UsingEntity(r => r.ToTable("RoleVisibility"));                
 
-        // Many to many self-referencing relationship for Player visibility
         builder.Entity<Player>()
             .HasMany(p => p.CanSee)
             .WithMany(p => p.CanBeSeenBy)
-            .UsingEntity<Dictionary<string, object>>(
-                "PlayerVisibility",
-                j => j
-                    .HasOne<Player>()
-                    .WithMany()
-                    .HasForeignKey("VisiblePlayerId")
-                    .OnDelete(DeleteBehavior.Restrict),
-                j => j
-                    .HasOne<Player>()
-                    .WithMany()
-                    .HasForeignKey("PlayerId")
-                    .OnDelete(DeleteBehavior.Restrict),
-                j =>
-                {
-                    j.HasKey("PlayerId", "VisiblePlayerId");
-                    j.ToTable("PlayerVisibility");
-                });
+            .UsingEntity(p => p.ToTable("PlayerVisibility"));
 
         builder.Entity<Role>()
             .HasMany(r => r.Abilities)

@@ -3,12 +3,15 @@ using Microsoft.EntityFrameworkCore;
 namespace API.DataAccess.Repositories;
 
 public class AbilityRepository : IRepository<Ability>
-{
+{    
     private readonly APIDatabaseContext _context;
     public AbilityRepository(APIDatabaseContext context)
     {
         _context = context;
     }
+
+    public IQueryable<Ability> AsQueryable() => _context.Abilities.AsNoTracking();
+
     public async Task<Ability> CreateAsync(Ability ability)
     {
         _context.Abilities.Add(ability);

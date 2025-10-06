@@ -2,11 +2,14 @@
 
 public interface IRepository<T>
 {
+    // For projections
+    /// <summary>
+    /// Returns the entities as an <see cref="IQueryable{T}"/> for advanced queries and projections.
+    /// Uses AsNoTracking() for read-only scenarios.
+    /// </summary>
+    IQueryable<T> AsQueryable();
     // Create
     Task<T> CreateAsync(T entity);
-    // Read
-    Task<T?> GetByIdAsync(int id);
-    Task<List<T>> GetAllAsync();
     // Update
     Task UpdateAsync(T entity);
     // Delete
