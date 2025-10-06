@@ -1,10 +1,13 @@
-﻿namespace API.AdminFeatures.Abilities.Endpoints;
+﻿using API.AdminFeatures.Abilities.Responses;
+using API.DataAccess.Repositories;
+
+namespace API.AdminFeatures.Abilities.Endpoints;
 
 public static class GetAbilities
 {
-    public static async Task<IResult> HandleAsync(AdminAbilityService abilityService)
+    public static async Task<IResult> HandleAsync(AbilityRepository repository)
     {
-        var result = await abilityService.GetAllAsync();
-        return result.AsIResult();
+        List<AbilityResponse> result = await repository.GetAllAsync<AbilityResponse>();
+        return Results.Ok(result);
     }
 }
