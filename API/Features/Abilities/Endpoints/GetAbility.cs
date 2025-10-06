@@ -1,10 +1,17 @@
-﻿namespace API.Features.Abilities.Endpoints;
+﻿using API.DataAccess.Repositories;
+using API.Features.Abilities.Responses;
+
+namespace API.Features.Abilities.Endpoints;
 
 public class GetAbility
 {
-    public static async Task<IResult> HandleAsync(AbilityService abilityService, int id)
+    public static async Task<IResult> HandleAsync(AbilityRepository repository, int id)
     {
-        var result = await abilityService.GetAsync(id);
-        return result.AsIResult();
+        AbilityResponse? result = await repository.GetAsync<AbilityResponse>(id);
+        if (result == null)
+        {
+            return Results.NotFound();
+        }
+        return Results.Ok(result);
     }
 }

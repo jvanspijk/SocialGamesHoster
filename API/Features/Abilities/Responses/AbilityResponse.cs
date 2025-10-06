@@ -1,8 +1,11 @@
-﻿using API.Domain.Models;
+﻿using API.DataAccess;
+using API.Domain.Models;
+using System.Linq.Expressions;
 
 namespace API.Features.Abilities.Responses;
 
-public readonly record struct AbilityResponse(string Name, string Description)
+public readonly record struct AbilityResponse(string Name, string Description) : IProjectable<Ability, AbilityResponse>
 {
-    public AbilityResponse(Ability ability) : this(ability.Name, ability.Description) { }
+    public static Expression<Func<Ability, AbilityResponse>> Projection =>
+        ability => new AbilityResponse(ability.Name, ability.Description);
 }
