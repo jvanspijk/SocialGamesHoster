@@ -9,7 +9,7 @@ public class Player
     [Required]
     public int Id { get; set; }
     [Required]
-    [StringLength(32, MinimumLength = 1, ErrorMessage = "Player name must be between 1 and 32 characters long.")]
+    [StringLength(64, MinimumLength = 1, ErrorMessage = "Player name must be between 1 and 64 characters long.")]
     [RegularExpression(@"^[a-zA-Z0-9 ]+$", ErrorMessage = "Player name can only contain alphanumeric characters and spaces.")]
     public required string Name { get; set; }
 

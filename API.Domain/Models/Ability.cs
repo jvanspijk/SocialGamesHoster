@@ -10,5 +10,6 @@ public class Ability
     [StringLength(32, MinimumLength = 1, ErrorMessage = "Ability name must be between 1 and 32 characters long.")]
     public required string Name { get; set; }
     public required string Description { get; set; }
-    public ICollection<Role> IsAbilityOfRoles { get; set; } = [];
+    public ICollection<Role> AssociatedRoles { get; set; } = [];
+    public int GameId { get; set; }
 }
