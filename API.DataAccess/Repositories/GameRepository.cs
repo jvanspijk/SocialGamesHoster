@@ -37,11 +37,16 @@ public class GameRepository : IRepository<Game>
             .FirstOrDefaultAsync();
     }
 
-    // Update
-    public async Task UpdateAsync(Game game)
+    public async Task<Game?> GetAsync(int id)
     {
-        _context.Entry(game).State = EntityState.Modified;
-        _context.Games.Update(game);
+        return await _context.Games.FindAsync(id);
+    }
+
+    // Update
+    public async Task UpdateAsync(Game updatedGame)
+    {
+        _context.Entry(updatedGame).State = EntityState.Modified;
+        _context.Games.Update(updatedGame);
         await _context.SaveChangesAsync();
     }
 

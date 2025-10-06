@@ -44,6 +44,11 @@ public class PlayerRepository : IRepository<Player>
             .ToListAsync();
     }
 
+    public async Task<Player?> GetAsync(int id)
+    {
+        return await _context.Players.FindAsync(id);
+    }
+
     public async Task<bool> IsVisibleToPlayerAsync(Player source, Player target)
     {
         int? playerRoleId = source.RoleId;

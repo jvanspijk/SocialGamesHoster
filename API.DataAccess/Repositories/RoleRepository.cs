@@ -22,6 +22,7 @@ public class RoleRepository : IRepository<Role>
         return role;
     }
 
+    // Read
     public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Role, TProjectable>
     {
         return await _context.Roles
@@ -35,6 +36,11 @@ public class RoleRepository : IRepository<Role>
         return await _context.Roles
             .Select(TProjectable.Projection)
             .ToListAsync();
+    }
+
+    public async Task<Role?> GetAsync(int id)
+    {
+        return await _context.Roles.FindAsync(id);
     }
 
     // Update
