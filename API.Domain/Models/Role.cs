@@ -13,9 +13,9 @@ public class Role
     [StringLength(512)]
     [DefaultValue("")]
     public string Description { get; set; } = "";
-    public ICollection<RoleAbility> AbilityAssociations { get; set; } = [];
-    public ICollection<RoleVisibility> CanSee { get; set; } = new List<RoleVisibility>();
-    public ICollection<RoleVisibility> CanBeSeenBy { get; set; } = new List<RoleVisibility>();
-    public ICollection<Player> PlayersWithRole { get; set; } = new List<Player>();
+    public ICollection<Ability> Abilities { get; set; } = [];
+    public ICollection<Role> CanSee { get; set; } = [];
+    public ICollection<Role> CanBeSeenBy { get; set; } = [];
+    public ICollection<Player> PlayersWithRole { get; set; } = [];
 }
 

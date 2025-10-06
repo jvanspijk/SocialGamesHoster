@@ -16,52 +16,57 @@ public class APIDatabaseContext : DbContext
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Ability> Abilities { get; set; }
-    public DbSet<RoleAbility> RoleAbilityAssociations { get; set; }
 
-    private void ConfigureEntityRelationships(ModelBuilder builder)
+    private static void ConfigureEntityRelationships(ModelBuilder builder)
     {
-        builder.Entity<RoleVisibility>()
-            .HasKey(rv => new { rv.RoleId, rv.VisibleRoleId });
-
-        builder.Entity<RoleVisibility>()
-            .HasOne(rv => rv.Role)
-            .WithMany(r => r.CanSee)
-            .HasForeignKey(rv => rv.RoleId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<RoleVisibility>()
-            .HasOne(rv => rv.VisibleRole)
+        // Many to many self-referencing relationship for Role visibility
+        builder.Entity<Role>()
+            .HasMany(r => r.CanSee)
             .WithMany(r => r.CanBeSeenBy)
-            .HasForeignKey(rv => rv.VisibleRoleId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .UsingEntity<Dictionary<string, object>>(
+                "RoleVisibility",
+                j => j
+                    .HasOne<Role>()
+                    .WithMany()
+                    .HasForeignKey("VisibleRoleId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j => j
+                    .HasOne<Role>()
+                    .WithMany()
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j =>
+                {
+                    j.HasKey("RoleId", "VisibleRoleId");
+                    j.ToTable("RoleVisibility");
+                });
 
-        builder.Entity<PlayerVisibility>()
-            .HasKey(pv => new { pv.PlayerId, pv.VisiblePlayerId });
-
-        builder.Entity<PlayerVisibility>()
-            .HasOne(pv => pv.Player)
-            .WithMany(p => p.CanSee)
-            .HasForeignKey(pv => pv.PlayerId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<PlayerVisibility>()
-            .HasOne(pv => pv.VisiblePlayer)
+        // Many to many self-referencing relationship for Player visibility
+        builder.Entity<Player>()
+            .HasMany(p => p.CanSee)
             .WithMany(p => p.CanBeSeenBy)
-            .HasForeignKey(pv => pv.VisiblePlayerId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .UsingEntity<Dictionary<string, object>>(
+                "PlayerVisibility",
+                j => j
+                    .HasOne<Player>()
+                    .WithMany()
+                    .HasForeignKey("VisiblePlayerId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j => j
+                    .HasOne<Player>()
+                    .WithMany()
+                    .HasForeignKey("PlayerId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j =>
+                {
+                    j.HasKey("PlayerId", "VisiblePlayerId");
+                    j.ToTable("PlayerVisibility");
+                });
 
-        builder.Entity<RoleAbility>()
-            .HasKey(ra => new { ra.RoleId, ra.AbilityId });
-
-        builder.Entity<RoleAbility>()
-            .HasOne(ra => ra.Role)
-            .WithMany(r => r.AbilityAssociations)
-            .HasForeignKey(ra => ra.RoleId);
-
-        builder.Entity<RoleAbility>()
-            .HasOne(ra => ra.Ability)
-            .WithMany(a => a.RoleAssociations)
-            .HasForeignKey(ra => ra.AbilityId);
+        builder.Entity<Role>()
+            .HasMany(r => r.Abilities)
+            .WithMany(a => a.IsAbilityOfRoles)
+            .UsingEntity(j => j.ToTable("RoleAbility"));
 
         builder.Entity<Player>()
             .HasOne(p => p.Role)
@@ -72,12 +77,11 @@ public class APIDatabaseContext : DbContext
 
     private void SeedData(ModelBuilder builder)
     {
-
-        List<Role> roles = SeedRolesAndAbilities(builder);
+        List<Role> roles = SeedTownOfSalem(builder);
         SeedPlayers(builder, roles);
     }
 
-    private void SeedPlayers(ModelBuilder builder, List<Role> roles)
+    private static void SeedPlayers(ModelBuilder builder, List<Role> roles)
     {
         int amountOfRoles = roles.Count;
 
@@ -108,7 +112,7 @@ public class APIDatabaseContext : DbContext
         builder.Entity<Player>().HasData(players);
     }
 
-    private List<Role> SeedRolesAndAbilities(ModelBuilder builder)
+    private static List<Role> SeedTownOfSalem(ModelBuilder builder)
     {
         var basicVote = new Ability { Id = 1, Name = "Vote", Description = "Participate in daily voting to lynch a suspect." };
         var defense = new Ability { Id = 3, Name = "Defense", Description = "Can defend themselves against night attacks." };
@@ -141,9 +145,9 @@ public class APIDatabaseContext : DbContext
         var jester = new Role { Id = 7, Name = "Jester", Description = "Your only goal is to be lynched by the town." };
         var executioner = new Role { Id = 8, Name = "Executioner", Description = "You have a specific target you must get lynched to win." };
 
-        builder.Entity<RoleVisibility>().HasData(
-            new RoleVisibility { RoleId = godfather.Id, VisibleRoleId = mafioso.Id },
-            new RoleVisibility { RoleId = mafioso.Id, VisibleRoleId = godfather.Id }
+        builder.Entity("RoleVisibility").HasData(
+            new { RoleId = godfather.Id, VisibleRoleId = mafioso.Id },
+            new { RoleId = mafioso.Id, VisibleRoleId = godfather.Id }
         );
 
         List<Role> roles = new()
@@ -160,38 +164,38 @@ public class APIDatabaseContext : DbContext
 
         builder.Entity<Role>().HasData(roles);
 
-        builder.Entity<RoleAbility>().HasData(
+        builder.Entity("RoleAbility").HasData(
             // Townie abilities
-            new RoleAbility { RoleId = townie.Id, AbilityId = basicVote.Id },
+            new { RoleId = townie.Id, AbilityId = basicVote.Id },
 
             // Doctor abilities
-            new RoleAbility { RoleId = doctor.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = doctor.Id, AbilityId = heal.Id },
+            new { RoleId = doctor.Id, AbilityId = basicVote.Id },
+            new { RoleId = doctor.Id, AbilityId = heal.Id },
 
             // Investigator abilities
-            new RoleAbility { RoleId = investigator.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = investigator.Id, AbilityId = investigate.Id },
+            new { RoleId = investigator.Id, AbilityId = basicVote.Id },
+            new { RoleId = investigator.Id, AbilityId = investigate.Id },
 
             // Vigilante abilities
-            new RoleAbility { RoleId = vigilante.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = vigilante.Id, AbilityId = shoot.Id },
+            new { RoleId = vigilante.Id, AbilityId = basicVote.Id },
+            new { RoleId = vigilante.Id, AbilityId = shoot.Id },
 
             // Mafioso abilities
-            new RoleAbility { RoleId = mafioso.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = mafioso.Id, AbilityId = mafiaKill.Id },
+            new { RoleId = mafioso.Id, AbilityId = basicVote.Id },
+            new { RoleId = mafioso.Id, AbilityId = mafiaKill.Id },
 
             // Godfather abilities
-            new RoleAbility { RoleId = godfather.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = godfather.Id, AbilityId = organizeKill.Id },
-            new RoleAbility { RoleId = godfather.Id, AbilityId = defense.Id },
+            new { RoleId = godfather.Id, AbilityId = basicVote.Id },
+            new { RoleId = godfather.Id, AbilityId = organizeKill.Id },
+            new { RoleId = godfather.Id, AbilityId = defense.Id },
 
             // Jester abilities
-            new RoleAbility { RoleId = jester.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = jester.Id, AbilityId = trick.Id },
+            new { RoleId = jester.Id, AbilityId = basicVote.Id },
+            new { RoleId = jester.Id, AbilityId = trick.Id },
 
             // Executioner abilities
-            new RoleAbility { RoleId = executioner.Id, AbilityId = basicVote.Id },
-            new RoleAbility { RoleId = executioner.Id, AbilityId = targetElimination.Id }
+            new { RoleId = executioner.Id, AbilityId = basicVote.Id },
+            new { RoleId = executioner.Id, AbilityId = targetElimination.Id }
         );
 
         return roles;

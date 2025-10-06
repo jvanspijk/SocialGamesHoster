@@ -25,8 +25,8 @@ public class Player
     public int? RoleId { get; set; }
     [JsonIgnore]
 
-    public ICollection<PlayerVisibility> CanSee { get; set; } = [];
-    public ICollection<PlayerVisibility> CanBeSeenBy { get; set; } = [];
+    public ICollection<Player> CanSee { get; set; } = [];
+    public ICollection<Player> CanBeSeenBy { get; set; } = [];
 }
 
 
