@@ -12,6 +12,21 @@ public class AbilityRepository : IRepository<Ability>
 
     public IQueryable<Ability> AsQueryable() => _context.Abilities.AsNoTracking();
 
+    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Ability, TProjection>
+    {
+        return await _context.Abilities
+            .Where(a => a.Id == id)
+            .Select(TProjection.Projection)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Ability, TProjection>
+    {
+        return await _context.Abilities
+            .Select(TProjection.Projection)
+            .ToListAsync();
+    }
+
     public async Task<Ability> CreateAsync(Ability ability)
     {
         _context.Abilities.Add(ability);
@@ -42,4 +57,6 @@ public class AbilityRepository : IRepository<Ability>
         _context.Abilities.Remove(ability);
         await _context.SaveChangesAsync();
     }
+
+
 }

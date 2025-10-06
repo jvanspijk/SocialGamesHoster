@@ -21,27 +21,19 @@ public class PlayerRepository : IRepository<Player>
         return player;
     }
     // Read
-    public async Task<Player?> GetByIdAsync(int id)
-    { 
-        return await _context.Players
-            .Include(p => p.Role)
-            .Include(p => p.CanSee)
-            .Include(p => p.CanBeSeenBy)
-            .SingleOrDefaultAsync(p => p.Id == id);       
-    }
-    public async Task<Player?> GetByNameAsync(string name)
+    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Player, TProjection>
     {
         return await _context.Players
-            .Include(p => p.Role)
-                .ThenInclude(r => r.Abilities)
-            .Include(p => p.CanSee)
-            .Include(p => p.CanBeSeenBy)
-            .SingleOrDefaultAsync(p => p.Name == name);           
+            .Where(a => a.Id == id)
+            .Select(TProjection.Projection)
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<List<Player>> GetAllAsync()
+    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Player, TProjection>
     {
-        return await _context.Players.Include(p => p.Role).ToListAsync();
+        return await _context.Players
+            .Select(TProjection.Projection)
+            .ToListAsync();
     }
 
     public async Task<bool> IsVisibleToPlayerAsync(Player source, Player target)

@@ -20,16 +20,20 @@ public class RoleRepository : IRepository<Role>
         _context.Roles.Add(role);
         await _context.SaveChangesAsync();
         return role;
-    }  
+    }
 
-    public async Task<List<Role>> GetAllAsync()
+    public async Task<TProjection?> GetAsync<TProjection>(int id) where TProjection : IProjectable<Role, TProjection>
     {
-        _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-
         return await _context.Roles
-            .Include(r => r.Abilities)
-            .Include(r => r.CanSee)
-            .Include(r => r.CanBeSeenBy)
+            .Where(a => a.Id == id)
+            .Select(TProjection.Projection)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<TProjection>> GetAllAsync<TProjection>() where TProjection : IProjectable<Role, TProjection>
+    {
+        return await _context.Roles
+            .Select(TProjection.Projection)
             .ToListAsync();
     }
 
