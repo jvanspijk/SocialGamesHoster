@@ -15,7 +15,7 @@ public class APIDatabaseContext : DbContext
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Ability> Abilities { get; set; }
-    public DbSet<Game> Games { get; set; }
+    public DbSet<Ruleset> Games { get; set; }
 
     private static void ConfigureEntityRelationships(ModelBuilder builder)
     {
@@ -44,7 +44,7 @@ public class APIDatabaseContext : DbContext
     private static void SeedGame(ModelBuilder builder)
     {
         const int gameId = 1;
-        builder.Entity<Game>().HasData(new Game
+        builder.Entity<Ruleset>().HasData(new Ruleset
         {
             Id = gameId,
             Name = "Town of Salem",

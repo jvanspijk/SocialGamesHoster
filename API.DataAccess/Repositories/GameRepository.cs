@@ -4,17 +4,17 @@ using System.Data;
 
 namespace API.DataAccess.Repositories;
 
-public class GameRepository : IRepository<Game>
+public class GameRepository : IRepository<Ruleset>
 {
     private readonly APIDatabaseContext _context;
     public GameRepository(APIDatabaseContext context)
     {
         _context = context;
     }
-    public IQueryable<Game> AsQueryable() => _context.Games.AsNoTracking();
+    public IQueryable<Ruleset> AsQueryable() => _context.Games.AsNoTracking();
 
     // Create
-    public async Task<Game> CreateAsync(Game game)
+    public async Task<Ruleset> CreateAsync(Ruleset game)
     {
         _context.Games.Add(game);
         await _context.SaveChangesAsync();
@@ -22,14 +22,14 @@ public class GameRepository : IRepository<Game>
     }
 
     // Read
-    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Game, TProjectable>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Ruleset, TProjectable>
     {
         return await _context.Games
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
-    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Game, TProjectable>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Ruleset, TProjectable>
     {
         return await _context.Games
             .Where(a => a.Id == id)
@@ -37,13 +37,13 @@ public class GameRepository : IRepository<Game>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Game?> GetAsync(int id)
+    public async Task<Ruleset?> GetAsync(int id)
     {
         return await _context.Games.FindAsync(id);
     }
 
     // Update
-    public async Task UpdateAsync(Game updatedGame)
+    public async Task UpdateAsync(Ruleset updatedGame)
     {
         _context.Entry(updatedGame).State = EntityState.Modified;
         _context.Games.Update(updatedGame);
@@ -51,7 +51,7 @@ public class GameRepository : IRepository<Game>
     }
 
     // Delete
-    public async Task DeleteAsync(Game game)
+    public async Task DeleteAsync(Ruleset game)
     {
         _context.Entry(game).State = EntityState.Modified;
         _context.Games.Remove(game);

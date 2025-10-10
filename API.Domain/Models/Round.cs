@@ -11,11 +11,6 @@ public class Round
     public int Id { get; set; }
 
     /// <summary>
-    /// The order of the round in the game session. E.g. 1 for the first round, 2 for the second, etc.
-    /// </summary>
-    public int Order { get; set; }
-
-    /// <summary>
     /// The time the round started in UTC.
     /// </summary>
     public DateTime StartTime {  get; set; }
