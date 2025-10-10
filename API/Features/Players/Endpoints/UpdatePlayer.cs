@@ -1,7 +1,6 @@
 ﻿using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.Players.Requests;
 using API.Features.Players.Responses;
 
 namespace API.Features.Players.Endpoints;
