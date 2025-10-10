@@ -7,25 +7,29 @@ namespace API.Logging;
 /// </summary>
 public class FileLogger : ILogger
 {
+    private readonly LogLevel _minLogLevel;
+    private readonly LogLevel _maxLogLevel;
     private readonly string _logFilePath;
     private readonly int _maxFileCount;
     private readonly object _lock = new();
 
     private const long MaxFileSizeInBytes = 8 * 1024 * 1024; // 8 MB
 
-    public FileLogger(string logFilePath, int maxFileCount)
+    public FileLogger(string logFilePath, int maxFileCount, LogLevel minLogLevel, LogLevel maxLogLevel = LogLevel.Critical)
     {
         _logFilePath = logFilePath;
         _maxFileCount = maxFileCount;
 
         Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
+        _minLogLevel = minLogLevel;
+        _maxLogLevel = maxLogLevel;
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default;
 
     public bool IsEnabled(LogLevel logLevel)
     {
-        return logLevel >= LogLevel.Information;
+        return logLevel >= _minLogLevel && logLevel <= _maxLogLevel;
     }
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -82,12 +86,5 @@ public class FileLogger : ILogger
     }
 }
 
-public static class FileLoggerExtensions
-{
-    public static ILoggingBuilder AddFileLogger(this ILoggingBuilder builder, string filePath, int maxFilesToKeep)
-    {
-        builder.AddProvider(new FileLoggerProvider(filePath, maxFilesToKeep));
-        return builder;
-    }
-}
+
 

@@ -11,7 +11,7 @@ namespace API;
 
 public static class Endpoints
 {
-    public static IEndpointRouteBuilder MapGameEndpoints(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder builder)
     {
         builder.MapAbilityEndpoints();
         builder.MapPlayerEndpoints();

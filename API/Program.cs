@@ -31,7 +31,8 @@ public class Program
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
-        builder.Logging.AddFileLogger("logs/api.log", 10);
+        builder.Logging.AddFileLogger("logs/api.log", 10, LogLevel.Information, LogLevel.Information);
+        builder.Logging.AddFileLogger("logs/errors.log", 5, LogLevel.Warning, LogLevel.Critical);
 
         services.AddHttpLogging(options =>
         {
@@ -42,8 +43,8 @@ public class Program
                                   | HttpLoggingFields.ResponseStatusCode
                                   | HttpLoggingFields.ResponseBody;
 
-            options.RequestBodyLogLimit = 1024;
-            options.ResponseBodyLogLimit = 1024;
+            options.RequestBodyLogLimit = 512;
+            options.ResponseBodyLogLimit = 512;
             options.RequestHeaders.Clear();
             options.ResponseHeaders.Clear();
             options.CombineLogs = true;
@@ -106,12 +107,8 @@ public class Program
         services.AddScoped<RoleRepository>()
             .AddScoped<PlayerRepository>()
             .AddScoped<AbilityRepository>()
-            .AddSingleton<RoundRepository>();
-
-        services.AddScoped<AbilityService>()
-            .AddScoped<AuthService>()
-            .AddScoped<PlayerService>()
-            .AddScoped<RoleService>();
+            .AddSingleton<RoundRepository>()
+            .AddScoped<AuthService>();
 
         var app = builder.Build();
 
@@ -160,10 +157,7 @@ public class Program
         app.UseAuthorization();
 
         var apiGroup = app.MapGroup("/api");
-        apiGroup.MapGameEndpoints();
-
-        var adminGroup = apiGroup.MapGroup("/admin").WithTags("Admin").RequireAuthorization("AdminPolicy"); //TODO: add the admin policy authorization
-        adminGroup.MapAdminEndpoints();
+        apiGroup.MapEndpoints();
 
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
 
