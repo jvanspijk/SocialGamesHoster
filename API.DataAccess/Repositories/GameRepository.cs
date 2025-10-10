@@ -11,12 +11,12 @@ public class GameRepository : IRepository<Ruleset>
     {
         _context = context;
     }
-    public IQueryable<Ruleset> AsQueryable() => _context.Games.AsNoTracking();
+    public IQueryable<Ruleset> AsQueryable() => _context.Rulesets.AsNoTracking();
 
     // Create
     public async Task<Ruleset> CreateAsync(Ruleset game)
     {
-        _context.Games.Add(game);
+        _context.Rulesets.Add(game);
         await _context.SaveChangesAsync();
         return game;
     }
@@ -24,14 +24,14 @@ public class GameRepository : IRepository<Ruleset>
     // Read
     public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Ruleset, TProjectable>
     {
-        return await _context.Games
+        return await _context.Rulesets
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
     public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Ruleset, TProjectable>
     {
-        return await _context.Games
+        return await _context.Rulesets
             .Where(a => a.Id == id)
             .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
@@ -39,14 +39,14 @@ public class GameRepository : IRepository<Ruleset>
 
     public async Task<Ruleset?> GetAsync(int id)
     {
-        return await _context.Games.FindAsync(id);
+        return await _context.Rulesets.FindAsync(id);
     }
 
     // Update
     public async Task UpdateAsync(Ruleset updatedGame)
     {
         _context.Entry(updatedGame).State = EntityState.Modified;
-        _context.Games.Update(updatedGame);
+        _context.Rulesets.Update(updatedGame);
         await _context.SaveChangesAsync();
     }
 
@@ -54,7 +54,7 @@ public class GameRepository : IRepository<Ruleset>
     public async Task DeleteAsync(Ruleset game)
     {
         _context.Entry(game).State = EntityState.Modified;
-        _context.Games.Remove(game);
+        _context.Rulesets.Remove(game);
         await _context.SaveChangesAsync();
     }
 }
