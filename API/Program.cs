@@ -31,7 +31,7 @@ public class Program
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
-        builder.Logging.AddFileLogger("logs/api.log", 10, LogLevel.Information, LogLevel.Information);
+        builder.Logging.AddFileLogger("logs/requests.log", 10, LogLevel.Information, LogLevel.Information);
         builder.Logging.AddFileLogger("logs/errors.log", 5, LogLevel.Warning, LogLevel.Critical);
 
         services.AddHttpLogging(options =>
