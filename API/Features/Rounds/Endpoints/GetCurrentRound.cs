@@ -1,10 +1,11 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Features.Rounds.Responses;
 
 namespace API.Features.Rounds.Endpoints;
 
-public class GetCurrentEndTime
+public class GetCurrentRound
 {
     public static async Task<IResult> HandleAsync(RoundRepository roundService)
     {
@@ -13,6 +14,7 @@ public class GetCurrentEndTime
         {
             return Results.NotFound();
         }
-        return Results.Ok(new RoundEndTimeResponse() { EndTimeUTC = round.EndTime });
+        RoundResponse response = round.ProjectTo<Round, RoundResponse>().First();
+        return Results.Ok(response);
     }
 }

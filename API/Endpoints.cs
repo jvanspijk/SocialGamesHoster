@@ -89,9 +89,9 @@ public static class Endpoints
         var roundGroup = builder.MapGroup("/current-round")
             .WithTags("CurrentRound");
 
-        roundGroup.MapGet("/end-time", GetCurrentEndTime.HandleAsync)
+        roundGroup.MapGet("/end-time", GetCurrentRound.HandleAsync)
             .WithName("GetCurrentEndTime")
-            .Produces<RoundEndTimeResponse>(StatusCodes.Status200OK)
+            .Produces<RoundResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return roundGroup;
