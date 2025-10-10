@@ -9,7 +9,7 @@ using API.Features.Rounds.Responses;
 
 namespace API;
 
-public static class GameEndpoints
+public static class Endpoints
 {
     public static IEndpointRouteBuilder MapGameEndpoints(this IEndpointRouteBuilder builder)
     {
@@ -45,17 +45,24 @@ public static class GameEndpoints
 
         playerGroup.MapGet("/", GetPlayers.HandleAsync)
             .WithName("GetAllPlayers")
-            .Produces<List<PlayerResponse>>(StatusCodes.Status200OK); 
+            .Produces<List<PlayerNameResponse>>(StatusCodes.Status200OK); 
 
         playerGroup.MapGet("/{id:int}", GetPlayer.HandleByIdAsync)
             .WithName("GetPlayerById")
-            .Produces<PlayerResponse>(StatusCodes.Status200OK)
+            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playerGroup.MapGet("/{name:alpha}", GetPlayer.HandleByNameAsync)
             .WithName("GetPlayerByName")
-            .Produces<PlayerResponse>(StatusCodes.Status200OK)
+            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        // Admin endpoints
+        playerGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
+           .WithName("UpdatePlayer")
+           .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+           .ProducesProblem(StatusCodes.Status404NotFound);
+
 
         return playerGroup;
     }

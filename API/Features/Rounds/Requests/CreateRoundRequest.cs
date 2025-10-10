@@ -1,4 +1,4 @@
-﻿namespace API.AdminFeatures.Rounds.Requests;
+﻿namespace API.Features.Rounds.Requests;
 public readonly record struct CreateRoundRequest
 {
     public DateTime StartTimeUTC { get; init; }

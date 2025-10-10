@@ -1,7 +1,7 @@
 ﻿using API.DataAccess.Repositories;
 using API.Domain.Models;
 
-namespace API.AdminFeatures.Players.Endpoints;
+namespace API.Features.Players.Endpoints;
 public class DeletePlayer
 {
     public readonly record struct Request(int Id);

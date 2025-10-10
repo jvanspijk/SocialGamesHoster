@@ -37,8 +37,4 @@
     <ProjectReference Include="..\API.Domain\API.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="AdminFeatures\Players\Requests\" />
-  </ItemGroup>
-
 </Project>

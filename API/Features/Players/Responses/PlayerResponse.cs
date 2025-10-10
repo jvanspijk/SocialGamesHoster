@@ -1,10 +1,18 @@
 ﻿using API.DataAccess;
 using API.Domain.Models;
+using API.Features.Roles.Responses;
 using System.Linq.Expressions;
 
 namespace API.Features.Players.Responses;
 
-public readonly record struct PlayerResponse(int Id, string Name) : IProjectable<Player, PlayerResponse>
+public readonly record struct PlayerResponse(int Id, string Name, RoleResponse? Role) : IProjectable<Player, PlayerResponse>
 {
-    public static Expression<Func<Player, PlayerResponse>> Projection => p => new PlayerResponse(p.Id, p.Name);
+    public static Expression<Func<Player, PlayerResponse>> Projection =>
+        player => new PlayerResponse(
+            player.Id,
+            player.Name,
+            player.Role == null ? null :
+            player.Role.ProjectTo<Role, RoleResponse>().First()
+        );
 }
+

@@ -7,7 +7,7 @@ public static class GetPlayers
 {
     public static async Task<IResult> HandleAsync(PlayerRepository repository)
     {
-        List<PlayerResponse> result = await repository.GetAllAsync<PlayerResponse>();
+        List<PlayerNameResponse> result = await repository.GetAllAsync<PlayerNameResponse>();
         return Results.Ok(result);
     }
 }

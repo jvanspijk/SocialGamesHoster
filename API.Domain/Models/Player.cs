@@ -13,6 +13,8 @@ public class Player
     [RegularExpression(@"^[a-zA-Z0-9 ]+$", ErrorMessage = "Player name can only contain alphanumeric characters and spaces.")]
     public required string Name { get; set; }
 
+    // instead of making the rule nullable, there should be a "no role" role
+    // this way we can avoid null checks everywhere
     public Role? Role { get; set; }
 
     /// <summary>

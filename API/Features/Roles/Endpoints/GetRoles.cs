@@ -7,7 +7,7 @@ public class GetRoles
 {
     public static async Task<IResult> HandleAsync(RoleRepository repository)
     {
-        List<RoleResponse> result = await repository.GetAllAsync<RoleResponse>();
+        List<RoleWithoutAbilitiesResponse> result = await repository.GetAllAsync<RoleWithoutAbilitiesResponse>();
         return Results.Ok(result);
     }
 }
