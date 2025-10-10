@@ -29,6 +29,7 @@ public class Player
 
     public ICollection<Player> CanSee { get; set; } = [];
     public ICollection<Player> CanBeSeenBy { get; set; } = [];
+    public bool IsEliminated { get; set; } = false;
 }
 
 
