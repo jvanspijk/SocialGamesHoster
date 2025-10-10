@@ -1,10 +1,6 @@
 using API.DataAccess;
 using API.DataAccess.Repositories;
-using API.Features.Abilities;
 using API.Features.Authentication;
-using API.Features.Players;
-using API.Features.Roles;
-using API.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -15,7 +11,6 @@ using System.Text.Json.Serialization;
 
 namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
-// And: https://blog.variant.no/moving-from-controllers-to-minimal-api-bda56a223cc8
 public class Program
 {
     public static void Main(string[] args)
