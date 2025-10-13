@@ -13,6 +13,10 @@ using System.Text.Json.Serialization;
 
 namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
+// Using scalar: http://localhost:8080/scalar
+// - Rulesets should include roles.Abilities (as id maybe)
+// - GET player by ID causes ".First()' could not be translated" (EntityReference: Role[Optional])
+// 
 public class Program
 {
     public static void Main(string[] args)
@@ -118,9 +122,9 @@ public class Program
             {
                 APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>() 
                     ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
-                //Console.WriteLine("Applying database migrations...");
-                //context.Database.Migrate();
-                //Console.WriteLine("Database migrations applied successfully.");
+                Console.WriteLine("Applying database migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Database migrations applied successfully.");
             }
             catch (Exception ex)
             {
