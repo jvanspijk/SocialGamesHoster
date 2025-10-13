@@ -34,8 +34,8 @@ public static class UpdateRole
             return Results.NoContent();
         }
 
-        await repository.UpdateAsync(role);
-        RoleResponse response = role.ProjectTo<Role, RoleResponse>().First();
+        var updatedRole = await repository.UpdateAsync(role);
+        RoleResponse response = updatedRole.ProjectTo<Role, RoleResponse>().First();
         return Results.Ok(response);
     }
 }

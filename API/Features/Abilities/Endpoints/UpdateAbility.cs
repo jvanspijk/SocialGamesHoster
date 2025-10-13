@@ -1,4 +1,9 @@
-﻿namespace API.Features.Abilities.Endpoints;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
+using API.Domain.Models;
+using API.Features.Abilities.Responses;
+
+namespace API.Features.Abilities.Endpoints;
 
 public static class UpdateAbility
 {
@@ -20,7 +25,7 @@ public static class UpdateAbility
             ability.Description = request.NewDescription;
         }
         Ability updatedAbility = await repository.UpdateAsync(ability);
-        AbilityResponse response = new(updatedAbility.Id, updatedAbility.Name, updatedAbility.Description);
+        AbilityResponse response = updatedAbility.ProjectTo<Ability, AbilityResponse>().First();
         return Results.Ok(response);
     }
 }

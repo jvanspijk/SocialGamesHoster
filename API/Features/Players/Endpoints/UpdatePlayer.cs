@@ -38,8 +38,8 @@ public static class UpdatePlayer
             return Results.NoContent();
         }
 
-        await repository.UpdateAsync(player);
-        PlayerResponse response = player.ProjectTo<Player, PlayerResponse>().First();
+        var updatedPlayer = await repository.UpdateAsync(player);
+        PlayerResponse response = updatedPlayer.ProjectTo<Player, PlayerResponse>().First();
 
         return Results.Ok(response);
     }
