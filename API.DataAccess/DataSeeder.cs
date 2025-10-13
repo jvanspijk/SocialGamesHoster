@@ -7,10 +7,10 @@ internal class DataSeeder
 {
     public static void SeedRuleset(ModelBuilder builder)
     {
-        const int gameId = 1;
+        const int rulesetId = 1;
         builder.Entity<Ruleset>().HasData(new Ruleset
         {
-            Id = gameId,
+            Id = rulesetId,
             Name = "Town of Salem",
             Description = "Town members aim to find and eliminate all evil roles, " +
             "while Mafia and Neutral roles have their own secret goals, " +
@@ -18,11 +18,11 @@ internal class DataSeeder
             "where players use their unique abilities, and day, where they discuss information, " +
             "share their 'wills', and vote to hang someone.",
         });
-        List<Role> roles = SeedRoles(builder, gameId);
-        SeedPlayers(builder, roles);
+        List<Role> roles = SeedRoles(builder, rulesetId);
+        //SeedPlayers(builder, roles, gameId); // Players belong to a game session, not a ruleset
     }
 
-    private static void SeedPlayers(ModelBuilder builder, List<Role> roles)
+    private static void SeedPlayers(ModelBuilder builder, List<Role> roles, int gameId)
     {
         int amountOfRoles = roles.Count;
 
@@ -46,7 +46,8 @@ internal class DataSeeder
             {
                 Id = i + 1,
                 Name = name,
-                RoleId = roleId
+                RoleId = roleId,
+                GameId = gameId
             });
         }
 
