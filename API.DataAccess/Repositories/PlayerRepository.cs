@@ -91,11 +91,12 @@ public class PlayerRepository : IRepository<Player>
     }
 
     // Update
-    public async Task UpdateAsync(Player updatedPlayer)
+    public async Task<Player> UpdateAsync(Player updatedPlayer)
     {
         _context.Entry(updatedPlayer).State = EntityState.Modified;
         _context.Players.Update(updatedPlayer);
         await _context.SaveChangesAsync();
+        return updatedPlayer;
     }   
 
     // Delete

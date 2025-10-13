@@ -44,11 +44,12 @@ public class RoleRepository : IRepository<Role>
     }
 
     // Update
-    public async Task UpdateAsync(Role role)
+    public async Task<Role> UpdateAsync(Role updatedRole)
     {
-        _context.Entry(role).State = EntityState.Modified;
-        _context.Roles.Update(role);
+        _context.Entry(updatedRole).State = EntityState.Modified;
+        _context.Roles.Update(updatedRole);
         await _context.SaveChangesAsync();
+        return updatedRole;
     }
 
     // Delete

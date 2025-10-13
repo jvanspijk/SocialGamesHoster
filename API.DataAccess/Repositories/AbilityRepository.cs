@@ -50,11 +50,12 @@ public class AbilityRepository : IRepository<Ability>
         return await _context.Abilities.ToListAsync();        
     }    
 
-    public async Task UpdateAsync(Ability updatedAbility)
+    public async Task<Ability> UpdateAsync(Ability updatedAbility)
     { 
         _context.Entry(updatedAbility).State = EntityState.Modified;
         _context.Abilities.Update(updatedAbility);
         await _context.SaveChangesAsync();
+        return updatedAbility;
     }
 
     public async Task DeleteAsync(Ability ability)

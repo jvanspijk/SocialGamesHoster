@@ -4,21 +4,21 @@ using System.Data;
 
 namespace API.DataAccess.Repositories;
 
-public class GameRepository : IRepository<Ruleset>
+public class RulesetRepository : IRepository<Ruleset>
 {
     private readonly APIDatabaseContext _context;
-    public GameRepository(APIDatabaseContext context)
+    public RulesetRepository(APIDatabaseContext context)
     {
         _context = context;
     }
     public IQueryable<Ruleset> AsQueryable() => _context.Rulesets.AsNoTracking();
 
     // Create
-    public async Task<Ruleset> CreateAsync(Ruleset game)
+    public async Task<Ruleset> CreateAsync(Ruleset ruleset)
     {
-        _context.Rulesets.Add(game);
+        _context.Rulesets.Add(ruleset);
         await _context.SaveChangesAsync();
-        return game;
+        return ruleset;
     }
 
     // Read
@@ -43,18 +43,19 @@ public class GameRepository : IRepository<Ruleset>
     }
 
     // Update
-    public async Task UpdateAsync(Ruleset updatedGame)
+    public async Task<Ruleset> UpdateAsync(Ruleset updatedRuleset)
     {
-        _context.Entry(updatedGame).State = EntityState.Modified;
-        _context.Rulesets.Update(updatedGame);
+        _context.Entry(updatedRuleset).State = EntityState.Modified;
+        _context.Rulesets.Update(updatedRuleset);
         await _context.SaveChangesAsync();
+        return updatedRuleset;
     }
 
     // Delete
-    public async Task DeleteAsync(Ruleset game)
+    public async Task DeleteAsync(Ruleset ruleset)
     {
-        _context.Entry(game).State = EntityState.Modified;
-        _context.Rulesets.Remove(game);
+        _context.Entry(ruleset).State = EntityState.Modified;
+        _context.Rulesets.Remove(ruleset);
         await _context.SaveChangesAsync();
     }
 }
