@@ -1,4 +1,5 @@
-﻿using API.Domain.Models;
+﻿using API.DataAccess.Seeders;
+using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess;
@@ -9,7 +10,30 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
     {
         base.OnModelCreating(builder);
         ConfigureEntityRelationships(builder);
-        DataSeeder.SeedRuleset(builder);
+
+        const int rulesetId = 1;
+        const int gameSessionId = 1;
+
+        var rulesetSeeder = new TownOfSalemSeeder(rulesetId);
+        rulesetSeeder
+            .SeedData()
+            .ApplyTo(builder);
+
+        var playerSeeder = new PlayerSeeder();
+        playerSeeder
+            .SeedPlayers(gameSessionId)
+            .AddRoles(rulesetSeeder.Roles)
+            .ApplyTo(builder);        
+
+        var gameSession = new GameSession
+        {
+            Id = gameSessionId,
+            Ruleset = rulesetSeeder.Ruleset!,
+            Participants = playerSeeder.Players,
+            Status = GameStatus.Running
+        };
+
+        builder.Entity<GameSession>().HasData(gameSession);
     }
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }

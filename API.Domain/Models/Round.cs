@@ -1,4 +1,6 @@
-﻿namespace API.Domain.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace API.Domain.Models;
 
 public class Round
 {
@@ -17,9 +19,12 @@ public class Round
     /// <summary>
     /// The time the round is scheduled to end in UTC.
     /// </summary>
-    public DateTime EndTime { get; private set; }
+    public DateTime EndTime { get; set; }
     public bool RoundOver {  get => EndTime >= DateTime.UtcNow; }
 
+    public int RoundNumber { get; set; }
+    [JsonIgnore]
+    public GameSession GameSession { get; set; }
     public TimeSpan RemainingTime
     {
         get
