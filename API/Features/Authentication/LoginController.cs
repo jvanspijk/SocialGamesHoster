@@ -1,8 +1,8 @@
 ﻿using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.GameSessions.Authentication.Responses;
 using Microsoft.AspNetCore.Mvc;
 using API.Features.Authentication.Requests;
+using API.Features.Authentication.Responses;
 
 namespace API.Features.Authentication;
 

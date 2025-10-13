@@ -1,10 +1,5 @@
 ﻿using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace API.DataAccess.Seeders;
 
@@ -22,10 +17,12 @@ internal class PlayerSeeder
         ];
 
         List<Player> players = new(testUserNames.Count);
-        foreach (var userName in testUserNames)
+        for (int i = 0; i < testUserNames.Count; i++)
         {
+            string? userName = testUserNames[i];
             players.Add(new Player
             {
+                Id = i + 1,
                 Name = userName,
                 GameId = gameId
             });
@@ -50,7 +47,6 @@ internal class PlayerSeeder
             // Append role name to player name for easy debugging
             string name = Players[i].Name + " " + roles[i % roles.Count].Name;
 
-            Players[i].Id = roleId;
             Players[i].RoleId = roleId;
             Players[i].Name = name;            
         }

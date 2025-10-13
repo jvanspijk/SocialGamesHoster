@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace API.Domain.Models;
@@ -24,10 +25,15 @@ public class Player
     //public Role? DisguisedRole { get; set; }
 
     [JsonIgnore]
+    [ForeignKey(nameof(Role))]
     public int? RoleId { get; set; }
 
     [JsonIgnore]
+    [ForeignKey(nameof(GameSession))]
     public int? GameId { get; set; }
+
+    [JsonIgnore]
+    public GameSession? GameSession { get; set; }
 
     public ICollection<Player> CanSee { get; set; } = [];
     public ICollection<Player> CanBeSeenBy { get; set; } = [];

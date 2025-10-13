@@ -5,7 +5,9 @@ using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -66,7 +68,7 @@ public class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddOpenApi();
 
         services.AddCors(options =>
         {
@@ -99,10 +101,11 @@ public class Program
         // And to send updates if the admin performs actions
         services.AddSignalR();
 
-        services.AddScoped<RoleRepository>()
+        services.AddScoped<AbilityRepository>()
             .AddScoped<PlayerRepository>()
-            .AddScoped<AbilityRepository>()
+            .AddScoped<RoleRepository>()
             .AddSingleton<RoundRepository>()
+            .AddScoped<RulesetRepository>()
             .AddScoped<AuthService>();
 
         var app = builder.Build();
@@ -115,9 +118,9 @@ public class Program
             {
                 APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>() 
                     ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
-                Console.WriteLine("Applying database migrations...");
-                context.Database.Migrate();
-                Console.WriteLine("Database migrations applied successfully.");
+                //Console.WriteLine("Applying database migrations...");
+                //context.Database.Migrate();
+                //Console.WriteLine("Database migrations applied successfully.");
             }
             catch (Exception ex)
             {
@@ -134,8 +137,10 @@ public class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.MapOpenApi();
+            app.MapScalarApiReference(o => o
+                .WithTheme(ScalarTheme.None)                
+            );
             app.UseHttpLogging();
             app.UseDeveloperExceptionPage();
         }

@@ -1,6 +1,7 @@
 ﻿using API.DataAccess.Seeders;
 using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace API.DataAccess;
 
@@ -28,8 +29,7 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
         var gameSession = new GameSession
         {
             Id = gameSessionId,
-            Ruleset = rulesetSeeder.Ruleset!,
-            Participants = playerSeeder.Players,
+            RulesetId = rulesetId,
             Status = GameStatus.Running
         };
 
@@ -56,13 +56,31 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
 
         builder.Entity<Role>()
             .HasMany(r => r.Abilities)
-            .WithMany(a => a.AssociatedRoles)
-            .UsingEntity(j => j.ToTable("RoleAbility"));
+            .WithMany(a => a.AssociatedRoles);
 
         builder.Entity<Player>()
             .HasOne(p => p.Role)
             .WithMany(r => r.PlayersWithRole)
             .HasForeignKey(p => p.RoleId)
             .IsRequired(false);
+
+        builder.Entity<Round>()
+            .HasOne(r => r.GameSession)              
+            .WithMany(gs => gs.Rounds)
+            .HasForeignKey(r => r.GameId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<GameSession>()
+            .Ignore(gs => gs.CurrentRound);
+
+        builder.Entity<GameSession>()
+            .Property(gs => gs.Status)
+            .HasConversion<int>();
+
+        builder.Entity<Player>()
+            .HasOne(p => p.GameSession)
+            .WithMany(gs => gs.Participants)
+            .HasForeignKey(p => p.GameId);
     }
 }

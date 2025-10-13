@@ -40,9 +40,7 @@ internal class TownOfSalemSeeder(int rulesetId)
                     "often involving the elimination of Town members. The game alternates between night, " +
                     "where players use their unique abilities, and day, where they discuss information, " +
                     "share their 'wills', and vote to hang someone.",
-            Roles = Roles,
-            Abilities = Abilities,
-        };
+       };
     }
 
     private void SeedAbilities()
@@ -90,7 +88,7 @@ internal class TownOfSalemSeeder(int rulesetId)
 
         foreach (var role in roles)
         {
-            role.GameId = _rulesetId;
+            role.RulesetId = _rulesetId;
             _roles[role.Name] = role;
         }
     }
@@ -165,10 +163,10 @@ internal class TownOfSalemSeeder(int rulesetId)
         }
 
         builder.Entity<Ability>().HasData(Abilities);
-
         builder.Entity<Role>().HasData(Roles);
-        builder.Entity("RoleVisibility").HasData(_roleVisibilities);
-        builder.Entity("RoleAbility").HasData(_roleAbilities);
+
+        //builder.Entity("RoleVisibility").HasData(_roleVisibilities);
+        //builder.Entity("RoleAbility").HasData(_roleAbilities);
 
         builder.Entity<Ruleset>().HasData(Ruleset);
     }

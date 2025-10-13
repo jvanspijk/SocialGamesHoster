@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace API.Domain.Models;
 
 public class Round
 {
+    public Round() { } // Default constructor for EF
     public Round(DateTime startTimeUtc, TimeSpan duration)
     {
         StartTime = startTimeUtc;
@@ -24,7 +26,10 @@ public class Round
 
     public int RoundNumber { get; set; }
     [JsonIgnore]
-    public required GameSession GameSession { get; set; }
+    public GameSession? GameSession { get; set; }
+    [JsonIgnore]
+    [ForeignKey(nameof(GameSession))]
+    public required int GameId { get; set; }
     public TimeSpan RemainingTime
     {
         get

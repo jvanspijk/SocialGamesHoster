@@ -6,6 +6,8 @@ using API.Features.Roles.Endpoints;
 using API.Features.Roles.Responses;
 using API.Features.Rounds.Endpoints;
 using API.Features.Rounds.Responses;
+using API.Features.Rulesets.Endpoints;
+using API.Features.Rulesets.Responses;
 
 namespace API;
 
@@ -27,6 +29,11 @@ public static class Endpoints
     {
         var rulesetsGroup = builder.MapGroup("/rulesets/{rulesetId:int}")
             .WithTags("Ruleset");
+
+        rulesetsGroup.MapGet("/", GetRuleset.HandleAsync)
+            .WithName("GetRulesetById")
+            .Produces<RulesetResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var abilitiesGroup = rulesetsGroup.MapGroup("abilties")
             .WithTags("Ability");

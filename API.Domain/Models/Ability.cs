@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Domain.Models;
 
@@ -11,5 +12,6 @@ public class Ability
     public required string Name { get; set; }
     public required string Description { get; set; }
     public ICollection<Role> AssociatedRoles { get; set; } = [];
+    [ForeignKey(nameof(Ruleset))]
     public int RulesetId { get; set; }
 }
