@@ -11,5 +11,5 @@ public class Ability
     public required string Name { get; set; }
     public required string Description { get; set; }
     public ICollection<Role> AssociatedRoles { get; set; } = [];
-    public int GameId { get; set; }
+    public int RulesetId { get; set; }
 }
