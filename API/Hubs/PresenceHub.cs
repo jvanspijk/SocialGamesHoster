@@ -1,16 +1,15 @@
-﻿using API.Features.Players;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 
 
 namespace API.Hubs;
 
 public class PresenceHub : Hub
 {
-    private readonly PlayerService _playerService;
-    public PresenceHub(PlayerService playerService)
-    {
-        _playerService = playerService;
-    }
+    //private readonly PlayerService _playerService;
+    //public PresenceHub(PlayerService playerService)
+    //{
+    //    _playerService = playerService;
+    //}
     public override async Task OnConnectedAsync()
     {
         //var httpContext = Context.GetHttpContext();

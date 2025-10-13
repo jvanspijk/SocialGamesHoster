@@ -24,7 +24,7 @@ public class Round
 
     public int RoundNumber { get; set; }
     [JsonIgnore]
-    public GameSession GameSession { get; set; }
+    public required GameSession GameSession { get; set; }
     public TimeSpan RemainingTime
     {
         get

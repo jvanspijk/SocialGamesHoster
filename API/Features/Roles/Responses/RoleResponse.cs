@@ -1,7 +1,7 @@
-﻿using API.Features.Abilities.Responses;
-using API.DataAccess;
+﻿using API.DataAccess;
 using API.Domain.Models;
 using System.Linq.Expressions;
+using API.Features.Abilities.Responses;
 
 namespace API.Features.Roles.Responses;
 

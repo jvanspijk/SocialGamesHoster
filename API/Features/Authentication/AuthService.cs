@@ -86,7 +86,7 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, string targetPlayerName)
+    public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, string targetPlayerName, int gameId)
     {
         Claim? usernameClaim = userClaim.FindFirst(JwtRegisteredClaimNames.Sub);
         Claim? roleClaim = userClaim.FindFirst(ClaimTypes.Role);
@@ -102,13 +102,13 @@ public class AuthService
             return true;
         }
 
-        Player? sourcePlayer = await _playerRepository.GetByNameAsync(usernameClaim.Value);
+        Player? sourcePlayer = await _playerRepository.GetByNameAsync(usernameClaim.Value, gameId);
         if (sourcePlayer == null)
         {
             return Errors.ResourceNotFound($"Player with name {usernameClaim.Value} not found.");
         }
 
-        Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName);
+        Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName, gameId);
         if (targetPlayer == null)
         {
             return Errors.ResourceNotFound($"Player with name {targetPlayerName} not found.");

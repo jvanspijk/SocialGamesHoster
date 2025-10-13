@@ -38,6 +38,14 @@ public class RoleRepository : IRepository<Role>
             .ToListAsync();
     }
 
+    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) where TProjectable : IProjectable<Role, TProjectable>
+    {
+        return await _context.Roles
+            .Where(r => r.RulesetId == rulesetId)
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+    }
+
     public async Task<Role?> GetAsync(int id)
     {
         return await _context.Roles.FindAsync(id);

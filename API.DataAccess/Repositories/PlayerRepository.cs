@@ -29,17 +29,26 @@ public class PlayerRepository : IRepository<Player>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name) where TProjectable : IProjectable<Player, TProjectable>
+    public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name, int gameId) where TProjectable : IProjectable<Player, TProjectable>
     {
         return await _context.Players
-            .Where(a => a.Name == name)
+            .Where(p => p.Name == name)
+            .Where(p => p.GameId == gameId)
             .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
     }
 
     public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Player, TProjectable>
     {
+        return await _context.Players            
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+    }
+
+    public async Task<List<TProjectable>> GetAllFromGameAsync<TProjectable>(int gameId) where TProjectable : IProjectable<Player, TProjectable>
+    {
         return await _context.Players
+            .Where(p => p.GameId == gameId)
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
@@ -47,6 +56,11 @@ public class PlayerRepository : IRepository<Player>
     public async Task<Player?> GetAsync(int id)
     {
         return await _context.Players.FindAsync(id);
+    }
+
+    public async Task<Player?> GetByNameAsync(string name, int gameId)
+    {
+        return await _context.Players.Where(p => p.GameId == gameId).Where(p => p.Name == name).FirstOrDefaultAsync();
     }
 
     public async Task<bool> IsVisibleToPlayerAsync(Player source, Player target)

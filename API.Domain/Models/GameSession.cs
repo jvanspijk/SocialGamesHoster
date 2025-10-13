@@ -20,6 +20,7 @@ public class GameSession
     {
         var newRound = new Round(startTimeUtc, duration)
         {
+            GameSession = this,
             RoundNumber = (Rounds.Count > 0) ? Rounds.Max(r => r.RoundNumber) + 1 : 1
         };
         Rounds.Add(newRound);

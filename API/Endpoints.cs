@@ -13,87 +13,117 @@ public static class Endpoints
 {
     public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder builder)
     {
+        builder.MapRoleEndpoints();
         builder.MapAbilityEndpoints();
         builder.MapPlayerEndpoints();
-        builder.MapRoleEndpoints();
-        builder.MapRoundEndPoints();
+
+        builder.MapGameEndpoints();
+        builder.MapRulesetEndpoints();
 
         return builder;
     }
 
-    private static RouteGroupBuilder MapAbilityEndpoints(this IEndpointRouteBuilder builder)
+    private static RouteGroupBuilder MapRulesetEndpoints(this IEndpointRouteBuilder builder)
     {
-        var abilityGroup = builder.MapGroup("/abilities");
+        var rulesetsGroup = builder.MapGroup("/rulesets/{rulesetId:int}")
+            .WithTags("Ruleset");
 
-        abilityGroup.MapGet("/", GetAbilities.HandleAsync)
-            .WithName("GetAbilities")
-            .Produces<List<AbilityResponse>>(StatusCodes.Status200OK);
+        var abilitiesGroup = rulesetsGroup.MapGroup("abilties")
+            .WithTags("Ability");
 
-        abilityGroup.MapGet("/{id:int}", GetAbility.HandleAsync)
-            .WithName("GetAbility")
-            .Produces<AbilityResponse>(StatusCodes.Status200OK)
+        abilitiesGroup.MapPost("/", CreateAbility.HandleAsync)
+            .WithName("CreateAbility");
+
+        abilitiesGroup.MapGet("/", GetAbilitiesFromRuleset.HandleAsync)
+            .WithName("GetRulesetAbilities")
+            .Produces<List<AbilityResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        var rolesGroup = rulesetsGroup.MapGroup("/roles")
+            .WithTags("Role");
 
-        return abilityGroup;
+        rolesGroup.MapPost("/", CreateRole.HandleAsync)
+            .WithName("CreateRole");
+
+        rolesGroup.MapGet("/", GetRoles.HandleAsync)
+            .WithName("GetAllRoles")
+            .Produces<List<RoleResponse>>(StatusCodes.Status200OK);
+
+        return rulesetsGroup;
     }
 
-    private static RouteGroupBuilder MapPlayerEndpoints(this IEndpointRouteBuilder builder)
+    private static RouteGroupBuilder MapGameEndpoints(this IEndpointRouteBuilder builder)
     {
-        var playerGroup = builder.MapGroup("/players")
-            .WithTags("Players");
+        var gamesGroup = builder.MapGroup("/games/{gameId:int}")
+           .WithTags("GameSession");
 
-        playerGroup.MapGet("/", GetPlayers.HandleAsync)
-            .WithName("GetAllPlayers")
-            .Produces<List<PlayerNameResponse>>(StatusCodes.Status200OK); 
+        var playersGroup = gamesGroup.MapGroup("/players")
+            .WithTags("Player");
 
-        playerGroup.MapGet("/{id:int}", GetPlayer.HandleByIdAsync)
-            .WithName("GetPlayerById")
-            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+        playersGroup.MapGet("/", GetPlayersFromGame.HandleAsync)
+            .WithName("GetGamePlayers")
+            .Produces<List<PlayerNameResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        playerGroup.MapGet("/{name:alpha}", GetPlayer.HandleByNameAsync)
+        playersGroup.MapGet("/{name:alpha}", GetPlayerFromGame.HandleAsync)
             .WithName("GetPlayerByName")
             .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        // Admin endpoints
-        playerGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
+        playersGroup.MapPost("/", CreatePlayer.HandleAsync)
+            .WithName("CreatePlayer");
+
+        var roundsGroup = gamesGroup.MapGroup("rounds")
+            .WithTags("Round");
+
+        roundsGroup.MapGet("/current", GetCurrentRound.HandleAsync)
+            .WithName("GetCurrentRound");
+
+        return gamesGroup;
+
+    }
+
+    private static RouteGroupBuilder MapAbilityEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var abilitiesGroup = builder.MapGroup("/abilities")
+            .WithTags("Ability");
+
+        abilitiesGroup.MapGet("/{id:int}", GetAbility.HandleAsync)
+            .WithName("GetAbility")
+            .Produces<AbilityResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        return abilitiesGroup;
+    }
+
+    private static RouteGroupBuilder MapPlayerEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var playersGroup = builder.MapGroup("/players")
+            .WithTags("Player");
+
+        playersGroup.MapGet("/{id:int}", GetPlayer.HandleAsync)
+            .WithName("GetPlayerById")
+            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        playersGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
            .WithName("UpdatePlayer")
            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
            .ProducesProblem(StatusCodes.Status404NotFound);
 
-
-        return playerGroup;
+        return playersGroup;
     }
 
     private static RouteGroupBuilder MapRoleEndpoints(this IEndpointRouteBuilder builder)
     {
-        var roleGroup = builder.MapGroup("/roles")
-            .WithTags("Roles");
+        var rolesGroup = builder.MapGroup("/roles")
+            .WithTags("Role");
 
-        roleGroup.MapGet("/", GetRoles.HandleAsync)
-            .WithName("GetAllRoles")
-            .Produces<List<RoleResponse>>(StatusCodes.Status200OK);
-
-        roleGroup.MapGet("/{id:int}", GetRole.HandleAsync)
+        rolesGroup.MapGet("/{id:int}", GetRole.HandleAsync)
             .WithName("GetRole")
             .Produces<RoleResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        return roleGroup;
-    }
-
-    private static RouteGroupBuilder MapRoundEndPoints(this IEndpointRouteBuilder builder)
-    {
-        var roundGroup = builder.MapGroup("/current-round")
-            .WithTags("CurrentRound");
-
-        roundGroup.MapGet("/end-time", GetCurrentRound.HandleAsync)
-            .WithName("GetCurrentEndTime")
-            .Produces<RoundResponse>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        return roundGroup;
+        return rolesGroup;
     }
 }

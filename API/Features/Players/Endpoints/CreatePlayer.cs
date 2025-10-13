@@ -6,10 +6,10 @@ namespace API.Features.Players.Endpoints;
 public static class CreatePlayer
 {
     public readonly record struct Request(string Name);
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request, HttpContext context)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request, int gameId, HttpContext context)
     {
         // TODO: validation
-        Player player = new() { Name = request.Name };
+        Player player = new() { Name = request.Name, GameId = gameId };
         Player result = await repository.CreateAsync(player);
 
         PlayerNameResponse response = new(result.Id, result.Name);

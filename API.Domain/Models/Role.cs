@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace API.Domain.Models;
 
@@ -17,6 +18,8 @@ public class Role
     public ICollection<Role> CanSee { get; set; } = [];
     public ICollection<Role> CanBeSeenBy { get; set; } = [];
     public ICollection<Player> PlayersWithRole { get; set; } = [];
+    [JsonIgnore]
+    public int RulesetId { get; set; }
     public int GameId { get; set; }
 }
 

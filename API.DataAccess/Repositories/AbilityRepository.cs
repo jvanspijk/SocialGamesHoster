@@ -28,6 +28,14 @@ public class AbilityRepository : IRepository<Ability>
             .ToListAsync();
     }
 
+    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) where TProjectable : IProjectable<Ability, TProjectable>
+    {
+        return await _context.Abilities
+            .Where(a => a.RulesetId == rulesetId)
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+    }
+
     public async Task<Ability?> GetAsync(int id)
     {
         return await _context.Abilities.FindAsync(id);

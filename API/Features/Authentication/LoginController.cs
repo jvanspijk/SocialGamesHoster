@@ -1,9 +1,8 @@
-﻿using API.Domain;
+﻿using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.Authentication.Requests;
-using API.Features.Authentication.Responses;
-using API.Features.Players;
+using API.Features.GameSessions.Authentication.Responses;
 using Microsoft.AspNetCore.Mvc;
+using API.Features.Authentication.Requests;
 
 namespace API.Features.Authentication;
 
@@ -12,22 +11,19 @@ namespace API.Features.Authentication;
 public class LoginController : ControllerBase
 {
     private readonly AuthService _authService;
-    private readonly PlayerService _playerService;
-    public LoginController(AuthService authService, PlayerService playerService)
+    private readonly PlayerRepository _playerRepository;
+    public LoginController(AuthService authService, PlayerRepository playerService)
     {
         _authService = authService;   
-        _playerService = playerService;
+        _playerRepository = playerService;
     }
 
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] PlayerLoginRequest request)
     {
         string name = request.Name;
-        Result<Player> result = await _playerService.GetByNameAsync(name);
-        if (!result.IsSuccess)
-        {
-            return result.AsActionResult();
-        }
+        Player? result = await _playerRepository.GetByNameAsync(name, request.GameId);
+       
         string token = _authService.GeneratePlayerToken(name);
         return Ok(new LoginTokenResponse(token));
     }
