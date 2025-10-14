@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
@@ -79,29 +81,16 @@ public class PlayerRepository : IRepository<Player>
             .SingleOrDefaultAsync(p => p.Id == target.Id)
             ?? throw new ArgumentException($"Target player with Id {target.Id} not found.");
 
-        return await _context.Players
-            .Where(p => p.Name == target.Name)
-            .Where(p =>
-                p.Name == source.Name ||
-                p.CanBeSeenBy.Any(p => p.Name == source.Name) ||
-                (p.Role != null &&
-                 p.Role.CanBeSeenBy.Any(r => r.Id == playerRoleId))
-            )
-            .AnyAsync();
+        return sourcePlayer.CanSee.Contains(target);
     }
 
     public async Task<List<Player>> GetPlayersVisibleToPlayerAsync(Player player)
     {
-        IQueryable<Player> query =
-            from p in _context.Players.Include(p => p.Role)
-            where
-                p.Id == player.Id ||
-                p.CanBeSeenBy.Any(p => p.Id == player.Id) ||
-                (p.Role != null &&
-                 p.Role.CanBeSeenBy.Any(r => r.Id == player.RoleId))
-            select p;
+        Player sourcePlayer = await _context.Players
+           .Include(p => p.CanSee)
+           .SingleAsync(p => p.Id == player.Id);       
 
-        return await query.ToListAsync();
+        return [.. sourcePlayer.CanSee];
     }
 
     // Update

@@ -26,8 +26,8 @@ public class RoleRepository : IRepository<Role>
     public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Role, TProjectable>
     {
         return await _context.Roles
-            .Where(a => a.Id == id)
-            .Select(TProjectable.Projection)
+            .Where(r => r.Id == id)
+            .Select(TProjectable.Projection)            
             .FirstOrDefaultAsync();
     }
 

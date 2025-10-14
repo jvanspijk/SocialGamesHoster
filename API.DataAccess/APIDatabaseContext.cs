@@ -37,26 +37,49 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
     }
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<RoleKnowledge> RoleKnowledges { get; set; }
     public DbSet<Ability> Abilities { get; set; }
     public DbSet<Ruleset> Rulesets { get; set; }
     public DbSet<Round> Rounds { get; set; }
     public DbSet<GameSession> GameSessions { get; set; }
 
-    private static void ConfigureEntityRelationships(ModelBuilder builder)
+    private static void ConfigureRoleAbilities(ModelBuilder builder)
     {
         builder.Entity<Role>()
-            .HasMany(r => r.CanSee)
-            .WithMany(r => r.CanBeSeenBy)
-            .UsingEntity(r => r.ToTable("RoleVisibility"));                
+        .HasMany(r => r.Abilities)
+        .WithMany(a => a.AssociatedRoles)
+        .UsingEntity(
+            "RoleAbilities",
+            j =>
+            {
+                j.Property<int>("RoleId");
+                j.Property<int>("AbilityId");            
+            });
+        // The rest of the configuration happens in the seeder,
+        // because implicit join entities have to be seeded while defining the relationship
+    }
+
+    private static void ConfigureEntityRelationships(ModelBuilder builder)
+    {
+        builder.Entity<RoleKnowledge>()
+            .HasKey(rv => new { rv.SourceId, rv.TargetId });
+
+        builder.Entity<RoleKnowledge>()
+            .HasOne(rv => rv.Source)
+            .WithMany(r => r.KnowsAbout)
+            .HasForeignKey(rv => rv.SourceId)
+            .IsRequired();
+
+        builder.Entity<RoleKnowledge>()
+            .HasOne(rv => rv.Target)
+            .WithMany(r => r.KnownBy)
+            .HasForeignKey(rv => rv.TargetId)
+            .IsRequired();
 
         builder.Entity<Player>()
             .HasMany(p => p.CanSee)
             .WithMany(p => p.CanBeSeenBy)
             .UsingEntity(p => p.ToTable("PlayerVisibility"));
-
-        builder.Entity<Role>()
-            .HasMany(r => r.Abilities)
-            .WithMany(a => a.AssociatedRoles);
 
         builder.Entity<Player>()
             .HasOne(p => p.Role)
@@ -82,5 +105,7 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
             .HasOne(p => p.GameSession)
             .WithMany(gs => gs.Participants)
             .HasForeignKey(p => p.GameId);
+
+        ConfigureRoleAbilities(builder);
     }
 }

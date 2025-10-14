@@ -22,12 +22,13 @@ public class Program
     public static void Main(string[] args)
     {
         //TODO: add these as env variables:
-        string hostUrl = "http://localhost:8080";
-        string[] corsUrls = ["http://web:8081", "http://localhost:8081"];
+        string hostUrl = "http://localhost:9090";
+        string[] corsUrls = ["http://web:9091", "http://localhost:9091"];
 
         Console.WriteLine("Booting up app");
         var builder = WebApplication.CreateBuilder(args);
         var services = builder.Services;
+        var environment = builder.Environment;
 
         // Configure logging
         builder.Logging.ClearProviders();
@@ -54,7 +55,16 @@ public class Program
         // Add services to the container.
 
         services.AddDbContext<APIDatabaseContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        {
+            if (environment.IsDevelopment())
+            {
+                options.UseInMemoryDatabase("DevInMemoryDb");
+            }
+            else
+            {
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));                
+            }
+        });
 
         services.AddDistributedMemoryCache();
 
@@ -122,9 +132,18 @@ public class Program
             {
                 APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>() 
                     ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
-                Console.WriteLine("Applying database migrations...");
-                context.Database.Migrate();
-                Console.WriteLine("Database migrations applied successfully.");
+                if (environment.IsDevelopment())
+                {
+                    Console.WriteLine("Creating in-memory database...");
+                    context.Database.EnsureCreated();
+                    Console.WriteLine("In-memory database created successfully.");
+                }
+                else
+                {                    
+                    Console.WriteLine("Applying database migrations...");
+                    context.Database.Migrate();
+                    Console.WriteLine("Database migrations applied successfully.");
+                }
             }
             catch (Exception ex)
             {

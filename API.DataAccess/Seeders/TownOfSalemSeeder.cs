@@ -8,7 +8,7 @@ internal class TownOfSalemSeeder(int rulesetId)
     private Dictionary<string, Role> _roles = [];
     private Dictionary<string, Ability> _abilities = [];
     private List<object> _roleAbilities = [];
-    private List<object> _roleVisibilities = [];
+    private List<RoleKnowledge> _roleVisibilities = [];
     private bool _doneSeeding = false;
     public Ruleset? Ruleset { get; private set; }
     public List<Role> Roles => [.. _roles.Values];
@@ -126,17 +126,17 @@ internal class TownOfSalemSeeder(int rulesetId)
         AddRoleVisibility("Mafioso", "Godfather");
     }
 
-    private void AddRoleVisibility(string roleName, string canSeeRoleName)
+    private void AddRoleVisibility(string seesName, string isSeenName)
     {
-        if (!_roles.TryGetValue(roleName, out Role? role))
+        if (!_roles.TryGetValue(seesName, out Role? role))
         {
-            throw new InvalidOperationException($"Role '{roleName}' not found.");
+            throw new InvalidOperationException($"Role '{seesName}' not found.");
         }
-        if (!_roles.TryGetValue(canSeeRoleName, out Role? canSeeRole))
+        if (!_roles.TryGetValue(isSeenName, out Role? isSeenRole))
         {
-            throw new InvalidOperationException($"Role '{canSeeRoleName}' not found.");
+            throw new InvalidOperationException($"Role '{isSeenName}' not found.");
         }
-        _roleVisibilities.Add(new { RoleId = role.Id, VisibleRoleId = canSeeRole.Id });
+        _roleVisibilities.Add(new RoleKnowledge{ SourceId = role.Id, TargetId = isSeenRole.Id, KnowledgeType = KnowledgeType.Role });
     }
 
     private void AddAbilityToRole(string roleName, string abilityName)
@@ -165,9 +165,18 @@ internal class TownOfSalemSeeder(int rulesetId)
         builder.Entity<Ability>().HasData(Abilities);
         builder.Entity<Role>().HasData(Roles);
 
-        //builder.Entity("RoleVisibility").HasData(_roleVisibilities);
+        builder.Entity<RoleKnowledge>().HasData(_roleVisibilities);
+        builder.Entity<Role>().HasMany(r => r.Abilities).WithMany(a => a.AssociatedRoles)
+            .UsingEntity("RoleAbilities",
+                j =>
+                {
+                    j.HasKey("RoleId", "AbilityId");
+                    j.HasData(_roleAbilities);
+                });
+            
+
         //builder.Entity("RoleAbility").HasData(_roleAbilities);
 
         builder.Entity<Ruleset>().HasData(Ruleset);
-    }
+    }   
 }

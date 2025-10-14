@@ -16,8 +16,8 @@ public class Role
     [DefaultValue("")]
     public string Description { get; set; } = "";
     public ICollection<Ability> Abilities { get; set; } = [];
-    public ICollection<Role> CanSee { get; set; } = [];
-    public ICollection<Role> CanBeSeenBy { get; set; } = [];
+    public ICollection<RoleKnowledge> KnowsAbout { get; set; } = [];
+    public ICollection<RoleKnowledge> KnownBy { get; set; } = [];
     public ICollection<Player> PlayersWithRole { get; set; } = [];
     [JsonIgnore]
     [ForeignKey(nameof(Ruleset))]
