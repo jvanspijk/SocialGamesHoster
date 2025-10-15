@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace API.Features.Roles.Responses;
 
-public readonly record struct RoleWithoutAbilitiesResponse(int Id, string Name, string Description)
+public record RoleWithoutAbilitiesResponse(int Id, string Name, string Description)
     : IProjectable<Role, RoleWithoutAbilitiesResponse>
 {
     public static Expression<Func<Role, RoleWithoutAbilitiesResponse>> Projection =>

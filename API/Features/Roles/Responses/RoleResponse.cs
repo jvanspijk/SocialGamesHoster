@@ -5,7 +5,7 @@ using API.Features.Abilities.Responses;
 
 namespace API.Features.Roles.Responses;
 
-public readonly record struct RoleResponse(int Id, string Name, string Description, List<AbilityResponse> Abilities) 
+public record RoleResponse(int Id, string Name, string Description, List<AbilityResponse> Abilities) 
     : IProjectable<Role, RoleResponse>
 {  
     public static Expression<Func<Role, RoleResponse>> Projection =>

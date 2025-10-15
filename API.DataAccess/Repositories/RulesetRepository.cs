@@ -22,14 +22,16 @@ public class RulesetRepository : IRepository<Ruleset>
     }
 
     // Read
-    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Ruleset, TProjectable>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : 
+        class, IProjectable<Ruleset, TProjectable>
     {
         return await _context.Rulesets
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
-    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Ruleset, TProjectable>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : 
+        class, IProjectable<Ruleset, TProjectable>
     {
         return await _context.Rulesets
             .Where(a => a.Id == id)

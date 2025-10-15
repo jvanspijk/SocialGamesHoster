@@ -4,8 +4,8 @@ public interface IRepository<T> where T : class
 {
     IQueryable<T> AsQueryable();
     // Read
-    Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<T, TProjectable>;
-    Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<T, TProjectable>;
+    Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : class, IProjectable<T, TProjectable>;
+    Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : class, IProjectable<T, TProjectable>;
     /// <summary>
     /// Gets the object without joins.
     /// </summary>

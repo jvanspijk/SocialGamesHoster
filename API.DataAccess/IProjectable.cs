@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace API.DataAccess;
 
@@ -11,13 +12,14 @@ namespace API.DataAccess;
 /// <typeparam name="TResponse"></typeparam>
 public interface IProjectable<TDomain, TResponse>
     where TDomain : class
-    where TResponse : IProjectable<TDomain, TResponse>
+    where TResponse : class, IProjectable<TDomain, TResponse>
 {
     /// <summary>
     /// The expression used to project from <typeparamref name="TDomain"/> to <typeparamref name="TResponse"/>.
     /// Used by repositories to perform projections at the database level to ensure only necessary data is retrieved.
     /// </summary>
     static abstract Expression<Func<TDomain, TResponse>> Projection { get; }
+    public static virtual Func<TDomain, TResponse> ConvertFunction { get; } = TResponse.Projection.Compile();
 }
 
 // Extension method for LINQ to apply a projection expression to an IQueryable source.
@@ -26,7 +28,7 @@ public static class QueryableExtensions
     public static IQueryable<TResponse> ProjectTo<TDomain, TResponse>(
         this IQueryable<TDomain> source)
         where TDomain : class
-        where TResponse : IProjectable<TDomain, TResponse>
+        where TResponse : class, IProjectable<TDomain, TResponse> 
     {
         return source.Select(TResponse.Projection);
     }  
@@ -34,18 +36,35 @@ public static class QueryableExtensions
     public static IQueryable<TResponse> ProjectTo<TDomain, TResponse>(
         this IEnumerable<TDomain> source)
         where TDomain : class
-        where TResponse : IProjectable<TDomain, TResponse>
+        where TResponse : class, IProjectable<TDomain, TResponse>
     {
         return source.AsQueryable().Select(TResponse.Projection);
     }
+}
 
-    public static IQueryable<TResponse> ProjectTo<TDomain, TResponse>(
+public static class MappableExtensions
+{
+    /// <summary>
+    /// Constructs a single TResponse object from a TDomain object using the static Constructor func.
+    /// Used for in-memory mapping after data has been retrieved from the database.
+    /// </summary>
+    public static TResponse ConvertToResponse<TDomain, TResponse>(
         this TDomain source)
         where TDomain : class
-        where TResponse : IProjectable<TDomain, TResponse>
+        where TResponse : class, IProjectable<TDomain, TResponse>
     {
-        return new[] { source }
-            .AsQueryable()
-            .Select(TResponse.Projection);
+        // Executes the pre-compiled static constructor delegate
+        return TResponse.ConvertFunction.Invoke(source);
+    }
+
+    /// <summary>
+    /// Constructs a sequence of TResponse objects from a sequence of TDomain objects.
+    /// </summary>
+    public static IEnumerable<TResponse> ConvertToResponse<TDomain, TResponse>(
+        this IEnumerable<TDomain> source)
+        where TDomain : class
+        where TResponse : class, IProjectable<TDomain, TResponse>
+    {
+        return source.Select(TResponse.ConvertFunction);
     }
 }

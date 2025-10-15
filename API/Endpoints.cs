@@ -53,7 +53,7 @@ public static class Endpoints
             .WithName("CreateRole");
 
         rolesGroup.MapGet("/", GetRoles.HandleAsync)
-            .WithName("GetAllRoles")
+            .WithName("GetRulesetRoles")
             .Produces<List<RoleResponse>>(StatusCodes.Status200OK);
 
         return rulesetsGroup;
@@ -100,6 +100,11 @@ public static class Endpoints
             .Produces<AbilityResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        abilitiesGroup.MapPatch("/{id:int}", UpdateAbility.HandleAsync)
+            .WithName("UpdateAbility")
+            .Produces<AbilityResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return abilitiesGroup;
     }
 
@@ -128,6 +133,11 @@ public static class Endpoints
 
         rolesGroup.MapGet("/{id:int}", GetRole.HandleAsync)
             .WithName("GetRole")
+            .Produces<RoleResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        rolesGroup.MapPatch("/{id:int}", UpdateRole.HandleAsync)
+            .WithName("UpdateRole")
             .Produces<RoleResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

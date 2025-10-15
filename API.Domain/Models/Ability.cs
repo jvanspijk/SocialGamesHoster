@@ -15,5 +15,5 @@ public class Ability
     [JsonIgnore]
     public ICollection<Role> AssociatedRoles { get; set; } = [];
     [ForeignKey(nameof(Ruleset))]
-    public int RulesetId { get; set; }
+    public int RulesetId { get; set; }    
 }

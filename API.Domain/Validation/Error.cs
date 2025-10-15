@@ -17,7 +17,8 @@ public enum ErrorType
     Validation,
 }
 
-public readonly record struct Error(ErrorType Type, string Message, HttpStatusCode StatusCode, string DebugMessage = "");
+public record class Error(ErrorType Type, string Message, HttpStatusCode StatusCode, string DebugMessage = "");
+public record class ValidationError(string Field, string Message) : Error(ErrorType.Validation, Message, HttpStatusCode.BadRequest);
 public static partial class Errors
 {
     // --- AUTHENTICATION ERRORS ---
@@ -50,8 +51,16 @@ public static partial class Errors
 
     public static Error FailedToCreate(string resourceName, string? name = null) =>
         new(ErrorType.FailedToCreate, $"Failed to create {resourceName}{(name is not null ? $" with name {name}" : string.Empty)}.", HttpStatusCode.BadRequest);
+}
 
-    public static Error Validation(string field, string message) =>
-        new(ErrorType.Validation, $"Validation error on field '{field}': {message}", HttpStatusCode.BadRequest);
-
+public static class ValidationExtensions
+{
+    public static bool IsValid(this IEnumerable<ValidationError> errors)
+    {        
+        return !errors.Any();
+    }   
+    public static bool HasErrors(this IEnumerable<ValidationError> errors)
+    {
+        return errors.Any();
+    }
 }

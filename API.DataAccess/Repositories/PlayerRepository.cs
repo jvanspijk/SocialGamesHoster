@@ -23,7 +23,8 @@ public class PlayerRepository : IRepository<Player>
         return player;
     }
     // Read
-    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Player, TProjectable>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id)
+        where TProjectable : class, IProjectable<Player, TProjectable>
     {
         return await _context.Players
             .Where(a => a.Id == id)
@@ -31,7 +32,8 @@ public class PlayerRepository : IRepository<Player>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name, int gameId) where TProjectable : IProjectable<Player, TProjectable>
+    public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name, int gameId) 
+        where TProjectable : class, IProjectable<Player, TProjectable>
     {
         return await _context.Players
             .Where(p => p.Name == name)
@@ -40,14 +42,16 @@ public class PlayerRepository : IRepository<Player>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Player, TProjectable>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() 
+        where TProjectable : class, IProjectable<Player, TProjectable>
     {
         return await _context.Players            
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllFromGameAsync<TProjectable>(int gameId) where TProjectable : IProjectable<Player, TProjectable>
+    public async Task<List<TProjectable>> GetAllFromGameAsync<TProjectable>(int gameId) 
+        where TProjectable : class, IProjectable<Player, TProjectable>
     {
         return await _context.Players
             .Where(p => p.GameId == gameId)
@@ -62,7 +66,10 @@ public class PlayerRepository : IRepository<Player>
 
     public async Task<Player?> GetByNameAsync(string name, int gameId)
     {
-        return await _context.Players.Where(p => p.GameId == gameId).Where(p => p.Name == name).FirstOrDefaultAsync();
+        return await _context.Players
+            .Where(p => p.GameId == gameId)
+            .Where(p => p.Name == name)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<bool> IsVisibleToPlayerAsync(Player source, Player target)

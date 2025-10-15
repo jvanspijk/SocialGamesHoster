@@ -13,7 +13,8 @@ public class AbilityRepository : IRepository<Ability>
     public IQueryable<Ability> AsQueryable() => _context.Abilities.AsNoTracking();
 
     // Read
-    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Ability, TProjectable>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id)
+        where TProjectable : class, IProjectable<Ability, TProjectable>
     {
         return await _context.Abilities
             .Where(a => a.Id == id)
@@ -21,14 +22,16 @@ public class AbilityRepository : IRepository<Ability>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Ability, TProjectable>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() 
+        where TProjectable : class, IProjectable<Ability, TProjectable>
     {
         return await _context.Abilities
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) where TProjectable : IProjectable<Ability, TProjectable>
+    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) 
+        where TProjectable : class, IProjectable<Ability, TProjectable>
     {
         return await _context.Abilities
             .Where(a => a.RulesetId == rulesetId)

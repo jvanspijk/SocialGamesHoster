@@ -23,7 +23,8 @@ public class RoleRepository : IRepository<Role>
     }
 
     // Read
-    public async Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : IProjectable<Role, TProjectable>
+    public async Task<TProjectable?> GetAsync<TProjectable>(int id)
+        where TProjectable : class, IProjectable<Role, TProjectable>
     {
         return await _context.Roles
             .Where(r => r.Id == id)
@@ -31,14 +32,16 @@ public class RoleRepository : IRepository<Role>
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : IProjectable<Role, TProjectable>
+    public async Task<List<TProjectable>> GetAllAsync<TProjectable>() 
+        where TProjectable : class, IProjectable<Role, TProjectable>
     {
         return await _context.Roles
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
-    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) where TProjectable : IProjectable<Role, TProjectable>
+    public async Task<List<TProjectable>> GetAllFromRulesetAsync<TProjectable>(int rulesetId) 
+        where TProjectable : class, IProjectable<Role, TProjectable>
     {
         return await _context.Roles
             .Where(r => r.RulesetId == rulesetId)
