@@ -4,5 +4,5 @@ namespace API.Domain.Validation;
 
 public interface IValidatable<T> where T : notnull
 {
-    Result<T> Validate();
+    IEnumerable<ValidationError> Validate();
 }

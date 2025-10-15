@@ -7,16 +7,16 @@ namespace API.Features.Players.Endpoints;
 
 public static class UpdatePlayer
 {
-    public readonly record struct Request(int Id, string? NewName, int? NewRoleId);
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request)
+    public readonly record struct Request(string? NewName, int? NewRoleId);
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, int id, Request request)
     {
         // TODO: validation
 
-        Player? player = await repository.GetAsync(request.Id);
+        Player? player = await repository.GetAsync(id);
 
         if (player == null)
         {
-            return Results.NotFound($"Player with ID {request.Id} not found.");
+            return Results.NotFound($"Player with ID {id} not found.");
         }
 
         bool playerChanged = false;
@@ -39,7 +39,7 @@ public static class UpdatePlayer
         }
 
         var updatedPlayer = await repository.UpdateAsync(player);
-        PlayerResponse response = updatedPlayer.ProjectTo<Player, PlayerResponse>().First();
+        PlayerResponse response = updatedPlayer.ConvertToResponse<Player, PlayerResponse>();
 
         return Results.Ok(response);
     }

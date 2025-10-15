@@ -1,15 +1,35 @@
 ﻿using API.DataAccess.Repositories;
+using API.Domain;
 using API.Domain.Models;
+using API.Domain.Validation;
 
 namespace API.Features.Roles.Endpoints;
 
+
+
 public static class CreateRole
 {
-    public readonly record struct Request(string Name, string? Description);
-
+    public readonly record struct Request(string Name, string? Description) : IValidatable<Request>
+    {
+        public readonly IEnumerable<ValidationError> Validate()
+        {            
+            if (string.IsNullOrWhiteSpace(Name) || Name.Length is < 1 or > 32)
+            {
+                 yield return new ValidationError(nameof(Name), "Role name must be between 1 and 32 characters long.");
+            }
+            if (!string.IsNullOrWhiteSpace(Description) && Description.Length is > 256)
+            {
+                yield return new ValidationError(nameof(Description), "Role description must be less than 256 characters long.");
+            }
+        }
+    }
     public static async Task<IResult> HandleAsync(RoleRepository repository, int rulesetId, Request request)
     {
-        // TODO: request validation
+        var validationResult = request.Validate();
+        if (validationResult.HasErrors())
+        {
+            return Results.ValidationProblem(validationResult.ToProblemDetails());
+        }
         string description = request.Description ?? "";
         Role role = new() { Name = request.Name, Description = description, RulesetId = rulesetId };
         Role createdRole = await repository.CreateAsync(role);

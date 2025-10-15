@@ -6,14 +6,14 @@ using API.Features.Roles.Responses;
 namespace API.Features.Roles.Endpoints;
 public static class UpdateRole
 {
-    public readonly record struct Request(int Id, string? Name, string? Description);
+    public readonly record struct Request(string? Name, string? Description);
 
-    public async static Task<IResult> HandleAsync(RoleRepository repository, Request request)
+    public async static Task<IResult> HandleAsync(RoleRepository repository, int id, Request request)
     {
-        Role? role = await repository.GetAsync(request.Id);
+        Role? role = await repository.GetAsync(id);
         if (role == null)
         {
-            return Results.NotFound($"Role with id {request.Id} not found.");
+            return Results.NotFound($"Role with id {id} not found.");
         }
 
         bool hasChanged = false;
@@ -35,7 +35,7 @@ public static class UpdateRole
         }
 
         var updatedRole = await repository.UpdateAsync(role);
-        RoleResponse response = updatedRole.ProjectTo<Role, RoleResponse>().First();
+        RoleResponse response = updatedRole.ConvertToResponse<Role, RoleResponse>();
         return Results.Ok(response);
     }
 }
