@@ -5,7 +5,6 @@ using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -14,6 +13,23 @@ using System.Text.Json.Serialization;
 namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
 // Using scalar: http://localhost:8080/scalar
+// TODO:
+// - Pause rounds
+// - Resume rounds
+// - End rounds
+// - Add abilities to roles (or set abilities of a role)
+// - Add players to game sessions
+//      - (should players create their own accounts or should admins create accounts for players?)
+// - Remove players from game sessions
+// - Assign ruleset to game session
+// - Start game session
+// - End game session
+// - Get current game session id
+// - Fix login for players
+//      - Use local IP address to identify players
+// - Admin: force logout users, (decouple IP from user)
+// - Fix login for admins
+
 public class Program
 {
     public static void Main(string[] args)
