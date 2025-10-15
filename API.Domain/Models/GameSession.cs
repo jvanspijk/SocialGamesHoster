@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace API.Domain.Models;
@@ -20,15 +21,16 @@ public class GameSession
     public ICollection<Player> Participants { get; set; } = [];
     public ICollection<Round> Rounds { get; set; } = [];
     public Round? CurrentRound { get; set; }
+    public int CurrentRoundNumber => CurrentRound?.RoundNumber ?? 0;
     public ICollection<Player> Winners { get; set; } = [];
     public GameStatus Status { get; set; } = GameStatus.Unknown;
-    public void StartNewRound(DateTime startTimeUtc, TimeSpan duration)
+    public void StartNewRound(Round newRound)
     {
-        var newRound = new Round(startTimeUtc, duration)
+        if (CurrentRound != null && !CurrentRound.RoundOver)
         {
-            GameId = Id,
-            RoundNumber = (Rounds.Count > 0) ? Rounds.Max(r => r.RoundNumber) + 1 : 1
-        };
+            EndCurrentRound();
+        }
+
         Rounds.Add(newRound);
         CurrentRound = newRound;
     }
