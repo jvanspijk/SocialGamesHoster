@@ -94,7 +94,10 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<GameSession>()
-            .Ignore(gs => gs.CurrentRound);
+            .HasOne(gs => gs.CurrentRound)
+            .WithOne()
+            .HasForeignKey<GameSession>()
+            .IsRequired(false);
 
         builder.Entity<GameSession>()
             .Property(gs => gs.Status)

@@ -22,14 +22,12 @@ public class Round
     /// The time the round is scheduled to end in UTC.
     /// </summary>
     public DateTime EndTime { get; set; }
-    public bool RoundOver {  get => EndTime >= DateTime.UtcNow; }
+    public bool RoundOver {  get => DateTime.UtcNow >= EndTime; }
 
     public int RoundNumber { get; set; }
     [JsonIgnore]
     public GameSession? GameSession { get; set; }
-    [JsonIgnore]
-    [ForeignKey(nameof(GameSession))]
-    public required int GameId { get; set; }
+    public int GameId { get; set; }
     public TimeSpan RemainingTime
     {
         get

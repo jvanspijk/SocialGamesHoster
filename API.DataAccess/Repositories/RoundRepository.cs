@@ -50,13 +50,12 @@ public class RoundRepository : IRepository<Round>
 
     public async Task<Round?> StartNewRound(int gameId, TimeSpan duration)
     {
-        var gameSession = await _context.GameSessions.FindAsync(gameId);
-        if (gameSession == null)
-        {
-            return null;
-        }
+        GameSession gameSession = await _context.GameSessions
+            .Include(g => g.CurrentRound)
+            .Where(g => g.Id == gameId)
+            .SingleAsync();
 
-        Round newRound = new(DateTime.UtcNow, duration) { GameId = gameId };
+        Round newRound = new(DateTime.UtcNow, duration) { GameId = gameId, GameSession = gameSession };
 
         gameSession.StartNewRound(newRound);
         _context.Rounds.Add(newRound);

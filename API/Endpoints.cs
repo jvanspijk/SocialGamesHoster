@@ -86,6 +86,11 @@ public static class Endpoints
         roundsGroup.MapGet("/current", GetCurrentRound.HandleAsync)
             .WithName("GetCurrentRound");
 
+        roundsGroup.MapPost("/start", StartNewRound.HandleAsync)
+            .WithName("StartNewRound")
+            .Produces<RoundResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return gamesGroup;
 
     }
