@@ -1,4 +1,5 @@
 ﻿using API.DataAccess.Repositories;
+using API.Domain;
 using API.Domain.Models;
 
 namespace API.Features.Rounds.Endpoints
@@ -7,19 +8,19 @@ namespace API.Features.Rounds.Endpoints
     {
         public record struct Request(int DurationInSeconds);
 
-        public static async Task<IResult> HandleAsync(RoundRepository repository, int gameId, Request request)
+        public static async Task<IResult> HandleAsync(RoundRepository repository, RoundTimer timer, int gameId, Request request)
         {
             if (request.DurationInSeconds <= 0)
             {
                 return Results.BadRequest("DurationInSeconds must be a positive integer.");
             }
             TimeSpan duration = TimeSpan.FromSeconds(request.DurationInSeconds);
-            Round? round = await repository.StartNewRound(gameId, duration);     
+            Round? round = await repository.StartNewRound(gameId);     
             if (round == null)
             {
                 return Results.NotFound($"Game with id {gameId} not found.");
             }
-
+            timer.Start(duration, round.Id);
             return Results.Created($"/rounds/{round.Id}", round);
         }
     }

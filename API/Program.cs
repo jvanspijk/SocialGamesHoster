@@ -1,6 +1,8 @@
 using API.DataAccess;
 using API.DataAccess.Repositories;
+using API.Domain;
 using API.Features.Authentication;
+using API.Features.Rounds.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -75,7 +77,7 @@ public class Program
             }
             else
             {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));                
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
             }
         });
 
@@ -128,43 +130,23 @@ public class Program
         // And to send updates if the admin performs actions
         services.AddSignalR();
 
-        services.AddScoped<AbilityRepository>()
+        services
+            .AddHostedService<TimerEventNotifier>();
+
+        services
+            .AddScoped<AbilityRepository>()
             .AddScoped<PlayerRepository>()
             .AddScoped<RoleRepository>()
             .AddScoped<RoundRepository>()
             .AddScoped<RulesetRepository>()
             .AddScoped<AuthService>();
 
+        services
+            .AddSingleton<RoundTimer>();
+
         var app = builder.Build();
 
-        // Apply database migrations on startup
-        using (var scope = app.Services.CreateScope())
-        {
-            var serviceProvider = scope.ServiceProvider;
-            try
-            {
-                APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>() 
-                    ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
-                if (environment.IsDevelopment())
-                {
-                    Console.WriteLine("Creating in-memory database...");
-                    context.Database.EnsureCreated();
-                    Console.WriteLine("In-memory database created successfully.");
-                }
-                else
-                {                    
-                    Console.WriteLine("Applying database migrations...");
-                    context.Database.Migrate();
-                    Console.WriteLine("Database migrations applied successfully.");
-                }
-            }
-            catch (Exception ex)
-            {
-                ILogger logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occurred while applying database migrations.");
-                throw;
-            }
-        }
+        ApplyDatabaseMigrations(environment, app);
 
         app.UseCors("CorsPolicy");
 
@@ -175,7 +157,7 @@ public class Program
         {
             app.MapOpenApi();
             app.MapScalarApiReference(o => o
-                .WithTheme(ScalarTheme.None)                
+                .WithTheme(ScalarTheme.None)
             );
             app.UseHttpLogging();
             app.UseDeveloperExceptionPage();
@@ -196,10 +178,40 @@ public class Program
         apiGroup.MapEndpoints();
 
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
+        apiGroup.MapHub<TimerHub>("/timerHub");
 
         // apiGroup.MapHub<PresenceHub>("/presenceHub");
 
         app.Run();
         Console.WriteLine("Done booting up");
+    }
+
+    private static void ApplyDatabaseMigrations(IWebHostEnvironment environment, WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var serviceProvider = scope.ServiceProvider;
+        try
+        {
+            APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>()
+                ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
+            if (environment.IsDevelopment())
+            {
+                Console.WriteLine("Creating in-memory database...");
+                context.Database.EnsureCreated();
+                Console.WriteLine("In-memory database created successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Applying database migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Database migrations applied successfully.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ILogger logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while applying database migrations.");
+            throw;
+        }
     }
 }

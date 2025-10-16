@@ -96,7 +96,7 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
         builder.Entity<GameSession>()
             .HasOne(gs => gs.CurrentRound)
             .WithOne()
-            .HasForeignKey<GameSession>()
+            .HasForeignKey<GameSession>(gs => gs.CurrentRoundId)
             .IsRequired(false);
 
         builder.Entity<GameSession>()
