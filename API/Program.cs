@@ -14,11 +14,9 @@ using System.Text.Json.Serialization;
 
 namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
-// Using scalar: http://localhost:8080/scalar
+// Using scalar: http://localhost:9090/scalar
 // TODO:
-// - Pause rounds
-// - Resume rounds
-// - End rounds
+// - Cancel rounds
 // - Add abilities to roles (or set abilities of a role)
 // - Add players to game sessions
 //      - (should players create their own accounts or should admins create accounts for players?)
