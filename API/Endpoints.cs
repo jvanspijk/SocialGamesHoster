@@ -83,8 +83,21 @@ public static class Endpoints
         var roundsGroup = gamesGroup.MapGroup("rounds")
             .WithTags("Round");
 
-        roundsGroup.MapGet("/current", GetCurrentRound.HandleAsync)
+        var currentRoundGroup = roundsGroup.MapGroup("/current")
+            .WithTags("Round");
+
+        currentRoundGroup.MapGet("/", GetCurrentRound.HandleAsync)
             .WithName("GetCurrentRound");
+
+        currentRoundGroup.MapPost("/pause", PauseCurrentRound.Handle)
+            .WithName("PauseCurrentRound")
+            .Produces<TimeSpan>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        currentRoundGroup.MapPost("/resume", ResumeCurrentRound.Handle)
+            .WithName("ResumeCurrentRound")
+            .Produces<TimeSpan>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         roundsGroup.MapPost("/start", StartNewRound.HandleAsync)
             .WithName("StartNewRound")
@@ -92,7 +105,6 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return gamesGroup;
-
     }
 
     private static RouteGroupBuilder MapAbilityEndpoints(this IEndpointRouteBuilder builder)
