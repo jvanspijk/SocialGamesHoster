@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace API.Features.Rounds.Responses;
 
-public record RoundResponse(int Id, DateTimeOffset StartTime) 
+public record RoundResponse(int Id, DateTimeOffset? StartTime) 
     : IProjectable<Round, RoundResponse>
 {
     public int RemainingSeconds { get; init; }

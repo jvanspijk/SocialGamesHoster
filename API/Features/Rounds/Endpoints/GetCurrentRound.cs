@@ -16,6 +16,10 @@ public class GetCurrentRound
             return Results.NotFound($"Game with id {gameId} does not have an active round or does not exist.");
         }
         TimeSpan timeLeft = timer.RemainingTime;
+        if(!round.StartedTime.HasValue)
+        {
+            return Results.Problem("Round has not started properly.", statusCode: 500);
+        }
         RoundResponse response = new(round.Id, round.StartedTime) { RemainingSeconds = (int)timeLeft.TotalSeconds};
         return Results.Ok(response);
     }

@@ -24,7 +24,6 @@ namespace API;
 // - Assign ruleset to game session
 // - Start game session
 // - End game session
-// - Get current game session id
 // - Fix login for players
 //      - Use local IP address to identify players
 // - Admin: force logout users, (decouple IP from user)
@@ -137,6 +136,7 @@ public class Program
             .AddScoped<RoleRepository>()
             .AddScoped<RoundRepository>()
             .AddScoped<RulesetRepository>()
+            .AddScoped<GameSessionRepository>()
             .AddScoped<AuthService>();
 
         services

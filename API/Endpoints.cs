@@ -1,5 +1,6 @@
 ﻿using API.Features.Abilities.Endpoints;
 using API.Features.Abilities.Responses;
+using API.Features.GameSessions.Endpoints;
 using API.Features.Players.Endpoints;
 using API.Features.Players.Responses;
 using API.Features.Roles.Endpoints;
@@ -14,7 +15,7 @@ namespace API;
 public static class Endpoints
 {
     public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder builder)
-    {
+    {        
         builder.MapRoleEndpoints();
         builder.MapAbilityEndpoints();
         builder.MapPlayerEndpoints();
@@ -61,6 +62,12 @@ public static class Endpoints
 
     private static RouteGroupBuilder MapGameEndpoints(this IEndpointRouteBuilder builder)
     {
+        builder.MapGet("/games/active", GetActiveGameSessions.HandleAsync)
+            .WithTags("GameSession")
+            .WithName("GetActiveGameId")
+            .Produces<int>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
 
