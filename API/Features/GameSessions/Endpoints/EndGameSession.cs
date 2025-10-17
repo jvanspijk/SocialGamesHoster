@@ -4,7 +4,7 @@ using API.Domain.Models;
 
 namespace API.Features.GameSessions.Endpoints;
 
-public class EndGameSession
+public static class EndGameSession
 {
     public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
     {
