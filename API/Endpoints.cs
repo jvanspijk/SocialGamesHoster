@@ -1,6 +1,7 @@
 ﻿using API.Features.Abilities.Endpoints;
 using API.Features.Abilities.Responses;
 using API.Features.GameSessions.Endpoints;
+using API.Features.GameSessions.Responses;
 using API.Features.Players.Endpoints;
 using API.Features.Players.Responses;
 using API.Features.Roles.Endpoints;
@@ -66,10 +67,22 @@ public static class Endpoints
             .WithTags("GameSession")
             .WithName("GetActiveGameId")
             .Produces<int>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound);      
 
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
+
+        gamesGroup.MapPost("/start", StartGameSession.HandleAsync)
+            .WithTags("GameSession")
+            .WithName("StartNewGameSession")
+            .Produces<ActiveGameResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        gamesGroup.MapPost("/end", EndGameSession.HandleAsync)
+            .WithName("EndGameSession")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var playersGroup = gamesGroup.MapGroup("/players")
             .WithTags("Player");

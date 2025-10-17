@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using API.Domain.Models;
+using System.Net;
 
 namespace API.Domain.Validation;
 
@@ -44,13 +45,16 @@ public static partial class Errors
     public static Error ResourceNotFound(string resourceName, int id) =>
         new(ErrorType.NotFound, $"{resourceName} with ID '{id}' was not found.", HttpStatusCode.NotFound);
 
-    public static Error ResourceNotFound(string message = "Resource not found.") =>
-        new(ErrorType.NotFound, message, HttpStatusCode.NotFound);
+    public static Error ResourceNotFound(string resourceName, string field, string value) =>
+    new(ErrorType.NotFound, $"{resourceName} with {field} '{value}' was not found.", HttpStatusCode.NotFound);
 
     // -----------    
 
     public static Error FailedToCreate(string resourceName, string? name = null) =>
         new(ErrorType.FailedToCreate, $"Failed to create {resourceName}{(name is not null ? $" with name {name}" : string.Empty)}.", HttpStatusCode.BadRequest);
+
+    public static Error InvalidOperation(string message) => 
+        new(ErrorType.Validation, message, HttpStatusCode.BadRequest);
 }
 
 public static class ValidationExtensions

@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
@@ -74,4 +76,52 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         .Where(gs => gs.Status == GameStatus.Running || gs.Status == GameStatus.Paused);
     }
 
+    public async Task<Result<GameSession>> StartGameSession(int gameSessionId)
+    {
+        GameSession? session = await _context.GameSessions
+            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
+
+        if (session == null)
+        {
+            return Errors.ResourceNotFound(nameof(session), gameSessionId);
+        }
+
+        switch (session.Status)
+        {
+            case GameStatus.Running:
+            case GameStatus.Paused:
+                return Errors.InvalidOperation($"Game session with id {gameSessionId} is already running.");
+            case GameStatus.Finished:
+                return Errors.InvalidOperation($"Game session with id {gameSessionId} has already finished.");
+        }
+
+        session.Status = GameStatus.Running;
+        await _context.SaveChangesAsync();
+        return session;
+    }
+
+    public async Task<Result<GameSession>> EndGameSession(int gameSessionId)
+    {
+        GameSession? session = await _context.GameSessions
+            .Include(gs => gs.CurrentRound)
+            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
+
+        if (session == null)
+        {
+            return Errors.ResourceNotFound(nameof(session), gameSessionId);
+        }
+        if(session.Status == GameStatus.Finished)
+        {
+            return Errors.InvalidOperation($"Game session with id {gameSessionId} has already finished.");
+        }
+
+        if(session.CurrentRound != null && !session.CurrentRound.FinishedTime.HasValue)
+        {
+            session.CurrentRound.FinishedTime = DateTimeOffset.UtcNow;
+        }
+
+        session.Status = GameStatus.Finished;
+        await _context.SaveChangesAsync();
+        return session;
+    }
 }
