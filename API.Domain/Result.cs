@@ -11,14 +11,14 @@ namespace API.Domain;
 public abstract partial record Result<T> where T : notnull
 {
     public T? Value { get; init; }
-    public Error Error { get; init; }
-    protected Result(T? value, Error error, bool isSuccess)
+    public Error? Error { get; init; }
+    protected Result(T? value, Error? error, bool isSuccess)
     {       
         Value = value;
         Error = error;
         IsSuccess = isSuccess;
     }
-    public static implicit operator Result<T>(T value) => value != null ? new Success<T>(value) : new Failure<T>(Errors.ResourceNotFound());
+    public static implicit operator Result<T>(T value) => new Success<T>(value);
     public static implicit operator Result<T>(Error error) => new Failure<T>(error);    
 
     /// <summary>
@@ -42,7 +42,7 @@ public abstract partial record Result<T> where T : notnull
     }
 }
 
-internal record Success<T>(T Value) : Result<T>(Value, default, Value != null) where T : notnull
+internal record Success<T>(T Value) : Result<T>(Value, null, Value != null) where T : notnull
 {
     public new T Value => base.Value!; // Ensures that the linter knows Value is not null here
 }

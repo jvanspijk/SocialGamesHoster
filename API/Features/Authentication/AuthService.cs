@@ -13,8 +13,8 @@ public class AuthService
 {
     // TODO: these should be loaded from environment variables
     private const string _jwtSecurityKey = "Social-games-hoster_JWT_Security_Key";
-    private const string _jwtIssuer = "http://localhost:8080";
-    private const string _jwtAudience = "http://localhost:8081";
+    private const string _jwtIssuer = "http://localhost:9090";
+    private const string _jwtAudience = "http://localhost:9091";
 
     private readonly string _adminUserName;
     private readonly string _adminPassword;
@@ -93,7 +93,7 @@ public class AuthService
 
         if (roleClaim == null || usernameClaim == null)
         {
-            return Errors.ResourceNotFound("Role or username claim is missing."); // TODO: error for missing claim
+            return Errors.MissingClaims("Role or username claim is missing.");
         }
 
         bool isAdmin = string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
@@ -105,13 +105,13 @@ public class AuthService
         Player? sourcePlayer = await _playerRepository.GetByNameAsync(usernameClaim.Value, gameId);
         if (sourcePlayer == null)
         {
-            return Errors.ResourceNotFound($"Player with name {usernameClaim.Value} not found.");
+            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), usernameClaim.Value);
         }
 
         Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName, gameId);
         if (targetPlayer == null)
         {
-            return Errors.ResourceNotFound($"Player with name {targetPlayerName} not found.");
+            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), targetPlayerName);
         }
 
         return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
@@ -122,7 +122,7 @@ public class AuthService
         var roleClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
         if (roleClaim == null)
         {
-            return Errors.ResourceNotFound("Role claim is missing."); // TODO: error for missing claim
+            return Errors.MissingClaims("Role claim is missing.");
         }
         return string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
     }
