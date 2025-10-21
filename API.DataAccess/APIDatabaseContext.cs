@@ -26,7 +26,7 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
         var playerSeeder = new PlayerSeeder();
         playerSeeder
             .SeedPlayers(gameSessionId)
-            .AddRoles(blackJackSeeder.Roles)
+            .AddRoles(townOfSalemSeeder.Roles)
             .ApplyTo(builder);        
 
         var gameSession = new GameSession
