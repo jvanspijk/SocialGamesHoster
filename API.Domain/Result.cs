@@ -48,7 +48,10 @@ internal record Success<T>(T Value) : Result<T>(Value, null, Value != null) wher
 {
     public new T Value => base.Value!; // Ensures that the linter knows Value is not null here
 }
-internal record Failure<T>(Error Error) : Result<T>(default, Error, false) where T : notnull;
+internal record Failure<T>(Error Error) : Result<T>(default, Error, false) where T : notnull 
+{ 
+    public new Error Error => base.Error!; // Ensures that the linter knows Error is not null here
+}
 
 
 
