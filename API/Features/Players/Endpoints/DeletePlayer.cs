@@ -4,14 +4,13 @@ using API.Domain.Models;
 namespace API.Features.Players.Endpoints;
 public class DeletePlayer
 {
-    public readonly record struct Request(int Id);
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, int id)
     {
         // TODO: validation of request
-        Player? playerToDelete = await repository.GetAsync(request.Id);
+        Player? playerToDelete = await repository.GetAsync(id);
         if (playerToDelete == null)
         {
-            return Results.NotFound($"Player with id {request.Id} not found.");
+            return Results.NotFound($"Player with id {id} not found.");
         }
             
         await repository.DeleteAsync(playerToDelete);

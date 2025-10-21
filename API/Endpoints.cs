@@ -123,7 +123,9 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapPost("/", CreatePlayer.HandleAsync)
-            .WithName("CreatePlayer");
+            .WithName("CreatePlayer")
+            .Produces<CreatePlayer.Response>(StatusCodes.Status201Created)
+            .Produces<HttpValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
         var roundsGroup = gamesGroup.MapGroup("rounds")
             .WithTags("Round");
@@ -184,6 +186,11 @@ public static class Endpoints
            .WithName("UpdatePlayer")
            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        playersGroup.MapDelete("/{id:int}", DeletePlayer.HandleAsync)
+            .WithName("DeletePlayer")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return playersGroup;
     }
