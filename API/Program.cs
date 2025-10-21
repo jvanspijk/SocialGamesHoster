@@ -1,6 +1,7 @@
 using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain;
+using API.Domain.Models;
 using API.Features.Authentication;
 using API.Features.Rounds.Hubs;
 using API.Logging;
@@ -17,9 +18,8 @@ namespace API;
 // Using scalar: http://localhost:9090/scalar
 // TODO:
 // - Cancel rounds through API
-// - Add players to game sessions
+// - Create players
 //      - (should players create their own accounts or should admins create accounts for players?)
-// - Remove players from game sessions
 // - Assign ruleset to game session
 // - Start game session
 // - End game session
@@ -28,6 +28,11 @@ namespace API;
 //      - Use local IP address to identify players
 // - Admin: force logout users, (decouple IP from user)
 // - Fix login for admins
+// - Change participants in active game sessions
+//   - Remove players from game sessions
+// - Always inject IRepository<T> instead of concrete repositories
+// - Testing project with unit and/or integration tests
+// - Performance testing
 // Bugs:
 // - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
 
@@ -132,6 +137,8 @@ public class Program
         services
             .AddHostedService<TimerEventNotifier>();
 
+        // Dependency injection for concrete repositories
+        // This should be replaced by IRepository<T> injections later
         services
             .AddScoped<AbilityRepository>()
             .AddScoped<PlayerRepository>()
@@ -140,6 +147,14 @@ public class Program
             .AddScoped<RulesetRepository>()
             .AddScoped<GameSessionRepository>()
             .AddScoped<AuthService>();
+
+        services
+            .AddScoped<IRepository<Ability>, AbilityRepository>()
+            .AddScoped<IRepository<Player>, PlayerRepository>()
+            .AddScoped<IRepository<Role>, RoleRepository>()
+            .AddScoped<IRepository<Round>, RoundRepository>()
+            .AddScoped<IRepository<Ruleset>, RulesetRepository>()
+            .AddScoped<IRepository<GameSession>, GameSessionRepository>();
 
         services
             .AddSingleton<RoundTimer>();

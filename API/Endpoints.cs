@@ -2,7 +2,6 @@
 using API.Features.Abilities.Responses;
 using API.Features.Authentication.Endpoints;
 using API.Features.GameSessions.Endpoints;
-using API.Features.GameSessions.Responses;
 using API.Features.Players.Endpoints;
 using API.Features.Players.Responses;
 using API.Features.Roles.Endpoints;
@@ -79,6 +78,18 @@ public static class Endpoints
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
 
+        gamesGroup.MapPatch("/players", UpdateGameParticipants.HandleAsync)
+            .WithName("UpdateGameParticipants")
+            .Produces<UpdateGameParticipants.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        gamesGroup.MapPatch("/ruleset", UpdateGameRuleset.HandleAsync)
+            .WithName("UpdateGameRuleset")
+            .Produces<UpdateGameRuleset.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         gamesGroup.MapPost("/login/{name:alpha}", PlayerLogin.HandleAsync)
             .WithTags("Authentication")
             .WithName("PlayerLogin")
@@ -89,7 +100,7 @@ public static class Endpoints
         gamesGroup.MapPost("/start", StartGameSession.HandleAsync)
             .WithTags("GameSession")
             .WithName("StartNewGameSession")
-            .Produces<ActiveGameResponse>(StatusCodes.Status200OK)
+            .Produces<StartGameSession.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

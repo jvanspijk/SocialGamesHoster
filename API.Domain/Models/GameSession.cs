@@ -5,7 +5,7 @@ namespace API.Domain.Models;
 
 public enum GameStatus
 {
-    Unknown = 0,
+    NotStarted = 0,
     Running = 100,
     Paused = 200,
     Finished = 300,
@@ -20,5 +20,5 @@ public class GameSession
     public int CurrentRoundId { get; set; }
     public Round? CurrentRound { get; set; }
     public ICollection<Player> Winners { get; set; } = [];
-    public GameStatus Status { get; set; } = GameStatus.Unknown;
+    public GameStatus Status { get; set; } = GameStatus.NotStarted;
 }
