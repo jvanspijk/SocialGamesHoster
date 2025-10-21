@@ -5,13 +5,13 @@ using API.Features.Abilities.Responses;
 
 namespace API.Features.Abilities.Endpoints;
 
-public static class UpdateAbility
+public static class UpdateAbilityInformation
 {
     public readonly record struct Request(string? NewName, string? NewDescription);
 
     public static async Task<IResult> HandleAsync(AbilityRepository repository, int id, Request request)
     {
-        Ability? ability = await repository.GetByIdAsync(id);
+        Ability? ability = await repository.GetAsync(id);
         if (ability == null)
         {
             return Results.NotFound();
