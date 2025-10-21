@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
 using System.Text.Json.Serialization;
 
 namespace API.Domain.Models;
@@ -38,6 +39,7 @@ public class Player
     public ICollection<Player> CanSee { get; set; } = [];
     public ICollection<Player> CanBeSeenBy { get; set; } = [];
     public bool IsEliminated { get; set; } = false;
+    public IPAddress? IP { get; set; }
 }
 
 

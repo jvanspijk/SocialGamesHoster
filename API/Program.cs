@@ -16,7 +16,7 @@ namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
 // Using scalar: http://localhost:9090/scalar
 // TODO:
-// - Cancel rounds
+// - Cancel rounds through API
 // - Add abilities to roles (or set abilities of a role)
 // - Add players to game sessions
 //      - (should players create their own accounts or should admins create accounts for players?)
@@ -24,10 +24,14 @@ namespace API;
 // - Assign ruleset to game session
 // - Start game session
 // - End game session
+// - Assign random roles to players
 // - Fix login for players
 //      - Use local IP address to identify players
 // - Admin: force logout users, (decouple IP from user)
 // - Fix login for admins
+// Bugs:
+// - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
+// - Starting a game session that does not exist should return 404
 
 public class Program
 {
@@ -155,7 +159,8 @@ public class Program
         {
             app.MapOpenApi();
             app.MapScalarApiReference(o => o
-                .WithTheme(ScalarTheme.None)
+                .WithTheme(ScalarTheme.Alternate)
+                .Layout = ScalarLayout.Classic
             );
             app.UseHttpLogging();
             app.UseDeveloperExceptionPage();

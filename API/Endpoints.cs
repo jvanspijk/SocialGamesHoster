@@ -1,5 +1,6 @@
 ﻿using API.Features.Abilities.Endpoints;
 using API.Features.Abilities.Responses;
+using API.Features.Authentication.Endpoints;
 using API.Features.GameSessions.Endpoints;
 using API.Features.GameSessions.Responses;
 using API.Features.Players.Endpoints;
@@ -23,6 +24,12 @@ public static class Endpoints
 
         builder.MapGameEndpoints();
         builder.MapRulesetEndpoints();
+
+        builder.MapPost("/admin/login", AdminLogin.HandleAsync)
+            .WithTags("Authentication")
+            .WithName("AdminLogin")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return builder;
     }
@@ -71,6 +78,13 @@ public static class Endpoints
 
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
+
+        gamesGroup.MapPost("/login/{name:alpha}", PlayerLogin.HandleAsync)
+            .WithTags("Authentication")
+            .WithName("PlayerLogin")
+            .Produces<string>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         gamesGroup.MapPost("/start", StartGameSession.HandleAsync)
             .WithTags("GameSession")
