@@ -79,7 +79,7 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
     public async Task<Result<GameSession>> StartGameSession(int gameSessionId)
     {
         GameSession? session = await _context.GameSessions
-            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
+            .FindAsync(gameSessionId);
 
         if (session == null)
         {

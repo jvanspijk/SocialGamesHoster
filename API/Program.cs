@@ -17,7 +17,6 @@ namespace API;
 // Using scalar: http://localhost:9090/scalar
 // TODO:
 // - Cancel rounds through API
-// - Add abilities to roles (or set abilities of a role)
 // - Add players to game sessions
 //      - (should players create their own accounts or should admins create accounts for players?)
 // - Remove players from game sessions
@@ -31,7 +30,6 @@ namespace API;
 // - Fix login for admins
 // Bugs:
 // - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
-// - Starting a game session that does not exist should return 404
 
 public class Program
 {

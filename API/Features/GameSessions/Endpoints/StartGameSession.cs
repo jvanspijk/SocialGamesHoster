@@ -10,7 +10,7 @@ public static class StartGameSession
     public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
     {
         Result<GameSession> result = await repository.StartGameSession(gameId);
-        if(!result.IsSuccess)
+        if(result.IsFailure)
         {
             return result.AsIResult();
         }
