@@ -1,13 +1,20 @@
-﻿using API.DataAccess.Repositories;
-using API.Features.Abilities.Responses;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
+using API.Domain.Models;
+using System.Linq.Expressions;
 
 namespace API.Features.Abilities.Endpoints;
 
 public class GetAbility
 {
+    public record Response(int Id, string Name, string Description) : IProjectable<Ability, Response>
+    {
+        public static Expression<Func<Ability, Response>> Projection =>
+            ability => new Response(ability.Id, ability.Name, ability.Description);
+    }
     public static async Task<IResult> HandleAsync(AbilityRepository repository, int id)
     {
-        AbilityResponse? result = await repository.GetAsync<AbilityResponse>(id);
+        Response? result = await repository.GetAsync<Response>(id);
         if (result == null)
         {
             return Results.NotFound($"Ability with id {id} not found.");

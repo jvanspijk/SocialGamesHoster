@@ -2,13 +2,23 @@
 using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Domain.Validation;
-using API.Features.Roles.Responses;
+using API.Features.Roles.Common;
+using System.Linq.Expressions;
 
 namespace API.Features.Roles.Endpoints;
 
 public static class UpdateRoleAbilities
 {
     public readonly record struct Request(List<int> AbilityIds);
+    public record Response(int Id, List<AbilityInfo> Abilities)
+    : IProjectable<Role, Response>
+    {
+        public static Expression<Func<Role, Response>> Projection =>
+            role => new Response(
+                role.Id,
+                role.Abilities.Select(a => new AbilityInfo(a.Id, a.Name, a.Description)).ToList()
+            );
+    }
     public async static Task<IResult> HandleAsync(RoleRepository repository, AbilityRepository abilityRepository, int id, Request request)
     {
         var abilitiesResult = await abilityRepository.GetMultipleAsync(request.AbilityIds);
@@ -40,7 +50,7 @@ public static class UpdateRoleAbilities
 
         role.Abilities = abilities;
         Role updatedRole = await repository.UpdateAsync(role);
-        RoleResponse response = updatedRole.ConvertToResponse<Role, RoleResponse>();
+        Response response = updatedRole.ConvertToResponse<Role, Response>();
         return Results.Ok(response);
     }
 }

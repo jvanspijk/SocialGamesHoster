@@ -1,12 +1,21 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
 using API.Domain;
 using API.Domain.Models;
+using System.Linq.Expressions;
 
 namespace API.Features.Rounds.Endpoints;
 
 public static class StartNewRound
 {
     public record struct Request(int DurationInSeconds);
+    public record Response(int Id, DateTimeOffset? StartTime)
+        : IProjectable<Round, Response>
+    {
+        public int RemainingSeconds { get; init; }
+        public static Expression<Func<Round, Response>> Projection =>
+            round => new Response(round.Id, round.StartedTime);
+    }
 
     public static async Task<IResult> HandleAsync(RoundRepository repository, RoundTimer timer, int gameId, Request request)
     {
@@ -22,6 +31,8 @@ public static class StartNewRound
         }        
         timer.Cancel(); // Should we cancel or finish the previous round? Maybe we shouldn't even allow starting a new round if one is active.
         timer.Start(duration, round.Id);
-        return Results.Created($"/rounds/{round.Id}", round);
+        return Results.CreatedAtRoute(
+            routeName: "GetCurrentRound",
+            value: round.ConvertToResponse<Round, Response>());
     }
 }

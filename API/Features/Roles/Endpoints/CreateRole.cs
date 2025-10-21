@@ -1,11 +1,10 @@
-﻿using API.DataAccess.Repositories;
-using API.Domain;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Domain.Validation;
+using System.Linq.Expressions;
 
 namespace API.Features.Roles.Endpoints;
-
-
 
 public static class CreateRole
 {
@@ -23,6 +22,17 @@ public static class CreateRole
             }
         }
     }
+
+    public record Response(int Id, string Name, string Description)
+    : IProjectable<Role, Response>
+    {
+        public static Expression<Func<Role, Response>> Projection =>
+            role => new Response(
+                role.Id,
+                role.Name,
+                role.Description              
+            );
+    }
     public static async Task<IResult> HandleAsync(RoleRepository repository, int rulesetId, Request request)
     {
         var validationResult = request.Validate();
@@ -32,7 +42,7 @@ public static class CreateRole
         }
         string description = request.Description ?? "";
         Role role = new() { Name = request.Name, Description = description, RulesetId = rulesetId };
-        Role createdRole = await repository.CreateAsync(role);
-        return Results.Ok(createdRole); // Can this be a problem?
+        Role createdRole = await repository.CreateAsync(role); // Should this be a result type?        
+        return Results.Ok(createdRole.ConvertToResponse<Role, Response>()); 
     }
 }
