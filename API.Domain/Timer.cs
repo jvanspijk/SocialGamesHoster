@@ -17,6 +17,7 @@ public sealed class RoundTimer
     public event Action<TimeSpan, int>? OnAdjust;
     public event Action<int>? OnCancel;
     public event Action<int>? OnFinished;
+
     public TimeSpan RemainingTime
     {
         get

@@ -1,65 +1,74 @@
-﻿using API.Domain;
+﻿using API.DataAccess.Repositories;
+using API.Domain;
 using API.Domain.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.Features.Rounds.Hubs;
 
-public class TimerEventNotifier : IHostedService
+public class TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubContext, IServiceScopeFactory serviceScopeFactory) : IHostedService
 {
-    private readonly RoundTimer _timer;
-    private readonly IHubContext<TimerHub> _hubContext;
-
-    public TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubContext)
+    private readonly RoundTimer _timer = timer;
+    private readonly IHubContext<TimerHub> _hubContext = hubContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = timer;
-        _hubContext = hubContext;      
+        _timer.OnStart += BroadcastTimerStart;
+        _timer.OnPause += BroadcastTimerPause;
+        _timer.OnCancel += BroadcastTimerCancelled;
+        _timer.OnFinished += BroadcastTimerFinished;
+        _timer.OnFinished += FinishRoundAsync;
+
+        return Task.CompletedTask;
+    }
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _timer.OnStart -= BroadcastTimerStart;
+        _timer.OnPause -= BroadcastTimerPause;
+        _timer.OnCancel -= BroadcastTimerCancelled;
+        _timer.OnFinished -= BroadcastTimerFinished;
+        _timer.OnFinished -= FinishRoundAsync;
+
+        return Task.CompletedTask;
     }
 
-    private async void BroadcastTimerStartAsync(TimeSpan remainingTime, int roundId)
+    private void BroadcastTimerStart(TimeSpan remainingTime, int roundId)
     {
-        await BroadcastTimeUpdate(remainingTime, isRunning: true, roundId);
+        BroadcastTimeUpdate(remainingTime, isRunning: true, roundId);
     }
 
-    private async void BroadcastTimerPauseAsync(TimeSpan remainingTime, int roundId)
+    private void BroadcastTimerPause(TimeSpan remainingTime, int roundId)
     {
-        await BroadcastTimeUpdate(remainingTime, isRunning: false, roundId);
+       BroadcastTimeUpdate(remainingTime, isRunning: false, roundId);
     }
 
-    private async Task BroadcastTimeUpdate(TimeSpan remainingTime, bool isRunning, int roundId)
+    private void BroadcastTimeUpdate(TimeSpan remainingTime, bool isRunning, int roundId)
     {
-        await _hubContext.Clients.All.SendAsync("TimerUpdated", new
+        _hubContext.Clients.All.SendAsync("TimerUpdated", new
         {
             RoundId = roundId,
             IsRunning = isRunning,
             RemainingSeconds = remainingTime.TotalSeconds,
         });
     }
-    private async void BroadcastTimerCancelledAsync(int roundId)
+    private void BroadcastTimerCancelled(int roundId)
     {
-        await _hubContext.Clients.All.SendAsync("TimerCancelled", roundId);
+        _hubContext.Clients.All.SendAsync("TimerCancelled", roundId);
     }
 
-    private async void BroadcastTimerFinishedAsync(int roundId)
+    private void BroadcastTimerFinished(int roundId)
     {
-        await _hubContext.Clients.All.SendAsync("TimerFinished", roundId);
+        _hubContext.Clients.All.SendAsync("TimerFinished", roundId);
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    private async void FinishRoundAsync(int roundId)
     {
-        _timer.OnStart += BroadcastTimerStartAsync;
-        _timer.OnPause += BroadcastTimerPauseAsync;
-        _timer.OnCancel += BroadcastTimerCancelledAsync;
-        _timer.OnFinished += BroadcastTimerFinishedAsync;
-
-        return Task.CompletedTask;
-    }
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _timer.OnStart -= BroadcastTimerStartAsync;
-        _timer.OnPause -= BroadcastTimerPauseAsync;
-        _timer.OnCancel -= BroadcastTimerCancelledAsync;
-        _timer.OnFinished -= BroadcastTimerFinishedAsync;
-
-        return Task.CompletedTask;
+        using var scope = _serviceScopeFactory.CreateScope();
+        var roundRepository = scope.ServiceProvider.GetRequiredService<RoundRepository>();
+        Result<bool> result = await roundRepository.FinishRoundAsync(roundId);
+        if (!result.IsSuccess)
+        {
+            scope.ServiceProvider.GetService<ILogger<TimerEventNotifier>>()?.LogError("Failed to finish round {RoundId}: {Error}", roundId, result.Error.Message);
+            return;
+        }
     }
 }

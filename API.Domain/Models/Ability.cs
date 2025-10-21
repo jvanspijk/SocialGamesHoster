@@ -7,7 +7,7 @@ namespace API.Domain.Models;
 public class Ability
 {
     [Key]
-    public int Id { get; init; }
+    public int Id { get; set; }
     [Required]
     [StringLength(32, MinimumLength = 1, ErrorMessage = "Ability name must be between 1 and 32 characters long.")]
     public required string Name { get; set; }

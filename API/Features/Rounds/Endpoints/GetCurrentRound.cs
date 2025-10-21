@@ -20,7 +20,8 @@ public class GetCurrentRound
         {
             return Results.Problem("Round has not started properly.", statusCode: 500);
         }
-        RoundResponse response = new(round.Id, round.StartedTime) { RemainingSeconds = (int)timeLeft.TotalSeconds};
+        bool isFinished = round.FinishedTime.HasValue && round.FinishedTime <= DateTimeOffset.UtcNow;
+        RoundResponse response = new(round.Id, round.StartedTime, isFinished) { RemainingSeconds = (int)timeLeft.TotalSeconds};
         return Results.Ok(response);
     }
 }

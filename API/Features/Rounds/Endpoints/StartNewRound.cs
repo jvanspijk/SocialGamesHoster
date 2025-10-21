@@ -19,7 +19,8 @@ public static class StartNewRound
         if (round == null)
         {
             return Results.NotFound($"Game with id {gameId} not found.");
-        }
+        }        
+        timer.Cancel(); // Should we cancel or finish the previous round? Maybe we shouldn't even allow starting a new round if one is active.
         timer.Start(duration, round.Id);
         return Results.Created($"/rounds/{round.Id}", round);
     }

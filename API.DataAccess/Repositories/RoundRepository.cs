@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
@@ -73,5 +75,17 @@ public class RoundRepository : IRepository<Round>
     public Task<Round> UpdateAsync(Round updatedEntity)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<Result<bool>> FinishRoundAsync(int roundId)
+    {
+        var round = await _context.Rounds.FindAsync(roundId);
+        if (round == null)
+        {
+            return Errors.ResourceNotFound(nameof(round), roundId);
+        }
+        round.FinishedTime = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
     }
 }
