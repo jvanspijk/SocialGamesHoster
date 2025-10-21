@@ -1,14 +1,17 @@
 ﻿using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 namespace API.DataAccess.Seeders;
 
-internal class TownOfSalemSeeder(int rulesetId)
+internal class TownOfSalemSeeder(int rulesetId, int startingId)
 {
-    private int _rulesetId = rulesetId;
-    private Dictionary<string, Role> _roles = [];
-    private Dictionary<string, Ability> _abilities = [];
-    private List<object> _roleAbilities = [];
-    private List<RoleKnowledge> _roleVisibilities = [];
+    private readonly int _idOffset = startingId - 1;
+    private readonly int _rulesetId = rulesetId;
+    private readonly Dictionary<string, Role> _roles = [];
+    private readonly Dictionary<string, Ability> _abilities = [];
+    private readonly List<object> _roleAbilities = [];
+    private readonly List<RoleKnowledge> _roleVisibilities = [];
     private bool _doneSeeding = false;
     public Ruleset? Ruleset { get; private set; }
     public List<Role> Roles => [.. _roles.Values];
@@ -68,6 +71,7 @@ internal class TownOfSalemSeeder(int rulesetId)
 
         foreach (var ability in abilities)
         {
+            ability.Id += _idOffset;
             ability.RulesetId = _rulesetId;
             _abilities[ability.Name] = ability;
         }
@@ -88,6 +92,7 @@ internal class TownOfSalemSeeder(int rulesetId)
 
         foreach (var role in roles)
         {
+            role.Id += _idOffset;
             role.RulesetId = _rulesetId;
             _roles[role.Name] = role;
         }

@@ -11,24 +11,28 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
         base.OnModelCreating(builder);
         ConfigureEntityRelationships(builder);
 
-        const int rulesetId = 1;
         const int gameSessionId = 1;
 
-        var rulesetSeeder = new TownOfSalemSeeder(rulesetId);
-        rulesetSeeder
+        var townOfSalemSeeder = new TownOfSalemSeeder(rulesetId: 1, startingId: 1);
+        townOfSalemSeeder
+            .SeedData()
+            .ApplyTo(builder);
+
+        var blackJackSeeder = new BlackJackSeeder(rulesetId: 2, startingId: 100);
+        blackJackSeeder
             .SeedData()
             .ApplyTo(builder);
 
         var playerSeeder = new PlayerSeeder();
         playerSeeder
             .SeedPlayers(gameSessionId)
-            .AddRoles(rulesetSeeder.Roles)
+            .AddRoles(blackJackSeeder.Roles)
             .ApplyTo(builder);        
 
         var gameSession = new GameSession
         {
             Id = gameSessionId,
-            RulesetId = rulesetId,
+            RulesetId = 1,
             Status = GameStatus.Running
         };
 
