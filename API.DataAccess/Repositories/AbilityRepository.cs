@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 namespace API.DataAccess.Repositories;
 
@@ -44,16 +46,23 @@ public class AbilityRepository : IRepository<Ability>
         return await _context.Abilities.FindAsync(id);
     }
 
+    public async Task<Result<List<Ability>>> GetAsync(List<int> abilityIds)
+    {
+        var abilities = await _context.Abilities.Where(a => abilityIds.Contains(a.Id)).ToListAsync();
+        if(abilityIds.Count != abilities.Count)
+        {
+            var foundIds = abilities.Select(a => a.Id).ToHashSet();
+            var missingIds = abilityIds.Where(id => !foundIds.Contains(id));
+            Errors.ResourceNotFound("Ability", "Ids", string.Join(", ", missingIds));
+        }
+        return abilities;
+    }
+
     public async Task<Ability> CreateAsync(Ability ability)
     {
         _context.Abilities.Add(ability);
         await _context.SaveChangesAsync();
         return ability;
-    }
-    
-    public async Task<Ability?> GetByIdAsync(int id)
-    {
-        return await _context.Abilities.FindAsync(id);        
     }
 
     public async Task<List<Ability>> GetAllAsync()

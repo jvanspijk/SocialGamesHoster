@@ -4,7 +4,7 @@ using API.Domain.Models;
 using API.Features.Roles.Responses;
 
 namespace API.Features.Roles.Endpoints;
-public static class UpdateRole
+public static class UpdateRoleInformation
 {
     public readonly record struct Request(string? Name, string? Description);
 

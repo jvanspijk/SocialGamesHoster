@@ -151,8 +151,8 @@ public static class Endpoints
             .Produces<AbilityResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        abilitiesGroup.MapPatch("/{id:int}", UpdateAbility.HandleAsync)
-            .WithName("UpdateAbility")
+        abilitiesGroup.MapPatch("/{id:int}", UpdateAbilityInformation.HandleAsync)
+            .WithName("UpdateAbilityInformation")
             .Produces<AbilityResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
@@ -187,8 +187,13 @@ public static class Endpoints
             .Produces<RoleResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        rolesGroup.MapPatch("/{id:int}", UpdateRole.HandleAsync)
-            .WithName("UpdateRole")
+        rolesGroup.MapPatch("/{id:int}", UpdateRoleInformation.HandleAsync)
+            .WithName("UpdateRoleInformation")
+            .Produces<RoleResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        rolesGroup.MapPatch("/{id:int}/abilities", UpdateRoleAbilities.HandleAsync)
+            .WithName("UpdateRoleAbilities")
             .Produces<RoleResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

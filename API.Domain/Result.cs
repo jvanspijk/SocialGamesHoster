@@ -27,6 +27,8 @@ public abstract partial record Result<T> where T : notnull
     [MemberNotNullWhen(true, nameof(Value))]
     [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess { get; init; }
+    [MemberNotNullWhen(false, nameof(Value))]
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool IsFailure => !IsSuccess;
 
     public bool TryGetValue([MaybeNullWhen(false)] out T value)
