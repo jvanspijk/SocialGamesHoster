@@ -3,7 +3,6 @@ using API.Features.Abilities.Responses;
 using API.Features.Authentication.Endpoints;
 using API.Features.GameSessions.Endpoints;
 using API.Features.Players.Endpoints;
-using API.Features.Players.Responses;
 using API.Features.Roles.Endpoints;
 using API.Features.Roles.Responses;
 using API.Features.Rounds.Endpoints;
@@ -114,12 +113,12 @@ public static class Endpoints
 
         playersGroup.MapGet("/", GetPlayersFromGame.HandleAsync)
             .WithName("GetGamePlayers")
-            .Produces<List<PlayerNameResponse>>(StatusCodes.Status200OK)
+            .Produces<List<GetPlayersFromGame.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapGet("/{name:alpha}", GetPlayerFromGame.HandleAsync)
             .WithName("GetPlayerByName")
-            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+            .Produces<GetPlayerFromGame.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapPost("/", CreatePlayer.HandleAsync)
@@ -179,12 +178,12 @@ public static class Endpoints
 
         playersGroup.MapGet("/{id:int}", GetPlayer.HandleAsync)
             .WithName("GetPlayerById")
-            .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+            .Produces<GetPlayer.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
            .WithName("UpdatePlayer")
-           .Produces<PlayerNameResponse>(StatusCodes.Status200OK)
+           .Produces<UpdatePlayer.Response>(StatusCodes.Status200OK)
            .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapDelete("/{id:int}", DeletePlayer.HandleAsync)

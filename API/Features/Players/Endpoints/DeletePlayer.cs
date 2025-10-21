@@ -2,7 +2,7 @@
 using API.Domain.Models;
 
 namespace API.Features.Players.Endpoints;
-public class DeletePlayer
+public static class DeletePlayer
 {
     public static async Task<IResult> HandleAsync(PlayerRepository repository, int id)
     {

@@ -31,7 +31,7 @@ public class PlayerRepository : IRepository<Player>
             .Select(TProjectable.Projection)
             .FirstOrDefaultAsync();
     }
-
+    // TODO: check if game exists and return result object
     public async Task<TProjectable?> GetByNameAsync<TProjectable>(string name, int gameId) 
         where TProjectable : class, IProjectable<Player, TProjectable>
     {
@@ -50,6 +50,7 @@ public class PlayerRepository : IRepository<Player>
             .ToListAsync();
     }
 
+    // TODO: Should return result object to indicate if game exists
     public async Task<List<TProjectable>> GetAllFromGameAsync<TProjectable>(int gameId) 
         where TProjectable : class, IProjectable<Player, TProjectable>
     {

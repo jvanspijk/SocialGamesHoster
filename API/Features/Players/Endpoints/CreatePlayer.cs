@@ -1,9 +1,8 @@
-﻿using API.DataAccess.Repositories;
-using API.Domain;
+﻿using API.DataAccess;
+using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Domain.Validation;
-using API.Features.Players.Responses;
-using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace API.Features.Players.Endpoints;
 public static class CreatePlayer
@@ -18,8 +17,12 @@ public static class CreatePlayer
             }
         }
     }
-
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request, int gameId, HttpContext context)
+    public record Response(int Id, string Name) : IProjectable<Player, Response>
+    {
+        public static Expression<Func<Player, Response>> Projection =>
+            player => new Response(player.Id, player.Name);
+    }
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request, int gameId)
     {
         var validationResult = request.Validate();
         if (validationResult.HasErrors())
@@ -30,11 +33,11 @@ public static class CreatePlayer
         Player player = new() { Name = request.Name, GameId = gameId };
         Player result = await repository.CreateAsync(player);
 
-        PlayerNameResponse response = new(result.Id, result.Name);
-        string uri = context.Request.Scheme + "://" +
-            context.Request.Host.ToString() + 
-            $"/players/{result.Id}";
+        Response response = new(result.Id, result.Name);
 
-        return Results.Created(uri, response);
+        return Results.CreatedAtRoute(
+            routeName: "GetPlayer",
+            routeValues: result.Id,
+            value: response);
     }
 }
