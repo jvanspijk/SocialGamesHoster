@@ -64,6 +64,22 @@ public class PlayerRepository : IRepository<Player>
         return await _context.Players.FindAsync(id);
     }
 
+    public async Task<Result<List<Player>>> GetMultipleAsync(List<int> ids)
+    {
+        var foundPlayers = await _context.Players
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
+
+        if(ids.Count != foundPlayers.Count)
+        {
+            var foundIds = foundPlayers.Select(p => p.Id).ToHashSet();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Player", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundPlayers;
+    }
+
     public async Task<Player?> GetByNameAsync(string name, int gameId)
     {
         return await _context.Players

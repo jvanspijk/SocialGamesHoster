@@ -1,4 +1,6 @@
-﻿namespace API.DataAccess;
+﻿using API.Domain;
+
+namespace API.DataAccess;
 
 public interface IRepository<T> where T : class
 {
@@ -12,6 +14,7 @@ public interface IRepository<T> where T : class
     /// <param name="id"></param>
     /// <returns></returns>
     Task<T?> GetAsync(int id);
+    Task<Result<List<T>>> GetMultipleAsync(List<int> ids);
     // Create
     Task<T> CreateAsync(T entity);
     // Update

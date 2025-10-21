@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
@@ -54,6 +56,22 @@ public class RoleRepository : IRepository<Role>
         return await _context.Roles.FindAsync(id);
     }
 
+    public async Task<Result<List<Role>>> GetMultipleAsync(List<int> ids)
+    {
+        var foundRoles = await _context.Roles
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync();
+
+        if(ids.Count != foundRoles.Count)
+        {
+            var foundIds = foundRoles.Select(r => r.Id).ToHashSet();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Role", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRoles;
+    }
+
     // Update
     public async Task<Role> UpdateAsync(Role updatedRole)
     {
@@ -70,6 +88,4 @@ public class RoleRepository : IRepository<Role>
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
     }
-
-
 }

@@ -11,7 +11,7 @@ public static class UpdateRoleAbilities
     public readonly record struct Request(List<int> AbilityIds);
     public async static Task<IResult> HandleAsync(RoleRepository repository, AbilityRepository abilityRepository, int id, Request request)
     {
-        var abilitiesResult = await abilityRepository.GetAsync(request.AbilityIds);
+        var abilitiesResult = await abilityRepository.GetMultipleAsync(request.AbilityIds);
         if (abilitiesResult.IsFailure)
         {
             return abilitiesResult.AsIResult();
@@ -39,7 +39,7 @@ public static class UpdateRoleAbilities
         }
 
         role.Abilities = abilities;
-        var updatedRole = await repository.UpdateAsync(role);
+        Role updatedRole = await repository.UpdateAsync(role);
         RoleResponse response = updatedRole.ConvertToResponse<Role, RoleResponse>();
         return Results.Ok(response);
     }

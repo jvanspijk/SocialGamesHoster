@@ -60,10 +60,27 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
     public Task<GameSession?> GetAsync(int id)
     {
         return _context.GameSessions
-            .Include(gs => gs.Ruleset!.Name)
+            .Include(gs => gs.Ruleset)
             .Include(gs => gs.Participants)
             .Include(gs => gs.Winners)
             .FirstOrDefaultAsync(gs => gs.Id == id);
+    }
+
+    public async Task<Result<List<GameSession>>> GetMultipleAsync(List<int> ids)
+    {
+        var foundSessions = await _context.GameSessions
+            .Include(gs => gs.Winners)
+            .Where(gs => ids.Contains(gs.Id))
+            .ToListAsync();
+
+        if(ids.Count != foundSessions.Count)
+        {
+            var foundIds = foundSessions.Select(gs => gs.Id).ToHashSet();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("GameSession", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundSessions;
     }
 
     public Task<GameSession> UpdateAsync(GameSession updatedEntity)

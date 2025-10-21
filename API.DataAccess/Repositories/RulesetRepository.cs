@@ -1,4 +1,6 @@
-﻿using API.Domain.Models;
+﻿using API.Domain;
+using API.Domain.Models;
+using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -42,6 +44,22 @@ public class RulesetRepository : IRepository<Ruleset>
     public async Task<Ruleset?> GetAsync(int id)
     {
         return await _context.Rulesets.FindAsync(id);
+    }
+
+    public async Task<Result<List<Ruleset>>> GetMultipleAsync(List<int> ids)
+    {
+        var foundRulesets = await _context.Rulesets
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync();
+
+        if(ids.Count != foundRulesets.Count)
+        {
+            var foundIds = foundRulesets.Select(r => r.Id).ToHashSet();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Ruleset", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRulesets;
     }
 
     // Update

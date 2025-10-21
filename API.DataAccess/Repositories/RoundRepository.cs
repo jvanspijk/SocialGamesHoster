@@ -42,6 +42,23 @@ public class RoundRepository : IRepository<Round>
         return await _context.Rounds.FindAsync(id);
     }
 
+    public async Task<Result<List<Round>>> GetMultipleAsync(List<int> ids)
+    {
+        var foundRounds = await _context.Rounds
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync();
+
+        if (ids.Count != foundRounds.Count)
+        {
+            var foundIds = foundRounds.Select(r => r.Id).ToHashSet();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Round", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRounds;
+    }
+
+
     public async Task<Round?> GetCurrentRoundFromGame(int gameId)
     {
         return await _context.GameSessions

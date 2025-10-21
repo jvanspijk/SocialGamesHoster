@@ -46,16 +46,19 @@ public class AbilityRepository : IRepository<Ability>
         return await _context.Abilities.FindAsync(id);
     }
 
-    public async Task<Result<List<Ability>>> GetAsync(List<int> abilityIds)
+    public async Task<Result<List<Ability>>> GetMultipleAsync(List<int> abilityIds)
     {
-        var abilities = await _context.Abilities.Where(a => abilityIds.Contains(a.Id)).ToListAsync();
-        if(abilityIds.Count != abilities.Count)
+        var foundAbilities = await _context.Abilities
+            .Where(a => abilityIds.Contains(a.Id))
+            .ToListAsync();
+
+        if(abilityIds.Count != foundAbilities.Count)
         {
-            var foundIds = abilities.Select(a => a.Id).ToHashSet();
+            var foundIds = foundAbilities.Select(a => a.Id).ToHashSet();
             var missingIds = abilityIds.Where(id => !foundIds.Contains(id));
             Errors.ResourceNotFound("Ability", "Ids", string.Join(", ", missingIds));
         }
-        return abilities;
+        return foundAbilities;
     }
 
     public async Task<Ability> CreateAsync(Ability ability)
