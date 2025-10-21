@@ -6,7 +6,7 @@ namespace API.DataAccess.Seeders;
 
 internal class BlackJackSeeder(int rulesetId, int startingId)
 {
-    private readonly int _idOffset = startingId;
+    private readonly int _idOffset = startingId - 1;
     private readonly int _rulesetId = rulesetId;
     private readonly Dictionary<string, Role> _roles = [];
     private readonly Dictionary<string, Ability> _abilities = [];
