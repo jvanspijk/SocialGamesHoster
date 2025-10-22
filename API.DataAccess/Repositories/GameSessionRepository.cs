@@ -107,7 +107,7 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         return session;
     }
 
-    public async Task<Result<GameSession>> EndGameSession(int gameSessionId)
+    public async Task<Result<GameSession>> FinishGameSession(int gameSessionId)
     {
         GameSession? session = await _context.GameSessions
             .Include(gs => gs.CurrentRound)
@@ -117,9 +117,10 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         {
             return Errors.ResourceNotFound(nameof(session), gameSessionId);
         }
-        if(session.Status == GameStatus.Finished)
+
+        if(session.IsDone)
         {
-            return Errors.InvalidOperation($"Game session with id {gameSessionId} has already finished.");
+            return Errors.InvalidOperation($"Game session with id {gameSessionId} has already completed.");
         }
 
         if(session.CurrentRound != null && !session.CurrentRound.FinishedTime.HasValue)
@@ -128,6 +129,26 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         }
 
         session.Status = GameStatus.Finished;
+        await _context.SaveChangesAsync();
+        return session;
+    }
+
+    public async Task<Result<GameSession>> CancelGameSession(int gameSessionId)
+    {
+        GameSession? session = await _context.GameSessions
+            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
+
+        if (session == null)
+        {
+            return Errors.ResourceNotFound(nameof(session), gameSessionId);
+        }
+
+        if (session.IsDone)
+        {
+            return Errors.InvalidOperation($"Game session with id {gameSessionId} has already completed.");
+        }
+
+        session.Status = GameStatus.Cancelled;
         await _context.SaveChangesAsync();
         return session;
     }

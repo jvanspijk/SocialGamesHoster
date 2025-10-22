@@ -4,11 +4,11 @@ using API.Domain.Models;
 
 namespace API.Features.GameSessions.Endpoints;
 
-public static class EndGameSession
+public static class FinishGameSession
 {
     public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
     {
-        Result<GameSession> result = await repository.EndGameSession(gameId);
+        Result<GameSession> result = await repository.FinishGameSession(gameId);
         if(!result.IsSuccess)
         {
             return result.AsIResult();

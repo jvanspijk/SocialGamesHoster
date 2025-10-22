@@ -8,7 +8,8 @@ public enum GameStatus
     NotStarted = 0,
     Running = 100,
     Paused = 200,
-    Finished = 300,
+    Cancelled = 300,
+    Finished = 400,
 }
 public class GameSession
 {
@@ -21,4 +22,9 @@ public class GameSession
     public Round? CurrentRound { get; set; }
     public ICollection<Player> Winners { get; set; } = [];
     public GameStatus Status { get; set; } = GameStatus.NotStarted;
+
+    [NotMapped]
+    public bool IsDone => Status == GameStatus.Finished || Status == GameStatus.Cancelled;
+    [NotMapped]
+    public bool IsActive => Status == GameStatus.Running || Status == GameStatus.Paused;
 }

@@ -4,7 +4,7 @@ using API.Features.GameSessions.Common;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
-public static class AddWinner
+public static class AddWinners
 {
     public readonly record struct Request(int PlayerId);
     public record Response(int Id, List<Participant> Winners) : IProjectable<GameSession, Response>
@@ -47,7 +47,7 @@ public static class AddWinner
 
         if (existingGameSession.Winners.Any(w => w.Id == request.PlayerId))
         {
-            return Results.BadRequest($"Player with id {request.PlayerId} is already marked as a winner.");
+            return Results.Conflict($"Player with id {request.PlayerId} is already marked as a winner.");
         }
 
         var player = await playerRepository.GetAsync(request.PlayerId);

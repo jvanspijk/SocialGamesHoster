@@ -88,6 +88,12 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        gamesGroup.MapPost("/winners", AddWinners.HandleAsync)
+            .WithName("AddGameWinner")
+            .Produces<AddWinners.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         gamesGroup.MapPost("/login/{name:alpha}", PlayerLogin.HandleAsync)
             .WithTags("Authentication")
             .WithName("PlayerLogin")
@@ -102,9 +108,14 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        gamesGroup.MapPost("/end", EndGameSession.HandleAsync)
-            .WithName("EndGameSession")
-            .Produces(StatusCodes.Status200OK)
+        gamesGroup.MapPost("/finish", FinishGameSession.HandleAsync)
+            .WithName("FinishGameSession")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        gamesGroup.MapPost("/cancel", CancelGameSession.HandleAsync)
+            .WithName("CancelGameSession")
+            .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         var playersGroup = gamesGroup.MapGroup("/players")
