@@ -12,8 +12,7 @@ public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
     #region Create
     public Task<Round> CreateAsync(Round entity)
     {
-        //return Errors.InvalidOperation("Use StartNewRound method to create a new round associated with a game session.");
-        throw new NotImplementedException();
+        throw new InvalidOperationException("Use the StartNewRound method to create a new round associated with a game session.");
     }
 
     public async Task<Round?> StartNewRound(int gameId)

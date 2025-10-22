@@ -10,9 +10,11 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
     private readonly APIDatabaseContext _context = context;
 
     #region Create
-    public Task<GameSession> CreateAsync(GameSession entity)
+    public async Task<GameSession> CreateAsync(GameSession newGameSession)
     {
-        throw new NotImplementedException();
+        _context.GameSessions.Add(newGameSession);
+        await _context.SaveChangesAsync();
+        return newGameSession;
     }
     #endregion
 
