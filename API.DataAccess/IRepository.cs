@@ -4,7 +4,6 @@ namespace API.DataAccess;
 
 public interface IRepository<T> where T : class
 {
-    IQueryable<T> AsQueryable();
     // Read
     Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : class, IProjectable<T, TProjectable>;
     Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : class, IProjectable<T, TProjectable>;

@@ -5,26 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
 
-public class RoleRepository : IRepository<Role>
+public class RoleRepository(APIDatabaseContext context) : IRepository<Role>
 {
-    private readonly APIDatabaseContext _context;
+    private readonly APIDatabaseContext _context = context;
 
-    public RoleRepository(APIDatabaseContext context) 
-    {
-        _context = context;
-    }
-
-    public IQueryable<Role> AsQueryable() => _context.Roles.AsNoTracking();
-
-    // Create
+    #region Create
     public async Task<Role> CreateAsync(Role role)
     {
         _context.Roles.Add(role);
         await _context.SaveChangesAsync();
         return role;
     }
+    #endregion
 
-    // Read
+    #region Read
     public async Task<TProjectable?> GetAsync<TProjectable>(int id)
         where TProjectable : class, IProjectable<Role, TProjectable>
     {
@@ -71,8 +65,9 @@ public class RoleRepository : IRepository<Role>
 
         return foundRoles;
     }
+    #endregion
 
-    // Update
+    #region Update
     public async Task<Role> UpdateAsync(Role updatedRole)
     {
         _context.Entry(updatedRole).State = EntityState.Modified;
@@ -80,12 +75,14 @@ public class RoleRepository : IRepository<Role>
         await _context.SaveChangesAsync();
         return updatedRole;
     }
+    #endregion
 
-    // Delete
+    #region Delete
     public async Task DeleteAsync(Role role)
     {
         _context.Entry(role).State = EntityState.Modified;
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
     }
+    #endregion
 }

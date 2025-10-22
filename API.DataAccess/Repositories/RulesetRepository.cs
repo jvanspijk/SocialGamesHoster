@@ -6,24 +6,20 @@ using System.Data;
 
 namespace API.DataAccess.Repositories;
 
-public class RulesetRepository : IRepository<Ruleset>
+public class RulesetRepository(APIDatabaseContext context) : IRepository<Ruleset>
 {
-    private readonly APIDatabaseContext _context;
-    public RulesetRepository(APIDatabaseContext context)
-    {
-        _context = context;
-    }
-    public IQueryable<Ruleset> AsQueryable() => _context.Rulesets.AsNoTracking();
+    private readonly APIDatabaseContext _context = context;
 
-    // Create
+    #region Create
     public async Task<Ruleset> CreateAsync(Ruleset ruleset)
     {
         _context.Rulesets.Add(ruleset);
         await _context.SaveChangesAsync();
         return ruleset;
     }
+    #endregion
 
-    // Read
+    #region Read
     public async Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : 
         class, IProjectable<Ruleset, TProjectable>
     {
@@ -61,8 +57,9 @@ public class RulesetRepository : IRepository<Ruleset>
 
         return foundRulesets;
     }
+    #endregion
 
-    // Update
+    #region Update
     public async Task<Ruleset> UpdateAsync(Ruleset updatedRuleset)
     {
         _context.Entry(updatedRuleset).State = EntityState.Modified;
@@ -70,12 +67,14 @@ public class RulesetRepository : IRepository<Ruleset>
         await _context.SaveChangesAsync();
         return updatedRuleset;
     }
+    #endregion
 
-    // Delete
+    #region Delete
     public async Task DeleteAsync(Ruleset ruleset)
     {
         _context.Entry(ruleset).State = EntityState.Modified;
         _context.Rulesets.Remove(ruleset);
         await _context.SaveChangesAsync();
     }
+    #endregion
 }

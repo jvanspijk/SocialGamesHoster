@@ -64,7 +64,7 @@ public class TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubConte
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var roundRepository = scope.ServiceProvider.GetRequiredService<RoundRepository>();
-        Result<bool> result = await roundRepository.FinishRoundAsync(roundId);
+        var result = await roundRepository.FinishRoundAsync(roundId);
         if (!result.IsSuccess)
         {
             scope.ServiceProvider.GetService<ILogger<TimerEventNotifier>>()?.LogError("Failed to finish round {RoundId}: {Error}", roundId, result.Error.Message);

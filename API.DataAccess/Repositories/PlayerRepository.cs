@@ -5,24 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
 
-public class PlayerRepository : IRepository<Player>
+public class PlayerRepository(APIDatabaseContext context) : IRepository<Player>
 {
-    private readonly APIDatabaseContext _context;
-    public PlayerRepository(APIDatabaseContext context)
-    {
-        _context = context;
-    }
+    private readonly APIDatabaseContext _context = context;
 
-    public IQueryable<Player> AsQueryable() => _context.Players.AsNoTracking();
-
-    // Create
+    #region Create
     public async Task<Player> CreateAsync(Player player)
     {
         _context.Players.Add(player);
         await _context.SaveChangesAsync();
         return player;
     }
-    // Read
+    #endregion
+
+    #region Read
     public async Task<TProjectable?> GetAsync<TProjectable>(int id)
         where TProjectable : class, IProjectable<Player, TProjectable>
     {
@@ -116,21 +112,24 @@ public class PlayerRepository : IRepository<Player>
 
         return [.. sourcePlayer.CanSee];
     }
+    #endregion
 
-    // Update
+    #region Update
     public async Task<Player> UpdateAsync(Player updatedPlayer)
     {
         _context.Entry(updatedPlayer).State = EntityState.Modified;
         _context.Players.Update(updatedPlayer);
         await _context.SaveChangesAsync();
         return updatedPlayer;
-    }   
+    }
+    #endregion
 
-    // Delete
+    #region Delete
     public async Task DeleteAsync(Player player)
     {
         _context.Entry(player).State = EntityState.Modified;
         _context.Players.Remove(player);
         await _context.SaveChangesAsync();
     }
+    #endregion
 }

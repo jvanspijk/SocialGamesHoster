@@ -9,21 +9,14 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
 {
     private readonly APIDatabaseContext _context = context;
 
-    public IQueryable<GameSession> AsQueryable()
-    {
-        return _context.GameSessions.AsQueryable();
-    }
-
+    #region Create
     public Task<GameSession> CreateAsync(GameSession entity)
     {
         throw new NotImplementedException();
     }
+    #endregion
 
-    public Task DeleteAsync(GameSession entity)
-    {
-        throw new NotImplementedException();
-    }
-
+    #region Read
     public async Task<TProjectable?> GetAsync<TProjectable>(int id)
        where TProjectable : class, IProjectable<GameSession, TProjectable>
     {
@@ -45,14 +38,14 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         where TProjectable : class, IProjectable<GameSession, TProjectable>
     {
 
-        return await GetActiveSessionsAsQueryable()
+        return await _activeSessions
             .Select(TProjectable.Projection)
             .ToListAsync();
     }
 
     public async Task<int> GetActiveSessionId()
     {
-        return await GetActiveSessionsAsQueryable()
+        return await _activeSessions
             .Select(gs => gs.Id)
             .SingleOrDefaultAsync();
     }
@@ -82,16 +75,13 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
 
         return foundSessions;
     }
+    #endregion
 
+    #region Update
     public Task<GameSession> UpdateAsync(GameSession updatedEntity)
     {
         throw new NotImplementedException();
-    }
-
-    private IQueryable<GameSession> GetActiveSessionsAsQueryable() {
-        return _context.GameSessions
-        .Where(gs => gs.Status == GameStatus.Running || gs.Status == GameStatus.Paused);
-    }
+    }   
 
     public async Task<Result<GameSession>> StartGameSession(int gameSessionId)
     {
@@ -141,4 +131,18 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         await _context.SaveChangesAsync();
         return session;
     }
+    #endregion
+
+    #region Delete
+    public Task DeleteAsync(GameSession entity)
+    {
+        throw new NotImplementedException();
+    }
+    #endregion
+
+    private IQueryable<GameSession> _activeSessions => _context.GameSessions
+        .Where(gs => gs.Status == GameStatus.Running || gs.Status == GameStatus.Paused);
+
+    private IQueryable<GameSession> _finishedSessions => _context.GameSessions
+        .Where(gs => gs.Status == GameStatus.Finished);
 }

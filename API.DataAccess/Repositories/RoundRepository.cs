@@ -5,27 +5,41 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Repositories;
 
-public class RoundRepository : IRepository<Round>
+public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
 {
-    private APIDatabaseContext _context;
-    public RoundRepository(APIDatabaseContext context)
-    {
-        _context = context;
-    }
-    public IQueryable<Round> AsQueryable()
-    {
-        return _context.Rounds;
-    }
+    private readonly APIDatabaseContext _context = context;
 
+    #region Create
     public Task<Round> CreateAsync(Round entity)
     {
+        //return Errors.InvalidOperation("Use StartNewRound method to create a new round associated with a game session.");
         throw new NotImplementedException();
     }
 
-    public Task DeleteAsync(Round entity)
+    public async Task<Round?> StartNewRound(int gameId)
     {
-        throw new NotImplementedException();
+        GameSession gameSession = await _context.GameSessions
+            .Include(g => g.CurrentRound)
+            .Where(g => g.Id == gameId)
+            .SingleAsync();
+
+        Round newRound = new()
+        {
+            GameId = gameId,
+            StartedTime = DateTimeOffset.UtcNow
+        };
+
+        gameSession.CurrentRound = newRound;
+
+        _context.Rounds.Add(newRound);
+
+        await _context.SaveChangesAsync();
+
+        return newRound;
     }
+    #endregion
+
+    #region Read
 
     public Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : class, IProjectable<Round, TProjectable>
     {
@@ -58,7 +72,6 @@ public class RoundRepository : IRepository<Round>
         return foundRounds;
     }
 
-
     public async Task<Round?> GetCurrentRoundFromGame(int gameId)
     {
         return await _context.GameSessions
@@ -66,35 +79,15 @@ public class RoundRepository : IRepository<Round>
             .Select(g => g.CurrentRound)
             .FirstOrDefaultAsync();
     }
+    #endregion
 
-    public async Task<Round?> StartNewRound(int gameId)
-    {
-        GameSession gameSession = await _context.GameSessions
-            .Include(g => g.CurrentRound)
-            .Where(g => g.Id == gameId)
-            .SingleAsync();
-
-        Round newRound = new() 
-        { 
-            GameId = gameId, 
-            StartedTime = DateTimeOffset.UtcNow 
-        };
-
-        gameSession.CurrentRound = newRound;
-
-        _context.Rounds.Add(newRound);
-
-        await _context.SaveChangesAsync();
-
-        return newRound;
-    }
-
+    #region Update
     public Task<Round> UpdateAsync(Round updatedEntity)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Result<bool>> FinishRoundAsync(int roundId)
+    public async Task<Result> FinishRoundAsync(int roundId)
     {
         var round = await _context.Rounds.FindAsync(roundId);
         if (round == null)
@@ -103,6 +96,16 @@ public class RoundRepository : IRepository<Round>
         }
         round.FinishedTime = DateTimeOffset.UtcNow;
         await _context.SaveChangesAsync();
-        return true;
+        return Result.Success();
     }
+    #endregion
+
+    #region Delete
+    public Task DeleteAsync(Round entity)
+    {
+        throw new NotImplementedException();
+    }
+    #endregion
 }
+
+

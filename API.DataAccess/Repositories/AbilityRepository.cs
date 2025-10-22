@@ -4,17 +4,20 @@ using API.Domain.Validation;
 using Microsoft.EntityFrameworkCore;
 namespace API.DataAccess.Repositories;
 
-public class AbilityRepository : IRepository<Ability>
+public class AbilityRepository(APIDatabaseContext context) : IRepository<Ability>
 {    
-    private readonly APIDatabaseContext _context;
-    public AbilityRepository(APIDatabaseContext context)
+    private readonly APIDatabaseContext _context = context;
+
+    #region Create
+    public async Task<Ability> CreateAsync(Ability ability)
     {
-        _context = context;
+        _context.Abilities.Add(ability);
+        await _context.SaveChangesAsync();
+        return ability;
     }
+    #endregion
 
-    public IQueryable<Ability> AsQueryable() => _context.Abilities.AsNoTracking();
-
-    // Read
+    #region Read
     public async Task<TProjectable?> GetAsync<TProjectable>(int id)
         where TProjectable : class, IProjectable<Ability, TProjectable>
     {
@@ -58,21 +61,17 @@ public class AbilityRepository : IRepository<Ability>
             var missingIds = abilityIds.Where(id => !foundIds.Contains(id));
             Errors.ResourceNotFound("Ability", "Ids", string.Join(", ", missingIds));
         }
-        return foundAbilities;
-    }
 
-    public async Task<Ability> CreateAsync(Ability ability)
-    {
-        _context.Abilities.Add(ability);
-        await _context.SaveChangesAsync();
-        return ability;
-    }
+        return foundAbilities;
+    }  
 
     public async Task<List<Ability>> GetAllAsync()
     {
         return await _context.Abilities.ToListAsync();        
-    }    
+    }
+    #endregion
 
+    #region Update
     public async Task<Ability> UpdateAsync(Ability updatedAbility)
     { 
         _context.Entry(updatedAbility).State = EntityState.Modified;
@@ -80,6 +79,9 @@ public class AbilityRepository : IRepository<Ability>
         await _context.SaveChangesAsync();
         return updatedAbility;
     }
+    #endregion
+
+    #region Delete
 
     public async Task DeleteAsync(Ability ability)
     {
@@ -87,4 +89,5 @@ public class AbilityRepository : IRepository<Ability>
         _context.Abilities.Remove(ability);
         await _context.SaveChangesAsync();
     }
+    #endregion
 }
