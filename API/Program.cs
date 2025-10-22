@@ -17,12 +17,6 @@ namespace API;
 // TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
 // Using scalar: http://localhost:9090/scalar
 // TODO:
-// - Cancel rounds through API
-// - Create players
-//      - (should players create their own accounts or should admins create accounts for players?)
-// - Assign ruleset to game session
-// - Start game session
-// - End game session
 // - Assign random roles to players
 // - Fix login for players
 //      - Use local IP address to identify players
@@ -30,11 +24,13 @@ namespace API;
 // - Fix login for admins
 // - Change participants in active game sessions
 //   - Remove players from game sessions
-// - Always inject IRepository<T> instead of concrete repositories
+// - Always inject repository interfaces instead of concrete repositories
 // - Testing project with unit and/or integration tests
 // - Performance testing
-// Bugs:
+
+// Bugs/issues:
 // - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
+// - Rounds can only be created with a timer that is started at creation and overrides the previous one. There's no way to create a round without a timer.
 
 public class Program
 {

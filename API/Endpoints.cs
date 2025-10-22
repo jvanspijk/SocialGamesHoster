@@ -71,10 +71,21 @@ public static class Endpoints
             .WithTags("GameSession")
             .WithName("GetActiveGameId")
             .Produces<int>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);      
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        
+        builder.MapPost("/games/duplicate", DuplicateGameSession.HandleAsync)
+            .WithTags("GameSession")
+            .WithName("DuplicateGameSession")
+            .Produces<CreatedAtRoute<DuplicateGameSession.Response>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
+
+        gamesGroup.MapGet("/", GetGameSession.HandleAsync)
+            .WithName("GetGameSessionById")
+            .Produces<GetGameSession.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);        
 
         gamesGroup.MapPatch("/players", UpdateGameParticipants.HandleAsync)
             .WithName("UpdateGameParticipants")
