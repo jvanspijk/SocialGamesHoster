@@ -147,6 +147,13 @@ public static class Endpoints
             .Produces<GetCurrentRound.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        currentRoundGroup.MapPatch("/time", AdjustRoundTime.HandleAsync)
+            .WithName("AdjustRoundTime")
+            .WithDescription("Adds or removes time from the round timer.")
+            .Produces<TimeSpan>(StatusCodes.Status200OK)            
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         currentRoundGroup.MapPost("/pause", PauseCurrentRound.Handle)
             .WithName("PauseCurrentRound")
             .Produces<TimeSpan>(StatusCodes.Status200OK)
@@ -157,7 +164,19 @@ public static class Endpoints
             .Produces<TimeSpan>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        roundsGroup.MapPost("/start", StartNewRound.HandleAsync)
+        currentRoundGroup.MapPost("/cancel", CancelCurrentRound.Handle)
+            .WithName("CancelRound")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        currentRoundGroup.MapPost("/finish", FinishCurrentRound.Handle)
+            .WithName("FinishRound")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        roundsGroup.MapPost("/", StartNewRound.HandleAsync)
             .WithName("StartNewRound")
             .Produces<CreatedAtRoute<StartNewRound.Response>>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status404NotFound);

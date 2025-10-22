@@ -6,13 +6,15 @@ namespace API.Features.GameSessions.Endpoints;
 
 public static class FinishGameSession
 {
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
+    public static async Task<IResult> HandleAsync(GameSessionRepository repository, RoundTimer timer, int gameId)
     {
         Result<GameSession> result = await repository.FinishGameSession(gameId);
         if(!result.IsSuccess)
         {
             return result.AsIResult();
         }
+
+        timer.Finish();
 
         return Results.NoContent();
     }

@@ -6,13 +6,15 @@ namespace API.Features.GameSessions.Endpoints;
 
 public static class CancelGameSession
 {
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
+    public static async Task<IResult> HandleAsync(GameSessionRepository repository, RoundTimer timer, int gameId)
     {
         Result<GameSession> result = await repository.CancelGameSession(gameId);
         if (!result.IsSuccess)
         {
             return result.AsIResult();
         }
+
+        timer.Cancel();
 
         return Results.NoContent();
     }

@@ -18,11 +18,12 @@ public class GetCurrentRound
 
     public static async Task<IResult> HandleAsync(RoundRepository repository, RoundTimer timer, int gameId)
     {
-        Round? round = await repository.GetCurrentRoundFromGame(gameId);
-        if (round == null)
+        var roundResult = await repository.GetCurrentRoundFromGame(gameId);
+        if (roundResult.IsFailure)
         {
-            return Results.NotFound($"Game with id {gameId} does not have an active round or does not exist.");
+            return roundResult.AsIResult();
         }
+        Round round = roundResult.Value;
         TimeSpan timeLeft = timer.RemainingTime;
         bool isFinished = round.FinishedTime.HasValue && round.FinishedTime <= DateTimeOffset.UtcNow;
         Response response = new(round.Id, round.StartedTime, isFinished) { RemainingSeconds = (int)timeLeft.TotalSeconds};

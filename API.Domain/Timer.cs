@@ -163,6 +163,10 @@ public sealed class RoundTimer
         OnFinished?.Invoke(roundId);
     }
 
+    /// <summary>
+    /// Adds or subtracts time from a running timer.
+    /// </summary>
+    /// <param name="delta">The difference in time.</param>
     public void AdjustTime(TimeSpan delta)
     {
         TimeSpan newRemaining;

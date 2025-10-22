@@ -56,6 +56,7 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
             .Include(gs => gs.Ruleset)
             .Include(gs => gs.Participants)
             .Include(gs => gs.Winners)
+            .Include(gs => gs.CurrentRound)
             .FirstOrDefaultAsync(gs => gs.Id == id);
     }
 

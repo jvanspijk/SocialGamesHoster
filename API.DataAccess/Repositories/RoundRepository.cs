@@ -72,12 +72,24 @@ public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
         return foundRounds;
     }
 
-    public async Task<Round?> GetCurrentRoundFromGame(int gameId)
+    public async Task<Result<Round>> GetCurrentRoundFromGame(int gameId)
     {
-        return await _context.GameSessions
+        var game = await _context.GameSessions
             .Where(g => g.Id == gameId)
-            .Select(g => g.CurrentRound)
+            .Include(g => g.CurrentRound)
             .FirstOrDefaultAsync();
+
+        if (game == null) 
+        {
+            return Errors.ResourceNotFound(nameof(game), gameId);
+        }
+
+        if (game.CurrentRound == null)
+        {
+            return Errors.ResourceNotFound("Current round for game", gameId);
+        }
+
+        return game.CurrentRound;
     }
     #endregion
 
@@ -95,6 +107,33 @@ public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
             return Errors.ResourceNotFound(nameof(round), roundId);
         }
         round.FinishedTime = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+        return Result.Success();
+    }
+
+    public async Task<Result> CancelRoundAsync(int roundId)
+    {
+        var round = await _context.Rounds
+            .Include(r => r.GameSession)
+            .SingleOrDefaultAsync(r => r.Id == roundId);
+
+        if (round == null)
+        {
+            return Errors.ResourceNotFound(nameof(round), roundId);
+        }
+
+        if(round.GameSession == null)
+        {
+            return Errors.InvalidOperation("Round is not associated with a game session.");
+        }
+
+        if(round.GameSession.CurrentRoundId != round.Id)
+        {
+            return Errors.InvalidOperation("Round is not the current round of its associated game session.");
+        }
+
+        round.GameSession.CurrentRound = null;
+
         await _context.SaveChangesAsync();
         return Result.Success();
     }

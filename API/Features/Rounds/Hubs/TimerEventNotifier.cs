@@ -13,8 +13,12 @@ public class TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubConte
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer.OnStart += BroadcastTimerStart;
+
         _timer.OnPause += BroadcastTimerPause;
+
         _timer.OnCancel += BroadcastTimerCancelled;
+        _timer.OnCancel += CancelRoundAsync;
+
         _timer.OnFinished += BroadcastTimerFinished;
         _timer.OnFinished += FinishRoundAsync;
 
@@ -23,8 +27,12 @@ public class TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubConte
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.OnStart -= BroadcastTimerStart;
+
         _timer.OnPause -= BroadcastTimerPause;
+
         _timer.OnCancel -= BroadcastTimerCancelled;
+        _timer.OnCancel -= CancelRoundAsync;
+
         _timer.OnFinished -= BroadcastTimerFinished;
         _timer.OnFinished -= FinishRoundAsync;
 
@@ -65,10 +73,20 @@ public class TimerEventNotifier(RoundTimer timer, IHubContext<TimerHub> hubConte
         using var scope = _serviceScopeFactory.CreateScope();
         var roundRepository = scope.ServiceProvider.GetRequiredService<RoundRepository>();
         var result = await roundRepository.FinishRoundAsync(roundId);
-        if (!result.IsSuccess)
+        if (result.IsFailure)
         {
             scope.ServiceProvider.GetService<ILogger<TimerEventNotifier>>()?.LogError("Failed to finish round {RoundId}: {Error}", roundId, result.Error.Message);
-            return;
+        }
+    }
+
+    private async void CancelRoundAsync(int roundId)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var roundRepository = scope.ServiceProvider.GetRequiredService<RoundRepository>();
+        var result = await roundRepository.CancelRoundAsync(roundId);
+        if (result.IsFailure)
+        {
+            scope.ServiceProvider.GetService<ILogger<TimerEventNotifier>>()?.LogError("Failed to cancel round {RoundId}: {Error}", roundId, result.Error.Message);
         }
     }
 }
