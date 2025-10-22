@@ -94,9 +94,12 @@ public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
     #endregion
 
     #region Update
-    public Task<Round> UpdateAsync(Round updatedEntity)
+    public async Task<Round> UpdateAsync(Round updatedRound)
     {
-        throw new NotImplementedException();
+        _context.Entry(updatedRound).State = EntityState.Modified;
+        _context.Rounds.Update(updatedRound);
+        await _context.SaveChangesAsync();
+        return updatedRound;
     }
 
     public async Task<Result> FinishRoundAsync(int roundId)

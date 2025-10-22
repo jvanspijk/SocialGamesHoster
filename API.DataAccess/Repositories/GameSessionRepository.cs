@@ -79,9 +79,12 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
     #endregion
 
     #region Update
-    public Task<GameSession> UpdateAsync(GameSession updatedEntity)
+    public async Task<GameSession> UpdateAsync(GameSession updatedGame)
     {
-        throw new NotImplementedException();
+        _context.Entry(updatedGame).State = EntityState.Modified;
+        _context.GameSessions.Update(updatedGame);
+        await _context.SaveChangesAsync();
+        return updatedGame;
     }   
 
     public async Task<Result<GameSession>> StartGameSession(int gameSessionId)
