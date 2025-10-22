@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace API.Features.GameSessions.Endpoints;
 public static class AddWinners
 {
-    public readonly record struct Request(int PlayerId);
+    public readonly record struct Request(List<int> PlayerIds);
     public record Response(int Id, List<Participant> Winners) : IProjectable<GameSession, Response>
     {
         public static Expression<Func<GameSession, Response>> Projection =>
@@ -39,26 +39,34 @@ public static class AddWinners
         {
             return Results.BadRequest("Winners can only be added to game sessions that are active or finished.");
         }
-
-        if (!existingGameSession.Participants.Any(p => p.Id == request.PlayerId))
+        
+        List<int> participantIds = [.. existingGameSession.Participants.Select(p => p.Id)];
+        var nonParticipants = request.PlayerIds.Except(participantIds).ToList();
+        if (nonParticipants.Count > 0)
         {
-            return Results.BadRequest($"Player with id {request.PlayerId} is not a participant in this game session.");
+            return Results.BadRequest($"Players with ids {string.Join(" ,", nonParticipants)} are not participants in this game session.");
         }
 
-        if (existingGameSession.Winners.Any(w => w.Id == request.PlayerId))
+        List<int> currentWinnerIds = [.. existingGameSession.Winners.Select(w => w.Id)];
+        var alreadyWinners = request.PlayerIds.Intersect(currentWinnerIds).ToList();
+        if (alreadyWinners.Count > 0)
         {
-            return Results.Conflict($"Player with id {request.PlayerId} is already marked as a winner.");
+            return Results.Conflict($"Players with ids {string.Join(" ,", alreadyWinners)} are already marked as a winner.");
         }
 
-        var player = await playerRepository.GetAsync(request.PlayerId);
-        if (player == null)
+        var players = await playerRepository.GetMultipleAsync(request.PlayerIds);
+        if (players.IsFailure)
         {
-            return Results.NotFound($"Player with id {request.PlayerId} not found.");
-        }        
+            return players.AsIResult();
+        }
 
-        existingGameSession.Winners.Add(player);
+        var newWinners = existingGameSession.Winners.Concat(players.Value).ToList();
+        existingGameSession.Winners = newWinners;
+
         await gameSessionRepository.UpdateAsync(existingGameSession);
-        var response = existingGameSession.ConvertToResponse<GameSession, Response>();
+
+        var response = await gameSessionRepository.GetAsync<Response>(gameId);
+
         return Results.Ok(response);
     }
 }
