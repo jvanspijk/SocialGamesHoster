@@ -99,7 +99,7 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        gamesGroup.MapPost("/winners", AddWinners.HandleAsync)
+        gamesGroup.MapPost("/winners/add", AddWinners.HandleAsync)
             .WithName("AddGameWinner")
             .Produces<AddWinners.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)

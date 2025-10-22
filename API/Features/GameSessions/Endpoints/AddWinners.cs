@@ -24,12 +24,12 @@ public static class AddWinners
             );
     }
     public static async Task<IResult> HandleAsync(
-        int id,
+        int gameId,
         Request request,
         IRepository<Player> playerRepository,
         IRepository<GameSession> gameSessionRepository)
     {
-        var existingGameSession = await gameSessionRepository.GetAsync(id);
+        var existingGameSession = await gameSessionRepository.GetAsync(gameId);
         if (existingGameSession == null)
         {
             return Results.NotFound();
