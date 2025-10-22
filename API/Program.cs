@@ -6,6 +6,7 @@ using API.Features.Authentication;
 using API.Features.Rounds.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,10 +15,12 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 namespace API;
-// TODO: take a look at https://andrewlock.net/using-unix-domain-sockets-with-aspnetcore-and-httpclient/
 // Using scalar: http://localhost:9090/scalar
 // TODO:
 // - Assign random roles to players
+//   - How do we come up with the general logic for how many roles of each type are assigned?
+//   Maybe with a percentage of particpants that can have a role per role in the ruleset? But then some roles are mandatory, or can always only have 1.
+
 // - Fix login for players
 //      - Use local IP address to identify players
 // - Admin: force logout users, (decouple IP from user)
@@ -31,7 +34,7 @@ namespace API;
 // Bugs/issues:
 // - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
 // - Rounds can only be created with a timer that is started at creation and overrides the previous one. There's no way to create a round without a timer.
-
+// - Admin name and password should be stored in the database, yet easily changeable. Maybe put it in the docker-compose environment variables.
 public class Program
 {
     public static void Main(string[] args)
@@ -187,10 +190,9 @@ public class Program
         app.UseAuthorization();
 
         var apiGroup = app.MapGroup("/api");
-        apiGroup.MapEndpoints();
-
-        apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
+        apiGroup.MapEndpoints();        
         apiGroup.MapHub<TimerHub>("/timerHub");
+        apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
 
         // apiGroup.MapHub<PresenceHub>("/presenceHub");
 
