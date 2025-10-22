@@ -7,11 +7,7 @@ public interface IRepository<T> where T : class
     // Read
     Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : class, IProjectable<T, TProjectable>;
     Task<List<TProjectable>> GetAllAsync<TProjectable>() where TProjectable : class, IProjectable<T, TProjectable>;
-    /// <summary>
-    /// Gets the object without joins.
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids) where TProjectable : class, IProjectable<T, TProjectable>;
     Task<T?> GetAsync(int id);
     Task<Result<List<T>>> GetMultipleAsync(List<int> ids);
     // Create

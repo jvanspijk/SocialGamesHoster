@@ -36,6 +36,27 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
             .ToListAsync();
     }
 
+    public async Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids)
+    where TProjectable : class, IProjectable<GameSession, TProjectable>
+    {
+        var foundRulesets = await _context.GameSessions
+            .Where(r => ids.Contains(r.Id))
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+
+        if (ids.Count != foundRulesets.Count)
+        {
+            var foundIds = await _context.GameSessions
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToHashSetAsync();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Game sessions", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRulesets;
+    }
+
     public async Task<List<TProjectable>> GetAllActiveAsync<TProjectable>()
         where TProjectable : class, IProjectable<GameSession, TProjectable>
     {

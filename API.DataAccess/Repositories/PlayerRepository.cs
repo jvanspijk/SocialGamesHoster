@@ -56,6 +56,27 @@ public class PlayerRepository(APIDatabaseContext context) : IRepository<Player>
             .ToListAsync();
     }
 
+    public async Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids)
+    where TProjectable : class, IProjectable<Player, TProjectable>
+    {
+        var foundPlayers = await _context.Players
+            .Where(r => ids.Contains(r.Id))
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+
+        if (ids.Count != foundPlayers.Count)
+        {
+            var foundIds = await _context.Players
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToHashSetAsync();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Players", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundPlayers;
+    }
+
     public async Task<Player?> GetAsync(int id)
     {
         return await _context.Players.FindAsync(id);

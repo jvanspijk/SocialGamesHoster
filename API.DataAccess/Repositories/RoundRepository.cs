@@ -49,6 +49,27 @@ public class RoundRepository(APIDatabaseContext context) : IRepository<Round>
     {
         throw new NotImplementedException();
     }
+    public async Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids)
+    where TProjectable : class, IProjectable<Round, TProjectable>
+    {
+        var foundRounds = await _context.Rounds
+            .Where(r => ids.Contains(r.Id))
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+
+        if (ids.Count != foundRounds.Count)
+        {
+            var foundIds = await _context.Rounds
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToHashSetAsync();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Rounds", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRounds;
+    }
+
 
     public async Task<Round?> GetAsync(int id)
     {

@@ -45,6 +45,27 @@ public class RoleRepository(APIDatabaseContext context) : IRepository<Role>
             .ToListAsync();
     }
 
+    public async Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids)
+    where TProjectable : class, IProjectable<Role, TProjectable>
+    {
+        var foundRoles = await _context.Roles
+            .Where(r => ids.Contains(r.Id))
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+
+        if (ids.Count != foundRoles.Count)
+        {
+            var foundIds = await _context.Rulesets
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToHashSetAsync();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Roles", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRoles;
+    }
+
     public async Task<Role?> GetAsync(int id)
     {
         return await _context.Roles.FindAsync(id);

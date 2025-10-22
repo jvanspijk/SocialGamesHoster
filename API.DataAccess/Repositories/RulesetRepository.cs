@@ -37,6 +37,27 @@ public class RulesetRepository(APIDatabaseContext context) : IRepository<Ruleset
             .FirstOrDefaultAsync();
     }
 
+    public async Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids) 
+        where TProjectable : class, IProjectable<Ruleset, TProjectable>
+    {
+        var foundRulesets = await _context.Rulesets
+            .Where(r => ids.Contains(r.Id))
+            .Select(TProjectable.Projection)
+            .ToListAsync();
+
+        if (ids.Count != foundRulesets.Count)
+        {
+            var foundIds = await _context.Rulesets
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToHashSetAsync();
+            var missingIds = ids.Where(id => !foundIds.Contains(id));
+            return Errors.ResourceNotFound("Rulesets", "Ids", string.Join(", ", missingIds));
+        }
+
+        return foundRulesets;
+    }
+
     public async Task<Ruleset?> GetAsync(int id)
     {
         return await _context.Rulesets.FindAsync(id);
