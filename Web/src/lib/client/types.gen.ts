@@ -74,6 +74,16 @@ export type GetAbilityResponse = {
 };
 
 /**
+ * Response for GetActiveGameSessions
+ */
+export type GetActiveGameSessionsResponse = {
+    id: number;
+    rulesetId: number;
+    status: string;
+    currentRoundNumber: number;
+};
+
+/**
  * Response for GetCurrentRound
  */
 export type GetCurrentRoundResponse = {
@@ -113,7 +123,7 @@ export type GetPlayerResponse = {
 /**
  * Response for GetPlayersFromGame
  */
-export type GetPlayersFromGameResponse2 = {
+export type GetPlayersFromGameResponse = {
     id: number;
     name: string;
 };
@@ -121,7 +131,7 @@ export type GetPlayersFromGameResponse2 = {
 /**
  * Response for GetRole
  */
-export type GetRoleResponse = {
+export type GetRoleResponse2 = {
     id: number;
     name: string;
     description: string;
@@ -166,7 +176,7 @@ export type NullableOfRoleInfo = {
     abilities?: Array<AbilityInfo>;
 } | null;
 
-export type NullableOfRoleInfo3 = {
+export type NullableOfRoleInfo2 = {
     id?: number;
     name?: string;
 } | null;
@@ -174,7 +184,7 @@ export type NullableOfRoleInfo3 = {
 export type Participant = {
     id?: number;
     name?: string;
-    role?: NullableOfRoleInfo3;
+    role?: NullableOfRoleInfo2;
 };
 
 export type ProblemDetails = {
@@ -211,7 +221,7 @@ export type StartNewRoundRequest = {
 /**
  * Request for UpdateAbilityInformation
  */
-export type UpdateAbilityInformationRequest = {
+export type UpdateAbilityInformationRequest2 = {
     newName?: string | null;
     newDescription?: string | null;
 };
@@ -326,10 +336,10 @@ export type GetRoleResponses = {
     /**
      * OK
      */
-    200: GetRoleResponse;
+    200: GetRoleResponse2;
 };
 
-export type GetRoleResponse2 = GetRoleResponses[keyof GetRoleResponses];
+export type GetRoleResponse = GetRoleResponses[keyof GetRoleResponses];
 
 export type UpdateRoleInformationData = {
     body: UpdateRoleInformationRequest;
@@ -413,7 +423,7 @@ export type GetAbilityResponses = {
 export type GetAbilityResponse2 = GetAbilityResponses[keyof GetAbilityResponses];
 
 export type UpdateAbilityInformationData = {
-    body: UpdateAbilityInformationRequest;
+    body: UpdateAbilityInformationRequest2;
     path: {
         id: number;
     };
@@ -520,30 +530,30 @@ export type UpdatePlayerResponses = {
 
 export type UpdatePlayerResponse2 = UpdatePlayerResponses[keyof UpdatePlayerResponses];
 
-export type GetActiveGameIdData = {
+export type GetActiveGamesData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/games/active';
 };
 
-export type GetActiveGameIdErrors = {
+export type GetActiveGamesErrors = {
     /**
      * Not Found
      */
     404: ProblemDetails;
 };
 
-export type GetActiveGameIdError = GetActiveGameIdErrors[keyof GetActiveGameIdErrors];
+export type GetActiveGamesError = GetActiveGamesErrors[keyof GetActiveGamesErrors];
 
-export type GetActiveGameIdResponses = {
+export type GetActiveGamesResponses = {
     /**
      * OK
      */
-    200: number;
+    200: GetActiveGameSessionsResponse;
 };
 
-export type GetActiveGameIdResponse = GetActiveGameIdResponses[keyof GetActiveGameIdResponses];
+export type GetActiveGamesResponse = GetActiveGamesResponses[keyof GetActiveGamesResponses];
 
 export type DuplicateGameSessionData = {
     body: DuplicateGameSessionRequest;
@@ -648,7 +658,7 @@ export type GetGamePlayersResponses = {
     /**
      * OK
      */
-    200: Array<GetPlayersFromGameResponse2>;
+    200: Array<GetPlayersFromGameResponse>;
 };
 
 export type GetGamePlayersResponse = GetGamePlayersResponses[keyof GetGamePlayersResponses];

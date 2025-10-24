@@ -69,8 +69,8 @@ public static class Endpoints
     {
         builder.MapGet("/games/active", GetActiveGameSessions.HandleAsync)
             .WithTags("GameSession")
-            .WithName("GetActiveGameId")
-            .Produces<int>(StatusCodes.Status200OK)
+            .WithName("GetActiveGames")
+            .Produces<GetActiveGameSessions.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
         
         builder.MapPost("/games/duplicate", DuplicateGameSession.HandleAsync)
