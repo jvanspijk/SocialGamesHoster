@@ -6,7 +6,6 @@ using API.Features.Authentication;
 using API.Features.Rounds.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +15,7 @@ using System.Text.Json.Serialization;
 
 namespace API;
 // Using scalar: http://localhost:9090/scalar
+// OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 // TODO:
 // - Assign random roles to players
 //   - How do we come up with the general logic for how many roles of each type are assigned?
@@ -100,7 +100,7 @@ public class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddOpenApi();
+        services.AddOpenApi(options => options.AddSchemaTransformer(new NestedClassSchemaTransformer()));        
 
         services.AddCors(options =>
         {
