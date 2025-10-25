@@ -1,63 +1,17 @@
 <script lang="ts">
-    import { client } from '$lib/client/client.gen';
-    import { playerLogin } from '$lib/client'; 
-	import { goto } from '$app/navigation';
+    import type { GetPlayersFromGameResponse } from '$lib/client'; 
+	import type { PageProps } from './$types';
 
     let { data }: PageProps = $props();
-    let players = data.players;
-    let gameId = data.gameId;
+    let players: GetPlayersFromGameResponse[] = data.players ?? [];
 
-    let selectedPlayerId: number = $state(null);
+    let selectedPlayerId: number | null = $state(null);
     
-    // State variables for UI feedback
     let isLoading: boolean = $state(false);
     let message: { text: string; type: 'success' | 'error' | '' } = $state({ text: '', type: '' });
-
-    async function handleLogin() {
-        message = { text: '', type: '' };
-        isLoading = true;
-
-        const selectedPlayer = players.find(p => p.id == selectedPlayerId);
-
-        if (!gameId || !selectedPlayer) {
-            message = { text: 'Both Game ID and Player Name are required.', type: 'error' };
-            isLoading = false;
-            return;
-        }
-
-        const playerName = selectedPlayer.Name;
-
-        try {         
-            const options = {
-                path: {
-                    gameId: gameId, 
-                    name: playerName
-                }
-            };
-            const { data: loginToken } = await playerLogin(options);
-            // Handle success based on what your API returns
-            console.log('Login Successful! Token:', loginToken);
-            message = { 
-                text: `Login successful for ${playerName}!`, 
-                type: 'success' 
-            };
-            await goto('/me')
-        } catch (error) {
-            const errorDetails = (error as any).message || 'An unknown API error occurred.';
-            const statusCode = (error as any).status ? ` (Status: ${(error as any).status})` : '';
-
-            console.error('Login Exception:', error);
-            message = { 
-                text: `Login failed${statusCode}. ${errorDetails}`, 
-                type: 'error' 
-            };
-        } finally {
-            isLoading = false;
-        }
-    }
 </script>
 
-<div class="login-container">
+<form method="POST" action="?/login" class="login-container"> 
     <h1>Player Login 🎮</h1>
     <p>Select your Player Name to join.</p>
 
@@ -67,7 +21,7 @@
         </p>
     {/if}
 
-    <select bind:value={selectedPlayerId}>
+    <select name="selectedPlayerId" bind:value={selectedPlayerId}>
         <option value={null} disabled selected>Select a Player</option>
         {#each players as player (player.id)}
             <option value={player.id}>
@@ -75,15 +29,15 @@
             </option>
         {/each}
     </select>
-
-    <button onclick={handleLogin} disabled={isLoading || selectedPlayerId === null}>
+    
+    <button type="submit" disabled={isLoading || selectedPlayerId === null}>
         {#if isLoading}
             Logging in...
         {:else}
             Login
         {/if}
     </button>
-</div>
+</form>
 
 <style>
     .login-container {
