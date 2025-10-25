@@ -22,7 +22,10 @@ namespace API;
 //   Maybe with a percentage of particpants that can have a role per role in the ruleset? But then some roles are mandatory, or can always only have 1.
 
 // - Fix login for players
+//      - login using player id
 //      - Use local IP address to identify players
+// - Fix login for admins
+//      - store admin credentials in database or environment variables
 // - Admin: force logout users, (decouple IP from user)
 // - Fix login for admins
 // - Change participants in active game sessions
