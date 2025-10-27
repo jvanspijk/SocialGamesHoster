@@ -95,32 +95,37 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }  
 
-    public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, string targetPlayerName, int gameId)
+    public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, int targetPlayerId)
     {
-        Claim? usernameClaim = userClaim.FindFirst(JwtRegisteredClaimNames.Sub);
-        Claim? roleClaim = userClaim.FindFirst(ClaimTypes.Role);
-
-        if (roleClaim == null || usernameClaim == null)
+        var adminCheck = IsAdmin(userClaim);
+        if (adminCheck.IsFailure)
         {
-            return Errors.MissingClaims("Role or username claim is missing.");
+            return adminCheck.Error;
         }
 
-        bool isAdmin = string.Equals(roleClaim.Value, _adminRoleName, StringComparison.Ordinal);
+        bool isAdmin = adminCheck.Value;
         if (isAdmin)
         {
             return true;
         }
 
-        Player? sourcePlayer = await _playerRepository.GetByNameAsync(usernameClaim.Value, gameId);
+        var playerClaimsResult = GetPlayerClaims(userClaim);
+        if (playerClaimsResult.IsFailure)
+        {
+            return playerClaimsResult.Error;
+        }
+        (int userId, int roleId) = playerClaimsResult.Value;
+
+        Player? sourcePlayer = await _playerRepository.GetAsync(userId);
         if (sourcePlayer == null)
         {
-            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), usernameClaim.Value);
+            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), userId.ToString());
         }
 
-        Player? targetPlayer = await _playerRepository.GetByNameAsync(targetPlayerName, gameId);
+        Player? targetPlayer = await _playerRepository.GetAsync(targetPlayerId);
         if (targetPlayer == null)
         {
-            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), targetPlayerName);
+            return Errors.ResourceNotFound(nameof(Player), nameof(Player.Id), targetPlayerId.ToString());
         }
 
         return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
@@ -134,5 +139,28 @@ public class AuthService
             return Errors.MissingClaims("Role claim is missing.");
         }
         return string.Equals(roleClaim.Value, _adminRoleName, StringComparison.Ordinal);
+    }
+
+    private static Result<(int, int)> GetPlayerClaims(ClaimsPrincipal playerClaim)
+    {
+        Claim? playerIdClaim = playerClaim.FindFirst(JwtRegisteredClaimNames.Sub);
+        Claim? roleClaim = playerClaim.FindFirst(ClaimTypes.Role);
+
+        if (roleClaim == null || playerIdClaim == null)
+        {
+            return Errors.MissingClaims("Role or username claim is missing.");
+        }
+
+        if (!int.TryParse(playerIdClaim.Value, out int userId))
+        {
+            return Errors.InvalidToken($"User ID claim `{playerIdClaim?.Value}` is not a valid integer.");
+        }
+
+        if(!int.TryParse(roleClaim.Value, out int roleId))
+        {
+            return Errors.InvalidToken($"Role ID claim `{roleClaim?.Value}` is not a valid integer.");
+        }
+
+        return (userId, roleId);
     }
 }

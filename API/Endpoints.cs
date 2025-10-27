@@ -137,8 +137,8 @@ public static class Endpoints
             .Produces<List<GetPlayersFromGame.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        playersGroup.MapGet("/{name:alpha}", GetPlayerFromGame.HandleAsync)
-            .WithName("GetPlayerByName")
+        playersGroup.MapGet("/{playerId:int}", GetPlayerFromGame.HandleAsync)
+            .WithName("GetPlayerFromGame")
             .Produces<GetPlayerFromGame.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

@@ -236,7 +236,7 @@ export type RoleInfo = {
 /**
  * Response for StartGameSession
  */
-export type StartGameSessionResponse = {
+export type StartGameSessionResponse2 = {
     id: number;
     status: string;
 };
@@ -860,7 +860,7 @@ export type StartNewGameSessionResponses = {
     /**
      * OK
      */
-    200: StartGameSessionResponse;
+    200: StartGameSessionResponse2;
 };
 
 export type StartNewGameSessionResponse = StartNewGameSessionResponses[keyof StartNewGameSessionResponses];
@@ -919,33 +919,32 @@ export type CancelGameSessionResponses = {
 
 export type CancelGameSessionResponse = CancelGameSessionResponses[keyof CancelGameSessionResponses];
 
-export type GetPlayerByNameData = {
+export type GetPlayerFromGameData = {
     body?: never;
-    path: {
-        name: string;
-        gameId: number;
+    path?: never;
+    query: {
+        userId: number;
     };
-    query?: never;
     url: '/api/games/{gameId}/players/{name}';
 };
 
-export type GetPlayerByNameErrors = {
+export type GetPlayerFromGameErrors = {
     /**
      * Not Found
      */
     404: ProblemDetails;
 };
 
-export type GetPlayerByNameError = GetPlayerByNameErrors[keyof GetPlayerByNameErrors];
+export type GetPlayerFromGameError = GetPlayerFromGameErrors[keyof GetPlayerFromGameErrors];
 
-export type GetPlayerByNameResponses = {
+export type GetPlayerFromGameResponses = {
     /**
      * OK
      */
     200: GetPlayerFromGameResponse;
 };
 
-export type GetPlayerByNameResponse = GetPlayerByNameResponses[keyof GetPlayerByNameResponses];
+export type GetPlayerFromGameResponse2 = GetPlayerFromGameResponses[keyof GetPlayerFromGameResponses];
 
 export type GetCurrentRoundData = {
     body?: never;

@@ -1,8 +1,10 @@
 ﻿using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain.Models;
+using API.Features.Authentication;
 using API.Features.Players.Common;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace API.Features.Players.Endpoints;
 
@@ -22,13 +24,24 @@ public static class GetPlayerFromGame
                 )
             );
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, string name, int gameId)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, AuthService authService, ClaimsPrincipal userClaims, int playerId)
     {
-        Response? result = await repository.GetByNameAsync<Response>(name, gameId);
-        if (result == null)
+        var canSeeResult = await authService.CanSeePlayerAsync(userClaims, playerId);
+        if (canSeeResult.IsFailure)
         {
-            return Results.NotFound($"Player with name '{name}' not found.");
+            return canSeeResult.AsIResult();
         }
-        return Results.Ok(result);
+
+        if(canSeeResult.Value == false)
+        {
+            return Results.Forbid();
+        }
+
+        Response? playerResult = await repository.GetAsync<Response>(playerId);
+        if (playerResult == null)
+        {
+            return Results.NotFound($"Player with id '{playerId}' not found.");
+        }
+        return Results.Ok(playerResult);
     }
 }
