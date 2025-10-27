@@ -218,7 +218,7 @@ export const cancelGameSession = <ThrowOnError extends boolean = false>(options:
 
 export const getPlayerFromGame = <ThrowOnError extends boolean = false>(options: Options<GetPlayerFromGameData, ThrowOnError>) => {
     return (options.client ?? client).get<GetPlayerFromGameResponses, GetPlayerFromGameErrors, ThrowOnError>({
-        url: '/api/games/{gameId}/players/{name}',
+        url: '/api/games/{gameId}/players/{playerId}',
         ...options
     });
 };

@@ -5,10 +5,10 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-    login: async ({ request, cookies, params }) => {
+    login: async ({ request, cookies, params, getClientAddress }) => {
         const formData = await request.formData();
-        const selectedPlayerId = Number(formData.get('selectedPlayerId'));       
-
+        const selectedPlayerId: number = Number(formData.get('selectedPlayerId')); 
+        const gameId: number = Number(params.gameId);
         
         if (!selectedPlayerId) {
             return fail(400, { 
@@ -17,39 +17,48 @@ export const actions: Actions = {
             });
         }
         
-        try {
-
-            const playerName = 'TestPlayer';
-            
+        try {            
             const options = {
                 path: {
-                    gameId: Number(params.gameId),
-                    name: playerName,                 
+                    gameId: gameId,            
+                },
+                body: {
+                    playerId: selectedPlayerId,
+                    ipAddress: getClientAddress(),
                 }
             };
             
-            const { data: loginToken } = await playerLogin(options);
+            const { data: response } = await playerLogin(options);
 
-            if(!loginToken) {
-                // TODO: return error
-                return;
+            if(!response || !response.token) {
+                return fail(500, { 
+                    success: false, 
+                    message: 'Login failed due to a server or network error.' 
+                });
             }
-            
-            // 3. Set the cookie securely on the server
-            cookies.set('auth_token', loginToken, {
+
+            const maxCookieAge: number = 60 * 60 * 24 // One day
+
+            cookies.set('auth_token', response.token, {
                 path: '/', 
-                httpOnly: true, 
-                maxAge: 60 * 60 * 24 * 1 
+                httpOnly: false,
+                secure: false, 
+                maxAge: maxCookieAge 
             });
 
             cookies.set('player_id', selectedPlayerId.toLocaleString(), {
                 path: '/', 
-                httpOnly: true, 
-                maxAge: 60 * 60 * 24 * 1 
+                httpOnly: false,
+                secure: false, 
+                maxAge: maxCookieAge 
             });
 
-            throw redirect(303, '/me');
-
+            cookies.set('game_id', gameId.toLocaleString(), {
+                path: '/', 
+                httpOnly: false,
+                secure: false,  
+                maxAge: maxCookieAge
+            });            
         } catch (error) {
             console.error('Server Login Exception:', error);
             
@@ -58,6 +67,7 @@ export const actions: Actions = {
                 message: 'Login failed due to a server or network error.' 
             });
         }
+        redirect(303, '/me');
     }
 };
 

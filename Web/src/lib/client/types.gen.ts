@@ -236,7 +236,7 @@ export type RoleInfo = {
 /**
  * Response for StartGameSession
  */
-export type StartGameSessionResponse2 = {
+export type StartGameSessionResponse = {
     id: number;
     status: string;
 };
@@ -860,7 +860,7 @@ export type StartNewGameSessionResponses = {
     /**
      * OK
      */
-    200: StartGameSessionResponse2;
+    200: StartGameSessionResponse;
 };
 
 export type StartNewGameSessionResponse = StartNewGameSessionResponses[keyof StartNewGameSessionResponses];
@@ -921,11 +921,11 @@ export type CancelGameSessionResponse = CancelGameSessionResponses[keyof CancelG
 
 export type GetPlayerFromGameData = {
     body?: never;
-    path?: never;
-    query: {
-        userId: number;
+    path: {
+        playerId: number;
     };
-    url: '/api/games/{gameId}/players/{name}';
+    query?: never;
+    url: '/api/games/{gameId}/players/{playerId}';
 };
 
 export type GetPlayerFromGameErrors = {
