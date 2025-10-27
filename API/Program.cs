@@ -7,6 +7,7 @@ using API.Features.Rounds.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -63,11 +64,9 @@ public class Program
                                   | HttpLoggingFields.RequestPath
                                   | HttpLoggingFields.RequestQuery
                                   | HttpLoggingFields.RequestBody
-                                  | HttpLoggingFields.ResponseStatusCode
-                                  | HttpLoggingFields.ResponseBody;
+                                  | HttpLoggingFields.ResponseStatusCode;
 
             options.RequestBodyLogLimit = 512;
-            options.ResponseBodyLogLimit = 512;
             options.RequestHeaders.Clear();
             options.ResponseHeaders.Clear();
             options.CombineLogs = true;
@@ -184,6 +183,11 @@ public class Program
         {
             app.UseExceptionHandler("/Error");
         }
+
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
 
         app.UseRouting();
 
