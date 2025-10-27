@@ -9,6 +9,7 @@ public enum ErrorType
     Authentication_NotAuthorized,
     Authentication_Required,
     Authentication_Failed,
+    Authentication_InvalidToken,
 
     UserAlreadyLoggedIn,        
     UserNotOnline, 
@@ -34,6 +35,8 @@ public static partial class Errors
 
     public static Error MissingClaims(string message = "The user token is valid but is missing required claims.") =>
         new(ErrorType.Authentication_MissingClaims, message, HttpStatusCode.Forbidden);
+    public static Error InvalidToken(string message = "The user token is invalid.") =>
+    new(ErrorType.Authentication_InvalidToken, message, HttpStatusCode.Forbidden);
 
     // ------------
     public static Error UserAlreadyLoggedIn(string message = "User is already logged in.") =>
