@@ -169,8 +169,6 @@ export type GetRulesetResponse = {
     id: number;
     name: string;
     description: string;
-    abilities: Array<AbilityInfo>;
-    roles: Array<RoleInfo>;
 };
 
 export type HttpValidationProblemDetails = {
@@ -225,14 +223,6 @@ export type ProblemDetails = {
     instance?: string | null;
 };
 
-export type RoleInfo = {
-    id?: number;
-    name?: string;
-    description?: string;
-    abilityIds?: Array<number>;
-    canSeeRoleIds?: Array<number>;
-};
-
 /**
  * Response for StartGameSession
  */
@@ -275,7 +265,7 @@ export type UpdateGameParticipantsRequest = {
 /**
  * Response for UpdateGameParticipants
  */
-export type UpdateGameParticipantsResponse = {
+export type UpdateGameParticipantsResponse2 = {
     id: number;
     participants: Array<Participant>;
 };
@@ -718,10 +708,10 @@ export type UpdateGameParticipantsResponses = {
     /**
      * OK
      */
-    200: UpdateGameParticipantsResponse;
+    200: UpdateGameParticipantsResponse2;
 };
 
-export type UpdateGameParticipantsResponse2 = UpdateGameParticipantsResponses[keyof UpdateGameParticipantsResponses];
+export type UpdateGameParticipantsResponse = UpdateGameParticipantsResponses[keyof UpdateGameParticipantsResponses];
 
 export type CreatePlayerData = {
     body: CreatePlayerRequest;

@@ -12,7 +12,7 @@
 </script>
 
 <form method="POST" action="?/login" class="login-container"> 
-    <h1>Player Login 🎮</h1>
+    <h1>Player Login</h1>
     <p>Select your Player Name to join.</p>
 
     {#if message.text}
@@ -40,58 +40,86 @@
 </form>
 
 <style>
-    .login-container {
-        max-width: 400px;
-        margin: 50px auto;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         text-align: center;
+        padding: 20px;
     }
 
-    h1 {
-        color: #333;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-        text-align: left;
-    }
-
-    button {
+    .form-content {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
         width: 100%;
-        padding: 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
+        max-width: 400px;
         margin-top: 10px;
     }
 
+    select {
+        font-family: 'IM Fell English', serif;
+        font-size: 1.2em;
+        padding: 10px 15px;
+        background-color: #fff9e6;
+        border: 2px solid #5b4a3c;
+        border-radius: 3px;
+        color: #3e322b;
+        width: 100%;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%235b4a3c" viewBox="0 0 10 10"><path d="M5 8l-5-5h10z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        cursor: pointer;
+    }
+    
+    button {
+        font-family: 'Cinzel', serif;
+        font-size: 1.2em;
+        text-transform: uppercase;
+        padding: 10px 20px;
+        color: #f7e7c4;
+        background-color: #a62a2a;
+        border: 3px solid #5b4a3c;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s, box-shadow 0.2s;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+        letter-spacing: 1px;
+    }
+
+    button:hover:enabled {
+        background-color: #7a1d1d;
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+    }
+    
     button:disabled {
-        background-color: #a0c9ff;
+        background-color: #999;
+        border-color: #777;
         cursor: not-allowed;
     }
-
-    .message {
+    
+    /* Message Bar Styling */
+    .message-bar {
+        font-family: 'IM Fell English', serif;
         padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-        font-weight: bold;
+        border: 2px solid;
+        border-radius: 3px;
+        text-align: center;
+        margin: 0;
+    }
+    
+    .error-message {
+        color: #a62a2a;
+        border-color: #a62a2a;
+        background-color: #fce7e7;
     }
 
-    .success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+    .success-message {
+        color: #387038;
+        border-color: #387038;
+        background-color: #e7fce7;
     }
 
-    .error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
 </style>
