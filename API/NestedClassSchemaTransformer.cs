@@ -16,11 +16,11 @@ public class NestedClassSchemaTransformer : IOpenApiSchemaTransformer
         if (!type.IsNested)
             return Task.CompletedTask;
 
-        if (type.Name.Equals("Request", StringComparison.Ordinal))
+        if (type.Name.Equals("Request", StringComparison.OrdinalIgnoreCase))
         {
             schema.Description = $"Request for {type.DeclaringType?.Name}";
         }
-        else if (type.Name.Equals("Response", StringComparison.Ordinal))
+        else if (type.Name.Equals("Response", StringComparison.OrdinalIgnoreCase))
         {
             schema.Description = $"Response for {type.DeclaringType?.Name}";
         }
