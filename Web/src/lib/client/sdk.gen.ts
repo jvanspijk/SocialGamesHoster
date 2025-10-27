@@ -111,7 +111,11 @@ export const duplicateGameSession = <ThrowOnError extends boolean = false>(optio
 export const adminLogin = <ThrowOnError extends boolean = false>(options: Options<AdminLoginData, ThrowOnError>) => {
     return (options.client ?? client).post<AdminLoginResponses, AdminLoginErrors, ThrowOnError>({
         url: '/api/admin/login',
-        ...options
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };
 
@@ -182,8 +186,12 @@ export const addGameWinner = <ThrowOnError extends boolean = false>(options: Opt
 
 export const playerLogin = <ThrowOnError extends boolean = false>(options: Options<PlayerLoginData, ThrowOnError>) => {
     return (options.client ?? client).post<PlayerLoginResponses, PlayerLoginErrors, ThrowOnError>({
-        url: '/api/games/{gameId}/login/{name}',
-        ...options
+        url: '/api/games/{gameId}/login',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };
 

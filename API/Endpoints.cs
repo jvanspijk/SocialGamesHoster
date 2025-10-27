@@ -23,7 +23,7 @@ public static class Endpoints
         builder.MapPost("/admin/login", AdminLogin.HandleAsync)
             .WithTags("Authentication")
             .WithName("AdminLogin")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         return builder;
@@ -105,10 +105,10 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        gamesGroup.MapPost("/login/{name:alpha}", PlayerLogin.HandleAsync)
+        gamesGroup.MapPost("/login", PlayerLogin.HandleAsync)
             .WithTags("Authentication")
             .WithName("PlayerLogin")
-            .Produces<string>(StatusCodes.Status200OK)
+            .Produces<PlayerLogin.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

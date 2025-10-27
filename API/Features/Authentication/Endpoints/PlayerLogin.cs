@@ -6,13 +6,21 @@ namespace API.Features.Authentication.Endpoints;
 
 public static class PlayerLogin
 {
-    public static Task<IResult> HandleAsync(AuthService authService, PlayerRepository playerRepository, HttpContext httpContext, int gameId, string name)
+    public readonly record struct Request(int PlayerId, string IPAddress);
+    public readonly record struct Response(string Token);
+    public static async Task<IResult> HandleAsync(AuthService authService, PlayerRepository playerRepository, HttpContext httpContext, Request request, int gameId)
     {
-        // This will be a little harder to implement because of the proxy server
-        // To get the IP address of the client, we need to look at the X-Forwarded-For header
-        // We need to enable forwarding headers in Program.cs for this to work
-        // For that we need to know the proxy server's IP address, which is hardcoded
-        // Before this can be implemented, we need to pass the proxy server's IP address to the application using environment variables
-        throw new NotImplementedException();
+        Player? player = await playerRepository.GetAsync(request.PlayerId);
+        if(player == null)
+        {
+            return Results.NotFound($"Player with id {request.PlayerId} not found.");
+        }
+        if(player.GameId != gameId)
+        {
+            return Results.BadRequest($"Player does not belong to game with id {gameId}.");
+        }
+        IPAddress ipAddress = IPAddress.Parse(httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? request.IPAddress);
+        string token = authService.GeneratePlayerToken(player.Id, player.RoleId);
+        return Results.Ok(new Response(token));
     }
 }

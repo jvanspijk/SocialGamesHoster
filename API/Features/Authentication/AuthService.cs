@@ -18,23 +18,25 @@ public class AuthService
 
     private readonly string _adminUserName;
     private readonly string _adminPassword;
+    private const string _adminRoleName = "admin";
 
     private readonly PlayerRepository _playerRepository;
 
     public AuthService(PlayerRepository playerRepository)
     {
-        if (!IniParser.ParseIniFile("settings.ini").TryGetValue("Admin", out var adminSettings))
-        {
-            throw new InvalidOperationException("Can't find admin header in settings.ini.");
-        }
+        // TODO: replace with environment variables
+        //if (!IniParser.ParseIniFile("settings.ini").TryGetValue("Admin", out var adminSettings))
+        //{
+        //    throw new InvalidOperationException("Can't find admin header in settings.ini.");
+        //}
 
-        if (!adminSettings.TryGetValue("admin_username", out string? username) || !adminSettings.TryGetValue("admin_password", out string? password))
-        {
-            throw new InvalidOperationException("Admin username or password not set in settings.ini.");
-        }
+        //if (!adminSettings.TryGetValue("admin_username", out string? username) || !adminSettings.TryGetValue("admin_password", out string? password))
+        //{
+        //    throw new InvalidOperationException("Admin username or password not set in settings.ini.");
+        //}
 
-        _adminUserName = username;
-        _adminPassword = password;
+        _adminUserName = "admin";
+        _adminPassword = "admin";
 
         _playerRepository = playerRepository;
     }
@@ -48,29 +50,13 @@ public class AuthService
     /// <summary>
     /// Generates a JWT token for a user with the 'player' role.
     /// </summary>
-    public string GeneratePlayerToken(string username)
+    public string GeneratePlayerToken(int userId, int? roleId)
     {
-        return GenerateToken(username, "player");
-    }
-
-    /// <summary>
-    /// Generates a JWT token for a user with the 'admin' role.
-    /// </summary>
-    public string GenerateAdminToken(string username)
-    {
-        return GenerateToken(username, "admin");
-    }
-
-    /// <summary>
-    /// Generates a JWT token
-    /// </summary>
-    private static string GenerateToken(string username, string role)
-    {
-        Claim[] claims =
+        var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, username),
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.Role, role)
+            new(ClaimTypes.Role, roleId.ToString() ?? "")
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecurityKey));
@@ -80,11 +66,34 @@ public class AuthService
             issuer: _jwtIssuer,
             audience: _jwtAudience,
             claims: claims,
-            expires: DateTime.Now.AddMinutes(10),
+            expires: DateTime.Now.AddHours(24),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>
+    /// Generates a JWT token for a user with the 'admin' role.
+    /// </summary>
+    public string GenerateAdminToken()
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Role, _adminRoleName)
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecurityKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _jwtIssuer,
+            audience: _jwtAudience,
+            claims: claims,
+            expires: DateTime.Now.AddHours(24),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }  
 
     public async Task<Result<bool>> CanSeePlayerAsync(ClaimsPrincipal userClaim, string targetPlayerName, int gameId)
     {
@@ -96,7 +105,7 @@ public class AuthService
             return Errors.MissingClaims("Role or username claim is missing.");
         }
 
-        bool isAdmin = string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
+        bool isAdmin = string.Equals(roleClaim.Value, _adminRoleName, StringComparison.Ordinal);
         if (isAdmin)
         {
             return true;
@@ -124,6 +133,6 @@ public class AuthService
         {
             return Errors.MissingClaims("Role claim is missing.");
         }
-        return string.Equals(roleClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(roleClaim.Value, _adminRoleName, StringComparison.Ordinal);
     }
 }

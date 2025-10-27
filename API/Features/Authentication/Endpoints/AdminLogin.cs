@@ -2,12 +2,14 @@
 
 public static class AdminLogin
 {
-    public static async Task<IResult> HandleAsync(AuthService authService, string username, string passwordHash)
+    public readonly record struct Request(string Username, string PasswordHash);
+    public readonly record struct Response(string Token);
+    public static async Task<IResult> HandleAsync(AuthService authService, Request request)
     {
-        if (await authService.AdminCredentialsAreValid(username, passwordHash))
+        if (await authService.AdminCredentialsAreValid(request.Username, request.PasswordHash))
         {
-            string token = authService.GenerateAdminToken(username);
-            return Results.Ok(new { Token = token, Role = "admin" });
+            string token = authService.GenerateAdminToken();
+            return Results.Ok(new Response{ Token = token });
         }
         return Results.Unauthorized();
     }

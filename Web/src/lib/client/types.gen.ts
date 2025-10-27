@@ -26,6 +26,21 @@ export type AddWinnersResponse = {
 };
 
 /**
+ * Request for AdminLogin
+ */
+export type AdminLoginRequest = {
+    username?: string;
+    passwordHash?: string;
+};
+
+/**
+ * Response for AdminLogin
+ */
+export type AdminLoginResponse = {
+    token?: string;
+};
+
+/**
  * Request for CreateAbility
  */
 export type CreateAbilityRequest = {
@@ -131,7 +146,7 @@ export type GetPlayersFromGameResponse = {
 /**
  * Response for GetRole
  */
-export type GetRoleResponse2 = {
+export type GetRoleResponse = {
     id: number;
     name: string;
     description: string;
@@ -187,6 +202,21 @@ export type Participant = {
     role?: NullableOfRoleInfo2;
 };
 
+/**
+ * Request for PlayerLogin
+ */
+export type PlayerLoginRequest = {
+    playerId?: number;
+    ipAddress?: string;
+};
+
+/**
+ * Response for PlayerLogin
+ */
+export type PlayerLoginResponse = {
+    token?: string;
+};
+
 export type ProblemDetails = {
     type?: string | null;
     title?: string | null;
@@ -221,7 +251,7 @@ export type StartNewRoundRequest = {
 /**
  * Request for UpdateAbilityInformation
  */
-export type UpdateAbilityInformationRequest2 = {
+export type UpdateAbilityInformationRequest = {
     newName?: string | null;
     newDescription?: string | null;
 };
@@ -336,10 +366,10 @@ export type GetRoleResponses = {
     /**
      * OK
      */
-    200: GetRoleResponse2;
+    200: GetRoleResponse;
 };
 
-export type GetRoleResponse = GetRoleResponses[keyof GetRoleResponses];
+export type GetRoleResponse2 = GetRoleResponses[keyof GetRoleResponses];
 
 export type UpdateRoleInformationData = {
     body: UpdateRoleInformationRequest;
@@ -423,7 +453,7 @@ export type GetAbilityResponses = {
 export type GetAbilityResponse2 = GetAbilityResponses[keyof GetAbilityResponses];
 
 export type UpdateAbilityInformationData = {
-    body: UpdateAbilityInformationRequest2;
+    body: UpdateAbilityInformationRequest;
     path: {
         id: number;
     };
@@ -572,12 +602,9 @@ export type DuplicateGameSessionErrors = {
 export type DuplicateGameSessionError = DuplicateGameSessionErrors[keyof DuplicateGameSessionErrors];
 
 export type AdminLoginData = {
-    body?: never;
+    body: AdminLoginRequest;
     path?: never;
-    query: {
-        username: string;
-        passwordHash: string;
-    };
+    query?: never;
     url: '/api/admin/login';
 };
 
@@ -592,8 +619,10 @@ export type AdminLoginResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: AdminLoginResponse;
 };
+
+export type AdminLoginResponse2 = AdminLoginResponses[keyof AdminLoginResponses];
 
 export type GetApiHealthData = {
     body?: never;
@@ -775,13 +804,12 @@ export type AddGameWinnerResponses = {
 export type AddGameWinnerResponse = AddGameWinnerResponses[keyof AddGameWinnerResponses];
 
 export type PlayerLoginData = {
-    body?: never;
+    body: PlayerLoginRequest;
     path: {
         gameId: number;
-        name: string;
     };
     query?: never;
-    url: '/api/games/{gameId}/login/{name}';
+    url: '/api/games/{gameId}/login';
 };
 
 export type PlayerLoginErrors = {
@@ -801,10 +829,10 @@ export type PlayerLoginResponses = {
     /**
      * OK
      */
-    200: string;
+    200: PlayerLoginResponse;
 };
 
-export type PlayerLoginResponse = PlayerLoginResponses[keyof PlayerLoginResponses];
+export type PlayerLoginResponse2 = PlayerLoginResponses[keyof PlayerLoginResponses];
 
 export type StartNewGameSessionData = {
     body?: never;
