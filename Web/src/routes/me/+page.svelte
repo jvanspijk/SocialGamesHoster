@@ -62,12 +62,11 @@
 
 <style>
     /* 1. Import Fantasy-Style Google Fonts */
-    /* "Cinzel" for titles (classic, epic) and "IM Fell English" for body text (old book feel) */
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=IM+Fell+English:ital@0;1&display=swap');
 
     /* 2. Page & Background Styles (Paper/Parchment Look) */
     :global(body) {
-        background-color: #3b332d; /* Dark background to contrast with the "paper" */
+        background-color: #3b332d;
         margin: 0;
         padding: 0;
         min-height: 100vh;

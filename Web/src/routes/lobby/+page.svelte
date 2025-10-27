@@ -1,25 +1,31 @@
 <script lang="ts">
     import type { PageProps } from './$types';
+    import type { GetActiveGameSessionsResponse } from '$lib/client';
     import { goto } from '$app/navigation';
 
     let { data }: PageProps = $props();
-    let games = data.games;
+    // response: List(int Id, int RulesetId, string Status, int CurrentRoundNumber)
+    let games: GetActiveGameSessionsResponse[] = (data.games as GetActiveGameSessionsResponse[] | undefined) ?? [];
+
     let message = $state("");
     let isLoading = $state(false);
     let selectedGameId = $state(null);
 
     async function handleJoin() {
+        if(selectedGameId == null) {
+            return;
+        }
         await goto(`/login/${selectedGameId}`)
     };    
 </script>
 
 <div class="join-container">
     <h1>Join game</h1>
-    <p>Select an activate game to join.</p>
+    <p>Active games:</p>
 
-    {#if message.text}
-        <p class={`message ${message.type}`}>
-            {message.text}
+    {#if message}
+        <p class={`message ${message}`}>
+            {message}
         </p>
     {/if}
 
