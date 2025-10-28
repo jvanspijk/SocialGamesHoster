@@ -21,60 +21,67 @@
     };    
 </script>
 
-<div class="join-page-main">
-    <div class="parchment-container">
-        <h1>Join A Game</h1>
-        
-        <p class="role-title">Select a game session.</p>
-        
-        <div class="controls-section">
+<div class="join-page-main">    
+    <h1>Join A Game</h1>
+    
+    <p>Select a game session.</p>
+    
+    <div class="controls-section">        
+        {#await rulesetPromise then descriptions} 
+            <MainSelect
+                placeholder="Select a Game Session"
+                options={games.map((g) => ({
+                    id: g.id,
+                    label: `Game ${g.id} (${descriptions[g.id]?.name ?? 'Details unavailable'})`
+                }))}
+                bind:selectedValue={selectedGameId}
+            />
+
+            <MainButton 
+                disabled={selectedGameId === null || isLoading} 
+                isLoading={isLoading} 
+                onActivate={handleJoin}
+                label={'Enter Selected Game'} 
+            />
             
-            {#await rulesetPromise then descriptions} 
-                <MainSelect
-					placeholder="-- Select a Game Session --"
-					options={games.map((g) => ({
-						id: g.id,
-						label: `Game ${g.id} (${descriptions[g.id]?.name ?? 'Details unavailable'})`
-					}))}
-					bind:selectedValue={selectedGameId}
-				/>
-
-                <MainButton 
-                    disabled={selectedGameId === null || isLoading} 
-                    isLoading={isLoading} 
-                    onActivate={handleJoin}
-                    label={'Enter Selected Game'} 
-                />
-                
-                {#if selectedGameId !== null}
-                    {@const ruleset = descriptions[selectedGameId]}
-                    <div class="ruleset-info">
-                        <h2>
-                            {ruleset?.name || 'Loading Details...'}
-                        </h2>
-                        <p>
-                            {ruleset?.description || ""}
-                        </p>
-                    </div>
-                {/if}
-
-                <div class="message-bar">
-                    {#if message}{message}{/if}
+            {#if selectedGameId !== null}
+                {@const ruleset = descriptions[selectedGameId]}
+                <div class="ruleset-info">
+                    <h2>
+                        {ruleset?.name || 'Loading Details...'}
+                    </h2>
+                    <p>
+                        {ruleset?.description || ""}
+                    </p>
                 </div>
-            {:catch error}
-                <div class="error-message">
-                    ERROR: Could not retrieve game data.
-                </div>
-            {/await}
-        </div>
+            {/if}
+
+            <div class="message-bar">
+                {#if message}{message}{/if}
+            </div>
+        {:catch error}
+            <div class="error-message">
+                ERROR: Could not retrieve game data.
+            </div>
+        {/await}
     </div>
+
 </div>
 
-<style>    
+<style>  
+    .join-page-main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
     .controls-section {
         display: flex;
         flex-direction: column;
-        gap: 20px;
         margin-bottom: 30px;
         align-items: center;
     }

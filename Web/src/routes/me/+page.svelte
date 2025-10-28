@@ -3,6 +3,7 @@
     import type { GetPlayerResponse } from '$lib/client';
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
+    import DetailCard from '$lib/components/DetailCard.svelte';
 
     let { data }: PageProps = $props();
     const playerData: GetPlayerResponse | undefined = data.player;
@@ -25,20 +26,12 @@
         <div class="character-sheet">
             <header class="sheet-header">
                 <h1>{playerData.name}</h1>
-                <p class="role-title">The {playerData.role?.name || 'Unassigned'}</p>
+                <h3 class="role-title">The {playerData.role?.name || 'Unassigned'}</h3>
             </header>
 
             <section class="details-section">
-                <div class="detail-card player-info">
-                    <h2>Player Details</h2>
-                    <p><strong>Your name:</strong> {playerData.name}</p>                   
-                </div>
-                
                 {#if playerData.role}
-                    <div class="detail-card role-info">
-                        <h2>Role: {playerData.role.name}</h2>
-                        <p class="role-description">{playerData.role.description || 'No description provided.'}</p>
-                    </div>
+                    <DetailCard title={playerData.role.name} content={playerData.role.description}/>                    
                 {/if}
             </section>
 
@@ -66,18 +59,13 @@
         grid-template-columns: 1fr;
         gap: 20px;
         margin-bottom: 30px;
+        margin-top: 10px;
     }
     
     @media (min-width: 600px) {
         .details-section {
             grid-template-columns: 1fr 1.5fr;
         }
-    }
-
-    .role-description {
-        font-style: italic;
-        color: #4f4135;
-        margin-top: 10px;
     }
     
     .abilities-section {

@@ -18,7 +18,7 @@
 	}));
 </script>
 
-<form method="POST" action="?/login" class="login-container"> 
+<form method="POST" action="?/login" class="container"> 
     <h1>Player Login</h1>
     <p>Select your Player Name to join.</p>
 
@@ -42,45 +42,3 @@
 		isLoading={isLoading}
 	/>
 </form>
-
-<style>
-    form {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .form-content {
-        display: flex;
-        flex-direction: column;
-        gap: 25px;
-        width: 100%;
-        max-width: 400px;
-        margin-top: 10px;
-    }
-    
-    /* Message Bar Styling */
-    .message-bar {
-        font-family: 'IM Fell English', serif;
-        padding: 10px;
-        border: 2px solid;
-        border-radius: 3px;
-        text-align: center;
-        margin: 0;
-    }
-    
-    .error-message {
-        color: #a62a2a;
-        border-color: #a62a2a;
-        background-color: #fce7e7;
-    }
-
-    .success-message {
-        color: #387038;
-        border-color: #387038;
-        background-color: #e7fce7;
-    }
-
-</style>

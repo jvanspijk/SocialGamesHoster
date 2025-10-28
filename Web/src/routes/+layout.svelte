@@ -18,12 +18,10 @@
 
 
 <style>
-    /* 1. Import Fantasy-Style Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=IM+Fell+English:ital@0;1&display=swap');
 
     /* 2. Page & Background Styles (Paper/Parchment Look) */
     :global(body) {
-        /* This creates the dark, atmospheric background */
         background-color: #3b332d;
         margin: 0;
         padding: 0;
@@ -34,26 +32,25 @@
         display: flex;
         justify-content: center;
         padding: 40px 20px;
+        text-align: center;
     }
 
     .parchment-container {
-        /* The main parchment look */
         background-color: #f7e7c4;
         color: #3e322b;
         font-family: 'IM Fell English', serif;
         width: 100%;
-        max-width: 700px; /* Kept the width from the previous example */
-        /* Shadow and border for that antique book/map look */
+        max-width: 700px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 
                     inset 0 0 10px rgba(100, 80, 50, 0.5);
         padding: 40px;
         border: 10px solid #5b4a3c;
         border-radius: 5px;
         line-height: 1.6;
-        min-height: 80vh; /* Ensure it covers a good part of the screen */
+        min-height: 80vh;
     }
 
-    /* 3. Common Typography (Applies to all content within .parchment-container) */
+    /* 3. Common Typography*/
 
     :global(h1), :global(h2) {
         font-family: 'Cinzel', serif;
@@ -79,25 +76,42 @@
         margin-top: 25px;
     }
 
-    /* 4. Reusable Utility Styles (Good to keep in layout if used often) */
-    :global(.role-title) {
-        font-style: italic;
+    :global(h3) {
+        font-size: 1.5em;
         text-align: center;
-        margin-top: -10px;
-        margin-bottom: 30px;
         color: #7a634e;
+        font-style: italic;
+        margin-top: -8px;
+        padding-bottom: 12px;
     }
 
-    :global(.detail-card), :global(.ruleset-info) {
-        padding: 15px;
-        background-color: #fff9e6;
-        border: 2px solid #5b4a3c;
-        border-radius: 3px;
+    :global(p) {
+        margin-top: -2px;
+        margin-bottom: 4px;
+        font-size: 1.2em;
+    }   
+
+    :global(.container) {       
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 80%;
+        margin: 0 auto;
     }
 
     :global(.error-message) {
         font-family: 'Cinzel', serif;
         color: #a62a2a;
+        text-align: center;
+        font-size: 1.5em;
+        padding: 50px;
+    }       
+
+    :global(.success-message) {
+        font-family: 'Cinzel', serif;
+        color: #387038;
+        border-color: #387038;
+        background-color: #e7fce7;
         text-align: center;
         font-size: 1.5em;
         padding: 50px;

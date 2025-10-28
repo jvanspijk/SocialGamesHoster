@@ -3,3 +3,11 @@
 
     let { data }: PageProps = $props();
 </script>
+
+<header>
+    <nav>
+        <a href="admin/games/create">Create Game</a>
+        |
+        <a href="admin/rulesets/create">Create Ruleset</a>
+    </nav>
+</header>

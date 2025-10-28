@@ -39,6 +39,8 @@
 		transition: background-color 0.2s, box-shadow 0.2s;
 		box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
 		letter-spacing: 1px;
+		margin-top: 12px;
+		margin-bottom: 12px;
 	}
 
 	button:hover:enabled {

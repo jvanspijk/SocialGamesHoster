@@ -39,5 +39,7 @@
 		background-repeat: no-repeat;
 		background-position: right 15px center;
 		cursor: pointer;
+		margin-top: 20px;
+		margin-bottom: 20px;
 	}
 </style>
