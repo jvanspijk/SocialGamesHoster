@@ -2,6 +2,8 @@
     import type { PageProps } from './$types';
     import type { GetActiveGameSessionsResponse, GetRulesetResponse } from '$lib/client';
     import { goto } from '$app/navigation';
+	import MainButton from '$lib/components/MainButton.svelte';
+    import MainSelect from '$lib/components/MainSelect.svelte';
 
     let { data }: PageProps = $props();
     let games: GetActiveGameSessionsResponse[] = (data.games as GetActiveGameSessionsResponse[] | undefined) ?? [];
@@ -27,26 +29,22 @@
         
         <div class="controls-section">
             
-            {#await rulesetPromise then descriptions}        
-                
-                <select bind:value={selectedGameId}>
-                    <option value={null} disabled selected={selectedGameId === null}>-- Select a Game Session --</option>
-                    {#each games as game (game.id)}
-                        {@const ruleset = descriptions[game.id]}
-                        <option value={game.id}>
-                            Game {game.id} 
-                            {#if ruleset}
-                                ({ruleset.name})
-                            {:else}
-                                (Details unavailable)
-                            {/if}
-                        </option>
-                    {/each}
-                </select>
+            {#await rulesetPromise then descriptions} 
+                <MainSelect
+					placeholder="-- Select a Game Session --"
+					options={games.map((g) => ({
+						id: g.id,
+						label: `Game ${g.id} (${descriptions[g.id]?.name ?? 'Details unavailable'})`
+					}))}
+					bind:selectedValue={selectedGameId}
+				/>
 
-                <button onclick={handleJoin} disabled={selectedGameId === null || isLoading}>
-                    {isLoading ? 'Preparing to Enter...' : 'Enter Selected Game'}
-                </button>
+                <MainButton 
+                    disabled={selectedGameId === null || isLoading} 
+                    isLoading={isLoading} 
+                    onActivate={handleJoin}
+                    label={'Enter Selected Game'} 
+                />
                 
                 {#if selectedGameId !== null}
                     {@const ruleset = descriptions[selectedGameId]}
@@ -79,50 +77,6 @@
         gap: 20px;
         margin-bottom: 30px;
         align-items: center;
-    }
-    
-    select {
-        font-family: 'IM Fell English', serif;
-        font-size: 1.2em;
-        padding: 10px 15px;
-        background-color: #fff9e6;
-        border: 2px solid #5b4a3c;
-        border-radius: 3px;
-        color: #3e322b;
-        width: 100%;
-        max-width: 400px;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-        appearance: none;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%235b4a3c" viewBox="0 0 10 10"><path d="M5 8l-5-5h10z"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right 15px center;
-        cursor: pointer;
-    }
-
-    button {
-        font-family: 'Cinzel', serif;
-        font-size: 1.2em;
-        text-transform: uppercase;
-        padding: 10px 20px;
-        color: #f7e7c4;
-        background-color: #a62a2a;
-        border: 3px solid #5b4a3c;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.2s, box-shadow 0.2s;
-        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
-        letter-spacing: 1px;
-    }
-
-    button:hover:enabled {
-        background-color: #7a1d1d;
-        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
-    }
-    
-    button:disabled {
-        background-color: #999;
-        border-color: #777;
-        cursor: not-allowed;
     }
     
     .ruleset-info {
