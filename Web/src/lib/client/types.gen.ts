@@ -36,7 +36,7 @@ export type AdminLoginRequest = {
 /**
  * Response for AdminLogin
  */
-export type AdminLoginResponse = {
+export type AdminLoginResponse2 = {
     token?: string;
 };
 
@@ -46,6 +46,22 @@ export type AdminLoginResponse = {
 export type CreateAbilityRequest = {
     name?: string;
     description?: string;
+};
+
+/**
+ * Request for CreateGameSession
+ */
+export type CreateGameSessionRequest = {
+    rulesetId?: number;
+    playerNames?: Array<string>;
+};
+
+/**
+ * Response for CreateGameSession
+ */
+export type CreateGameSessionResponse = {
+    id: number;
+    rulesetId: number;
 };
 
 /**
@@ -96,6 +112,15 @@ export type GetActiveGameSessionsResponse = {
     rulesetId: number;
     status: string;
     currentRoundNumber: number;
+};
+
+/**
+ * Response for GetAllRulesets
+ */
+export type GetAllRulesetsResponse = {
+    id: number;
+    name: string;
+    description: string;
 };
 
 /**
@@ -265,7 +290,7 @@ export type UpdateGameParticipantsRequest = {
 /**
  * Response for UpdateGameParticipants
  */
-export type UpdateGameParticipantsResponse2 = {
+export type UpdateGameParticipantsResponse = {
     id: number;
     participants: Array<Participant>;
 };
@@ -273,7 +298,7 @@ export type UpdateGameParticipantsResponse2 = {
 /**
  * Request for UpdateGameRuleset
  */
-export type UpdateGameRulesetRequest = {
+export type UpdateGameRulesetRequest2 = {
     rulesetId?: number;
 };
 
@@ -591,6 +616,38 @@ export type DuplicateGameSessionErrors = {
 
 export type DuplicateGameSessionError = DuplicateGameSessionErrors[keyof DuplicateGameSessionErrors];
 
+export type CreateGameSessionData = {
+    body: CreateGameSessionRequest;
+    path?: never;
+    query?: never;
+    url: '/api/games';
+};
+
+export type CreateGameSessionResponses = {
+    /**
+     * OK
+     */
+    200: CreateGameSessionResponse;
+};
+
+export type CreateGameSessionResponse2 = CreateGameSessionResponses[keyof CreateGameSessionResponses];
+
+export type GetAllRulesetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api';
+};
+
+export type GetAllRulesetsResponses = {
+    /**
+     * OK
+     */
+    200: Array<GetAllRulesetsResponse>;
+};
+
+export type GetAllRulesetsResponse2 = GetAllRulesetsResponses[keyof GetAllRulesetsResponses];
+
 export type AdminLoginData = {
     body: AdminLoginRequest;
     path?: never;
@@ -609,10 +666,10 @@ export type AdminLoginResponses = {
     /**
      * OK
      */
-    200: AdminLoginResponse;
+    200: AdminLoginResponse2;
 };
 
-export type AdminLoginResponse2 = AdminLoginResponses[keyof AdminLoginResponses];
+export type AdminLoginResponse = AdminLoginResponses[keyof AdminLoginResponses];
 
 export type GetApiHealthData = {
     body?: never;
@@ -708,10 +765,10 @@ export type UpdateGameParticipantsResponses = {
     /**
      * OK
      */
-    200: UpdateGameParticipantsResponse2;
+    200: UpdateGameParticipantsResponse;
 };
 
-export type UpdateGameParticipantsResponse = UpdateGameParticipantsResponses[keyof UpdateGameParticipantsResponses];
+export type UpdateGameParticipantsResponse2 = UpdateGameParticipantsResponses[keyof UpdateGameParticipantsResponses];
 
 export type CreatePlayerData = {
     body: CreatePlayerRequest;
@@ -732,7 +789,7 @@ export type CreatePlayerErrors = {
 export type CreatePlayerError = CreatePlayerErrors[keyof CreatePlayerErrors];
 
 export type UpdateGameRulesetData = {
-    body: UpdateGameRulesetRequest;
+    body: UpdateGameRulesetRequest2;
     path: {
         gameId: number;
     };

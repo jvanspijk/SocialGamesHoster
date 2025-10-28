@@ -16,6 +16,13 @@ public class PlayerRepository(APIDatabaseContext context) : IRepository<Player>
         await _context.SaveChangesAsync();
         return player;
     }
+
+    public async Task<List<Player>> CreateMultipleAsync(List<Player> players)
+    {
+        _context.Players.AddRange(players);
+        await _context.SaveChangesAsync();
+        return players;
+    }
     #endregion
 
     #region Read

@@ -28,7 +28,6 @@ namespace API;
 // - Fix login for admins
 //      - store admin credentials in database or environment variables
 // - Admin: force logout users, (decouple IP from user)
-// - Fix login for admins
 // - Change participants in active game sessions
 //   - Remove players from game sessions
 // - Always inject repository interfaces instead of concrete repositories
@@ -36,7 +35,7 @@ namespace API;
 // - Performance testing
 
 // Bugs/issues:
-// - Minor issue: cancelling a round increments the round number. This might be an issue for games where there's a fixed number of rounds.
+// - Minor issue: cancelling a round increments the round number (not talking about the id). This might be an issue for games where there's a fixed number of rounds.
 // - Rounds can only be created with a timer that is started at creation and overrides the previous one. There's no way to create a round without a timer.
 // - Admin name and password should be stored in the database, yet easily changeable. Maybe put it in the docker-compose environment variables.
 public class Program

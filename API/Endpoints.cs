@@ -31,6 +31,11 @@ public static class Endpoints
 
     private static RouteGroupBuilder MapRulesetEndpoints(this IEndpointRouteBuilder builder)
     {
+        builder.MapGet("/", GetAllRulesets.HandleAsync)
+            .WithTags("Ruleset")
+            .WithName("GetAllRulesets")
+            .Produces<List<GetAllRulesets.Response>>(StatusCodes.Status200OK);
+
         var rulesetsGroup = builder.MapGroup("/rulesets/{rulesetId:int}")
             .WithTags("Ruleset");
 
@@ -78,6 +83,10 @@ public static class Endpoints
             .WithName("DuplicateGameSession")
             .Produces<CreatedAtRoute<DuplicateGameSession.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        builder.MapPost("/games", CreateGameSession.HandleAsync)
+            .WithName("CreateGameSession")
+            .Produces<CreateGameSession.Response>(StatusCodes.Status200OK); //TODO: created at route
 
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
