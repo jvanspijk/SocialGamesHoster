@@ -1,26 +1,16 @@
 <script lang="ts">
-    import type { GetPlayersFromGameResponse } from '$lib/client'; 
-	import type { PageProps } from './$types';
-    import MainSelect from '$lib/components/MainSelect.svelte';
+    import TextInput from '$lib/components/TextInput.svelte';
     import MainButton from '$lib/components/MainButton.svelte';
 
-    let { data }: PageProps = $props();
-    let players: GetPlayersFromGameResponse[] = data.players ?? [];
-
-    let selectedPlayerId: number | null = $state(null);
+    let playerName: string = $state("");
     
     let isLoading: boolean = $state(false);
     let message: { text: string; type: 'success' | 'error' | '' } = $state({ text: '', type: '' });
-
-    const playerOptions = players.map((p) => ({
-		id: p.id,
-		label: p.name
-	}));
 </script>
 
 <form method="POST" action="?/login" class="container"> 
-    <h1>Player Login</h1>
-    <p>Select your Player Name to join.</p>
+    <h1>Join game</h1>
+    <p>Enter your name to join.</p>
 
     {#if message.text}
         <p class={`message ${message.type}`}>
@@ -28,17 +18,16 @@
         </p>
     {/if}
 
-    <MainSelect
-		name="selectedPlayerId"
-		placeholder="Select a Player"
-		options={playerOptions}
-		bind:selectedValue={selectedPlayerId}
-	/>
-    
+    <TextInput
+        name="playerName"
+        placeholder="Enter your name..."
+        bind:value={playerName}
+    />
+            
     <MainButton
-		label="Login"
-		type="submit"
-		disabled={isLoading || selectedPlayerId === null}
-		isLoading={isLoading}
-	/>
+        label="Login"
+        type="submit"
+        disabled={isLoading || playerName.trim() === ""} 
+        isLoading={isLoading}
+    />
 </form>

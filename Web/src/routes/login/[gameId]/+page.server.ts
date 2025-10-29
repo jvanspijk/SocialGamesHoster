@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { createPlayer } from '$lib/client';
 import { getGamePlayers } from '$lib/client';
 import { playerLogin } from '$lib/client';
 import { fail, redirect } from '@sveltejs/kit';
@@ -7,15 +8,43 @@ import type { Actions } from './$types';
 export const actions: Actions = {
     login: async ({ request, cookies, params, getClientAddress }) => {
         const formData = await request.formData();
-        const selectedPlayerId: number = Number(formData.get('selectedPlayerId')); 
+        const playerNameInput: string | undefined = formData.get('playerName')?.toString().trim(); 
         const gameId: number = Number(params.gameId);
         
-        if (!selectedPlayerId) {
+        if (!playerNameInput || playerNameInput === "") {
             return fail(400, { 
                 success: false, 
-                message: 'Player selection is required.' 
+                message: 'Player name is required.' 
             });
         }
+
+        let playerId: number;
+        try {
+            const options = {
+                path: {                    
+                    gameId: gameId                    
+                },
+                body: {
+                    name: playerNameInput
+                }
+            }
+
+            const res = await createPlayer(options);
+            if(!res.data) {
+                return fail(500, { 
+                    success: false, 
+                    message: 'Player creation failed.' 
+                }); 
+            }
+            playerId = res.data.id;
+        } catch (error) {
+            console.error('Player creation Exception:', error);
+            
+            return fail(500, { 
+                success: false, 
+                message: 'Player creation failed.' 
+            });     
+        }        
         
         try {            
             const options = {
@@ -23,7 +52,7 @@ export const actions: Actions = {
                     gameId: gameId,            
                 },
                 body: {
-                    playerId: selectedPlayerId,
+                    playerId: playerId,
                     ipAddress: getClientAddress(),
                 }
             };
@@ -46,7 +75,7 @@ export const actions: Actions = {
                 maxAge: maxCookieAge 
             });
 
-            cookies.set('player_id', selectedPlayerId.toLocaleString(), {
+            cookies.set('player_id', playerId.toLocaleString(), {
                 path: '/', 
                 httpOnly: false,
                 secure: false, 
@@ -72,6 +101,7 @@ export const actions: Actions = {
 };
 
 export const load = (async ({params}) => {
+    // TODO: redirect if cookies are already set
     const options = {
         path: {
             gameId: Number(params.gameId),                 

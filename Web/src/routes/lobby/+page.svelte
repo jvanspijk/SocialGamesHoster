@@ -22,7 +22,7 @@
 </script>
 
 <div class="join-page-main">    
-    <h1>Join A Game</h1>
+    <h1>Lobby</h1>
     
     <p>Select a game session.</p>
     
