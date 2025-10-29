@@ -72,6 +72,11 @@ public static class Endpoints
 
     private static RouteGroupBuilder MapGameEndpoints(this IEndpointRouteBuilder builder)
     {
+        builder.MapGet("/games", GetAllGameSessions.HandleAsync)
+            .WithTags("GameSession")
+            .WithName("GetAllGameSessions")
+            .Produces<List<GetAllGameSessions.Response>>(StatusCodes.Status200OK);
+
         builder.MapGet("/games/active", GetActiveGameSessions.HandleAsync)
             .WithTags("GameSession")
             .WithName("GetActiveGames")
