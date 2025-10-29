@@ -4,9 +4,10 @@
     import { onMount } from 'svelte';
     import Description from '$lib/components/Description.svelte';
     import TimeDisplay from '$lib/components/TimeDisplay.svelte';
+    import HUDFooter from '$lib/components/HUDFooter.svelte';
 
     let timer: TimeDisplay | undefined = undefined;
-    const TOTAL_DURATION = 60;
+    const TOTAL_DURATION = 120; // temporary hard coded value
     let remainingTime = $state(TOTAL_DURATION);
     let timerFinished = $state(false);
 
@@ -22,17 +23,8 @@
 </script>
 
 <main>
-    <div class="timer">
-        <TimeDisplay 
-            bind:this={timer} 
-            bind:remainingTime={remainingTime} 
-            initialSeconds={TOTAL_DURATION} 
-            onFinished={() => timerFinished = true}
-        />
-    </div>
-
     {#if playerData}
-        <div class="character-sheet">
+        <div class="character-sheet">                   
             <header class="sheet-header">
                 <h1>{playerData.name}</h1>
                 <h3 class="role-title">The {playerData.role?.name || 'Unassigned'}</h3>
@@ -56,17 +48,22 @@
     {:else}
         <p class="error-message">Player data not found.</p>
     {/if}
+
+    <HUDFooter>
+        <a href="/admin">Go to admin</a>
+        <TimeDisplay 
+            bind:this={timer} 
+            bind:remainingTime={remainingTime} 
+            initialSeconds={TOTAL_DURATION} 
+            onFinished={() => timerFinished = true}
+        />        
+    </HUDFooter>
 </main>
 
 <style>
-    .timer {
-        position: fixed;        
-        top: 20px; 
-        right: 20px;        
-        z-index: 1000;       
-        transform: scale(0.7);         
-        transform-origin: top right;
-    }
+    .character-sheet {
+        position: relative;
+    }    
 
     .abilities-section {
         margin-top: 30px;

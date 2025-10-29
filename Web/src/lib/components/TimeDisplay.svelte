@@ -135,11 +135,13 @@
 
     .timer-wrapper {
         position: relative;
-        width: 150px; 
-        height: 150px;
-        background-color: #3b332d;
+        width: 75px; 
+        height: 75px;
+        background-color: #5b4a3c; 
         border-radius: 50%;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 
+                    inset 0 0 15px rgba(0, 0, 0, 0.9);
+        border: 2px solid #5b4a3c;
     }
 
     .progress-ring {
@@ -170,7 +172,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         font-family: 'Cinzel', serif;
-        font-size: 1.8em;
+        font-size: 1em;
         font-weight: 700;
         color: #f7e7c4;         
         user-select: none;
