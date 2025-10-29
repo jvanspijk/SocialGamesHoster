@@ -1,5 +1,7 @@
 <script lang="ts">
     import MainSelect from '$lib/components/MainSelect.svelte';
+    import TextInput from '$lib/components/TextInput.svelte';
+    import Description from '$lib/components/Description.svelte';
     
     let { data } = $props(); 
 
@@ -57,17 +59,23 @@
                 bind:selectedValue={selectedRulesetId}
             />          
 
-            {#if selectedRuleset}
-                <p class="ruleset-description">
-                    {selectedRuleset.description}
-                </p>
-            {/if}
+            <Description text={selectedRuleset?.description} isHidden={selectedRulesetId == null} />
         </div>
 
         {#if selectedRulesetId !== null}
             <p>2. Add Players</p>
             <div class="input-area">
-                <input
+                <TextInput 
+                    bind:value={newPlayerName} 
+                    on:keydown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addPlayer(); 
+                        }
+                    }}
+                    placeholder="Enter player name..."
+                />
+                <!-- <input
                     type="text"
                     bind:value={newPlayerName}
                     onkeydown={(e) => {
@@ -77,7 +85,7 @@
                         }
                     }}
                     placeholder="Enter player name..."
-                />
+                /> -->
                 <button type="button" onclick={addPlayer} disabled={!canAddPlayer}>
                     Add Player
                 </button>

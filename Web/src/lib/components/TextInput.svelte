@@ -8,7 +8,8 @@
     type="text" 
     {name} 
     {placeholder} 
-    bind:value 
+    bind:value
+    on:keydown
 />
 
 <style>
