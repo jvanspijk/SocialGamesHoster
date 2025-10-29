@@ -63,6 +63,7 @@
         </div>
 
         {#if selectedRulesetId !== null}
+            <input type="hidden" name="selectedRulesetId" value={selectedRulesetId ?? ''} />
             <p>2. Add Players</p>
             <div class="input-area">
                 <TextInput 
@@ -75,17 +76,6 @@
                     }}
                     placeholder="Enter player name..."
                 />
-                <!-- <input
-                    type="text"
-                    bind:value={newPlayerName}
-                    onkeydown={(e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addPlayer(); 
-                        }
-                    }}
-                    placeholder="Enter player name..."
-                /> -->
                 <button type="button" onclick={addPlayer} disabled={!canAddPlayer}>
                     Add Player
                 </button>
@@ -107,7 +97,7 @@
                             </button>
                         </li>
                         
-                        <input type="hidden" name="participant" value={name} />
+                        <input type="hidden" name="participants" value={name} />
                         
                     {/each}
                 </ol>

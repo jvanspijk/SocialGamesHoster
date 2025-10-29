@@ -7,8 +7,12 @@ import { fail } from '@sveltejs/kit';
 export const actions: Actions = {
     create: async ({ request }) => {
         const formData = await request.formData();
-        const selectedRulesetId: number = Number(formData.get('selectedRulesetId')); 
-        const participants: string[] = formData.getAll('participant')
+        const selectedRulesetId: number = Number(formData.get('selectedRulesetId'));
+        if (!selectedRulesetId) {
+            console.error("selectedRulesetId not found");
+            console.error(formData.get('selectedRulesetId'));
+        }
+        const participants: string[] = formData.getAll('participants')
             .map(entry => String(entry))
             .filter(name => name.trim().length > 0);
 
@@ -22,7 +26,7 @@ export const actions: Actions = {
         if (!selectedRulesetId) {
             return fail(400, { 
                 success: false, 
-                message: 'Player selection is required.' 
+                message: 'Ruleset selection is required.' 
             });
         }
         
