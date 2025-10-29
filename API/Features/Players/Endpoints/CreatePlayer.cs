@@ -35,9 +35,6 @@ public static class CreatePlayer
 
         Response response = new(result.Id, result.Name);
 
-        return Results.CreatedAtRoute(
-            routeName: "GetPlayer",
-            routeValues: result.Id,
-            value: response);
+        return Results.Ok(response);
     }
 }

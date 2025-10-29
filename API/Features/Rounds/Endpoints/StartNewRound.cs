@@ -24,15 +24,19 @@ public static class StartNewRound
             return Results.BadRequest("DurationInSeconds must be a positive integer.");
         }
         TimeSpan duration = TimeSpan.FromSeconds(request.DurationInSeconds);
-        Round? round = await repository.StartNewRound(gameId);     
+        Round? round = await repository.StartNewRound(gameId);
         if (round == null)
         {
             return Results.NotFound($"Game with id {gameId} not found.");
-        }        
+        }
         timer.Cancel(); // Should we cancel or finish the previous round? Maybe we shouldn't even allow starting a new round if one is active.
         timer.Start(duration, round.Id);
-        return Results.CreatedAtRoute(
-            routeName: "GetCurrentRound",
-            value: round.ConvertToResponse<Round, Response>());
+
+        Response response = new(round.Id, round.StartedTime)
+        {
+            RemainingSeconds = request.DurationInSeconds
+        };
+
+        return Results.Ok(response);
     }
 }

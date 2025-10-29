@@ -20,9 +20,6 @@ public static class CreateAbility
 
         Response response = new(result.Id, result.Name, result.Description);
 
-        return Results.CreatedAtRoute(
-            routeName:"GetAbility", 
-            routeValues: result.Id, 
-            value: response);
+        return Results.Ok(response);
     }
 }

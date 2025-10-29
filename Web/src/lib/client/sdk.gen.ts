@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddGameWinnerData, AddGameWinnerErrors, AddGameWinnerResponses, AdjustRoundTimeData, AdjustRoundTimeErrors, AdjustRoundTimeResponses, AdminLoginData, AdminLoginErrors, AdminLoginResponses, CancelGameSessionData, CancelGameSessionErrors, CancelGameSessionResponses, CancelRoundData, CancelRoundErrors, CancelRoundResponses, CreateAbilityData, CreateAbilityResponses, CreateGameSessionData, CreateGameSessionResponses, CreatePlayerData, CreatePlayerErrors, CreateRoleData, CreateRoleResponses, DeletePlayerData, DeletePlayerErrors, DeletePlayerResponses, DuplicateGameSessionData, DuplicateGameSessionErrors, FinishGameSessionData, FinishGameSessionErrors, FinishGameSessionResponses, FinishRoundData, FinishRoundErrors, FinishRoundResponses, GetAbilityData, GetAbilityErrors, GetAbilityResponses, GetActiveGamesData, GetActiveGamesErrors, GetActiveGamesResponses, GetAllGamesData, GetAllGamesResponses, GetAllRulesetsData, GetAllRulesetsResponses, GetApiHealthData, GetApiHealthResponses, GetCurrentRoundData, GetCurrentRoundErrors, GetCurrentRoundResponses, GetGamePlayersData, GetGamePlayersErrors, GetGamePlayersResponses, GetGameSessionByIdData, GetGameSessionByIdErrors, GetGameSessionByIdResponses, GetPlayerByIdData, GetPlayerByIdErrors, GetPlayerByIdResponses, GetPlayerFromGameData, GetPlayerFromGameErrors, GetPlayerFromGameResponses, GetRoleData, GetRoleErrors, GetRoleResponses, GetRulesetAbilitiesData, GetRulesetAbilitiesErrors, GetRulesetAbilitiesResponses, GetRulesetByIdData, GetRulesetByIdErrors, GetRulesetByIdResponses, GetRulesetRolesData, GetRulesetRolesResponses, PauseCurrentRoundData, PauseCurrentRoundErrors, PauseCurrentRoundResponses, PlayerLoginData, PlayerLoginErrors, PlayerLoginResponses, ResumeCurrentRoundData, ResumeCurrentRoundErrors, ResumeCurrentRoundResponses, StartNewGameSessionData, StartNewGameSessionErrors, StartNewGameSessionResponses, StartNewRoundData, StartNewRoundErrors, UpdateAbilityInformationData, UpdateAbilityInformationErrors, UpdateAbilityInformationResponses, UpdateGameParticipantsData, UpdateGameParticipantsErrors, UpdateGameParticipantsResponses, UpdateGameRulesetData, UpdateGameRulesetErrors, UpdateGameRulesetResponses, UpdatePlayerData, UpdatePlayerErrors, UpdatePlayerResponses, UpdateRoleAbilitiesData, UpdateRoleAbilitiesErrors, UpdateRoleAbilitiesResponses, UpdateRoleInformationData, UpdateRoleInformationErrors, UpdateRoleInformationResponses } from './types.gen';
+import type { AddGameWinnerData, AddGameWinnerErrors, AddGameWinnerResponses, AdjustRoundTimeData, AdjustRoundTimeErrors, AdjustRoundTimeResponses, AdminLoginData, AdminLoginErrors, AdminLoginResponses, CancelGameSessionData, CancelGameSessionErrors, CancelGameSessionResponses, CancelRoundData, CancelRoundErrors, CancelRoundResponses, CreateAbilityData, CreateAbilityResponses, CreateGameSessionData, CreateGameSessionResponses, CreatePlayerData, CreatePlayerErrors, CreatePlayerResponses, CreateRoleData, CreateRoleResponses, DeletePlayerData, DeletePlayerErrors, DeletePlayerResponses, DuplicateGameSessionData, DuplicateGameSessionErrors, DuplicateGameSessionResponses, FinishGameSessionData, FinishGameSessionErrors, FinishGameSessionResponses, FinishRoundData, FinishRoundErrors, FinishRoundResponses, GetAbilityData, GetAbilityErrors, GetAbilityResponses, GetActiveGamesData, GetActiveGamesErrors, GetActiveGamesResponses, GetAllGameSessionsData, GetAllGameSessionsResponses, GetAllRulesetsData, GetAllRulesetsResponses, GetApiHealthData, GetApiHealthResponses, GetCurrentRoundData, GetCurrentRoundErrors, GetCurrentRoundResponses, GetGamePlayersData, GetGamePlayersErrors, GetGamePlayersResponses, GetGameSessionByIdData, GetGameSessionByIdErrors, GetGameSessionByIdResponses, GetPlayerByIdData, GetPlayerByIdErrors, GetPlayerByIdResponses, GetPlayerFromGameData, GetPlayerFromGameErrors, GetPlayerFromGameResponses, GetRoleData, GetRoleErrors, GetRoleResponses, GetRulesetAbilitiesData, GetRulesetAbilitiesErrors, GetRulesetAbilitiesResponses, GetRulesetByIdData, GetRulesetByIdErrors, GetRulesetByIdResponses, GetRulesetRolesData, GetRulesetRolesResponses, PauseCurrentRoundData, PauseCurrentRoundErrors, PauseCurrentRoundResponses, PlayerLoginData, PlayerLoginErrors, PlayerLoginResponses, ResumeCurrentRoundData, ResumeCurrentRoundErrors, ResumeCurrentRoundResponses, StartNewGameSessionData, StartNewGameSessionErrors, StartNewGameSessionResponses, StartNewRoundData, StartNewRoundErrors, StartNewRoundResponses, UpdateAbilityInformationData, UpdateAbilityInformationErrors, UpdateAbilityInformationResponses, UpdateGameParticipantsData, UpdateGameParticipantsErrors, UpdateGameParticipantsResponses, UpdateGameRulesetData, UpdateGameRulesetErrors, UpdateGameRulesetResponses, UpdatePlayerData, UpdatePlayerErrors, UpdatePlayerResponses, UpdateRoleAbilitiesData, UpdateRoleAbilitiesErrors, UpdateRoleAbilitiesResponses, UpdateRoleInformationData, UpdateRoleInformationErrors, UpdateRoleInformationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -90,8 +90,8 @@ export const updatePlayer = <ThrowOnError extends boolean = false>(options: Opti
     });
 };
 
-export const getAllGames = <ThrowOnError extends boolean = false>(options?: Options<GetAllGamesData, ThrowOnError>) => {
-    return (options?.client ?? client).get<GetAllGamesResponses, unknown, ThrowOnError>({
+export const getAllGameSessions = <ThrowOnError extends boolean = false>(options?: Options<GetAllGameSessionsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetAllGameSessionsResponses, unknown, ThrowOnError>({
         url: '/api/games',
         ...options
     });
@@ -116,7 +116,7 @@ export const getActiveGames = <ThrowOnError extends boolean = false>(options?: O
 };
 
 export const duplicateGameSession = <ThrowOnError extends boolean = false>(options: Options<DuplicateGameSessionData, ThrowOnError>) => {
-    return (options.client ?? client).post<unknown, DuplicateGameSessionErrors, ThrowOnError>({
+    return (options.client ?? client).post<DuplicateGameSessionResponses, DuplicateGameSessionErrors, ThrowOnError>({
         url: '/api/games/duplicate',
         ...options,
         headers: {
@@ -177,7 +177,7 @@ export const updateGameParticipants = <ThrowOnError extends boolean = false>(opt
 };
 
 export const createPlayer = <ThrowOnError extends boolean = false>(options: Options<CreatePlayerData, ThrowOnError>) => {
-    return (options.client ?? client).post<unknown, CreatePlayerErrors, ThrowOnError>({
+    return (options.client ?? client).post<CreatePlayerResponses, CreatePlayerErrors, ThrowOnError>({
         url: '/api/games/{gameId}/players',
         ...options,
         headers: {
@@ -294,7 +294,7 @@ export const finishRound = <ThrowOnError extends boolean = false>(options?: Opti
 };
 
 export const startNewRound = <ThrowOnError extends boolean = false>(options: Options<StartNewRoundData, ThrowOnError>) => {
-    return (options.client ?? client).post<unknown, StartNewRoundErrors, ThrowOnError>({
+    return (options.client ?? client).post<StartNewRoundResponses, StartNewRoundErrors, ThrowOnError>({
         url: '/api/games/{gameId}/rounds',
         ...options,
         headers: {

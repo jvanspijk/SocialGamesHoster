@@ -48,8 +48,8 @@ public static class Endpoints
             .WithTags("Ability");
 
         abilitiesGroup.MapPost("/", CreateAbility.HandleAsync)
-            .WithName("CreateAbility")
-            .Produces<CreatedAtRoute<CreateAbility.Response>>(StatusCodes.Status201Created);
+            .WithName("CreateAbility")  
+            .Produces<CreateAbility.Response>(StatusCodes.Status201Created);
 
         abilitiesGroup.MapGet("/", GetAbilitiesFromRuleset.HandleAsync)
             .WithName("GetRulesetAbilities")
@@ -61,7 +61,7 @@ public static class Endpoints
 
         rolesGroup.MapPost("/", CreateRole.HandleAsync)
             .WithName("CreateRole")
-            .Produces<CreatedAtRoute<CreateRole.Response>>(StatusCodes.Status201Created);
+            .Produces<CreateRole.Response>(StatusCodes.Status201Created);
 
         rolesGroup.MapGet("/", GetRoles.HandleAsync)
             .WithName("GetRulesetRoles")
@@ -86,12 +86,12 @@ public static class Endpoints
         builder.MapPost("/games/duplicate", DuplicateGameSession.HandleAsync)
             .WithTags("GameSession")
             .WithName("DuplicateGameSession")
-            .Produces<CreatedAtRoute<DuplicateGameSession.Response>>(StatusCodes.Status200OK)
+            .Produces<DuplicateGameSession.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         builder.MapPost("/games", CreateGameSession.HandleAsync)
             .WithName("CreateGameSession")
-            .Produces<CreateGameSession.Response>(StatusCodes.Status200OK); //TODO: created at route
+            .Produces<CreateGameSession.Response>(StatusCodes.Status200OK);
 
         var gamesGroup = builder.MapGroup("/games/{gameId:int}")
            .WithTags("GameSession");
@@ -158,7 +158,7 @@ public static class Endpoints
 
         playersGroup.MapPost("/", CreatePlayer.HandleAsync)
             .WithName("CreatePlayer")
-            .Produces<CreatedAtRoute<CreatePlayer.Response>>(StatusCodes.Status201Created)
+            .Produces<CreatePlayer.Response>(StatusCodes.Status201Created)
             .Produces<HttpValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
         var roundsGroup = gamesGroup.MapGroup("rounds")
@@ -203,7 +203,7 @@ public static class Endpoints
 
         roundsGroup.MapPost("/", StartNewRound.HandleAsync)
             .WithName("StartNewRound")
-            .Produces<CreatedAtRoute<StartNewRound.Response>>(StatusCodes.Status201Created)
+            .Produces<StartNewRound.Response>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return gamesGroup;

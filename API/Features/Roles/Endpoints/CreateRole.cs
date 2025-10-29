@@ -42,7 +42,9 @@ public static class CreateRole
         }
         string description = request.Description ?? "";
         Role role = new() { Name = request.Name, Description = description, RulesetId = rulesetId };
-        Role createdRole = await repository.CreateAsync(role); // Should this be a result type?        
-        return Results.Ok(createdRole.ConvertToResponse<Role, Response>()); 
+        Role createdRole = await repository.CreateAsync(role); // Should this be a result type?
+                                                               // 
+        Response response = new(createdRole.Id, createdRole.Name, createdRole.Description);
+        return Results.Ok(response); 
     }
 }

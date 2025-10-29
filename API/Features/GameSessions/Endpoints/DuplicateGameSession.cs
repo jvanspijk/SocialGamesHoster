@@ -45,9 +45,6 @@ public static class DuplicateGameSession
         GameSession createdSession = await repository.CreateAsync(duplicatedSession);
 
         var response = createdSession.ConvertToResponse<GameSession, Response>();
-        return Results.CreatedAtRoute(
-            routeName: "GetGameSession",
-            routeValues: createdSession.Id,
-            value: response);
+        return Results.Ok(response);
     }
 }
