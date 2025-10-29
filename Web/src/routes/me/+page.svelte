@@ -1,9 +1,14 @@
 <script lang="ts">
-    import type { AbilityInfo } from '$lib/client'
     import type { GetPlayerResponse } from '$lib/client';
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
-    import DetailCard from '$lib/components/DetailCard.svelte';
+    import Description from '$lib/components/Description.svelte';
+    import TimeDisplay from '$lib/components/TimeDisplay.svelte';
+
+    let timer: TimeDisplay | undefined = undefined;
+    const TOTAL_DURATION = 60;
+    let remainingTime = $state(TOTAL_DURATION);
+    let timerFinished = $state(false);
 
     let { data }: PageProps = $props();
     const playerData: GetPlayerResponse | undefined = data.player;
@@ -14,14 +19,18 @@
             mainElement.style.minHeight = '100vh';
         }
     });
-
-    function getAbilityList(abilities: AbilityInfo[] | undefined): string {
-        if (!abilities || abilities.length === 0) return 'No abilities listed.';
-        return abilities.map(a => a.name).join(', ');
-    }
 </script>
 
 <main>
+    <div class="timer">
+        <TimeDisplay 
+            bind:this={timer} 
+            bind:remainingTime={remainingTime} 
+            initialSeconds={TOTAL_DURATION} 
+            onFinished={() => timerFinished = true}
+        />
+    </div>
+
     {#if playerData}
         <div class="character-sheet">
             <header class="sheet-header">
@@ -29,11 +38,7 @@
                 <h3 class="role-title">The {playerData.role?.name || 'Unassigned'}</h3>
             </header>
 
-            <section class="details-section">
-                {#if playerData.role}
-                    <DetailCard title={playerData.role.name} content={playerData.role.description}/>                    
-                {/if}
-            </section>
+            <Description text={playerData.role?.description} isHidden={!playerData.role}/>
 
             {#if playerData.role?.abilities && playerData.role.abilities.length > 0}
                 <section class="abilities-section">
@@ -54,20 +59,15 @@
 </main>
 
 <style>
-    .details-section {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 20px;
-        margin-bottom: 30px;
-        margin-top: 10px;
+    .timer {
+        position: fixed;        
+        top: 20px; 
+        right: 20px;        
+        z-index: 1000;       
+        transform: scale(0.7);         
+        transform-origin: top right;
     }
-    
-    @media (min-width: 600px) {
-        .details-section {
-            grid-template-columns: 1fr 1.5fr;
-        }
-    }
-    
+
     .abilities-section {
         margin-top: 30px;
     }
