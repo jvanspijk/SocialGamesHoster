@@ -38,7 +38,7 @@
     }
 
     footer.collapsed {
-        transform: translateY(calc(100% - 30px));
+        transform: translateY(calc(100% - 38px));
     }
 
     .hud {
@@ -54,14 +54,13 @@
         justify-content: center;
         width: 100%;
         background-color: #3e322b;
-        padding: 2px 0;
         border-bottom: 1px solid #5b4a3c;
-        height: 28px;
+        height: 38px;
     }
 
     .toggle-control button {
         font-family: 'Cinzel', serif;
-        font-size: 1.2em;
+        font-size: 1.4em;
         color: #e7c58d;
         background: none;
         border: none;
@@ -69,6 +68,9 @@
         padding: 0 10px;
         line-height: 1;
         transition: color 0.2s;
+        height: 100%;
+        width: 100%;
+        border-radius: 5px;
     }
 
     .toggle-control button:hover {

@@ -29,9 +29,11 @@
     }
 
     .page-main {
+        background-color: #3b332d;
         display: flex;
         justify-content: center;
-        padding: 40px 20px;
+        padding: 10px 14px;
+        margin-top: 10px;
         text-align: center;
     }
 
@@ -43,11 +45,11 @@
         max-width: 700px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 
                     inset 0 0 10px rgba(100, 80, 50, 0.5);
-        padding: 40px;
+        padding-top: 10px;
         border: 10px solid #5b4a3c;
         border-radius: 5px;
         line-height: 1.6;
-        min-height: 80vh;
+        min-height: 85vh;
     }
 
     /* 3. Common Typography*/
@@ -70,14 +72,14 @@
     }
 
     :global(h2) {
-        font-size: 1.5em;
+        font-size: 1.75em;
         border-bottom: 1px solid #5b4a3c;
         padding-bottom: 5px;
         margin-top: 25px;
     }
 
     :global(h3) {
-        font-size: 1.5em;
+        font-size: 1.25em;
         text-align: center;
         color: #7a634e;
         font-style: italic;
@@ -88,7 +90,7 @@
     :global(p) {
         margin-top: -2px;
         margin-bottom: 4px;
-        font-size: 1.2em;
+        font-size: 1.1em;
     }   
 
     :global(.container) {       

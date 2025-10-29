@@ -156,17 +156,6 @@
         padding-bottom: 5px;
     }
 
-    .ruleset-description {
-        background-color: #e3d8b8;
-        border: 1px solid #c9b48c;
-        padding: 15px;
-        margin-top: 15px;
-        border-radius: 3px;
-        line-height: 1.5;
-        font-size: 1.1em;
-        text-align: left;
-        color: #3e322b;
-    }
 
     .ruleset-select-area {
         text-align: left;
@@ -178,20 +167,7 @@
         gap: 10px;
         align-items: center;
         margin-bottom: 25px;
-    }
-
-    .input-area input[type="text"] {
-        flex-grow: 1;
-        font-family: 'IM Fell English', serif;
-        font-size: 1.2em;
-        padding: 10px 15px;
-        background-color: #fff9e6; 
-        border: 2px solid #5b4a3c;
-        border-radius: 3px;
-        color: #3e322b;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-        max-width: none;
-    }
+    }   
 
     button {
         font-family: 'Cinzel', serif;
