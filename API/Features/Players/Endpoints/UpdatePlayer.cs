@@ -9,18 +9,13 @@ namespace API.Features.Players.Endpoints;
 public static class UpdatePlayer
 {
     public readonly record struct Request(string? NewName, int? NewRoleId);
-    public record Response(int Id, string Name, RoleInfo? Role) : IProjectable<Player, Response>
+    public record Response(int Id, string Name, int? RoleId) : IProjectable<Player, Response>
     {
         public static Expression<Func<Player, Response>> Projection =>
             player => new Response(
                 player.Id,
                 player.Name,
-                player.Role == null ? null :
-                new RoleInfo(player.Role.Id, player.Role.Name, player.Role.Description,
-                    player.Role.Abilities
-                    .Select(a => new AbilityInfo(a.Id, a.Name, a.Description))
-                    .ToList()
-                )
+                player.RoleId
             );
     }
     public static async Task<IResult> HandleAsync(PlayerRepository repository, int id, Request request)
@@ -53,8 +48,7 @@ public static class UpdatePlayer
         }
 
         var updatedPlayer = await repository.UpdateAsync(player);
-        Response response = updatedPlayer.ConvertToResponse<Player, Response>();
-
+        Response response = new(updatedPlayer.Id, updatedPlayer.Name, updatedPlayer.RoleId);
         return Results.Ok(response);
     }
 }

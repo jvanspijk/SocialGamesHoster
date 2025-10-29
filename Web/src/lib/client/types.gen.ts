@@ -13,7 +13,7 @@ export type AbilityInfo = {
 /**
  * Request for AddWinners
  */
-export type AddWinnersRequest2 = {
+export type AddWinnersRequest = {
     playerIds?: Array<number>;
 };
 
@@ -51,7 +51,7 @@ export type CreateAbilityRequest = {
 /**
  * Response for CreateAbility
  */
-export type CreateAbilityResponse2 = {
+export type CreateAbilityResponse = {
     id: number;
     name: string;
     description: string;
@@ -76,7 +76,7 @@ export type CreateGameSessionResponse = {
 /**
  * Request for CreatePlayer
  */
-export type CreatePlayerRequest2 = {
+export type CreatePlayerRequest = {
     name?: string;
 };
 
@@ -133,7 +133,7 @@ export type GetAbilitiesFromRulesetResponse = {
 /**
  * Response for GetAbility
  */
-export type GetAbilityResponse2 = {
+export type GetAbilityResponse = {
     id: number;
     name: string;
     description: string;
@@ -142,7 +142,7 @@ export type GetAbilityResponse2 = {
 /**
  * Response for GetActiveGameSessions
  */
-export type GetActiveGameSessionsResponse = {
+export type GetActiveGameSessionsResponse2 = {
     id: number;
     rulesetId: number;
     status: string;
@@ -208,7 +208,7 @@ export type GetPlayerResponse = {
 /**
  * Response for GetPlayersFromGame
  */
-export type GetPlayersFromGameResponse2 = {
+export type GetPlayersFromGameResponse = {
     id: number;
     name: string;
 };
@@ -296,7 +296,7 @@ export type ProblemDetails = {
 /**
  * Response for StartGameSession
  */
-export type StartGameSessionResponse2 = {
+export type StartGameSessionResponse = {
     id: number;
     status: string;
 };
@@ -320,7 +320,7 @@ export type StartNewRoundResponse = {
 /**
  * Request for UpdateAbilityInformation
  */
-export type UpdateAbilityInformationRequest2 = {
+export type UpdateAbilityInformationRequest = {
     newName?: string | null;
     newDescription?: string | null;
 };
@@ -378,7 +378,7 @@ export type UpdatePlayerRequest = {
 export type UpdatePlayerResponse = {
     id: number;
     name: string;
-    role: NullableOfRoleInfo;
+    roleId: number | null;
 };
 
 /**
@@ -516,13 +516,13 @@ export type GetAbilityResponses = {
     /**
      * OK
      */
-    200: GetAbilityResponse2;
+    200: GetAbilityResponse;
 };
 
-export type GetAbilityResponse = GetAbilityResponses[keyof GetAbilityResponses];
+export type GetAbilityResponse2 = GetAbilityResponses[keyof GetAbilityResponses];
 
 export type UpdateAbilityInformationData = {
-    body: UpdateAbilityInformationRequest2;
+    body: UpdateAbilityInformationRequest;
     path: {
         id: number;
     };
@@ -681,7 +681,7 @@ export type GetActiveGamesResponses = {
     /**
      * OK
      */
-    200: GetActiveGameSessionsResponse;
+    200: GetActiveGameSessionsResponse2;
 };
 
 export type GetActiveGamesResponse = GetActiveGamesResponses[keyof GetActiveGamesResponses];
@@ -813,7 +813,7 @@ export type GetGamePlayersResponses = {
     /**
      * OK
      */
-    200: Array<GetPlayersFromGameResponse2>;
+    200: Array<GetPlayersFromGameResponse>;
 };
 
 export type GetGamePlayersResponse = GetGamePlayersResponses[keyof GetGamePlayersResponses];
@@ -850,7 +850,7 @@ export type UpdateGameParticipantsResponses = {
 export type UpdateGameParticipantsResponse2 = UpdateGameParticipantsResponses[keyof UpdateGameParticipantsResponses];
 
 export type CreatePlayerData = {
-    body: CreatePlayerRequest2;
+    body: CreatePlayerRequest;
     path: {
         gameId: number;
     };
@@ -908,7 +908,7 @@ export type UpdateGameRulesetResponses = {
 export type UpdateGameRulesetResponse2 = UpdateGameRulesetResponses[keyof UpdateGameRulesetResponses];
 
 export type AddGameWinnerData = {
-    body: AddWinnersRequest2;
+    body: AddWinnersRequest;
     path: {
         gameId: number;
     };
@@ -995,7 +995,7 @@ export type StartNewGameSessionResponses = {
     /**
      * OK
      */
-    200: StartGameSessionResponse2;
+    200: StartGameSessionResponse;
 };
 
 export type StartNewGameSessionResponse = StartNewGameSessionResponses[keyof StartNewGameSessionResponses];
@@ -1343,10 +1343,10 @@ export type CreateAbilityResponses = {
     /**
      * Created
      */
-    201: CreateAbilityResponse2;
+    201: CreateAbilityResponse;
 };
 
-export type CreateAbilityResponse = CreateAbilityResponses[keyof CreateAbilityResponses];
+export type CreateAbilityResponse2 = CreateAbilityResponses[keyof CreateAbilityResponses];
 
 export type GetRulesetRolesData = {
     body?: never;
