@@ -11,6 +11,8 @@ export type AbilityInfo = {
 };
 
 /**
+ * AddWinnersRequest
+ *
  * Request for AddWinners
  */
 export type AddWinnersRequest = {
@@ -18,6 +20,8 @@ export type AddWinnersRequest = {
 };
 
 /**
+ * AddWinnersResponse
+ *
  * Response for AddWinners
  */
 export type AddWinnersResponse = {
@@ -26,6 +30,8 @@ export type AddWinnersResponse = {
 };
 
 /**
+ * AdminLoginRequest
+ *
  * Request for AdminLogin
  */
 export type AdminLoginRequest = {
@@ -34,6 +40,8 @@ export type AdminLoginRequest = {
 };
 
 /**
+ * AdminLoginResponse
+ *
  * Response for AdminLogin
  */
 export type AdminLoginResponse = {
@@ -41,6 +49,8 @@ export type AdminLoginResponse = {
 };
 
 /**
+ * CreateAbilityRequest
+ *
  * Request for CreateAbility
  */
 export type CreateAbilityRequest = {
@@ -49,6 +59,8 @@ export type CreateAbilityRequest = {
 };
 
 /**
+ * CreateAbilityResponse
+ *
  * Response for CreateAbility
  */
 export type CreateAbilityResponse = {
@@ -58,6 +70,8 @@ export type CreateAbilityResponse = {
 };
 
 /**
+ * CreateGameSessionRequest
+ *
  * Request for CreateGameSession
  */
 export type CreateGameSessionRequest = {
@@ -66,6 +80,8 @@ export type CreateGameSessionRequest = {
 };
 
 /**
+ * CreateGameSessionResponse
+ *
  * Response for CreateGameSession
  */
 export type CreateGameSessionResponse = {
@@ -74,6 +90,8 @@ export type CreateGameSessionResponse = {
 };
 
 /**
+ * CreatePlayerRequest
+ *
  * Request for CreatePlayer
  */
 export type CreatePlayerRequest = {
@@ -81,6 +99,8 @@ export type CreatePlayerRequest = {
 };
 
 /**
+ * CreatePlayerResponse
+ *
  * Response for CreatePlayer
  */
 export type CreatePlayerResponse = {
@@ -89,6 +109,8 @@ export type CreatePlayerResponse = {
 };
 
 /**
+ * CreateRoleRequest
+ *
  * Request for CreateRole
  */
 export type CreateRoleRequest = {
@@ -97,6 +119,8 @@ export type CreateRoleRequest = {
 };
 
 /**
+ * CreateRoleResponse
+ *
  * Response for CreateRole
  */
 export type CreateRoleResponse = {
@@ -106,6 +130,8 @@ export type CreateRoleResponse = {
 };
 
 /**
+ * DuplicateGameSessionRequest
+ *
  * Request for DuplicateGameSession
  */
 export type DuplicateGameSessionRequest = {
@@ -113,6 +139,8 @@ export type DuplicateGameSessionRequest = {
 };
 
 /**
+ * DuplicateGameSessionResponse
+ *
  * Response for DuplicateGameSession
  */
 export type DuplicateGameSessionResponse = {
@@ -122,6 +150,8 @@ export type DuplicateGameSessionResponse = {
 };
 
 /**
+ * GetAbilitiesFromRulesetResponse
+ *
  * Response for GetAbilitiesFromRuleset
  */
 export type GetAbilitiesFromRulesetResponse = {
@@ -131,6 +161,8 @@ export type GetAbilitiesFromRulesetResponse = {
 };
 
 /**
+ * GetAbilityResponse
+ *
  * Response for GetAbility
  */
 export type GetAbilityResponse = {
@@ -140,9 +172,11 @@ export type GetAbilityResponse = {
 };
 
 /**
+ * GetActiveGameSessionsResponse
+ *
  * Response for GetActiveGameSessions
  */
-export type GetActiveGameSessionsResponse2 = {
+export type GetActiveGameSessionsResponse = {
     id: number;
     rulesetId: number;
     status: string;
@@ -150,6 +184,8 @@ export type GetActiveGameSessionsResponse2 = {
 };
 
 /**
+ * GetAllGameSessionsResponse
+ *
  * Response for GetAllGameSessions
  */
 export type GetAllGameSessionsResponse = {
@@ -160,6 +196,8 @@ export type GetAllGameSessionsResponse = {
 };
 
 /**
+ * GetAllRulesetsResponse
+ *
  * Response for GetAllRulesets
  */
 export type GetAllRulesetsResponse = {
@@ -169,6 +207,8 @@ export type GetAllRulesetsResponse = {
 };
 
 /**
+ * GetCurrentRoundResponse
+ *
  * Response for GetCurrentRound
  */
 export type GetCurrentRoundResponse = {
@@ -179,6 +219,8 @@ export type GetCurrentRoundResponse = {
 };
 
 /**
+ * GetGameSessionResponse
+ *
  * Response for GetGameSession
  */
 export type GetGameSessionResponse = {
@@ -188,6 +230,8 @@ export type GetGameSessionResponse = {
 };
 
 /**
+ * GetPlayerFromGameResponse
+ *
  * Response for GetPlayerFromGame
  */
 export type GetPlayerFromGameResponse = {
@@ -197,6 +241,8 @@ export type GetPlayerFromGameResponse = {
 };
 
 /**
+ * GetPlayerResponse
+ *
  * Response for GetPlayer
  */
 export type GetPlayerResponse = {
@@ -206,6 +252,8 @@ export type GetPlayerResponse = {
 };
 
 /**
+ * GetPlayersFromGameResponse
+ *
  * Response for GetPlayersFromGame
  */
 export type GetPlayersFromGameResponse = {
@@ -214,6 +262,8 @@ export type GetPlayersFromGameResponse = {
 };
 
 /**
+ * GetRoleResponse
+ *
  * Response for GetRole
  */
 export type GetRoleResponse = {
@@ -224,6 +274,8 @@ export type GetRoleResponse = {
 };
 
 /**
+ * GetRolesResponse
+ *
  * Response for GetRoles
  */
 export type GetRolesResponse = {
@@ -233,6 +285,8 @@ export type GetRolesResponse = {
 };
 
 /**
+ * GetRulesetResponse
+ *
  * Response for GetRuleset
  */
 export type GetRulesetResponse = {
@@ -271,6 +325,8 @@ export type Participant = {
 };
 
 /**
+ * PlayerLoginRequest
+ *
  * Request for PlayerLogin
  */
 export type PlayerLoginRequest = {
@@ -279,6 +335,8 @@ export type PlayerLoginRequest = {
 };
 
 /**
+ * PlayerLoginResponse
+ *
  * Response for PlayerLogin
  */
 export type PlayerLoginResponse = {
@@ -294,6 +352,8 @@ export type ProblemDetails = {
 };
 
 /**
+ * StartGameSessionResponse
+ *
  * Response for StartGameSession
  */
 export type StartGameSessionResponse = {
@@ -302,6 +362,8 @@ export type StartGameSessionResponse = {
 };
 
 /**
+ * StartNewRoundRequest
+ *
  * Request for StartNewRound
  */
 export type StartNewRoundRequest = {
@@ -309,6 +371,8 @@ export type StartNewRoundRequest = {
 };
 
 /**
+ * StartNewRoundResponse
+ *
  * Response for StartNewRound
  */
 export type StartNewRoundResponse = {
@@ -318,6 +382,8 @@ export type StartNewRoundResponse = {
 };
 
 /**
+ * UpdateAbilityInformationRequest
+ *
  * Request for UpdateAbilityInformation
  */
 export type UpdateAbilityInformationRequest = {
@@ -326,6 +392,8 @@ export type UpdateAbilityInformationRequest = {
 };
 
 /**
+ * UpdateAbilityInformationResponse
+ *
  * Response for UpdateAbilityInformation
  */
 export type UpdateAbilityInformationResponse = {
@@ -335,6 +403,8 @@ export type UpdateAbilityInformationResponse = {
 };
 
 /**
+ * UpdateGameParticipantsRequest
+ *
  * Request for UpdateGameParticipants
  */
 export type UpdateGameParticipantsRequest = {
@@ -342,6 +412,8 @@ export type UpdateGameParticipantsRequest = {
 };
 
 /**
+ * UpdateGameParticipantsResponse
+ *
  * Response for UpdateGameParticipants
  */
 export type UpdateGameParticipantsResponse = {
@@ -350,6 +422,8 @@ export type UpdateGameParticipantsResponse = {
 };
 
 /**
+ * UpdateGameRulesetRequest
+ *
  * Request for UpdateGameRuleset
  */
 export type UpdateGameRulesetRequest = {
@@ -357,6 +431,8 @@ export type UpdateGameRulesetRequest = {
 };
 
 /**
+ * UpdateGameRulesetResponse
+ *
  * Response for UpdateGameRuleset
  */
 export type UpdateGameRulesetResponse = {
@@ -365,6 +441,8 @@ export type UpdateGameRulesetResponse = {
 };
 
 /**
+ * UpdatePlayerRequest
+ *
  * Request for UpdatePlayer
  */
 export type UpdatePlayerRequest = {
@@ -373,6 +451,8 @@ export type UpdatePlayerRequest = {
 };
 
 /**
+ * UpdatePlayerResponse
+ *
  * Response for UpdatePlayer
  */
 export type UpdatePlayerResponse = {
@@ -382,6 +462,8 @@ export type UpdatePlayerResponse = {
 };
 
 /**
+ * UpdateRoleAbilitiesRequest
+ *
  * Request for UpdateRoleAbilities
  */
 export type UpdateRoleAbilitiesRequest = {
@@ -389,6 +471,8 @@ export type UpdateRoleAbilitiesRequest = {
 };
 
 /**
+ * UpdateRoleAbilitiesResponse
+ *
  * Response for UpdateRoleAbilities
  */
 export type UpdateRoleAbilitiesResponse = {
@@ -397,6 +481,8 @@ export type UpdateRoleAbilitiesResponse = {
 };
 
 /**
+ * UpdateRoleInformationRequest
+ *
  * Request for UpdateRoleInformation
  */
 export type UpdateRoleInformationRequest = {
@@ -405,6 +491,8 @@ export type UpdateRoleInformationRequest = {
 };
 
 /**
+ * UpdateRoleInformationResponse
+ *
  * Response for UpdateRoleInformation
  */
 export type UpdateRoleInformationResponse = {
@@ -681,7 +769,7 @@ export type GetActiveGamesResponses = {
     /**
      * OK
      */
-    200: GetActiveGameSessionsResponse2;
+    200: GetActiveGameSessionsResponse;
 };
 
 export type GetActiveGamesResponse = GetActiveGamesResponses[keyof GetActiveGamesResponses];

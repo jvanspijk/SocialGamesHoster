@@ -11,10 +11,17 @@ public class NestedClassSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
+        const string schemaId = "x-schema-id";
         var type = context.JsonTypeInfo.Type;
 
         if (!type.IsNested)
+        {
             return Task.CompletedTask;
+        }
+
+        string uniqueName = $"{type.DeclaringType?.Name}{type.Name}";
+        schema.Title = uniqueName;
+        schema.Annotations[schemaId] = uniqueName;
 
         if (type.Name.Equals("Request", StringComparison.OrdinalIgnoreCase))
         {
@@ -24,9 +31,6 @@ public class NestedClassSchemaTransformer : IOpenApiSchemaTransformer
         {
             schema.Description = $"Response for {type.DeclaringType?.Name}";
         }
-
-        const string schemaId = "x-schema-id";
-        schema.Annotations[schemaId] = $"{type.DeclaringType?.Name}{type.Name}";
 
         return Task.CompletedTask;
     }  
