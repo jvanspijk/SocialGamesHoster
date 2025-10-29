@@ -16,9 +16,14 @@ public static class CreateGameSession
     }
     public static async Task<IResult> HandleAsync(GameSessionRepository repository, PlayerRepository playerRepository, Request request)
     {
-        List<Player> participants = await playerRepository.CreateMultipleAsync(
-            [.. request.PlayerNames.Select(name => new Player { Name = name })]
-        );
+        List<Player> participants = new(request.PlayerNames.Count);
+        if (request.PlayerNames.Count > 0)
+        {
+            participants = await playerRepository.CreateMultipleAsync(
+                [.. request.PlayerNames.Select(name => new Player { Name = name })]
+            );
+        }
+
         GameSession newSession = new()
         {
             RulesetId = request.RulesetId,

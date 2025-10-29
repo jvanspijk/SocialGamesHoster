@@ -6,7 +6,7 @@
 
 <header>
     <nav>
-        <a href="admin/games/create">Create Game</a>
+        <a href="admin/games/start">Start Game</a>
         |
         <a href="admin/rulesets/create">Create Ruleset</a>
     </nav>
