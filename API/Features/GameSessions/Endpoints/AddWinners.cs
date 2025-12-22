@@ -29,44 +29,41 @@ public static class AddWinners
         IRepository<Player> playerRepository,
         IRepository<GameSession> gameSessionRepository)
     {
-        var existingGameSession = await gameSessionRepository.GetAsync(gameId);
-        if (existingGameSession == null)
+        var session = await gameSessionRepository.GetAsync(gameId);
+        if (session is null) return TypedResults.NotFound();
+
+        if (session.Status is GameStatus.NotStarted)
         {
-            return Results.NotFound();
+            return TypedResults.BadRequest("Winners can only be added to active or finished sessions.");
         }
 
-        if(existingGameSession.Status == GameStatus.NotStarted)
+        var participantIds = session.Participants.Select(p => p.Id).ToHashSet();
+        var nonParticipants = request.PlayerIds.Where(id => !participantIds.Contains(id)).ToList();
+
+        if (nonParticipants.Count != 0)
         {
-            return Results.BadRequest("Winners can only be added to game sessions that are active or finished.");
-        }
-        
-        List<int> participantIds = [.. existingGameSession.Participants.Select(p => p.Id)];
-        var nonParticipants = request.PlayerIds.Except(participantIds).ToList();
-        if (nonParticipants.Count > 0)
-        {
-            return Results.BadRequest($"Players with ids {string.Join(" ,", nonParticipants)} are not participants in this game session.");
+            return TypedResults.BadRequest($"Players {string.Join(", ", nonParticipants)} are not participants.");
         }
 
-        List<int> currentWinnerIds = [.. existingGameSession.Winners.Select(w => w.Id)];
-        var alreadyWinners = request.PlayerIds.Intersect(currentWinnerIds).ToList();
-        if (alreadyWinners.Count > 0)
+        var currentWinnerIds = session.Winners.Select(w => w.Id).ToHashSet();
+        var alreadyWinners = request.PlayerIds.Where(id => currentWinnerIds.Contains(id)).ToList();
+
+        if (alreadyWinners.Count != 0)
         {
-            return Results.Conflict($"Players with ids {string.Join(" ,", alreadyWinners)} are already marked as a winner.");
+            return TypedResults.Conflict($"Players {string.Join(", ", alreadyWinners)} are already winners.");
         }
 
-        var players = await playerRepository.GetMultipleAsync(request.PlayerIds);
-        if (players.IsFailure)
+        var playersResult = await playerRepository.GetMultipleAsync(request.PlayerIds);
+        if (playersResult.IsFailure)
         {
-            return players.AsIResult();
+            return playersResult.AsIResult();
         }
 
-        var newWinners = existingGameSession.Winners.Concat(players.Value).ToList();
-        existingGameSession.Winners = newWinners;
+        session.Winners = [.. session.Winners, .. playersResult.Value];
 
-        await gameSessionRepository.UpdateAsync(existingGameSession);
+        await gameSessionRepository.UpdateAsync(session);
 
         var response = await gameSessionRepository.GetAsync<Response>(gameId);
-
-        return Results.Ok(response);
+        return TypedResults.Ok(response!);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace API;
 
@@ -21,7 +21,6 @@ public class NestedClassSchemaTransformer : IOpenApiSchemaTransformer
 
         string uniqueName = $"{type.DeclaringType?.Name}{type.Name}";
         schema.Title = uniqueName;
-        schema.Annotations[schemaId] = uniqueName;
 
         if (type.Name.Equals("Request", StringComparison.OrdinalIgnoreCase))
         {

@@ -19,26 +19,27 @@ public interface IProjectable<TDomain, TResponse>
     /// Used by repositories to perform projections at the database level to ensure only necessary data is retrieved.
     /// </summary>
     static abstract Expression<Func<TDomain, TResponse>> Projection { get; }
-    public static virtual Func<TDomain, TResponse> ConvertFunction { get; } = TResponse.Projection.Compile();
+    public static virtual Func<TDomain, TResponse> ConvertFunction
+        => field ??= TResponse.Projection.Compile();
 }
 
 // Extension method for LINQ to apply a projection expression to an IQueryable source.
 public static class QueryableExtensions
 {
-    public static IQueryable<TResponse> ProjectTo<TDomain, TResponse>(
-        this IQueryable<TDomain> source)
-        where TDomain : class
-        where TResponse : class, IProjectable<TDomain, TResponse> 
-    {
-        return source.Select(TResponse.Projection);
-    }  
-    
-    public static IQueryable<TResponse> ProjectTo<TDomain, TResponse>(
-        this IEnumerable<TDomain> source)
+    extension<TDomain, TResponse>(IQueryable<TDomain> source)
         where TDomain : class
         where TResponse : class, IProjectable<TDomain, TResponse>
     {
-        return source.AsQueryable().Select(TResponse.Projection);
+        public IQueryable<TResponse> ProjectTo()
+            => source.Select(TResponse.Projection);
+    }
+
+    extension<TDomain, TResponse>(IEnumerable<TDomain> source)
+        where TDomain : class
+        where TResponse : class, IProjectable<TDomain, TResponse>
+    {
+        public IQueryable<TResponse> ProjectTo()
+            => source.AsQueryable().Select(TResponse.Projection);
     }
 }
 
