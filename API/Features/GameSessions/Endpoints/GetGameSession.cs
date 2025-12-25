@@ -14,7 +14,7 @@ public static class GetGameSession
             gs => new Response(
                 gs.Id,
                 gs.RulesetId,
-                gs.Status.ToString()
+                gs.Status.ToFriendlyString()
             );
     }
     public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)

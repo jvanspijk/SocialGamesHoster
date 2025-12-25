@@ -14,7 +14,7 @@ namespace API.Features.GameSessions.Endpoints
                     gs.Id,
                     gs.Ruleset!.Name,
                     gs.Participants.Select(p => p.Id).ToList(),
-                    gs.Status.ToString()
+                    gs.Status.ToFriendlyString()
                 );
         }
 

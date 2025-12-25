@@ -14,7 +14,7 @@ public static class GetActiveGameSessions
             gs => new Response(
                 gs.Id,
                 gs.RulesetId,
-                gs.Status.ToString(),
+                gs.Status.ToFriendlyString(),
                 gs.Rounds.Count(r => r.StartedTime.HasValue)
             );
     }
