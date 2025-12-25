@@ -6,8 +6,7 @@
     import MainSelect from '$lib/components/MainSelect.svelte';
 
     let { data }: PageProps = $props();
-    let games: GetActiveGameSessionsResponse[] = (data.games as GetActiveGameSessionsResponse[] | undefined) ?? [];
-    let rulesetPromise: Promise<Record<number, GetRulesetResponse>> = data.rulesets as Promise<Record<number, GetRulesetResponse>>;
+    let games = $derived((data.games as GetActiveGameSessionsResponse[] | undefined) ?? []);
 
     let message = $state("");
     let isLoading = $state(false);
@@ -27,7 +26,17 @@
     <p>Select a game session.</p>
     
     <div class="controls-section">        
-        {#await rulesetPromise then descriptions} 
+        {#await data.streamed.rulesets}
+        <MainSelect
+                placeholder="Loading game sessions..."
+                options={games.map((g) => ({
+                    id: g.id,
+                    label: `Game ${g.id} (Loading details...)`
+                }))}
+                bind:selectedValue={selectedGameId}
+                enabled={false} 
+            />
+        {:then descriptions}
             <MainSelect
                 placeholder="Select a Game Session"
                 options={games.map((g) => ({

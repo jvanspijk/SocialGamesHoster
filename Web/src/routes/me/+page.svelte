@@ -12,7 +12,7 @@
     let timerFinished = $state(false);
 
     let { data }: PageProps = $props();
-    const playerData: GetPlayerResponse | undefined = data.player;
+    const playerData: GetPlayerResponse | undefined = $derived(data.player);
 
     onMount(() => {
         const mainElement = document.querySelector('main');

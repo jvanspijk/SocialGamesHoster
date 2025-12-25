@@ -2,7 +2,7 @@
     import type { PageProps } from './$types';
 
     const { data }: PageProps = $props();
-    const games = data.games;
+    const games = $derived(data.games);
 </script>
 
 <div class="games-table-container">

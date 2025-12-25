@@ -4,11 +4,13 @@ import type {GetActiveGameSessionsResponse, GetRulesetResponse } from '$lib/clie
 
 export const load = (async () => {
     const gamesResponse = await getActiveGames();
-    const games: GetActiveGameSessionsResponse[] = (gamesResponse.data || []) as GetActiveGameSessionsResponse[];
-    const rulesetsPromise = fetchAllRulesets(games);
+    const games = (gamesResponse.data || []) as GetActiveGameSessionsResponse[];
+
     return {
-        games: games,
-        rulesets: rulesetsPromise
+        games,
+        streamed: {
+            rulesets: fetchAllRulesets(games)
+        }
     };
 }) satisfies PageServerLoad;
 
@@ -18,35 +20,27 @@ const fetchAllRulesets = async (games: GetActiveGameSessionsResponse[]): Promise
         games.map(game => game.rulesetId).filter((id): id is number => id != null)
     ));   
 
-    const fetchPromises = uniqueRulesetIds.map(async (rulesetId) => {
-        try {
-            const options = { path: { rulesetId } };
-            const response = await getRulesetById(options);
-            
-            if (!response.data) {
-                return {}; 
-            }
-            
-            return response.data;
+    const results = await Promise.all(
+        uniqueRulesetIds.map(id => 
+            getRulesetById({ path: { rulesetId: id } })
+            .catch(err => {
+                console.error(`Error fetching ruleset ${id}:`, err);
+                return { data: null };
+            })
+        )
+    );
 
-        } catch (error) {
-            console.error(`Failed to load ruleset ${rulesetId} during streaming:`, error);
-            return {};
-        }
-    });
+    const idToRuleset = new Map(
+        results
+            .filter(r => r.data) 
+            .map(r => [r.data!.id, r.data!])
+    );
 
-    const results = await Promise.all(fetchPromises) as GetRulesetResponse[];    
-    const rulesetDictionary: Record<number, GetRulesetResponse> = {};
-    
-    games.forEach(game => {
-        if (game.rulesetId != null) { 
-            const rulesetResult = results.find(r => r.id === game.rulesetId);
-            
-            if (rulesetResult) {
-                rulesetDictionary[game.id] = rulesetResult;
-            }
-        }
-    });
+    const dictionary: Record<number, GetRulesetResponse> = {};
+    for (const game of games) {
+        const data = idToRuleset.get(game.rulesetId);
+        if (data) dictionary[game.id] = data;
+    }
 
-    return rulesetDictionary;
+    return dictionary;   
 }
