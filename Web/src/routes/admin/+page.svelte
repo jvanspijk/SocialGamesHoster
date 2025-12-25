@@ -1,13 +1,48 @@
 <script lang="ts">
-    import type { PageProps } from './$types';
-
-    let { data }: PageProps = $props();
+    import NavBlock from "$lib/components/NavBlock.svelte";
 </script>
 
-<header>
-    <nav>
-        <a href="admin/games/start">Start Game</a>
-        |
-        <a href="admin/rulesets/create">Create Ruleset</a>
-    </nav>
-</header>
+<div class="container">
+    <h1>Admin Console</h1>
+    <h3>With great power comes great responsibility.</h3>
+
+    <section class="nav-section">
+        <h2>Live Operations</h2>
+        <NavBlock 
+            href="/admin/games" 
+            title="Active Games" 
+            description="Stop sessions, assign roles, or banish troublesome players from ongoing matches."
+            icon="⚔️"
+        />
+        <NavBlock 
+            href="/admin/games/new" 
+            title="Start New Game" 
+            description="Start a new game."
+            icon="🔔"
+        />
+    </section>
+
+    <section class="nav-section">
+        <h2>The Archives</h2>
+        <NavBlock 
+            href="/admin/rulesets" 
+            title="Manage Rulesets" 
+            description="Define the roles, abilities, and laws that govern every game."
+            icon="📜"
+        />
+    </section>
+</div>
+
+<style>
+    .nav-section {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    h2 {
+        text-align: left;
+        font-size: 1.2rem;
+        border-bottom: 2px solid #5b4a3c;
+        margin-top: 1.5rem;
+    }
+</style>
