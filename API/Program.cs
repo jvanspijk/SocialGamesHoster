@@ -85,7 +85,8 @@ public class Program
             }
         });
 
-        services.AddDistributedMemoryCache();
+        services.AddDistributedMemoryCache(); //For session state
+        services.AddMemoryCache(); //For general caching
 
         services.AddSession(options =>
         {

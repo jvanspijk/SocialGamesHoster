@@ -2,6 +2,7 @@
 using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Features.Rulesets.Common;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.Rulesets.Endpoints;
@@ -24,9 +25,13 @@ public static class GetFullRuleset
                     );
 
     }
-    public static async Task<IResult> HandleAsync(RulesetRepository repository, int rulesetId)
+    public static async Task<IResult> HandleAsync(RulesetRepository repository, IMemoryCache cache, int rulesetId)
     {
-        Response? response = await repository.GetAsync<Response>(rulesetId);
+        Response? response = await cache.GetOrCreateAsync($"{nameof(GetFullRuleset)}{rulesetId}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+            return await repository.GetAsync<Response>(rulesetId);
+        });
         if (response == null)
         {
             return Results.Problem($"Ruleset with id {rulesetId} not found.");
