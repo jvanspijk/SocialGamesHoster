@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace API.Domain.Models;
 
@@ -11,6 +12,15 @@ public enum GameStatus
     Cancelled = 300,
     Finished = 400,
 }
+public static partial class GameStatusExtensions
+{
+    [GeneratedRegex("([a-z])([A-Z])")]
+    private static partial Regex SplitCamelCase();
+
+    public static string ToFriendlyString(this GameStatus status) =>
+        SplitCamelCase().Replace(status.ToString(), "$1 $2");
+}
+
 public class GameSession
 {
     public int Id { get; set; }
