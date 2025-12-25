@@ -10,9 +10,10 @@
 	export let placeholder: string = 'Select an option';
 	export let name: string = '';
 	export let selectedValue: T | null = null;
+	export let enabled: boolean = true;
 </script>
 
-<select name={name} bind:value={selectedValue}>
+<select name={name} bind:value={selectedValue} disabled={!enabled}>
 	<option value={null} disabled selected={selectedValue === null}>
 		{placeholder}
 	</option>
@@ -31,8 +32,9 @@
 		border: 2px solid #5b4a3c;
 		border-radius: 3px;
 		color: #3e322b;
-		width: 100%;
-		max-width: 400px;
+		display: block;
+		width: 320px;
+		max-width: 320px;
 		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 		appearance: none;
 		background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%235b4a3c" viewBox="0 0 10 10"><path d="M5 8l-5-5h10z"/></svg>');
@@ -41,5 +43,15 @@
 		cursor: pointer;
 		margin-top: 20px;
 		margin-bottom: 20px;
+		transition: all 0.2s ease;
 	}
+
+	select:disabled {
+        background-color: #f2ede0;
+        border-color: #a09388;
+        color: #8a7e72;
+        cursor: not-allowed;
+        filter: grayscale(0.3);
+        opacity: 0.7;
+    }
 </style>
