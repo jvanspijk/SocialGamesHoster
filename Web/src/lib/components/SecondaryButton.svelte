@@ -15,20 +15,22 @@
     .secondary-btn {
         font-family: 'Cinzel', serif;
         font-weight: bold;
-        padding: 4px 12px;
+        padding: 2px 10px; 
         cursor: pointer;
-        border: 2px solid #5b4a3c;
+        border: 1px solid #5b4a3c;
         background: #fcf5e5;
         color: #5b4a3c;
         text-transform: uppercase;
-        font-size: 0.8rem;
+        font-size: 0.77rem;
         transition: all 0.1s ease;
-        box-shadow: 2px 2px 0px #5b4a3c;
+        box-shadow: 1px 1px 0px #5b4a3c;
+        line-height: 2.4;
+        height: fit-content;
     }
 
     .secondary-btn:not(:disabled):active {
-        transform: translate(1px, 1px);
-        box-shadow: 0px 0px 0px;
+        transform: translate(0.5px, 0.5px);
+        box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
     }
 
     .secondary-btn:not(:disabled).primary:hover {

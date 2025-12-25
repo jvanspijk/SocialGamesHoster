@@ -20,7 +20,7 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=IM+Fell+English:ital@0;1&display=swap');
 
-    /* 2. Page & Background Styles (Paper/Parchment Look) */
+    /* 2. Page & Background Styles */
     :global(body) {
         background-color: #3b332d;
         margin: 0;
@@ -43,13 +43,24 @@
         font-family: 'IM Fell English', serif;
         width: 100%;
         max-width: 700px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 
-                    inset 0 0 10px rgba(100, 80, 50, 0.5);
+        box-shadow: 
+            0 4px 10px rgba(0, 0, 0, 0.4), 
+            inset 0 0 50px rgba(100, 80, 50, 0.3),
+            inset 0 0 10px rgba(100, 80, 50, 0.5);
         padding: 20px 40px;
-        border: 10px solid #5b4a3c;
-        border-radius: 5px;
+        border: 8px solid #5b4a3c;
+        border-radius: 4px;
         line-height: 1.6;
-        min-height: 85vh;
+        min-height: 85vh;     
+        
+    }
+
+    /* for mobile */
+    @media (max-width: 650px) {
+        .parchment-container {
+            padding: 15px 10px !important;
+            border-width: 5px;
+        }
     }
 
     /* 3. Common Typography*/

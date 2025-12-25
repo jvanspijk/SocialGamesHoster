@@ -1,6 +1,7 @@
 <script lang="ts">
     import MainSelect from '$lib/components/MainSelect.svelte';
     import Description from '$lib/components/Description.svelte';    
+	import BackLink from '$lib/components/BackLink.svelte';
     
     let { data } = $props(); 
 
@@ -21,7 +22,12 @@
 </script>
 
 <div class="page-container">
-    <h2>Start New Game</h2>
+    <div class="page-header">
+        <BackLink href="/admin" pageName="Admin Overview"></BackLink>
+        <h2>Start New Game</h2>
+    </div>
+
+    
 
     <form method="POST" action="?/start">
     

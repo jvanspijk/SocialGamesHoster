@@ -7,7 +7,7 @@
     <h3>With great power comes great responsibility.</h3>
 
     <section class="nav-section">
-        <h2>Live Operations</h2>
+        <h2>Game sessions</h2>
         <NavBlock 
             href="/admin/games" 
             title="Active Games" 
@@ -23,7 +23,7 @@
     </section>
 
     <section class="nav-section">
-        <h2>The Archives</h2>
+        <h2>Rulesets</h2>
         <NavBlock 
             href="/admin/rulesets" 
             title="Manage Rulesets" 

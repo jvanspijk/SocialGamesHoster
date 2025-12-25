@@ -1,137 +1,79 @@
 <script lang="ts">
-    import type { PageProps } from './$types';
+    import type { GetAllGameSessionsResponse } from '$lib/client';
+    import LedgerTable from '$lib/components/LedgerTable.svelte';
+    import SecondaryButton from '$lib/components/SecondaryButton.svelte';
+    import { goto } from '$app/navigation';
+	import BackLink from '$lib/components/BackLink.svelte';
 
-    const { data }: PageProps = $props();
-    const games = $derived(data.games);
+    let { data } = $props();
 </script>
 
-<div class="games-table-container">
-    <h2>Game Administration Overview</h2>
-    
-    {#if games && games.length > 0}
-        <table class="games-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Ruleset</th>
-                    <th>Participants</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each games as game (game.id)}
-                    <tr class="game-row game-status-{game.status.toLowerCase()}">
-                        <td>{game.id}</td>
-                        <td>{game.rulesetName}</td>
-                        <td>{game.participantIds.length}</td>
-                        <td class="status-cell">
-                            <span class="status-indicator" aria-label="Status: {game.status}"></span>
-                            {game.status}
-                        </td>
-                        <td>
-                            <button onclick={() => alert(`Viewing Game ${game.id}`)}>View</button>
-                            <button class="action-danger" onclick={() => confirm(`Are you sure you want to delete Game ${game.id}?`)}>Delete</button>
-                        </td>
-                    </tr>
-                {/each}
-            </tbody>
-        </table>
-    {:else}
-        <p class="no-games">No games found in the database. Start a new one!</p>
-    {/if}
+<div class="page-header">
+    <BackLink href="/admin" pageName="Admin Overview"></BackLink>
+    <h1>Game Session Overview</h1>
 </div>
 
-<style>
-    .games-table-container {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-        font-family: sans-serif;
-    }
+<LedgerTable 
+    data={data.games} 
+    enableFilter={true} 
+    filterOptions={['Not started', 'Running', 'Paused', 'Stopped', 'Cancelled', 'Finished']}
+>
+    {#snippet columns()}
+        <tr>
+            <th>Id</th>
+            <th>Ruleset</th>
+            <th>Players</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    {/snippet}
 
-    h2 {
-        color: #333;
-        margin-bottom: 1.5em;
-        border-bottom: 2px solid #eee;
+    {#snippet rows(game: GetAllGameSessionsResponse)}
+        <tr>
+            <td data-label="Id" style="font-weight: bold;">{game.id}</td>
+            <td data-label="Ruleset">{game.rulesetName}</td>
+            <td data-label="Players">👤 {game.participantIds.length}</td>
+            <td data-label="Status"><span class="status-stamp">{game.status}</span></td>
+            <td>
+                <div class="actions-wrapper">
+                    <SecondaryButton onclick={() => goto(`/admin/games/${game.id}`)}>Manage</SecondaryButton>
+                    <SecondaryButton variant="danger" onclick={() => {}}>Stop Game</SecondaryButton>
+                </div>
+            </td>
+        </tr>
+    {/snippet}
+</LedgerTable>
+
+<style>
+    :global(th) {
+        text-align: left;
+        font-family: 'Cinzel', serif;
+        border-bottom: 2px solid #5b4a3c;
         padding-bottom: 10px;
     }
-
-    .games-table {
-        width: 100%;
-        border-collapse: collapse;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    :global(td) {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(91, 74, 60, 0.2);
+    }
+    .status-stamp {
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #a62a2a;
     }
 
-    .games-table thead tr {
-        background-color: #f4f4f4;
-        color: #333;
-        text-align: left;
-    }
-
-    .games-table th, .games-table td {
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-    }
-    
-    .games-table tbody tr:hover {
-        background-color: #f9f9f9;
-    }
-
-    .status-cell {
+    .actions-wrapper {
         display: flex;
+        gap: 0.8rem;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
     }
 
-    .status-indicator {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-    }
-
-    .game-status-in_progress .status-indicator {
-        background-color: orange;
-    }
-    .game-status-completed .status-indicator {
-        background-color: green;
-    }
-    .game-status-pending .status-indicator {
-        background-color: blue;
-    }
-
-    .games-table button {
-        padding: 6px 10px;
-        margin-right: 5px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .games-table button:not(.action-danger) {
-        background-color: #5cb85c;
-        color: white;
-    }
-    .games-table button:not(.action-danger):hover {
-        background-color: #4cae4c;
-    }
-
-    .action-danger {
-        background-color: #d9534f;
-        color: white;
-    }
-    .action-danger:hover {
-        background-color: #c9302c;
-    }
-
-    .no-games {
-        text-align: center;
-        padding: 50px;
-        color: #999;
-        font-size: 1.2em;
-        border: 1px dashed #ddd;
-        margin-top: 20px;
+    /* mobile */
+    @media(max-width: 650px) {
+        .actions-wrapper {
+            gap: 1rem;            
+        }
+        
     }
 </style>
