@@ -45,7 +45,7 @@
         max-width: 700px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 
                     inset 0 0 10px rgba(100, 80, 50, 0.5);
-        padding-top: 10px;
+        padding: 20px 40px;
         border: 10px solid #5b4a3c;
         border-radius: 5px;
         line-height: 1.6;
