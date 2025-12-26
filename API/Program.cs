@@ -3,6 +3,7 @@ using API.DataAccess.Repositories;
 using API.Domain;
 using API.Domain.Models;
 using API.Features.Authentication;
+using API.Features.Players.Hubs;
 using API.Features.Rounds.Hubs;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -18,12 +19,11 @@ namespace API;
 // Using scalar: http://localhost:9090/scalar
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 // TODO:
-// - Assign random roles to players
-//   - How do we come up with the general logic for how many roles of each type are assigned?
-//   Maybe with a percentage of particpants that can have a role per role in the ruleset? But then some roles are mandatory, or can always only have 1.
-
+// - Rethink round timers data structure so that it is easier to use on the client side
+// - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, lover, etc.
+// - IAbility interface so that a DM can create custom abilities for roles (will be god object)
 // - Fix login for players
-//      - login using player id
+//      - login using player id (?)
 //      - Use local IP address to identify players
 // - Fix login for admins
 //      - store admin credentials in database or environment variables
@@ -33,6 +33,13 @@ namespace API;
 // - Always inject repository interfaces instead of concrete repositories
 // - Testing project with unit and/or integration tests
 // - Performance testing
+
+// Optional:
+// - Assign random roles to players
+//   - How do we come up with the general logic for how many roles of each type are assigned?
+//   Maybe with a percentage of particpants that can have a role per role in the ruleset? But then some roles are mandatory, or can always only have 1.
+
+
 
 // Bugs/issues:
 // - Minor issue: cancelling a round increments the round number (not talking about the id). This might be an issue for games where there's a fixed number of rounds.
@@ -44,7 +51,7 @@ public class Program
     {
         //TODO: add these as env variables:
         string hostUrl = "http://localhost:9090";
-        string[] corsUrls = ["http://web:9091", "http://localhost:9091"];
+        string[] corsUrls = ["http://web:9091", "http://localhost:9091", "http://chromebox:9091"];
 
         Console.WriteLine("Booting up app");
         var builder = WebApplication.CreateBuilder(args);
@@ -100,15 +107,15 @@ public class Program
             options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
 
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddOpenApi(options => options.AddSchemaTransformer(new NestedClassSchemaTransformer()));        
+        //services.AddOpenApi(options => options.AddSchemaTransformer(new NestedClassSchemaTransformer()));        
+        services.AddOpenApi();
 
         services.AddCors(options =>
         {
             options.AddPolicy("CorsPolicy", builder =>
             {
-                builder.WithOrigins(corsUrls)
+                builder.SetIsOriginAllowed(origin => true)
                        .AllowAnyMethod()
                        .AllowAnyHeader()
                        .AllowCredentials();
@@ -160,6 +167,11 @@ public class Program
         services
             .AddSingleton<RoundTimer>();
 
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(9090);
+        });
+
         var app = builder.Build();
 
         ApplyDatabaseMigrations(environment, app);
@@ -177,7 +189,7 @@ public class Program
                 .Layout = ScalarLayout.Classic
             );
             app.UseHttpLogging();
-            app.UseDeveloperExceptionPage();
+            app.UseDeveloperExceptionPage();            
         }
         else
         {

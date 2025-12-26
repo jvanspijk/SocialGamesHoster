@@ -2,6 +2,8 @@
 using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Features.Players.Common;
+using API.Features.Players.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 
 namespace API.Features.Players.Endpoints;
@@ -18,7 +20,7 @@ public static class UpdatePlayer
                 player.RoleId
             );
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, int id, Request request)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, IHubContext<PlayerHub, IPlayerHub> hub, int id, Request request)
     {
         // TODO: validation
         Player? player = await repository.GetAsync(id);
@@ -48,6 +50,8 @@ public static class UpdatePlayer
         }
 
         var updatedPlayer = await repository.UpdateAsync(player);
+        await PlayerHub.NotifyPlayerUpdated(hub, updatedPlayer.Id);
+
         Response response = new(updatedPlayer.Id, updatedPlayer.Name, updatedPlayer.RoleId);
         return Results.Ok(response);
     }
