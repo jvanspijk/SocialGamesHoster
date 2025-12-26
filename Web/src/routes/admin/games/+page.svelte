@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { GetAllGameSessionsResponse } from '$lib/client';
+    import type { GetAllGameSessionsResponse } from '$lib/client/GameSessions/GetAllGameSessions';
     import LedgerTable from '$lib/components/LedgerTable.svelte';
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
     import { goto } from '$app/navigation';

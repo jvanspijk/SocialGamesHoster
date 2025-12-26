@@ -1,10 +1,12 @@
 <script lang="ts">
-    import type { GetPlayerResponse } from '$lib/client';
+    import type { GetPlayerResponse } from '$lib/client/Players/GetPlayer';
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
     import Description from '$lib/components/Description.svelte';
     import TimeDisplay from '$lib/components/TimeDisplay.svelte';
     import HUDFooter from '$lib/components/HUDFooter.svelte';
+	import { playerHub } from '$lib/client/Players/Hub.svelte';
+	import { invalidateAll } from '$app/navigation';
 
     let timer: TimeDisplay | undefined = undefined;
     const TOTAL_DURATION = 120; // temporary hard coded value
@@ -13,6 +15,13 @@
 
     let { data }: PageProps = $props();
     const playerData: GetPlayerResponse | undefined = $derived(data.player);
+
+    playerHub.onEvent('PlayerUpdated', (event) => {
+        if (event.data == data.player?.id) {
+            console.log("Refreshing data for player:", event.data);
+            invalidateAll();
+        }
+    });
 
     onMount(() => {
         const mainElement = document.querySelector('main');

@@ -1,46 +1,54 @@
 import type { PageServerLoad } from './$types';
-import { getActiveGames, getRulesetById } from '$lib/client';
-import type {GetActiveGameSessionsResponse, GetRulesetResponse } from '$lib/client'
+import { GetActiveGameSessions, type GetActiveGameSessionsResponse } from '$lib/client/GameSessions/GetActiveGameSessions';
+import { GetRuleset, type GetRulesetResponse } from '$lib/client/Rulesets/GetRuleset';
+import { error } from '@sveltejs/kit';
 
-export const load = (async () => {
-    const gamesResponse = await getActiveGames();
-    const games = (gamesResponse.data || []) as GetActiveGameSessionsResponse[];
+export const load = (async ({fetch}) => {
+    const result = await GetActiveGameSessions(fetch);
+    if (!result.ok) {
+        throw error(result.error.status, {
+            message: result.error.title || 'Failed to load games'
+        });
+    }
+
+    const games = result.data
 
     return {
         games,
         streamed: {
-            rulesets: fetchAllRulesets(games)
+            rulesets: fetchAllRulesets(fetch, games)
         }
     };
 }) satisfies PageServerLoad;
 
-
-const fetchAllRulesets = async (games: GetActiveGameSessionsResponse[]): Promise<Record<number, GetRulesetResponse>> => {
+/**
+ * Helper to fetch unique rulesets and map them to Game IDs
+ */
+async function fetchAllRulesets(f: typeof fetch, games: GetActiveGameSessionsResponse[]) {
     const uniqueRulesetIds = Array.from(new Set(
-        games.map(game => game.rulesetId).filter((id): id is number => id != null)
-    ));   
+        games.map(g => g.rulesetId).filter(id => id != null)
+    ));
 
-    const results = await Promise.all(
-        uniqueRulesetIds.map(id => 
-            getRulesetById({ path: { rulesetId: id } })
-            .catch(err => {
-                console.error(`Error fetching ruleset ${id}:`, err);
-                return { data: null };
-            })
-        )
+    const rulesetResults = await Promise.all(
+        uniqueRulesetIds.map(async (id) => {
+            const res = await GetRuleset(f, { rulesetId: id.toString() });
+            return res.ok ? res.data : null;
+        })
     );
 
-    const idToRuleset = new Map(
-        results
-            .filter(r => r.data) 
-            .map(r => [r.data!.id, r.data!])
+    const rulesetMap = new Map(
+        rulesetResults
+            .filter((r): r is NonNullable<typeof r> => r !== null)
+            .map(r => [r.id, r])
     );
 
     const dictionary: Record<number, GetRulesetResponse> = {};
     for (const game of games) {
-        const data = idToRuleset.get(game.rulesetId);
-        if (data) dictionary[game.id] = data;
+        const data = rulesetMap.get(game.rulesetId);
+        if (data) {
+            dictionary[game.id] = data;
+        }
     }
 
-    return dictionary;   
+    return dictionary;
 }

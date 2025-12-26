@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { PageProps } from './$types';
-    import type { GetActiveGameSessionsResponse, GetRulesetResponse } from '$lib/client';
+    import type { GetActiveGameSessionsResponse } from '$lib/client/GameSessions/GetActiveGameSessions';
     import { goto } from '$app/navigation';
 	import MainButton from '$lib/components/MainButton.svelte';
     import MainSelect from '$lib/components/MainSelect.svelte';

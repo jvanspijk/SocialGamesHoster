@@ -1,15 +1,18 @@
 import type { PageServerLoad } from './$types';
-import { createPlayer } from '$lib/client';
-import { getGamePlayers } from '$lib/client';
-import { playerLogin } from '$lib/client';
+// import { createPlayer } from '$lib/client';
+// import { getGamePlayers } from '$lib/client';
+// import { playerLogin } from '$lib/client';
+import { CreatePlayer, type CreatePlayerRequest } from '$lib/client/Players/CreatePlayer';
+import { GetPlayersFromGame } from '$lib/client/Players/GetPlayersFromGame';
+import { PlayerLogin, type PlayerLoginRequest } from '$lib/client/Authentication/PlayerLogin';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-    login: async ({ request, cookies, params, getClientAddress }) => {
+    login: async ({ request, cookies, params, getClientAddress, fetch }) => {
         const formData = await request.formData();
         const playerNameInput: string | undefined = formData.get('playerName')?.toString().trim(); 
-        const gameId: number = Number(params.gameId);
+        const gameId = params.gameId;
         
         if (!playerNameInput || playerNameInput === "") {
             return fail(400, { 
@@ -20,20 +23,16 @@ export const actions: Actions = {
 
         let playerId: number;
         try {
-            const options = {
-                path: {                    
-                    gameId: gameId                    
-                },
-                body: {
-                    name: playerNameInput
-                }
+            const request: CreatePlayerRequest = {
+                gameId: gameId,
+                name: playerNameInput
             }
 
-            const res = await createPlayer(options);
-            if(!res.data) {
-                return fail(500, { 
+            const res = await CreatePlayer(fetch, request);
+            if(!res.ok) {
+                return fail(res.error.status, { 
                     success: false, 
-                    message: 'Player creation failed.' 
+                    message: res.error.title || 'Player creation failed.'
                 }); 
             }
             playerId = res.data.id;
@@ -46,29 +45,33 @@ export const actions: Actions = {
             });     
         }        
         
-        try {            
-            const options = {
-                path: {
-                    gameId: gameId,            
-                },
-                body: {
-                    playerId: playerId,
-                    ipAddress: getClientAddress(),
-                }
-            };
+        try {
+            const request: PlayerLoginRequest = {
+                gameId: gameId,
+                playerId: playerId,
+                iPAddress: getClientAddress()
+            }
             
-            const { data: response } = await playerLogin(options);
+            
+            const response = await PlayerLogin(fetch, request);
 
-            if(!response || !response.token) {
-                return fail(500, { 
+            if(!response.ok) {
+                return fail(response.error.status, { 
                     success: false, 
-                    message: 'Login failed due to a server or network error.' 
+                    message: response.error.title || 'Login failed due to a server or network error.' 
                 });
             }
 
-            const maxCookieAge: number = 60 * 60 * 24 // One day
+            if(!response.data || !response.data.token) {
+                return fail(500, { 
+                    success: false, 
+                    message: 'Token missing from response.' 
+                });
+            }
 
-            cookies.set('auth_token', response.token, {
+            const maxCookieAge: number = 60 * 60 * 12 // Half a day
+
+            cookies.set('auth_token', response.data.token, {
                 path: '/', 
                 httpOnly: false,
                 secure: false, 
@@ -96,18 +99,31 @@ export const actions: Actions = {
                 message: 'Login failed due to a server or network error.' 
             });
         }
+
+        // Tell the player hub that a new player joined the game.
         redirect(303, '/me');
     }
 };
 
-export const load = (async ({params}) => {
+export const load = (async ({fetch, params, cookies}) => {
+    const playerId = cookies.get('player_id');
+    if(playerId) {
+        redirect(303, '/me');
+    }
+
     // TODO: redirect if cookies are already set
-    const options = {
-        path: {
-            gameId: Number(params.gameId),                 
-        }
-    };
-    const response = await getGamePlayers(options);
+    const request = {
+        gameId: params.gameId
+    }
+
+    const response = await GetPlayersFromGame(fetch, request);
+    if(!response.ok) {
+        return fail(response.error.status, { 
+            success: false, 
+            message: response.error.title || 'Failed to load players.' 
+        });
+    }
+
     return {
         players: response.data,
         gameId: params.gameId

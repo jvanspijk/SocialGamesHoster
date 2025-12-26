@@ -1,8 +1,27 @@
 <script lang="ts">
-    let { children, variant = 'secondary', onclick, enabled = true } = $props();
+    import type { Snippet } from 'svelte';
+
+    type ButtonType = 'button' | 'submit' | 'reset';
+
+    interface Props {
+        children: Snippet;
+        variant?: 'secondary' | 'primary' | 'danger';
+        onclick?: (e: MouseEvent) => void;
+        enabled?: boolean;
+        type?: ButtonType;
+    }
+
+    let { 
+        children, 
+        variant = 'secondary', 
+        onclick, 
+        enabled = true,
+        type = 'button' 
+    }: Props = $props();
 </script>
 
 <button 
+    {type} 
     class="secondary-btn {variant}" 
     {onclick} 
     disabled={!enabled}

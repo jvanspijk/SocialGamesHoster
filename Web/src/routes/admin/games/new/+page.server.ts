@@ -1,11 +1,12 @@
 import type { PageServerLoad } from './$types';
-import { getAllRulesets, createGameSession } from '$lib/client';
-import type { GetAllRulesetsResponse } from '$lib/client';
+import { GetAllRulesets } from '$lib/client/Rulesets/GetAllRulesets';
+import { CreateGameSession } from '$lib/client/GameSessions/CreateGameSession';
+import type { GetAllRulesetsResponse } from '$lib/client/Rulesets/GetAllRulesets';
 import type { Actions } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect, error } from '@sveltejs/kit';
 
 export const actions: Actions = {
-    start: async ({ request }) => {
+    start: async ({ request, fetch }) => {
         const formData = await request.formData();
         const selectedRulesetId: number = Number(formData.get('selectedRulesetId'));
 
@@ -22,21 +23,17 @@ export const actions: Actions = {
         }
         
         try {            
-            const options = {
-                body: {
-                    rulesetId: selectedRulesetId,
-                    playerNames: [],
-                }
+            const request = {
+                rulesetId: selectedRulesetId,
+                playerNames: [],
             };
 
-            const { data: response } = await createGameSession(options);
+            const response = await CreateGameSession(fetch, request);
 
-            if(!response) {
-                console.error("No response");
-
-                return fail(500, { 
+            if(!response.ok) {
+                return fail(response.error.status, { 
                     success: false, 
-                    message: 'Create failed due to a server or network error.' 
+                    message: response.error.title || 'Create failed due to a server or network error.' 
                 });
             }           
         } catch (error) {
@@ -51,9 +48,14 @@ export const actions: Actions = {
     }
 };
 
-export const load = (async () => {
-    const rulesetsResponse = await getAllRulesets();
-    const rulesets: GetAllRulesetsResponse[] = (rulesetsResponse.data || []) as GetAllRulesetsResponse[];
+export const load = (async ({fetch}) => {
+    const response = await GetAllRulesets(fetch);
+    if(!response.ok) {
+        throw error(response.error.status, {
+            message: response.error.title || 'Failed to load rulesets.'
+        });
+    }
+    const rulesets: GetAllRulesetsResponse[] = (response.data || []);
     return {
         rulesets: rulesets
     };

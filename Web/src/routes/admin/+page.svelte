@@ -11,7 +11,7 @@
         <NavBlock 
             href="/admin/games" 
             title="Active Games" 
-            description="Stop sessions, assign roles, or banish troublesome players from ongoing matches."
+            description="Manage active games."
             icon="⚔️"
         />
         <NavBlock 

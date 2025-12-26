@@ -10,9 +10,9 @@
 	} = $props();
 
 	let startTime = $state(Date.now());
-	let initialDuration = $state(initialSeconds);
-    let lastUpdate = $state(0);
-    let isRunning = $state(true);
+	let initialDuration = $derived(initialSeconds);
+    let lastUpdate = $derived(0);
+    let isRunning = $derived(true);
 
 	const R = 45;
 	const C = 2 * Math.PI * R;
