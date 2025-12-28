@@ -120,7 +120,6 @@ export const load = (async ({fetch, params, cookies}) => {
             redirect(303, '/me');
         }
         else {
-            console.debug(`Player ${playerId} not found in game ${params.gameId}`);
             invalidate_cookies(cookies);
         }        
     }

@@ -13,6 +13,7 @@
 	import HUDFooter from '$lib/components/HUDFooter.svelte';
 	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
     import BackLink from '$lib/components/BackLink.svelte';
+    import { authenticationHub } from '$lib/client/Authentication/AuthenticationHub.svelte';
 
 
     let { data } = $props();
@@ -40,6 +41,14 @@
             await invalidateAll();
         }
     }
+
+    authenticationHub.onEvent('PlayerLoggedIn', (event) => {
+        console.debug(`Player ${event.playerId} logged in.`);
+        const isPlayerPresent = data.players.some(p => p.id === event.playerId);
+        if (!isPlayerPresent) {
+            invalidateAll();
+        }
+    });
 
     function toggleWinner(id: number) {
         if (winnerIds.has(id)) winnerIds.delete(id);
@@ -120,7 +129,7 @@
                     <form method="POST" action="?/saveRoles" use:enhance={() => {
                         isSaving = true;
                         return async ({ update }) => {
-                            await update();
+                            await update({reset: false});
                             pendingRoles = {};
                             isSaving = false;
                         };
@@ -151,7 +160,7 @@
         <div class="round-controls-mini">
             <span>Round #{data.currentRound?.id}</span>
             
-            <TimeDisplay 
+            <!-- <TimeDisplay 
                 initialSeconds={data.currentRound?.remainingSeconds ?? 0} 
                 isPaused={data.currentRound?.isPaused ?? true}
             />
@@ -160,7 +169,7 @@
                 <button onclick={() => handleRound('resume')}>▶ Resume Round</button>
             {:else}
                 <button onclick={() => handleRound('pause')}>⏸ Pause Round</button>
-            {/if}
+            {/if} -->
         </div>        
         <button onclick={() => handleRound('start')}>Start new Round</button>    
     </HUDFooter>

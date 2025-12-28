@@ -29,7 +29,7 @@ public static class Endpoints
             .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-        builder.MapHub<AuthenticationHub>("/auth/hub");
+        builder.MapHub<AuthenticationHub>("/authentication/hub");
 
         return builder;
     }

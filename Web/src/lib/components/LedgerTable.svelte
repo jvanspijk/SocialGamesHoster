@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { page } from '$app/state';
+    import { goto } from '$app/navigation';
+    import { untrack } from 'svelte';
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
     
     let { 
@@ -12,13 +15,26 @@
 
     let searchTerm = $state("");
     let filterValue = $state("All");
-    let currentPage = $state(1);
+    
+    const currentPage = $derived(Number(page.url.searchParams.get('page')) || 1);
     const itemsPerPage = 5;
+
+    async function changePage(newPage: number) {
+        const url = new URL(page.url);
+        url.searchParams.set('page', newPage.toString());
+        
+        await goto(url, { 
+            keepFocus: true, 
+            noScroll: true, 
+            replaceState: true,
+            invalidateAll: false 
+        });
+    }
 
     const filteredData = $derived(
         data.filter(item => {
             const matchesSearch = JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = filterValue === "All" || item.status === filterValue;
+            const matchesFilter = filterValue === "All" || (item as any).status === filterValue;
             return matchesSearch && matchesFilter;
         })
     );
@@ -28,6 +44,20 @@
     );
 
     const totalPages = $derived(Math.ceil(filteredData.length / itemsPerPage));
+
+    let lastSearch = $derived(searchTerm);
+    let lastFilter = $derived(filterValue);
+
+    $effect(() => {
+        if (searchTerm !== lastSearch || filterValue !== lastFilter) {
+            lastSearch = searchTerm;
+            lastFilter = filterValue;
+            
+            if (currentPage !== 1) {
+                untrack(() => changePage(1));
+            }
+        }
+    });
 </script>
 
 <div class="ledger-container">
@@ -70,9 +100,17 @@
 
     {#if totalPages > 1}
         <div class="pagination">
-            <SecondaryButton onclick={() => currentPage--} enabled={currentPage != 1}>Previous</SecondaryButton>
+            <SecondaryButton 
+                onclick={() => changePage(currentPage - 1)} 
+                enabled={currentPage > 1}
+            >Previous</SecondaryButton>
+            
             <span class="page-info">Page {currentPage} of {totalPages}</span>
-            <SecondaryButton onclick={() => currentPage++} enabled={currentPage != totalPages}>Next</SecondaryButton>
+            
+            <SecondaryButton 
+                onclick={() => changePage(currentPage + 1)} 
+                enabled={currentPage < totalPages}
+            >Next</SecondaryButton>
         </div>
     {/if}
 </div>
