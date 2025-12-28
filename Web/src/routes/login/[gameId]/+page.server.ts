@@ -66,7 +66,6 @@ export const actions: Actions = {
             }
 
             set_cookies(cookies, response.data.token, playerId, gameId);
-
         } catch (error) {
             console.error('Server Login Exception:', error);
             invalidate_cookies(cookies)
@@ -77,7 +76,6 @@ export const actions: Actions = {
             });
         }
 
-        // TODO: Tell the player hub that a new player joined the game.
         redirect(303, '/me');
     }
 };
