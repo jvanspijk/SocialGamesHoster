@@ -1,132 +1,114 @@
 <script lang="ts">
-	let {
-		initialSeconds = 120,
-		remainingTime = $bindable(120),
+    import { timersHub } from "$lib/client/Timers/TimersHub.svelte";
+    let lastProcessedTs = $state(0);
+    let {
+        initialSeconds = 0,
+        remainingTime = $bindable(0),
+        isTimerRunning = false,
         onFinished
-	}: {
-		initialSeconds: number;
-		remainingTime: number;
+    }: {
+        initialSeconds: number;
+        remainingTime: number;
+        isTimerRunning?: boolean;
         onFinished?: () => void;
-	} = $props();
+    } = $props();
 
-	let startTime = $state(Date.now());
-	let initialDuration = $derived(initialSeconds);
-    let lastUpdate = $derived(0);
-    let isRunning = $derived(true);
 
-	const R = 45;
-	const C = 2 * Math.PI * R;
+    let internalTotal = $state(0);
+    let isRunning = $state(false); 
+    let lastUpdate = $state(Date.now());
 
-	const progressOffset = $derived(
-		C - (Math.max(0, remainingTime) / initialDuration) * C
-	);
+    $effect(() => {
+        internalTotal = initialSeconds;
+        isRunning = isTimerRunning;
+    });
 
-	$effect(() => {
-		initialDuration = initialSeconds;
-		remainingTime = initialSeconds;
-		startTime = Date.now();
-	});
+    const R = 45;
+    const C = 2 * Math.PI * R;
+    const progressOffset = $derived(
+        C - (Math.max(0, remainingTime) / (internalTotal || 1)) * C
+    );
 
-	$effect(() => {
-        if (!isRunning) return;
+    const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
+        console.log("yo - Event Triggered:", payload);
+        remainingTime = payload.remainingSeconds;
+        internalTotal = payload.totalSeconds;
+        isRunning = true;
+        lastUpdate = Date.now();
+    };
+
+    timersHub.onEvent('OnTimerStarted', handleSync);
+    timersHub.onEvent('OnTimerResumed', handleSync);
+    timersHub.onEvent('OnTimerChanged', handleSync);
+
+    timersHub.onEvent('OnTimerPaused', (payload) => {
+        remainingTime = payload.remainingSeconds;
+        isRunning = false;
+    });
+
+    timersHub.onEvent('OnTimerStopped', () => {
+        isRunning = false;
+        remainingTime = 0;
+        onFinished?.();
+    });
+
+    timersHub.onEvent('OnTimerFinished', () => {
+        isRunning = false;
+        remainingTime = 0;
+        onFinished?.();
+    });
+
+    $effect(() => {
+        if (!isRunning || remainingTime <= 0) return;
 
         let frame: number;
-
         const tick = () => {
             const now = Date.now();
-            const deltaTime = (now - lastUpdate) / 1000; 
-            remainingTime = Math.max(0, remainingTime - deltaTime);         
+            const delta = (now - lastUpdate) / 1000;
             lastUpdate = now;
 
-            if (remainingTime > 0) { 
+            remainingTime = Math.max(0, remainingTime - delta);
+            
+            if (remainingTime > 0) {
                 frame = requestAnimationFrame(tick);
+            } else {
+                isRunning = false;
+                onFinished?.();
             }
         };
 
-        if (remainingTime > 0) {
-            lastUpdate = Date.now();
-            tick();
-        } else {            
-            isRunning = false;
-            if(onFinished) onFinished();
-        }
-        
+        frame = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frame);
     });
 
-	function formatTime(totalSeconds: number): string {
-		const safe = Math.max(0, Math.floor(totalSeconds));
-		const m = Math.floor(safe / 60);
-		const s = safe % 60;
-		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-	}
-
-	export function addSeconds(delta: number): void {
-        if(delta <= 0) {
-            return;
-        }
-        
-        remainingTime += delta; 
-        isRunning = true;       
-
-        if(remainingTime > initialDuration)	{
-            initialDuration = remainingTime;
-        }
-        
-	}
-
-	export function removeSeconds(delta: number): void {
-		if (delta <= 0) {
-			return;
-		}
-        remainingTime = Math.max(0, remainingTime - delta);
-	}
-
-    export function setRemainingTime(seconds: number): void {
-        if(seconds < 0) {
-            return;
-        } 
-        else if(seconds > 0) {
-            isRunning = true; 
-        }
-
-        remainingTime = seconds;       
-
-        if(remainingTime > initialDuration)	{
-            initialDuration = remainingTime;
-        }
+    function formatTime(seconds: number): string {
+        const safe = Math.max(0, Math.floor(seconds));
+        return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
     }
 
-    export function togglePause(): void {
-        isRunning = !isRunning;
-    }
-
-    export function stop(): void {
-        isRunning = false;
-        remainingTime = 0;
-        if(onFinished) onFinished();        
-    }
+    const isUrgent = $derived(remainingTime < (internalTotal * 0.25));
 </script>
 
-<div class="timer-wrapper">
-    <svg class="progress-ring" viewBox="0 0 100 100">
-        <circle
-            class="ring-track"
-            cx="50"
-            cy="50"
-            r="{R}"
-        />
-        <circle
-            class="ring-progress"
-            cx="50"
-            cy="50"
-            r="{R}"
-            stroke-dasharray="{C}"
-            stroke-dashoffset="{progressOffset}"
-        />
-    </svg>
-    <div class="time-text">
-        {formatTime(remainingTime)}
+<div class="timer-container" class:urgent={isUrgent}>
+    <div class="status-badge {timersHub.status.toLowerCase()}">
+        {timersHub.status}
+    </div>
+
+    <div class="timer-wrapper">
+        <svg class="progress-ring" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="{R}" />
+            <circle
+                class="ring-progress"
+                cx="50"
+                cy="50"
+                r="{R}"
+                stroke-dasharray="{C}"
+                stroke-dashoffset="{progressOffset}"
+            />
+        </svg>
+        <div class="time-text">
+            {formatTime(remainingTime)}
+        </div>
     </div>
 </div>
 
@@ -176,5 +158,20 @@
         font-weight: 700;
         color: #f7e7c4;         
         user-select: none;
+    }
+
+    .urgent .ring-progress {
+        stroke: #d48e15;
+        filter: drop-shadow(0 0 5px #d48e15);
+    }
+
+    .urgent .time-text {
+        color: #fff;
+        animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        to { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
     }
 </style>

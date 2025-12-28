@@ -5,10 +5,6 @@
 
     import type { GetPlayersFromGameResponse } from '$lib/client/Players/GetPlayersFromGame';
 	import { StartNewRound } from '$lib/client/Rounds/StartNewRound.js';
-	import { ResumeCurrentRound } from '$lib/client/Rounds/ResumeCurrentRound.js';
-	import { PauseCurrentRound } from '$lib/client/Rounds/PauseCurrentRound.js';
-	import { StartGameSession } from '$lib/client/GameSessions/StartGameSession.js';
-	import { FinishGameSession } from '$lib/client/GameSessions/FinishGameSession.js';
 	import { invalidateAll } from '$app/navigation';
 	import HUDFooter from '$lib/components/HUDFooter.svelte';
 	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
@@ -24,23 +20,6 @@
 
     const isDirty = $derived(Object.keys(pendingRoles).length > 0);
     const gameId = $derived(data.gameSession.id.toString());
-
-    async function handleRound(action: 'pause' | 'resume' | 'start') {
-        let res;
-        if (action === 'start') {
-            const duration = prompt("Duration (seconds):", "300");
-            if (!duration) return;
-            res = await StartNewRound(fetch, { gameId, durationInSeconds: Number(duration) });
-        } else if (action === 'pause') {
-            res = await PauseCurrentRound(fetch, { gameId });
-        } else {
-            res = await ResumeCurrentRound(fetch, { gameId });
-        }
-
-        if (res?.ok) {
-            await invalidateAll();
-        }
-    }
 
     authenticationHub.onEvent('PlayerLoggedIn', (event) => {
         console.debug(`Player ${event.playerId} logged in.`);
@@ -160,18 +139,8 @@
         <div class="round-controls-mini">
             <span>Round #{data.currentRound?.id}</span>
             
-            <!-- <TimeDisplay 
-                initialSeconds={data.currentRound?.remainingSeconds ?? 0} 
-                isPaused={data.currentRound?.isPaused ?? true}
-            />
-
-            {#if data.currentRound && data.currentRound.isPaused}
-                <button onclick={() => handleRound('resume')}>▶ Resume Round</button>
-            {:else}
-                <button onclick={() => handleRound('pause')}>⏸ Pause Round</button>
-            {/if} -->
+            <!-- <TimeDisplay/> -->
         </div>        
-        <button onclick={() => handleRound('start')}>Start new Round</button>    
     </HUDFooter>
 </div>
 

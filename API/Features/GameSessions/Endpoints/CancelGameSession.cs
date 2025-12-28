@@ -14,7 +14,7 @@ public static class CancelGameSession
             return result.AsIResult();
         }
 
-        timer.Cancel();
+        timer.Stop();
 
         return Results.NoContent();
     }

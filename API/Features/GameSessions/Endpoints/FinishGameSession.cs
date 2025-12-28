@@ -14,7 +14,7 @@ public static class FinishGameSession
             return result.AsIResult();
         }
 
-        timer.Finish();
+        timer.Stop();
 
         return Results.NoContent();
     }

@@ -1,10 +1,8 @@
 import { createEndpoint } from "../api";
 export type StartNewRoundRequest = {
-    readonly gameId: string;
-    readonly durationInSeconds: number;
+    readonly gameId: number;
 };
 export type StartNewRoundResponse = {
     readonly id: number;
-    readonly startTime: string | null;
 };
-export const StartNewRound = createEndpoint<StartNewRoundRequest, StartNewRoundResponse>('/api/games/{gameId}/rounds', 'POST');
+export const StartNewRound = createEndpoint<StartNewRoundRequest, StartNewRoundResponse>('/api/rounds', 'POST');

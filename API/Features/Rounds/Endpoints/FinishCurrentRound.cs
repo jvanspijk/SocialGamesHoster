@@ -1,18 +1,16 @@
 ﻿using API.Domain;
+using API.Features.Rounds.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
 
 namespace API.Features.Rounds.Endpoints;
 
 public static class FinishCurrentRound
 {
-    public static IResult Handle(RoundTimer timer)
+    public static async Task<IResult> HandleAsync(IHubContext<RoundsHub, IRoundsHub> hub)
     {
-        if (timer.State != TimerState.Running)
-        {
-            return Results.BadRequest("No active round to finish.");
-        }
-
-        timer.Finish(); // Let the timer update the database through the notify event
-
+        await RoundsHub.NotifyRoundEnded(hub, 0);
+        //TODO: Implement finishing the current round
         return Results.NoContent();
     }
 }

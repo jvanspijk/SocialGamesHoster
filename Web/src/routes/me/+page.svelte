@@ -8,11 +8,6 @@
 	import { playersHub } from '$lib/client/Players/PlayersHub.svelte';
 	import { invalidateAll } from '$app/navigation';
 
-    let timer: TimeDisplay | undefined = undefined;
-    const TOTAL_DURATION = 120; // temporary hard coded value
-    let remainingTime = $state(TOTAL_DURATION);
-    let timerFinished = $state(false);
-
     let { data }: PageProps = $props();
     const playerData: GetPlayerResponse | undefined = $derived(data.player);
 
@@ -61,10 +56,10 @@
     <HUDFooter>
         <a href="/admin">Go to admin</a>
         <TimeDisplay 
-            bind:this={timer} 
-            bind:remainingTime={remainingTime} 
-            initialSeconds={TOTAL_DURATION} 
-            onFinished={() => timerFinished = true}
+            initialSeconds={data.timer.totalSeconds} 
+            remainingTime={data.timer.remainingSeconds}
+            isTimerRunning={data.timer.isRunning}
+            onFinished={() => {}}
         />        
     </HUDFooter>
 </main>

@@ -20,7 +20,7 @@ export const load = (async ({ fetch, params }) => {
     const [gameRes, playersRes, roundRes] = await Promise.all([
         GetGameSession(fetch, req),
         GetPlayersFromGame(fetch, req),
-        GetCurrentRound(fetch, req),
+        GetCurrentRound(fetch, {gameId: Number(gameId)}),
     ]);
 
     if (!gameRes.ok) throw error(404, 'Session not found');

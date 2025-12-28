@@ -6,7 +6,10 @@ using API.Features.Players.Endpoints;
 using API.Features.Players.Hubs;
 using API.Features.Roles.Endpoints;
 using API.Features.Rounds.Endpoints;
+using API.Features.Rounds.Hubs;
 using API.Features.Rulesets.Endpoints;
+using API.Features.Timers.Endpoints;
+using API.Features.Timers.Hubs;
 
 namespace API;
 
@@ -20,18 +23,67 @@ public static class Endpoints
             .MapHub<PlayersHub>("/hub")
             .WithTags("Players");
 
-        builder.MapGameEndpoints().WithTags("GameSessions");
-        builder.MapRulesetEndpoints().WithTags("Rulesets");
+        builder.MapGameEndpoints()
+            .WithTags("GameSessions");
+        
+        builder.MapRulesetEndpoints()
+            .WithTags("Rulesets");
 
-        builder.MapPost("/admin/login", AdminLogin.HandleAsync)
-            .WithTags("Authentication")
-            .WithName(nameof(AdminLogin))
-            .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized);
+        builder.MapAdminEndpoints()
+            .WithTags("Admin");
+
+        builder.MapTimerEndpoints()
+            .MapHub<TimersHub>("/hub")
+            .WithTags("Timers");
+
+        builder.MapRoundEndpoints()
+            .MapHub<RoundsHub>("/hub")
+            .WithTags("Rounds");
 
         builder.MapHub<AuthenticationHub>("/authentication/hub");
 
         return builder;
+    }
+
+    private static RouteGroupBuilder MapAdminEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var adminGroup = builder.MapGroup("/admin");
+
+        adminGroup.MapPost("/login", AdminLogin.HandleAsync)
+            .WithName(nameof(AdminLogin))
+            .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        return adminGroup;
+    }
+
+    private static RouteGroupBuilder MapRoundEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var roundsGroup = builder.MapGroup("/rounds");
+        //roundsGroup.MapGet("/{id:int}", GetRound.HandleAsync)
+        //    .WithName(nameof(GetRound))
+        //    .Produces<GetRound.Response>(StatusCodes.Status200OK)
+        //    .ProducesProblem(StatusCodes.Status404NotFound);
+        var currentRoundGroup = roundsGroup.MapGroup("/current")
+          .WithTags("Rounds");
+
+        currentRoundGroup.MapGet("/", GetCurrentRound.HandleAsync)
+            .WithName(nameof(GetCurrentRound))
+            .Produces<GetCurrentRound.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        currentRoundGroup.MapPost("/finish", FinishCurrentRound.HandleAsync)
+            .WithName(nameof(FinishCurrentRound))
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        roundsGroup.MapPost("/", StartNewRound.HandleAsync)
+            .WithName(nameof(StartNewRound))
+            .Produces<StartNewRound.Response>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        return roundsGroup;
     }
 
     private static RouteGroupBuilder MapRulesetEndpoints(this IEndpointRouteBuilder builder)
@@ -166,52 +218,45 @@ public static class Endpoints
             .Produces<CreatePlayer.Response>(StatusCodes.Status201Created)
             .Produces<HttpValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
-        var roundsGroup = gamesGroup.MapGroup("rounds")
-            .WithTags("Rounds");
-
-        var currentRoundGroup = roundsGroup.MapGroup("/current")
-            .WithTags("Rounds");
-
-        currentRoundGroup.MapGet("/", GetCurrentRound.HandleAsync)
-            .WithName(nameof(GetCurrentRound))
-            .Produces<GetCurrentRound.Response>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        currentRoundGroup.MapPatch("/time", AdjustRoundTime.HandleAsync)
-            .WithName(nameof(AdjustRoundTime))
-            .WithDescription("Adds or removes time from the round timer.")
-            .Produces<TimeSpan>(StatusCodes.Status200OK)            
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        currentRoundGroup.MapPost("/pause", PauseCurrentRound.Handle)
-            .WithName(nameof(PauseCurrentRound))
-            .Produces<TimeSpan>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
-
-        currentRoundGroup.MapPost("/resume", ResumeCurrentRound.Handle)
-            .WithName(nameof(ResumeCurrentRound))
-            .Produces<TimeSpan>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
-
-        currentRoundGroup.MapPost("/cancel", CancelCurrentRound.Handle)
-            .WithName(nameof(CancelCurrentRound))
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        currentRoundGroup.MapPost("/finish", FinishCurrentRound.Handle)
-            .WithName(nameof(FinishCurrentRound))
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        roundsGroup.MapPost("/", StartNewRound.HandleAsync)
-            .WithName(nameof(StartNewRound))
-            .Produces<StartNewRound.Response>(StatusCodes.Status201Created)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
         return gamesGroup;
+    }
+
+    private static RouteGroupBuilder MapTimerEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var timersGroup = builder.MapGroup("/timers");
+
+        timersGroup.MapGet("/", GetTimerState.Handle)
+            .WithName(nameof(GetTimerState))
+            .Produces<GetTimerState.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        timersGroup.MapPut("/adjust", AdjustTimer.HandleAsync)
+           .WithName(nameof(AdjustTimer))
+           .Produces<AdjustTimer.Response>(StatusCodes.Status200OK)
+           .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        timersGroup.MapPost("/start", StartTimer.HandleAsync)
+            .WithName(nameof(StartTimer))
+            .Produces<StartTimer.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        timersGroup.MapPost("/pause", PauseTimer.HandleAsync)
+            .WithName(nameof(PauseTimer))
+            .Produces<PauseTimer.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        timersGroup.MapPost("/resume", ResumeTimer.HandleAsync)
+            .WithName(nameof(ResumeTimer))
+            .Produces<ResumeTimer.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        
+        timersGroup.MapPost("/stop", StopTimer.HandleAsync)
+            .WithName(nameof(StopTimer))
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        return timersGroup;        
     }
 
     private static RouteGroupBuilder MapAbilityEndpoints(this IEndpointRouteBuilder builder)

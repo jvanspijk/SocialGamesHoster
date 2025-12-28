@@ -5,6 +5,7 @@ using API.Domain.Models;
 using API.Features.Authentication;
 using API.Features.Players.Hubs;
 using API.Features.Rounds.Hubs;
+using API.Features.Timers;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -111,8 +112,11 @@ public class Program
             options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
 
-        services.AddEndpointsApiExplorer();    
-        services.AddOpenApi();
+        services.AddEndpointsApiExplorer();
+        services.AddOpenApi(options =>
+        {
+            options.CreateSchemaReferenceId = typeInfo => typeInfo.Type.FullName?.Replace("+", "_");
+        });
 
         services.AddCors(options =>
         {
@@ -145,9 +149,6 @@ public class Program
         // And to send updates if the admin performs actions
         services.AddSignalR();
 
-        services
-            .AddHostedService<TimerEventNotifier>();
-
         // Dependency injection for concrete repositories
         // This should be replaced by IRepository<T> injections later
         services
@@ -168,7 +169,10 @@ public class Program
             .AddScoped<IRepository<GameSession>, GameSessionRepository>();
 
         services
-            .AddSingleton<RoundTimer>();
+            .AddSingleton<RoundTimer>()
+            .AddSingleton<TimerNotifier>();
+
+        services.AddHostedService(provider => provider.GetRequiredService<TimerNotifier>());
 
         builder.WebHost.ConfigureKestrel(options =>
         {
@@ -213,7 +217,6 @@ public class Program
 
         var apiGroup = app.MapGroup("/api");
         apiGroup.MapEndpoints();        
-        apiGroup.MapHub<TimerHub>("/timerHub");
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
 
         // apiGroup.MapHub<PresenceHub>("/presenceHub");
