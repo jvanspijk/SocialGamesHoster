@@ -7,15 +7,15 @@ import urllib.request
 import json
 import shutil
 from generate_hub_sdk import create_sdk_hubs
+from generate_api_sdk import create_api_sdk
 
-def clear_output_dir():
-    curr_path = pathlib.Path.cwd()
-    output_base_path = curr_path.parent / "src" / "lib" / "client"
-    dont_delete = ["api.ts", "config.json", "Hub.svelte.ts"]
+
+def clear_output_dir(output_base_path: Path):
+    dont_delete = ["api.ts", "config.json"]
 
     if not output_base_path.exists():
-        print("Path does not exist.")
-        return
+        raise Exception("Output path not found at {}".format(output_base_path))
+        
 
     for item in output_base_path.iterdir():
         if item.name in dont_delete:
@@ -233,18 +233,10 @@ def GetStructsFromCommon(common: Common) -> List[TypescriptClass]:
     return results
 
 def load_openapi_json(open_api_url: str):
-    try:
-        with urllib.request.urlopen(open_api_url) as response:
-            data = response.read().decode('utf-8')
-            return json.loads(data)
-    except urllib.error.URLError as url_error:
-        print(f"url error: {url_error}")
-        clear_output_dir()
-        exit()
-    except json.JSONDecodeError as json_error:
-        print(f"json error: {json_error}")
-        clear_output_dir()
-        exit()
+    with urllib.request.urlopen(open_api_url) as response:
+        data = response.read().decode('utf-8')
+        return json.loads(data)
+
 
 def create_sdk_common_files(common_files: List[Common], output_base_path: Path, feature_common_types_dict: Dict[str, set]):
     for common in common_files:
@@ -305,47 +297,54 @@ def create_sdk_endpoints(endpoints: List[Endpoint], output_base_path: Path, feat
             f.write(f"('{endpoint.url}', '{endpoint.method.upper()}');\n")
 
 if __name__ == '__main__':
-    clear_output_dir()
-    open_api_url = "http://localhost:9090/openapi/v1.json"
-    api_json = load_openapi_json(open_api_url)
-    
     curr_path = pathlib.Path.cwd()
-    features_path = curr_path.parent.parent / "API" / "Features" 
+    features_path = curr_path.parent / "API" / "Features"     
+    output_base_path = curr_path / "src" / "lib" / "client"
+    open_api_url = "http://localhost:9090/openapi/v1.json"
+
     feature_structure = {"Endpoints": [], "Common": [], "Hubs": []}
-    output_base_path = curr_path.parent / "src" / "lib" / "client"
 
-    if not features_path.exists():
-        raise Exception("Features path not found at {}".format(features_path))
-        exit()
-    
-    all_features = set()
-    for feature_dir in (d for d in features_path.iterdir() if d.is_dir()):
-        all_features.add(feature_dir.name)
-        for sub_dir in feature_dir.iterdir():
-            if not sub_dir.is_dir():
-                continue
-                
-            if sub_dir.name == "Endpoints":
-                for file in sub_dir.glob("*.cs"):
-                    obj = Endpoint(file, api_json)
-                    feature_structure["Endpoints"].append(obj)
+    try:
+        clear_output_dir(output_base_path)
+        api_json = load_openapi_json(open_api_url)
+
+        if not features_path.exists():
+            raise Exception("Features path not found at {}".format(features_path))
+            exit()
+        
+        all_features = set()
+        for feature_dir in (d for d in features_path.iterdir() if d.is_dir()):
+            all_features.add(feature_dir.name)
+            for sub_dir in feature_dir.iterdir():
+                if not sub_dir.is_dir():
+                    continue
                     
-            elif sub_dir.name == "Common":
-                for file in sub_dir.glob("*.cs"):
-                    obj = Common(file)
-                    feature_structure["Common"].append(obj)
+                if sub_dir.name == "Endpoints":
+                    for file in sub_dir.glob("*.cs"):
+                        obj = Endpoint(file, api_json)
+                        feature_structure["Endpoints"].append(obj)
+                        
+                elif sub_dir.name == "Common":
+                    for file in sub_dir.glob("*.cs"):
+                        obj = Common(file)
+                        feature_structure["Common"].append(obj)
 
-            elif sub_dir.name == "Hubs":
-                for file in sub_dir.glob("*.cs"):
-                    obj = get_hub_from_file(file)
-                    feature_structure["Hubs"].append(obj)
+                elif sub_dir.name == "Hubs":
+                    for file in sub_dir.glob("*.cs"):
+                        obj = get_hub_from_file(file)
+                        feature_structure["Hubs"].append(obj)
 
-    feature_common_types_dict = {feature: set() for feature in all_features}
-    for feature in all_features:
-        feature_output_dir = output_base_path / feature
-        feature_output_dir.mkdir(parents=True, exist_ok=True)
+        feature_common_types_dict = {feature: set() for feature in all_features}
+        for feature in all_features:
+            feature_output_dir = output_base_path / feature
+            feature_output_dir.mkdir(parents=True, exist_ok=True)
 
-    create_sdk_common_files(feature_structure["Common"], output_base_path, feature_common_types_dict)
-    create_sdk_endpoints(feature_structure["Endpoints"], output_base_path, feature_common_types_dict)
-    create_sdk_hubs(feature_structure["Hubs"], output_base_path)
+        create_sdk_common_files(feature_structure["Common"], output_base_path, feature_common_types_dict)
+        create_sdk_endpoints(feature_structure["Endpoints"], output_base_path, feature_common_types_dict)
+        create_sdk_hubs(feature_structure["Hubs"], output_base_path)
+        create_api_sdk(output_base_path)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        clear_output_dir(output_base_path)
 
