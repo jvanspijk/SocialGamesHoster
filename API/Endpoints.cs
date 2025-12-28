@@ -1,5 +1,6 @@
 ﻿using API.Features.Abilities.Endpoints;
 using API.Features.Authentication.Endpoints;
+using API.Features.Authentication.Hubs;
 using API.Features.GameSessions.Endpoints;
 using API.Features.Players.Endpoints;
 using API.Features.Players.Hubs;
@@ -16,7 +17,7 @@ public static class Endpoints
         builder.MapRoleEndpoints().WithTags("Roles");
         builder.MapAbilityEndpoints().WithTags("Abilities");
         builder.MapPlayerEndpoints()
-            .MapHub<PlayerHub>("/hub")
+            .MapHub<PlayersHub>("/hub")
             .WithTags("Players");
 
         builder.MapGameEndpoints().WithTags("GameSessions");
@@ -27,6 +28,8 @@ public static class Endpoints
             .WithName(nameof(AdminLogin))
             .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
+
+        builder.MapHub<AuthenticationHub>("/auth/hub");
 
         return builder;
     }
@@ -120,6 +123,7 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // wtf is this endpoint doing here?
         gamesGroup.MapPost("/login", PlayerLogin.HandleAsync)
             .WithTags("Authentication")
             .WithName(nameof(PlayerLogin))
@@ -241,6 +245,10 @@ public static class Endpoints
             .WithName(nameof(GetFullPlayer))
             .Produces<GetFullPlayer.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        playersGroup.MapGet("/{id:int}/{gameId:int}/exists", PlayerExistsInGame.HandleAsync)
+            .WithName(nameof(PlayerExistsInGame))
+            .Produces<PlayerExistsInGame.Response>(StatusCodes.Status200OK);
 
         playersGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
            .WithName(nameof(UpdatePlayer))

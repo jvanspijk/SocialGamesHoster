@@ -20,7 +20,7 @@ public static class UpdatePlayer
                 player.RoleId
             );
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, IHubContext<PlayerHub, IPlayerHub> hub, int id, Request request)
+    public static async Task<IResult> HandleAsync(PlayerRepository repository, IHubContext<PlayersHub, IPlayersHub> hub, int id, Request request)
     {
         // TODO: validation
         Player? player = await repository.GetAsync(id);
@@ -50,7 +50,7 @@ public static class UpdatePlayer
         }
 
         var updatedPlayer = await repository.UpdateAsync(player);
-        await PlayerHub.NotifyPlayerUpdated(hub, updatedPlayer.Id);
+        await PlayersHub.NotifyPlayerUpdated(hub, updatedPlayer.Id);
 
         Response response = new(updatedPlayer.Id, updatedPlayer.Name, updatedPlayer.RoleId);
         return Results.Ok(response);

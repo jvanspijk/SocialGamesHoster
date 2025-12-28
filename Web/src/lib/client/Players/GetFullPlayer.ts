@@ -1,5 +1,5 @@
 import { createEndpoint } from "../api";
-import type { RoleInfo } from './common';
+import type { RoleInfo } from './Common';
 
 export type GetFullPlayerRequest = {
     readonly id: string;

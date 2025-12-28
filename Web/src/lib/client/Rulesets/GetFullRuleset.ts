@@ -1,5 +1,5 @@
 import { createEndpoint } from "../api";
-import type { AbilityInfo, RoleInfo } from './common';
+import type { AbilityInfo, RoleInfo } from './Common';
 
 export type GetFullRulesetRequest = {
     readonly rulesetId: string;

@@ -1,5 +1,5 @@
 import { createEndpoint } from "../api";
-import type { Participant } from './common';
+import type { Participant } from './Common';
 
 export type AddWinnersRequest = {
     readonly gameId: string;

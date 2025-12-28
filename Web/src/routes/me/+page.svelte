@@ -5,7 +5,7 @@
     import Description from '$lib/components/Description.svelte';
     import TimeDisplay from '$lib/components/TimeDisplay.svelte';
     import HUDFooter from '$lib/components/HUDFooter.svelte';
-	import { playerHub } from '$lib/client/Players/Hub.svelte';
+	import { playersHub } from '$lib/client/Players/PlayersHub.svelte';
 	import { invalidateAll } from '$app/navigation';
 
     let timer: TimeDisplay | undefined = undefined;
@@ -16,9 +16,9 @@
     let { data }: PageProps = $props();
     const playerData: GetPlayerResponse | undefined = $derived(data.player);
 
-    playerHub.onEvent('PlayerUpdated', (event) => {
-        if (event.data == data.player?.id) {
-            console.log("Refreshing data for player:", event.data);
+    playersHub.onEvent('PlayerUpdated', (event) => {
+        if (event.playerId == data.player?.id) {
+            console.log("Refreshing data for player:", event.playerId);
             invalidateAll();
         }
     });

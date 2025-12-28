@@ -1,11 +1,9 @@
 import type { PageServerLoad } from './$types';
-// import { createPlayer } from '$lib/client';
-// import { getGamePlayers } from '$lib/client';
-// import { playerLogin } from '$lib/client';
 import { CreatePlayer, type CreatePlayerRequest } from '$lib/client/Players/CreatePlayer';
 import { GetPlayersFromGame } from '$lib/client/Players/GetPlayersFromGame';
+import { GetPlayerFromGame } from '$lib/client/Players/GetPlayerFromGame';
 import { PlayerLogin, type PlayerLoginRequest } from '$lib/client/Authentication/PlayerLogin';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -51,8 +49,7 @@ export const actions: Actions = {
                 playerId: playerId,
                 iPAddress: getClientAddress()
             }
-            
-            
+
             const response = await PlayerLogin(fetch, request);
 
             if(!response.ok) {
@@ -69,30 +66,11 @@ export const actions: Actions = {
                 });
             }
 
-            const maxCookieAge: number = 60 * 60 * 12 // Half a day
+            set_cookies(cookies, response.data.token, playerId, gameId);
 
-            cookies.set('auth_token', response.data.token, {
-                path: '/', 
-                httpOnly: false,
-                secure: false, 
-                maxAge: maxCookieAge 
-            });
-
-            cookies.set('player_id', playerId.toLocaleString(), {
-                path: '/', 
-                httpOnly: false,
-                secure: false, 
-                maxAge: maxCookieAge 
-            });
-
-            cookies.set('game_id', gameId.toLocaleString(), {
-                path: '/', 
-                httpOnly: false,
-                secure: false,  
-                maxAge: maxCookieAge
-            });            
         } catch (error) {
             console.error('Server Login Exception:', error);
+            invalidate_cookies(cookies)
             
             return fail(500, { 
                 success: false, 
@@ -100,18 +78,56 @@ export const actions: Actions = {
             });
         }
 
-        // Tell the player hub that a new player joined the game.
+        // TODO: Tell the player hub that a new player joined the game.
         redirect(303, '/me');
     }
 };
 
+const set_cookies = (cookies: Cookies, token: string, playerId: number, gameId: string, duration: number = 60 * 60 * 12) => {
+    const cookieOptions = {
+        path: '/', 
+        httpOnly: true,
+        secure: false, 
+        maxAge: duration,
+        sameSite: 'lax' as const
+    };
+
+    cookies.set('auth_token', token, cookieOptions);
+    cookies.set('player_id', playerId.toString(), cookieOptions);
+    cookies.set('game_id', gameId, cookieOptions);            
+}
+
+const invalidate_cookies = (cookies: Cookies) => {
+    const options = { path: '/', secure: false };
+    cookies.delete('auth_token', options);
+    cookies.delete('player_id', options);
+    cookies.delete('game_id', options);
+}
+
 export const load = (async ({fetch, params, cookies}) => {
-    const playerId = cookies.get('player_id');
+    let playerId: string | undefined;
+    try {
+        playerId = cookies.get('player_id');
+    }
+    catch (error) {
+        invalidate_cookies(cookies);
+        return fail(500, `Failed to load cookies: ${error}`);
+    };
     if(playerId) {
-        redirect(303, '/me');
+        const response = await GetPlayerFromGame(fetch, {
+            gameId: params.gameId,
+            playerId: playerId
+        });
+
+        if(!response.ok) {
+            console.debug(response.error);
+            invalidate_cookies(cookies);
+        }
+        else {
+            redirect(303, '/me');
+        }
     }
 
-    // TODO: redirect if cookies are already set
     const request = {
         gameId: params.gameId
     }

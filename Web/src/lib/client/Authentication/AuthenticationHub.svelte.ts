@@ -2,15 +2,15 @@ import * as signalR from '@microsoft/signalr';
 import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
-export type PlayerHubEvents = {
-    PlayerUpdated: { data: number; ts: number };
+export type AuthenticationHubEvents = {
+    PlayerLoggedIn: { gameId: number; playerId: number; ts: number; };
 };
 
-class PlayerHub {
+class AuthenticationHub {
     private connection: signalR.HubConnection | null = null;
-    
-    #state = $state<{ [K in keyof PlayerHubEvents]: PlayerHubEvents[K] | null }>({
-        PlayerUpdated: null,
+
+    #state = $state<{ [K in keyof AuthenticationHubEvents]: AuthenticationHubEvents[K] | null }>({
+        PlayerLoggedIn: null,
     });
 
     #connectionState = $state<"Disconnected" | "Connected" | "Reconnecting" | "Faulted">("Disconnected");
@@ -41,8 +41,8 @@ class PlayerHub {
     private registerListeners() {
         if (!this.connection) return;
 
-        this.connection.on("PlayerUpdated", (data: number) => {
-            this.#state.PlayerUpdated = { data, ts: Date.now() };
+        this.connection.on("PlayerLoggedIn", (gameId: number, playerId: number) => {
+            this.#state.PlayerLoggedIn = { gameId, playerId, ts: Date.now() };
         });
 
         this.connection.onreconnecting(() => this.#connectionState = "Reconnecting");
@@ -53,9 +53,9 @@ class PlayerHub {
     get events() { return this.#state; }
     get status() { return this.#connectionState; }
 
-    onEvent<K extends keyof PlayerHubEvents>(
+    onEvent<K extends keyof AuthenticationHubEvents>(
         key: K, 
-        callback: (payload: PlayerHubEvents[K]) => void
+        callback: (payload: AuthenticationHubEvents[K]) => void
     ) {
         $effect.pre(() => {
             const value = this.#state[key];
@@ -72,5 +72,6 @@ class PlayerHub {
         }
     }
 }
+
 const apiBase = browser ? `${window.location.protocol}//${window.location.hostname}:9090` : '';
-export const playerHub = new PlayerHub(`${apiBase}/api/players/hub`);
+export const authenticationHub = new AuthenticationHub(`${apiBase}/api/authentication/hub`);

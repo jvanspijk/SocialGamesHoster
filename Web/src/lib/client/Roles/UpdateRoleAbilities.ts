@@ -1,5 +1,5 @@
 import { createEndpoint } from "../api";
-import type { AbilityInfo } from './common';
+import type { AbilityInfo } from './Common';
 
 export type UpdateRoleAbilitiesRequest = {
     readonly id: string;

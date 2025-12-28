@@ -117,17 +117,25 @@ public class PlayerRepository(APIDatabaseContext context) : IRepository<Player>
     {
         int? playerRoleId = source.RoleId;
 
-        Player sourcePlayer = await _context.Players
+        Player? sourcePlayer = await _context.Players
             .Include(p => p.Role)
             .Include(p => p.CanSee)
-            .SingleOrDefaultAsync(p => p.Id == source.Id)
-            ?? throw new ArgumentException($"Source player with Id {source.Id} not found.");
+            .SingleOrDefaultAsync(p => p.Id == source.Id);
 
-        Player targetPlayer = await _context.Players
+        Player? targetPlayer = await _context.Players
             .Include(p => p.Role)
             .Include(p => p.CanBeSeenBy)
-            .SingleOrDefaultAsync(p => p.Id == target.Id)
-            ?? throw new ArgumentException($"Target player with Id {target.Id} not found.");
+            .SingleOrDefaultAsync(p => p.Id == target.Id);
+
+        if (sourcePlayer == null)
+        {
+            throw new ArgumentException($"Source player with Id {target.Id} not found.");
+        }
+
+        if(targetPlayer == null)
+        {
+            throw new ArgumentException($"Target player with Id {target.Id} not found.");
+        }
 
         return sourcePlayer.CanSee.Contains(target);
     }
