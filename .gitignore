@@ -56,3 +56,4 @@ nunit-*.xml
 API/settings.ini
 API/Services/RegistrationController.cs
 todo.txt
+/Web/sdk_generation/__pycache__
