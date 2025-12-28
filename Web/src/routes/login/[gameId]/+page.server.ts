@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { CreatePlayer, type CreatePlayerRequest } from '$lib/client/Players/CreatePlayer';
 import { GetPlayersFromGame } from '$lib/client/Players/GetPlayersFromGame';
-import { GetPlayerFromGame } from '$lib/client/Players/GetPlayerFromGame';
 import { PlayerLogin, type PlayerLoginRequest } from '$lib/client/Authentication/PlayerLogin';
 import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import type { Actions } from './$types';
@@ -105,29 +104,6 @@ const invalidate_cookies = (cookies: Cookies) => {
 }
 
 export const load = (async ({fetch, params, cookies}) => {
-    let playerId: string | undefined;
-    try {
-        playerId = cookies.get('player_id');
-    }
-    catch (error) {
-        invalidate_cookies(cookies);
-        return fail(500, `Failed to load cookies: ${error}`);
-    };
-    if(playerId) {
-        const response = await GetPlayerFromGame(fetch, {
-            gameId: params.gameId,
-            playerId: playerId
-        });
-
-        if(!response.ok) {
-            console.debug(response.error);
-            invalidate_cookies(cookies);
-        }
-        else {
-            redirect(303, '/me');
-        }
-    }
-
     const request = {
         gameId: params.gameId
     }
@@ -138,6 +114,17 @@ export const load = (async ({fetch, params, cookies}) => {
             success: false, 
             message: response.error.title || 'Failed to load players.' 
         });
+    }
+
+    const playerId = cookies.get('player_id');
+    if(playerId) {
+        if(response.data.find(p => p.id === Number(playerId))) {
+            redirect(303, '/me');
+        }
+        else {
+            console.debug(`Player ${playerId} not found in game ${params.gameId}`);
+            invalidate_cookies(cookies);
+        }        
     }
 
     return {

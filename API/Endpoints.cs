@@ -246,10 +246,6 @@ public static class Endpoints
             .Produces<GetFullPlayer.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        playersGroup.MapGet("/{id:int}/{gameId:int}/exists", PlayerExistsInGame.HandleAsync)
-            .WithName(nameof(PlayerExistsInGame))
-            .Produces<PlayerExistsInGame.Response>(StatusCodes.Status200OK);
-
         playersGroup.MapPatch("/{id:int}", UpdatePlayer.HandleAsync)
            .WithName(nameof(UpdatePlayer))
            .Produces<UpdatePlayer.Response>(StatusCodes.Status200OK)
