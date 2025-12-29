@@ -21,23 +21,28 @@ namespace API;
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 // TODO:
 // v1:
-// - Rethink round timers data structure so that it is easier to use on the client side
 // - Fix login for admins
 //      - store admin credentials in database or environment variables
 // - Admin: force logout users, (decouple IP from user)
 // - Change participants in active game sessions
 //   - Remove players from game sessions
 // - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, lover, etc.
-// - IAbility interface so that a DM can create custom abilities for roles (will be god object)
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
+// - Fix adjust timer endpoint:
+//      - it assumes delta is negative
+//      - Calculation of total time is off
+// - GetTimerState should have a result for the case where there is no timer.
+
 // v2:
 // - Always inject repository interfaces instead of concrete repositories
 // - Testing project with unit and/or integration tests
 // - Performance testing
 // - chats
 // - roles have win conditions
+// - IAbility interface so that a DM can create custom abilities for roles (will be god object)
+
 
 // Optional:
 // - Assign random roles to players
