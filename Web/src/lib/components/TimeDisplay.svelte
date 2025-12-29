@@ -5,12 +5,14 @@
         initialSeconds = 0,
         remainingTime = $bindable(0),
         isTimerRunning = false,
-        onFinished
+        onFinished,
+        onclick
     }: {
         initialSeconds: number;
         remainingTime: number;
         isTimerRunning?: boolean;
         onFinished?: () => void;
+        onclick?: () => void;
     } = $props();
 
 
@@ -30,7 +32,6 @@
     );
 
     const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
-        console.log("yo - Event Triggered:", payload);
         remainingTime = payload.remainingSeconds;
         internalTotal = payload.totalSeconds;
         isRunning = true;
@@ -89,11 +90,7 @@
     const isUrgent = $derived(remainingTime < (internalTotal * 0.25));
 </script>
 
-<div class="timer-container" class:urgent={isUrgent}>
-    <div class="status-badge {timersHub.status.toLowerCase()}">
-        {timersHub.status}
-    </div>
-
+<div class="timer-container" class:urgent={isUrgent} class:inactive={!isRunning}>
     <div class="timer-wrapper">
         <svg class="progress-ring" viewBox="0 0 100 100">
             <circle class="ring-track" cx="50" cy="50" r="{R}" />
@@ -109,12 +106,21 @@
         <div class="time-text">
             {formatTime(remainingTime)}
         </div>
+
+        {#if onclick}
+            <button 
+                type="button" 
+                class="hitbox" 
+                onclick={() => onclick?.()}
+                aria-label="Timer action"
+            ></button>
+        {/if}
     </div>
 </div>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-
+    
     .timer-wrapper {
         position: relative;
         width: 75px; 
@@ -124,6 +130,51 @@
         box-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 
                     inset 0 0 15px rgba(0, 0, 0, 0.9);
         border: 2px solid #5b4a3c;
+        transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+        overflow: hidden;
+    }
+
+    .timer-wrapper:has(.hitbox:active) {
+        transform: scale(0.92);
+        box-shadow: 0 0 2px rgba(255, 255, 255, 0.1), 
+                    inset 0 0 20px rgba(0, 0, 0, 1);
+    }
+
+    .hitbox {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        
+        appearance: none;
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        
+        border-radius: 50%;
+        
+        outline: none;
+    }
+
+    .hitbox:hover {
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .hitbox:focus-visible {
+        box-shadow: 0 0 0 3px rgba(212, 142, 21, 0.5);
+    }
+
+    .inactive {
+        opacity: 0.5;
+        filter: grayscale(0.6) brightness(0.8);
+    }
+
+    .inactive .ring-progress {
+        stroke: #4a3f35; 
     }
 
     .progress-ring {
