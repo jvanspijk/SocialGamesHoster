@@ -12,7 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"client:generate": "python sdk_generation/generate_sdk.py"
+		"client:generate": "python sdk_generation/generate_sdk.py && prettier --write \"src/lib/client/**/*.{ts,js,svelte}\""
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",

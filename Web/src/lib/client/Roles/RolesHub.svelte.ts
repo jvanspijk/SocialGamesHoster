@@ -3,74 +3,77 @@ import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
 export type RolesHubEvents = {
-    RoleUpdated: { roleId: number; ts: number; };
+	RoleUpdated: { roleId: number; ts: number };
 };
 
 class RolesHub {
-    private connection: signalR.HubConnection | null = null;
+	private connection: signalR.HubConnection | null = null;
 
-    #state = $state<{ [K in keyof RolesHubEvents]: RolesHubEvents[K] | null }>({
-        RoleUpdated: null,
-    });
+	#state = $state<{ [K in keyof RolesHubEvents]: RolesHubEvents[K] | null }>({
+		RoleUpdated: null
+	});
 
-    #connectionState = $state<"Disconnected" | "Connected" | "Reconnecting" | "Faulted">("Disconnected");
+	#connectionState = $state<'Disconnected' | 'Connected' | 'Reconnecting' | 'Faulted'>(
+		'Disconnected'
+	);
 
-    constructor(url: string) {
-        if (!browser) return;
+	constructor(url: string) {
+		if (!browser) return;
 
-        this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(url)
-            .withAutomaticReconnect()
-            .configureLogging(signalR.LogLevel.Information)
-            .build();
+		this.connection = new signalR.HubConnectionBuilder()
+			.withUrl(url)
+			.withAutomaticReconnect()
+			.configureLogging(signalR.LogLevel.Information)
+			.build();
 
-        this.registerListeners();
-        this.start();
-    }
+		this.registerListeners();
+		this.start();
+	}
 
-    private async start() {
-        try {
-            await this.connection?.start();
-            this.#connectionState = "Connected";
-        } catch (err) {
-            console.error("SignalR Start Error: ", err);
-            this.#connectionState = "Faulted";
-        }
-    }
+	private async start() {
+		try {
+			await this.connection?.start();
+			this.#connectionState = 'Connected';
+		} catch (err) {
+			console.error('SignalR Start Error: ', err);
+			this.#connectionState = 'Faulted';
+		}
+	}
 
-    private registerListeners() {
-        if (!this.connection) return;
+	private registerListeners() {
+		if (!this.connection) return;
 
-        this.connection.on("RoleUpdated", (roleId: number) => {
-            this.#state.RoleUpdated = { roleId, ts: Date.now() };
-        });
+		this.connection.on('RoleUpdated', (roleId: number) => {
+			this.#state.RoleUpdated = { roleId, ts: Date.now() };
+		});
 
-        this.connection.onreconnecting(() => this.#connectionState = "Reconnecting");
-        this.connection.onreconnected(() => this.#connectionState = "Connected");
-        this.connection.onclose(() => this.#connectionState = "Disconnected");
-    }
+		this.connection.onreconnecting(() => (this.#connectionState = 'Reconnecting'));
+		this.connection.onreconnected(() => (this.#connectionState = 'Connected'));
+		this.connection.onclose(() => (this.#connectionState = 'Disconnected'));
+	}
 
-    get events() { return this.#state; }
-    get status() { return this.#connectionState; }
+	get events() {
+		return this.#state;
+	}
+	get status() {
+		return this.#connectionState;
+	}
 
-    onEvent<K extends keyof RolesHubEvents>(
-        key: K, 
-        callback: (payload: RolesHubEvents[K]) => void
-    ) {
-        $effect.pre(() => {
-            const value = this.#state[key];
-            if (value) {
-                untrack(() => callback(value));
-                this.#state[key] = null;
-            }
-        });
-    }
+	onEvent<K extends keyof RolesHubEvents>(key: K, callback: (payload: RolesHubEvents[K]) => void) {
+		$effect.pre(() => {
+			const value = this.#state[key];
+			if (value) {
+				untrack(() => callback(value));
+				this.#state[key] = null;
+			}
+		});
+	}
 
-    async disconnect() {
-        if (this.connection) {
-            await this.connection.stop();
-        }
-    }
+	async disconnect() {
+		if (this.connection) {
+			await this.connection.stop();
+		}
+	}
 }
 
 const apiBase = browser ? `${window.location.protocol}//${window.location.hostname}:9090` : '';

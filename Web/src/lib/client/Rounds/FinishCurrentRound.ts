@@ -1,1 +1,1 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';

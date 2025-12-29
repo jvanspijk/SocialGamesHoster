@@ -1,10 +1,13 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 export type GetRolesRequest = {
-    readonly rulesetId: string;
+	readonly rulesetId: string;
 };
 export type GetRolesResponse = {
-    readonly id: number;
-    readonly name: string;
-    readonly description: string;
+	readonly id: number;
+	readonly name: string;
+	readonly description: string;
 };
-export const GetRoles = createEndpoint<GetRolesRequest, GetRolesResponse[]>('/api/rulesets/{rulesetId}/roles', 'GET');
+export const GetRoles = createEndpoint<GetRolesRequest, GetRolesResponse[]>(
+	'/api/rulesets/{rulesetId}/roles',
+	'GET'
+);

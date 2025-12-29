@@ -1,12 +1,15 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 import type { Participant } from './Common';
 
 export type DuplicateGameSessionRequest = {
-    readonly gameSessionId: number;
+	readonly gameSessionId: number;
 };
 export type DuplicateGameSessionResponse = {
-    readonly gameSessionId: number;
-    readonly rulesetId: number;
-    readonly participants: Participant[];
+	readonly gameSessionId: number;
+	readonly rulesetId: number;
+	readonly participants: Participant[];
 };
-export const DuplicateGameSession = createEndpoint<DuplicateGameSessionRequest, DuplicateGameSessionResponse>('/api/games/duplicate', 'POST');
+export const DuplicateGameSession = createEndpoint<
+	DuplicateGameSessionRequest,
+	DuplicateGameSessionResponse
+>('/api/games/duplicate', 'POST');

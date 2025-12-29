@@ -1,15 +1,18 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 import type { RoleInfo } from './Common';
 
 export type GetFullPlayerRequest = {
-    readonly id: string;
+	readonly id: string;
 };
 export type GetFullPlayerResponse = {
-    readonly id: number;
-    readonly name: string;
-    readonly role: RoleInfo | null;
-    readonly isEliminated: boolean;
-    readonly canSeeIds: number[];
-    readonly canBeSeenByIds: number[];
+	readonly id: number;
+	readonly name: string;
+	readonly role: RoleInfo | null;
+	readonly isEliminated: boolean;
+	readonly canSeeIds: number[];
+	readonly canBeSeenByIds: number[];
 };
-export const GetFullPlayer = createEndpoint<GetFullPlayerRequest, GetFullPlayerResponse>('/api/players/{id}/full', 'GET');
+export const GetFullPlayer = createEndpoint<GetFullPlayerRequest, GetFullPlayerResponse>(
+	'/api/players/{id}/full',
+	'GET'
+);

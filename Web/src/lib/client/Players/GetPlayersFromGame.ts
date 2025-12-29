@@ -1,9 +1,12 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 export type GetPlayersFromGameRequest = {
-    readonly gameId: string;
+	readonly gameId: string;
 };
 export type GetPlayersFromGameResponse = {
-    readonly id: number;
-    readonly name: string;
+	readonly id: number;
+	readonly name: string;
 };
-export const GetPlayersFromGame = createEndpoint<GetPlayersFromGameRequest, GetPlayersFromGameResponse[]>('/api/games/{gameId}/players', 'GET');
+export const GetPlayersFromGame = createEndpoint<
+	GetPlayersFromGameRequest,
+	GetPlayersFromGameResponse[]
+>('/api/games/{gameId}/players', 'GET');

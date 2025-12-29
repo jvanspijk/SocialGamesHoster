@@ -1,8 +1,11 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 export type GetAllRulesetsRequest = void;
 export type GetAllRulesetsResponse = {
-    readonly id: number;
-    readonly name: string;
-    readonly description: string;
+	readonly id: number;
+	readonly name: string;
+	readonly description: string;
 };
-export const GetAllRulesets = createEndpoint<GetAllRulesetsRequest, GetAllRulesetsResponse[]>('/api', 'GET');
+export const GetAllRulesets = createEndpoint<GetAllRulesetsRequest, GetAllRulesetsResponse[]>(
+	'/api',
+	'GET'
+);

@@ -1,5 +1,8 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 export type FinishGameSessionRequest = {
-    readonly gameId: string;
+	readonly gameId: string;
 };
-export const FinishGameSession = createEndpoint<FinishGameSessionRequest, void>('/api/games/{gameId}/finish', 'POST');
+export const FinishGameSession = createEndpoint<FinishGameSessionRequest, void>(
+	'/api/games/{gameId}/finish',
+	'POST'
+);

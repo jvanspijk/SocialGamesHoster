@@ -1,8 +1,11 @@
-import { createEndpoint } from "../api";
+import { createEndpoint } from '../api';
 export type StartTimerRequest = {
-    readonly durationSeconds: number;
+	readonly durationSeconds: number;
 };
 export type StartTimerResponse = {
-    readonly remainingSeconds: number;
+	readonly remainingSeconds: number;
 };
-export const StartTimer = createEndpoint<StartTimerRequest, StartTimerResponse>('/api/timers/start', 'POST');
+export const StartTimer = createEndpoint<StartTimerRequest, StartTimerResponse>(
+	'/api/timers/start',
+	'POST'
+);
