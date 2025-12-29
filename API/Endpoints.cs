@@ -1,13 +1,17 @@
 ﻿using API.Features.Abilities.Endpoints;
+using API.Features.Abilities.Hubs;
 using API.Features.Authentication.Endpoints;
 using API.Features.Authentication.Hubs;
 using API.Features.GameSessions.Endpoints;
+using API.Features.GameSessions.Hubs;
 using API.Features.Players.Endpoints;
 using API.Features.Players.Hubs;
 using API.Features.Roles.Endpoints;
+using API.Features.Roles.Hubs;
 using API.Features.Rounds.Endpoints;
 using API.Features.Rounds.Hubs;
 using API.Features.Rulesets.Endpoints;
+using API.Features.Rulesets.Hubs;
 using API.Features.Timers.Endpoints;
 using API.Features.Timers.Hubs;
 
@@ -17,16 +21,24 @@ public static class Endpoints
 {
     public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder builder)
     {        
-        builder.MapRoleEndpoints().WithTags("Roles");
-        builder.MapAbilityEndpoints().WithTags("Abilities");
+        builder.MapRoleEndpoints()
+            .MapHub<RolesHub>("/hub")
+            .WithTags("Roles");
+
+        builder.MapAbilityEndpoints()
+            .MapHub<AbilitiesHub>("/hub")
+            .WithTags("Abilities");
+
         builder.MapPlayerEndpoints()
             .MapHub<PlayersHub>("/hub")
-            .WithTags("Players");
+            .WithTags("Players");           
 
         builder.MapGameEndpoints()
+            .MapHub<GameSessionsHub>("/hub")
             .WithTags("GameSessions");
         
         builder.MapRulesetEndpoints()
+            .MapHub<RulesetsHub>("/hub")
             .WithTags("Rulesets");
 
         builder.MapAdminEndpoints()
@@ -155,7 +167,7 @@ public static class Endpoints
         gamesGroup.MapGet("/", GetGameSession.HandleAsync)
             .WithName(nameof(GetGameSession))
             .Produces<GetGameSession.Response>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);        
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         gamesGroup.MapPatch("/players", UpdateGameParticipants.HandleAsync)
             .WithName(nameof(UpdateGameParticipants))
@@ -228,7 +240,8 @@ public static class Endpoints
         timersGroup.MapGet("/", GetTimerState.Handle)
             .WithName(nameof(GetTimerState))
             .Produces<GetTimerState.Response>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .DisableClientCaching();
 
         timersGroup.MapPut("/adjust", AdjustTimer.HandleAsync)
            .WithName(nameof(AdjustTimer))
@@ -324,5 +337,31 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return rolesGroup;
+    }
+}
+
+public static class RouteHandlerBuilderExtensions
+{
+    public static RouteHandlerBuilder DisableClientCaching(this RouteHandlerBuilder builder)
+    {
+        builder.AddEndpointFilter(async (context, next) =>
+        {
+            var headers = context.HttpContext.Response.Headers;
+            headers.CacheControl = "no-store, no-cache, must-revalidate";
+            headers.Pragma = "no-cache";
+            headers.Expires = "0";
+            return await next(context);
+        });
+        return builder;
+    }
+
+    public static RouteHandlerBuilder WithClientCaching(this RouteHandlerBuilder builder, int seconds)
+    {
+        return builder.AddEndpointFilter(async (context, next) =>
+        {
+            var headers = context.HttpContext.Response.Headers;
+            headers.CacheControl = $"public, max-age={seconds}";
+            return await next(context);
+        });
     }
 }
