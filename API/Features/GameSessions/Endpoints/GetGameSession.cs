@@ -2,7 +2,6 @@
 using API.DataAccess.Repositories;
 using API.Domain.Models;
 using System.Linq.Expressions;
-using API.Features.GameSessions.Common;
 
 namespace API.Features.GameSessions.Endpoints;
 

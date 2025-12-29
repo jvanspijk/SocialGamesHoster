@@ -3,6 +3,7 @@ using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Domain.Validation;
 using API.Features.Roles.Common;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.Roles.Endpoints;
@@ -19,7 +20,7 @@ public static class UpdateRoleAbilities
                 role.Abilities.Select(a => new AbilityInfo(a.Id, a.Name, a.Description)).ToList()
             );
     }
-    public async static Task<IResult> HandleAsync(RoleRepository repository, AbilityRepository abilityRepository, int id, Request request)
+    public async static Task<IResult> HandleAsync(RoleRepository repository, AbilityRepository abilityRepository, IMemoryCache cache, int id, Request request)
     {
         var abilitiesResult = await abilityRepository.GetMultipleAsync(request.AbilityIds);
         if (abilitiesResult.IsFailure)
@@ -50,6 +51,10 @@ public static class UpdateRoleAbilities
 
         role.Abilities = abilities;
         Role updatedRole = await repository.UpdateAsync(role);
+
+        GetRole.InvalidateCache(cache, id);
+        GetRoles.InvalidateCache(cache, role.RulesetId);
+
         Response response = updatedRole.ConvertToResponse<Role, Response>();
         return Results.Ok(response);
     }

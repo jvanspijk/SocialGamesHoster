@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain.Models;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.Roles.Endpoints;
@@ -19,7 +20,7 @@ public static class UpdateRoleInformation
             );
     }
 
-    public async static Task<IResult> HandleAsync(RoleRepository repository, int id, Request request)
+    public async static Task<IResult> HandleAsync(RoleRepository repository, IMemoryCache cache, int id, Request request)
     {
         Role? role = await repository.GetAsync(id);
         if (role == null)
@@ -44,6 +45,9 @@ public static class UpdateRoleInformation
         {
             return Results.NoContent();
         }
+
+        GetRole.InvalidateCache(cache, id);
+        GetRoles.InvalidateCache(cache, role.RulesetId);
 
         var updatedRole = await repository.UpdateAsync(role);
         Response response = updatedRole.ConvertToResponse<Role, Response>();
