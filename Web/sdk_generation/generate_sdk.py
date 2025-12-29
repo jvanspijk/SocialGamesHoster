@@ -27,7 +27,7 @@ def clear_output_dir(output_base_path: Path):
             item.unlink()
 
 class Endpoint:
-    def __init__(self, path: Path, open_api: dict):
+    def __init__(self, path: Path, open_api: dict, endpoints_cs: str):
         self.path = path
         self.endpoint_name = path.stem
         self.feature_name = path.parent.parent.name
@@ -36,6 +36,7 @@ class Endpoint:
         self.returns_array = False
         self.set_url_and_method(open_api)
         self.placeholders = re.findall(r'\{([^}]+)\}', self.url)
+        self.check_returns_array(endpoints_cs)
 
     def set_url_and_method(self, open_api):
         for path in open_api["paths"]:
@@ -56,6 +57,29 @@ class Endpoint:
         print(f"url of {self.endpoint_name} not found!")
         clear_output_dir()
         exit()
+
+    def check_returns_array(self, endpoints_cs: str):
+        name_pattern = rf"\.WithName\(nameof\({re.escape(self.endpoint_name)}\)\)"
+        match = re.search(name_pattern, endpoints_cs)
+        if not match:
+            return
+        remaining_code = endpoints_cs[match.end():]
+        statement_end = remaining_code.find(';')
+    
+        if statement_end == -1:
+            return
+
+        current_chain = remaining_code[:statement_end]
+
+        produces_match = re.search(r"\.Produces<([^>]+)>", current_chain)
+        
+        if not produces_match:
+            return
+        
+        return_type = produces_match.group(1)
+        is_collection = any(indicator in return_type for indicator in ["List<", "IEnumerable<", "[]"])
+        if is_collection:
+            self.returns_array = True
 
 class Common:
     def __init__(self, path: Path):
@@ -296,6 +320,13 @@ def create_sdk_endpoints(endpoints: List[Endpoint], output_base_path: Path, feat
             f.write(f"export const {endpoint.endpoint_name} = createEndpoint<{input_type}, {output_type}>")
             f.write(f"('{endpoint.url}', '{endpoint.method.upper()}');\n")
 
+def load_endpoints_cs():
+    curr_path = pathlib.Path.cwd()
+    endpoints_path = curr_path.parent / "API" / "Endpoints.cs"
+    with open(endpoints_path, "r") as f:
+        return f.read()
+    
+
 if __name__ == '__main__':
     curr_path = pathlib.Path.cwd()
     features_path = curr_path.parent / "API" / "Features"     
@@ -307,6 +338,7 @@ if __name__ == '__main__':
     try:
         clear_output_dir(output_base_path)
         api_json = load_openapi_json(open_api_url)
+        endpoints_cs = load_endpoints_cs()
 
         if not features_path.exists():
             raise Exception("Features path not found at {}".format(features_path))
@@ -321,7 +353,7 @@ if __name__ == '__main__':
                     
                 if sub_dir.name == "Endpoints":
                     for file in sub_dir.glob("*.cs"):
-                        obj = Endpoint(file, api_json)
+                        obj = Endpoint(file, api_json, endpoints_cs)
                         feature_structure["Endpoints"].append(obj)
                         
                 elif sub_dir.name == "Common":
