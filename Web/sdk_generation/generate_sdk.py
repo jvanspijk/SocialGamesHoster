@@ -290,9 +290,6 @@ def create_sdk_endpoints(endpoints: List[Endpoint], output_base_path: Path, feat
         with(open(output_path, "w")) as f:
             f.write(endpoint_factory_import_header)
 
-        if not ts_request and not ts_response:
-            continue
-
         used_common_types = set()
         all_members = []
         if ts_request: all_members.extend(ts_request.members.values())
