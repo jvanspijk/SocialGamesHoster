@@ -35,6 +35,7 @@
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
         letter-spacing: 1px;
         transition: transform 0.3s ease-in-out;
+        box-sizing: border-box;
     }
 
     footer.collapsed {
@@ -47,6 +48,16 @@
         align-items: center;
         padding: 5px 20px 10px 20px;
         gap: 25px;
+
+        flex-wrap: wrap; 
+        max-width: 100vw; 
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .hud > :global(*) {
+        max-width: fit-content;
+        flex-shrink: 0; /* Prevents them from squishing since you have "plenty of space" */
     }
 
     .toggle-control {
