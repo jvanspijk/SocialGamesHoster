@@ -7,6 +7,6 @@ export type AdminLoginResponse = {
 	readonly token: string;
 };
 export const AdminLogin = createEndpoint<AdminLoginRequest, AdminLoginResponse>(
-	'/api/admin/login',
+	'/api/auth/admin/login',
 	'POST'
 );

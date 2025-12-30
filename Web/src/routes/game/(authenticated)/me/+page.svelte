@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { GetPlayerResponse } from '$lib/client/Players/GetPlayer';
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
     import Description from '$lib/components/Description.svelte';
@@ -7,9 +6,25 @@
     import HUDFooter from '$lib/components/HUDFooter.svelte';
 	import { playersHub } from '$lib/client/Players/PlayersHub.svelte';
 	import { invalidateAll } from '$app/navigation';
+    import Spacer from '$lib/components/Spacer.svelte';
+	import ChatToggle from '$lib/components/ChatToggle.svelte';
+    import ChatChannel from '$lib/components/ChatChannel.svelte';
+
+    let isChatOpen = $state(false);
+    let hasNewMessages = $state(true); // Example: start with a notification
+
+    function openChat() {
+        isChatOpen = true;
+        hasNewMessages = false; // Clear the dot when they open it
+    }
+
+    function closeChat() {
+        isChatOpen = false;
+    }
 
     let { data }: PageProps = $props();
-    const playerData: GetPlayerResponse | undefined = $derived(data.player);
+    const player = $derived(data.player);
+    const role = $derived(data.player.role);
 
     playersHub.onEvent('PlayerUpdated', (event) => {
         if (event.playerId == data.player?.id) {
@@ -27,20 +42,20 @@
 </script>
 
 <main>
-    {#if playerData}
+    {#if player}
         <div class="character-sheet">                   
             <header class="sheet-header">
-                <h1>{playerData.name}</h1>
-                <h3 class="role-title">The {playerData.role?.name || 'Unassigned'}</h3>
+                <h1>{player.name}</h1>
+                <h3 class="role-title">The {role?.name || 'Unassigned'}</h3>
             </header>
 
-            <Description text={playerData.role?.description} isHidden={!playerData.role}/>
+            <Description text={role?.description} isHidden={!role}/>
 
-            {#if playerData.role?.abilities && playerData.role.abilities.length > 0}
+            {#if role?.abilities && role.abilities.length > 0}
                 <section class="abilities-section">
                     <h2>Abilities</h2>
                     <ul class="abilities-list">
-                        {#each playerData.role.abilities as ability}
+                        {#each role.abilities as ability}
                             <li class="ability-item">
                                 <strong>{ability.name}:</strong> {ability.description || 'A mysterious power...'}
                             </li>
@@ -53,8 +68,18 @@
         <p class="error-message">Player data not found.</p>
     {/if}
 
+    <ChatChannel 
+        channelId="global" 
+        isOpen={isChatOpen} 
+        on:close={closeChat} 
+    />
+
     <HUDFooter>
-        <a href="/admin">Go to admin</a>
+        <ChatToggle 
+            hasNewMessage={hasNewMessages} 
+            on:click={openChat} 
+        />
+        <Spacer/>
         <TimeDisplay 
             initialSeconds={data.timer.totalSeconds} 
             remainingTime={data.timer.remainingSeconds}

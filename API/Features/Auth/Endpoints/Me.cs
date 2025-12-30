@@ -1,14 +1,13 @@
 ﻿using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.Auth;
-using API.Features.Players.Common;
+using API.Features.Auth.Common;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
-namespace API.Features.Players.Endpoints;
+namespace API.Features.Auth.Endpoints;
 
-public static class GetPlayerFromGame
+public class Me
 {
     public record Response(int Id, string Name, RoleInfo? Role) : IProjectable<Player, Response>
     {
@@ -24,24 +23,22 @@ public static class GetPlayerFromGame
                 )
             );
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, AuthService authService, HttpRequest request, int playerId)
+    public static async Task<IResult> HandleAsync(HttpRequest request, PlayerRepository repository)
     {
-        var canSeeResult = await authService.CanSeePlayerAsync(request, playerId);
-        if (canSeeResult.IsFailure)
+        var playerClaimsResult = AuthService.GetPlayerClaims(request);
+        if (playerClaimsResult.IsFailure)
         {
-            return canSeeResult.AsIResult();
+            return playerClaimsResult.AsIResult();
         }
 
-        if(canSeeResult.Value == false)
+        (int playerId, int? _) = playerClaimsResult.Value;
+
+        var response = await repository.GetAsync<Response>(playerId);
+        if(response == null)
         {
-            return Results.Forbid();
+            return Results.NotFound($"Player {playerId} not found");
         }
 
-        Response? playerResult = await repository.GetAsync<Response>(playerId);
-        if (playerResult == null)
-        {
-            return Results.NotFound($"Player with id '{playerId}' not found.");
-        }
-        return Results.Ok(playerResult);
+        return Results.Ok(response);
     }
 }

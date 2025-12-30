@@ -2,15 +2,14 @@ using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain;
 using API.Domain.Models;
-using API.Features.Authentication;
-using API.Features.Players.Hubs;
-using API.Features.Rounds.Hubs;
+using API.Features.Auth;
 using API.Features.Timers;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -146,7 +145,7 @@ public class Program
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = hostUrl,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Social-games-hoster_JWT_Security_Key"))
-            };
+            };            
         });
 
         // We use signalR for websockets

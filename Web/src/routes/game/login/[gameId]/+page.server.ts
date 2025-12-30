@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { CreatePlayer, type CreatePlayerRequest } from '$lib/client/Players/CreatePlayer';
-import { GetPlayersFromGame } from '$lib/client/Players/GetPlayersFromGame';
-import { PlayerLogin, type PlayerLoginRequest } from '$lib/client/Authentication/PlayerLogin';
-import { fail, redirect, type Cookies } from '@sveltejs/kit';
+import { PlayerLogin, type PlayerLoginRequest } from '$lib/client/Auth/PlayerLogin';
+import { fail, redirect } from '@sveltejs/kit';
+import { set_player_cookies, invalidate_player_cookies } from '$lib/cookies.svelte';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -44,7 +44,7 @@ export const actions: Actions = {
         
         try {
             const request: PlayerLoginRequest = {
-                gameId: gameId,
+                gameId: Number(gameId),
                 playerId: playerId,
                 iPAddress: getClientAddress()
             }
@@ -65,10 +65,10 @@ export const actions: Actions = {
                 });
             }
 
-            set_cookies(cookies, response.data.token, playerId, gameId);
+            set_player_cookies(cookies, response.data.token, playerId, gameId);
         } catch (error) {
             console.error('Server Login Exception:', error);
-            invalidate_cookies(cookies)
+            invalidate_player_cookies(cookies);
             
             return fail(500, { 
                 success: false, 
@@ -76,56 +76,12 @@ export const actions: Actions = {
             });
         }
 
-        redirect(303, '/me');
+        redirect(303, '/game/me');
     }
 };
 
-const set_cookies = (cookies: Cookies, token: string, playerId: number, gameId: string, duration: number = 60 * 60 * 12) => {
-    const cookieOptions = {
-        path: '/', 
-        httpOnly: true,
-        secure: false, 
-        maxAge: duration,
-        sameSite: 'lax' as const
-    };
-
-    cookies.set('auth_token', token, cookieOptions);
-    cookies.set('player_id', playerId.toString(), cookieOptions);
-    cookies.set('game_id', gameId, cookieOptions);            
-}
-
-const invalidate_cookies = (cookies: Cookies) => {
-    const options = { path: '/', secure: false };
-    cookies.delete('auth_token', options);
-    cookies.delete('player_id', options);
-    cookies.delete('game_id', options);
-}
-
-export const load = (async ({fetch, params, cookies}) => {
-    const request = {
-        gameId: params.gameId
+export const load = (async ({ locals}) => {  
+    if(locals.user?.id && locals.user?.name) {        
+        redirect(303, '/game/me');            
     }
-
-    const response = await GetPlayersFromGame(fetch, request);
-    if(!response.ok) {
-        return fail(response.error.status, { 
-            success: false, 
-            message: response.error.title || 'Failed to load players.' 
-        });
-    }
-
-    const playerId = cookies.get('player_id');
-    if(playerId) {
-        if(response.data.find(p => p.id === Number(playerId))) {
-            redirect(303, '/me');
-        }
-        else {
-            invalidate_cookies(cookies);
-        }        
-    }
-
-    return {
-        players: response.data,
-        gameId: params.gameId
-    };
 }) satisfies PageServerLoad;

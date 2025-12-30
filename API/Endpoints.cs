@@ -1,7 +1,7 @@
 ﻿using API.Features.Abilities.Endpoints;
 using API.Features.Abilities.Hubs;
-using API.Features.Authentication.Endpoints;
-using API.Features.Authentication.Hubs;
+using API.Features.Auth.Endpoints;
+using API.Features.Auth.Hubs;
 using API.Features.GameSessions.Endpoints;
 using API.Features.GameSessions.Hubs;
 using API.Features.Players.Endpoints;
@@ -20,7 +20,7 @@ namespace API;
 public static class Endpoints
 {
     public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder builder)
-    {        
+    {
         builder.MapRoleEndpoints()
             .MapHub<RolesHub>("/hub")
             .WithTags("Roles");
@@ -31,18 +31,15 @@ public static class Endpoints
 
         builder.MapPlayerEndpoints()
             .MapHub<PlayersHub>("/hub")
-            .WithTags("Players");           
+            .WithTags("Players");
 
         builder.MapGameEndpoints()
             .MapHub<GameSessionsHub>("/hub")
             .WithTags("GameSessions");
-        
+
         builder.MapRulesetEndpoints()
             .MapHub<RulesetsHub>("/hub")
             .WithTags("Rulesets");
-
-        builder.MapAdminEndpoints()
-            .WithTags("Admin");
 
         builder.MapTimerEndpoints()
             .MapHub<TimersHub>("/hub")
@@ -52,21 +49,11 @@ public static class Endpoints
             .MapHub<RoundsHub>("/hub")
             .WithTags("Rounds");
 
-        builder.MapHub<AuthenticationHub>("/authentication/hub");
+        builder.MapAuthEndpoints()
+            .MapHub<AuthenticationHub>("/hub")
+            .WithTags("Auth");
 
         return builder;
-    }
-
-    private static RouteGroupBuilder MapAdminEndpoints(this IEndpointRouteBuilder builder)
-    {
-        var adminGroup = builder.MapGroup("/admin");
-
-        adminGroup.MapPost("/login", AdminLogin.HandleAsync)
-            .WithName(nameof(AdminLogin))
-            .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized);
-
-        return adminGroup;
     }
 
     private static RouteGroupBuilder MapRoundEndpoints(this IEndpointRouteBuilder builder)
@@ -120,7 +107,7 @@ public static class Endpoints
             .WithTags("Abilities");
 
         abilitiesGroup.MapPost("/", CreateAbility.HandleAsync)
-            .WithName(nameof(CreateAbility))  
+            .WithName(nameof(CreateAbility))
             .Produces<CreateAbility.Response>(StatusCodes.Status201Created);
 
         abilitiesGroup.MapGet("/", GetAbilitiesFromRuleset.HandleAsync)
@@ -152,7 +139,7 @@ public static class Endpoints
             .WithName(nameof(GetActiveGameSessions))
             .Produces<List<GetActiveGameSessions.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
-        
+
         builder.MapPost("/games/duplicate", DuplicateGameSession.HandleAsync)
             .WithName("DuplicateGameSession")
             .Produces<DuplicateGameSession.Response>(StatusCodes.Status200OK)
@@ -184,14 +171,6 @@ public static class Endpoints
         gamesGroup.MapPost("/winners/add", AddWinners.HandleAsync)
             .WithName(nameof(AddWinners))
             .Produces<AddWinners.Response>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        // wtf is this endpoint doing here?
-        gamesGroup.MapPost("/login", PlayerLogin.HandleAsync)
-            .WithTags("Authentication")
-            .WithName(nameof(PlayerLogin))
-            .Produces<PlayerLogin.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
@@ -262,14 +241,14 @@ public static class Endpoints
             .WithName(nameof(ResumeTimer))
             .Produces<ResumeTimer.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest);
-        
+
         timersGroup.MapPost("/stop", StopTimer.HandleAsync)
             .WithName(nameof(StopTimer))
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        return timersGroup;        
+        return timersGroup;
     }
 
     private static RouteGroupBuilder MapAbilityEndpoints(this IEndpointRouteBuilder builder)
@@ -337,6 +316,29 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return rolesGroup;
+    }
+
+
+    public static RouteGroupBuilder MapAuthEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var authGroup = builder.MapGroup("/auth");
+
+        authGroup.MapPost("/admin/login", AdminLogin.HandleAsync)
+            .WithName(nameof(AdminLogin))
+            .Produces<AdminLogin.Response>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        authGroup.MapPost("/player/login", PlayerLogin.HandleAsync)
+            .WithName(nameof(PlayerLogin))
+            .Produces<PlayerLogin.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        authGroup.MapGet("/me", Me.HandleAsync)
+            .WithName(nameof(Me))
+            .Produces<Me.Response>(StatusCodes.Status200OK);
+
+        return authGroup;
     }
 }
 

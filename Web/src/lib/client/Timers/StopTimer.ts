@@ -1,6 +1,3 @@
 import { createEndpoint } from '../api';
-
-export const StopTimer = createEndpoint<void, void>(
-    '/api/timers/stop',
-    'POST'
-);
+export type StopTimerRequest = void;
+export const StopTimer = createEndpoint<StopTimerRequest, void>('/api/timers/stop', 'POST');

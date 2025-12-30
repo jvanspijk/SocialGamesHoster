@@ -13,10 +13,12 @@
     let selectedGameId = $state(null);
 
     async function handleJoin() {
+                console.debug(`Joining game ${selectedGameId}`);
         if(selectedGameId == null) {
             return;
         }
-        await goto(`/login/${selectedGameId}`)
+
+        await goto(`/game/login/${selectedGameId}`);
     };    
 </script>
 

@@ -45,7 +45,8 @@ export function createEndpoint<TReq, TRes>(
 
 		const options: RequestInit = {
 			method,
-			headers: { 'Content-Type': 'application/json' }
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
 		};
 
 		const remainingKeys = Object.keys(requestData);

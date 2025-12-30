@@ -1,4 +1,4 @@
-﻿namespace API.Features.Authentication.Endpoints;
+﻿namespace API.Features.Auth.Endpoints;
 
 public static class AdminLogin
 {

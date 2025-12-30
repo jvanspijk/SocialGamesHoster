@@ -9,7 +9,7 @@
 	import HUDFooter from '$lib/components/HUDFooter.svelte';
 	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
     import BackLink from '$lib/components/BackLink.svelte';
-    import { authenticationHub } from '$lib/client/Authentication/AuthenticationHub.svelte';
+    import { authHub } from '$lib/client/Auth/AuthHub.svelte';
 
 
     let { data } = $props();
@@ -21,7 +21,7 @@
     const isDirty = $derived(Object.keys(pendingRoles).length > 0);
     const gameId = $derived(data.gameSession.id.toString());
 
-    authenticationHub.onEvent('PlayerLoggedIn', (event) => {
+    authHub.onEvent('PlayerLoggedIn', (event) => {
         console.debug(`Player ${event.playerId} logged in.`);
         const isPlayerPresent = data.players.some(p => p.id === event.playerId);
         if (!isPlayerPresent) {

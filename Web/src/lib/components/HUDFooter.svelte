@@ -26,7 +26,7 @@
         z-index: 100;
         background: #3e322b;
         
-        border-top: 4px solid #5b4a3c; 
+        border-top: 3px solid #5b4a3c; 
         box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.7); 
         padding: 0;
         
@@ -39,25 +39,24 @@
     }
 
     footer.collapsed {
-        transform: translateY(calc(100% - 38px));
+        transform: translateY(calc(100% - 40px));
     }
 
     .hud {
         display: flex;
-        justify-content: flex-end; 
+        justify-content: flex-start; 
         align-items: center;
         padding: 5px 20px 10px 20px;
         gap: 25px;
 
-        flex-wrap: wrap; 
+        flex-wrap: nowrap; 
         max-width: 100vw; 
         box-sizing: border-box;
         overflow: hidden;
     }
 
     .hud > :global(*) {
-        max-width: fit-content;
-        flex-shrink: 0; /* Prevents them from squishing since you have "plenty of space" */
+        flex-shrink: 0;
     }
 
     .toggle-control {
@@ -66,7 +65,7 @@
         width: 100%;
         background-color: #3e322b;
         border-bottom: 1px solid #5b4a3c;
-        height: 38px;
+        height: 40px;
     }
 
     .toggle-control button {

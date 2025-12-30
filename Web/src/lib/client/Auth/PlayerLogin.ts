@@ -1,13 +1,13 @@
 import { createEndpoint } from '../api';
 export type PlayerLoginRequest = {
-	readonly gameId: string;
 	readonly playerId: number;
 	readonly iPAddress: string;
+	readonly gameId: number;
 };
 export type PlayerLoginResponse = {
 	readonly token: string;
 };
 export const PlayerLogin = createEndpoint<PlayerLoginRequest, PlayerLoginResponse>(
-	'/api/games/{gameId}/login',
+	'/api/auth/player/login',
 	'POST'
 );

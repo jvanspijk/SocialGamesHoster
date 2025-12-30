@@ -2,14 +2,14 @@ import * as signalR from '@microsoft/signalr';
 import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
-export type AuthenticationHubEvents = {
+export type AuthHubEvents = {
 	PlayerLoggedIn: { gameId: number; playerId: number; ts: number };
 };
 
-class AuthenticationHub {
+class AuthHub {
 	private connection: signalR.HubConnection | null = null;
 
-	#state = $state<{ [K in keyof AuthenticationHubEvents]: AuthenticationHubEvents[K] | null }>({
+	#state = $state<{ [K in keyof AuthHubEvents]: AuthHubEvents[K] | null }>({
 		PlayerLoggedIn: null
 	});
 
@@ -59,10 +59,7 @@ class AuthenticationHub {
 		return this.#connectionState;
 	}
 
-	onEvent<K extends keyof AuthenticationHubEvents>(
-		key: K,
-		callback: (payload: AuthenticationHubEvents[K]) => void
-	) {
+	onEvent<K extends keyof AuthHubEvents>(key: K, callback: (payload: AuthHubEvents[K]) => void) {
 		$effect.pre(() => {
 			const value = this.#state[key];
 			if (value) {
@@ -80,4 +77,4 @@ class AuthenticationHub {
 }
 
 const apiBase = browser ? `${window.location.protocol}//${window.location.hostname}:9090` : '';
-export const authenticationHub = new AuthenticationHub(`${apiBase}/api/authentication/hub`);
+export const authHub = new AuthHub(`${apiBase}/api/auth/hub`);

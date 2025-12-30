@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace API.Features.Authentication.Hubs;
+namespace API.Features.Auth.Hubs;
 
 public interface IAuthenticationHub
 {

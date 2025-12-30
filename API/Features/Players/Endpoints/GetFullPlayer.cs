@@ -1,7 +1,7 @@
 ﻿using API.DataAccess;
 using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.Authentication;
+using API.Features.Auth;
 using API.Features.Players.Common;
 using System.Linq.Expressions;
 using System.Security.Claims;
