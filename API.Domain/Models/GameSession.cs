@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace API.Domain.Models;
@@ -32,6 +31,7 @@ public class GameSession
     public Round? CurrentRound { get; set; }
     public ICollection<Player> Winners { get; set; } = [];
     public GameStatus Status { get; set; } = GameStatus.NotStarted;
+    public ICollection<ChatChannel> ChatChannels { get; set; } = [];
 
     [NotMapped]
     public bool IsDone => Status == GameStatus.Finished || Status == GameStatus.Cancelled;

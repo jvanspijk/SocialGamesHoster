@@ -2,6 +2,8 @@
 using API.Features.Abilities.Hubs;
 using API.Features.Auth.Endpoints;
 using API.Features.Auth.Hubs;
+using API.Features.Chat.Endpoints;
+using API.Features.Chat.Hubs;
 using API.Features.GameSessions.Endpoints;
 using API.Features.GameSessions.Hubs;
 using API.Features.Players.Endpoints;
@@ -52,6 +54,10 @@ public static class Endpoints
         builder.MapAuthEndpoints()
             .MapHub<AuthenticationHub>("/hub")
             .WithTags("Auth");
+
+        builder.MapChatEndpoints()
+            .MapHub<ChatHub>("/hub")
+            .WithTags("Chat");
 
         return builder;
     }
@@ -340,7 +346,42 @@ public static class Endpoints
 
         return authGroup;
     }
+
+    public static RouteGroupBuilder MapChatEndpoints(this IEndpointRouteBuilder builder)
+    {
+        var chatGroup = builder.MapGroup("/chat");
+        
+        var channelGroup = chatGroup.MapGroup("/channels/{channelId:int}");
+
+        channelGroup.MapPost("/", CreateChannel.HandleAsync)
+            .WithName(nameof(CreateChannel))
+            .Produces<CreateChannel.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        //channelGroup.MapPost("/join", JoinChannel.HandleAsync)
+        //    .WithName(nameof(JoinChannel))
+        //    .Produces(StatusCodes.Status204NoContent)
+        //    .ProducesProblem(StatusCodes.Status400BadRequest)
+        //    .ProducesProblem(StatusCodes.Status404NotFound);
+
+        channelGroup.MapPost("/send", SendMessage.HandleAsync)
+            .WithName(nameof(SendMessage))
+            .Produces(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        channelGroup.MapGet("/messages", GetMessagesFromChannel.HandleAsync)
+            .WithName(nameof(GetMessagesFromChannel))
+            .Produces<List<GetMessagesFromChannel.Response>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .DisableClientCaching();
+
+        return chatGroup;
+    }
 }
+
+
 
 public static class RouteHandlerBuilderExtensions
 {

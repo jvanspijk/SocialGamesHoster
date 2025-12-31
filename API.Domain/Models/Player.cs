@@ -39,6 +39,7 @@ public class Player
     public ICollection<Player> CanBeSeenBy { get; set; } = [];
     public bool IsEliminated { get; set; } = false;
     public IPAddress? IP { get; set; }
+    public ICollection<ChatChannelMembership> ChatChannelMemberships { get; } = [];
 }
 
 

@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace API.Features.Auth.Endpoints;
 
-public class Me
+public static class Me
 {
     public record Response(int Id, string Name, RoleInfo? Role) : IProjectable<Player, Response>
     {

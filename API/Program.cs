@@ -170,7 +170,8 @@ public class Program
             .AddScoped<IRepository<Role>, RoleRepository>()
             .AddScoped<IRepository<Round>, RoundRepository>()
             .AddScoped<IRepository<Ruleset>, RulesetRepository>()
-            .AddScoped<IRepository<GameSession>, GameSessionRepository>();
+            .AddScoped<IRepository<GameSession>, GameSessionRepository>()
+            .AddScoped<ChatRepository>();
 
         services
             .AddSingleton<RoundTimer>()

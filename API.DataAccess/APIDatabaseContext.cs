@@ -36,7 +36,23 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
             Status = GameStatus.Running
         };
 
+        var globalChat = new ChatChannel
+        {
+            Id = 1,
+            Name = "Global",
+            GameId = gameSessionId,
+        };
+
+        var globalChatMemberships = playerSeeder.Players.Select(p => new ChatChannelMembership
+        {
+            Player = p,
+            PlayerId = p.Id,
+            Channel = globalChat,
+            ChannelId = globalChat.Id
+        }).ToList();
+
         builder.Entity<GameSession>().HasData(gameSession);
+        builder.Entity<ChatChannel>().HasData(globalChat);
     }
     public DbSet<Player> Players { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -45,6 +61,8 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
     public DbSet<Ruleset> Rulesets { get; set; }
     public DbSet<Round> Rounds { get; set; }
     public DbSet<GameSession> GameSessions { get; set; }
+    public DbSet<ChatChannel> ChatChannels { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
 
     private static void ConfigureRoleAbilities(ModelBuilder builder)
     {
@@ -111,6 +129,52 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
             .HasOne(p => p.GameSession)
             .WithMany(gs => gs.Participants)
             .HasForeignKey(p => p.GameId);
+
+        builder.Entity<Player>()
+            .HasMany(p => p.ChatChannelMemberships)
+            .WithOne(ccm => ccm.Player)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatChannel>()
+            .HasOne<GameSession>()
+            .WithMany(gs => gs.ChatChannels)
+            .HasForeignKey(cc => cc.GameId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatChannelMembership>()
+            .HasKey(ccm => new { ccm.PlayerId, ccm.ChannelId });
+
+        builder.Entity<ChatChannelMembership>()
+            .HasOne(ccm => ccm.Player)
+            .WithMany(p => p.ChatChannelMemberships)
+            .HasForeignKey(ccm => ccm.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatChannelMembership>()
+             .HasOne(ccm => ccm.Channel)
+             .WithMany(cc => cc.Members)
+             .HasForeignKey(ccm => ccm.ChannelId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatMessage>()
+            .HasOne(cm => cm.Channel)
+            .WithMany(cc => cc.Messages)
+            .HasForeignKey(cm => cm.ChannelId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatMessage>()
+            .HasOne(cm => cm.Sender)
+            .WithMany()
+            .HasForeignKey(cm => cm.SenderId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ChatMessage>()
+            .HasIndex(cm => new { cm.ChannelId, cm.SentAt })
+            .HasDatabaseName("IX_ChatMessage_Channel_Time");
 
         ConfigureRoleAbilities(builder);
     }
