@@ -14,7 +14,8 @@ public static class SendMessage
         {
             return result.AsIResult();
         }
-        await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId);
+
+        await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId, result.Value.Id);
         return Results.Created();
     }
 }

@@ -350,7 +350,12 @@ public static class Endpoints
     public static RouteGroupBuilder MapChatEndpoints(this IEndpointRouteBuilder builder)
     {
         var chatGroup = builder.MapGroup("/chat");
-        
+
+        chatGroup.MapGet("/{id:guid}", GetMessage.HandleAsync)
+            .WithName(nameof(GetMessage))
+            .Produces<GetMessage.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         var channelGroup = chatGroup.MapGroup("/channels/{channelId:int}");
 
         channelGroup.MapPost("/", CreateChannel.HandleAsync)

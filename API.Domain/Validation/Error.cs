@@ -58,6 +58,9 @@ public static partial class Errors
 
     public static Error InvalidOperation(string message) => 
         new(ErrorType.Validation, message, HttpStatusCode.BadRequest);
+
+    public static Error InvalidRequest(string message) =>
+        new(ErrorType.Validation, message, HttpStatusCode.BadRequest);
 }
 
 public static class ValidationExtensions

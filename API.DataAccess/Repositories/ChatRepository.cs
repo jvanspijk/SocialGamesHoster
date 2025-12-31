@@ -112,9 +112,13 @@ public class ChatRepository(APIDatabaseContext context)
         throw new NotImplementedException();
     }
 
-    Task<TProjectable?> GetAsync<TProjectable>(int id) where TProjectable : class
+    public async Task<TProjectable?> GetAsync<TProjectable>(Guid id) where TProjectable : class, IProjectable<ChatMessage, TProjectable>
     {
-        throw new NotImplementedException();
+        return await _context.ChatMessages
+            .AsNoTracking()
+            .Where(m => m.Id == id)
+            .Select(TProjectable.Projection)
+            .SingleOrDefaultAsync();
     }
 
     Task<Result<List<TProjectable>>> GetMultipleAsync<TProjectable>(List<int> ids) where TProjectable : class

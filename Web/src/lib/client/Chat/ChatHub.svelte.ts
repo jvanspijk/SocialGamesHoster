@@ -3,16 +3,16 @@ import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
 export type ChatHubEvents = {
-	OnChannelCreated: { channelId: number; memberIds: number[]; gameId: number; ts: number };
-	OnMessageSent: { channelId: number; senderId: number; ts: number };
+	ChannelCreated: { channelId: number; memberIds: number[]; gameId: number; ts: number };
+	MessageSent: { channelId: number; senderId: number; messageId: string; ts: number };
 };
 
 class ChatHub {
 	private connection: signalR.HubConnection | null = null;
 
 	#state = $state<{ [K in keyof ChatHubEvents]: ChatHubEvents[K] | null }>({
-		OnChannelCreated: null,
-		OnMessageSent: null
+		ChannelCreated: null,
+		MessageSent: null
 	});
 
 	#connectionState = $state<'Disconnected' | 'Connected' | 'Reconnecting' | 'Faulted'>(
@@ -46,13 +46,13 @@ class ChatHub {
 		if (!this.connection) return;
 
 		this.connection.on(
-			'OnChannelCreated',
+			'ChannelCreated',
 			(channelId: number, memberIds: number[], gameId: number) => {
-				this.#state.OnChannelCreated = { channelId, memberIds, gameId, ts: Date.now() };
+				this.#state.ChannelCreated = { channelId, memberIds, gameId, ts: Date.now() };
 			}
 		);
-		this.connection.on('OnMessageSent', (channelId: number, senderId: number) => {
-			this.#state.OnMessageSent = { channelId, senderId, ts: Date.now() };
+		this.connection.on('MessageSent', (channelId: number, senderId: number, messageId: string) => {
+			this.#state.MessageSent = { channelId, senderId, messageId, ts: Date.now() };
 		});
 
 		this.connection.onreconnecting(() => (this.#connectionState = 'Reconnecting'));

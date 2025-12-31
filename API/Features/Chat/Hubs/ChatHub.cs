@@ -4,14 +4,14 @@ namespace API.Features.Chat.Hubs
 {
     public interface IChatHub
     {
-        Task OnChannelCreated(int channelId, List<int> memberIds, int gameId);
-        Task OnMessageSent(int channelId, int senderId);
+        Task ChannelCreated(int channelId, List<int> memberIds, int gameId);
+        Task MessageSent(int channelId, int senderId, Guid messageId);
     }
     public class ChatHub : Hub<IChatHub>
     {
-        public static async Task NotifyMessageSent(IHubContext<ChatHub, IChatHub> hubContext, int channelId, int senderId)
+        public static async Task NotifyMessageSent(IHubContext<ChatHub, IChatHub> hubContext, int channelId, int senderId, Guid messageId)
         {
-            await hubContext.Clients.All.OnMessageSent(channelId, senderId);
+            await hubContext.Clients.All.MessageSent(channelId, senderId, messageId);
         }
     }
 }
