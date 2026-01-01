@@ -42,7 +42,7 @@
 
 	.toggle-button {
 		position: relative;
-		background: linear-gradient(145deg, #a6324a, #8c2a3e);
+		background: #5b4a3c;
 		color: white;
 		border: 2px solid #5b4a3c;
 		border-radius: 50%;
@@ -53,11 +53,12 @@
 		align-items: center;
 		justify-content: center;
 		transition: all 0.2s ease;
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 0 5px rgba(255, 255, 255, 0.1), 
+                    inset 0 0 15px rgba(0, 0, 0, 0.8);
 	}
 
 	.toggle-button:hover {
-		background: linear-gradient(145deg, #b83b55, #a6324a);
+		background: #6d5a4a;
 		transform: scale(1.05);
 	}
 

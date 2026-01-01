@@ -97,9 +97,12 @@ public class ChatRepository(APIDatabaseContext context)
             .ToListAsync();
     }
 
-    public Task<ChatMessage?> GetAsync(Guid id)
+    public async Task<ChatMessage?> GetAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _context.ChatMessages
+          .AsNoTracking()
+          .Where(m => m.Id == id)
+          .SingleOrDefaultAsync();
     }
 
     public Task<List<TProjectable>> GetMultipleAsync<TProjectable>(int channelId)

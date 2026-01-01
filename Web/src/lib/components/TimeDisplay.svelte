@@ -174,7 +174,7 @@
     }
 
     .inactive .ring-progress {
-        stroke: #4a3f35; 
+        stroke: #a62a2a; 
     }
 
     .progress-ring {

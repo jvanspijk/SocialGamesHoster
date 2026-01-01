@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:9090';
+const BASE_URL = 'http://100.75.215.118:9090';
 
 export type ApiError = {
 	status: number;
@@ -70,7 +70,13 @@ export function createEndpoint<TReq, TRes>(
 		const res = await f(finalUrl, options);
 
 		if (res.ok) {
-			return { ok: true, data: await res.json() };
+			const contentType = res.headers.get("content-type");
+            if (res.status === 204 || !contentType || !contentType.includes("application/json")) {
+                return { ok: true, data: {} as TRes };
+            }
+            const text = await res.text();
+            const data = text ? JSON.parse(text) : {};
+            return { ok: true, data };
 		}
 		let errorBody: ApiError;
 		try {

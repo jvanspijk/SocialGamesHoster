@@ -69,9 +69,11 @@
     {/if}
 
     <ChatChannel 
-        channelId="global" 
+        channelId={1} 
+        channelName="Global Chat"
+        readerId={data.player.id}
         isOpen={isChatOpen} 
-        on:close={closeChat} 
+        onClose={closeChat} 
     />
 
     <HUDFooter>
