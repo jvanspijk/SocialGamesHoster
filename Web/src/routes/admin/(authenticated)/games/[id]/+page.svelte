@@ -10,6 +10,9 @@
 	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
     import BackLink from '$lib/components/BackLink.svelte';
     import { authHub } from '$lib/client/Auth/AuthHub.svelte';
+	import MainButton from '$lib/components/MainButton.svelte';
+	import { FinishGameSession } from '$lib/client/GameSessions/FinishGameSession';
+	import { StartGameSession } from '$lib/client/GameSessions/StartGameSession';
 
 
     let { data } = $props();
@@ -133,6 +136,19 @@
                 </form>
             {/if}
         </footer>
+    </div>
+
+    <div class="game-controls">
+
+        {#if data.gameSession.status === 'Not started'}
+            <SecondaryButton onclick={() => StartGameSession(fetch, { gameId: data.gameSession.id.toString() })}>Start game</SecondaryButton>
+        {:else if data.gameSession.status === 'Running'}
+            <SecondaryButton variant="danger" onclick={() => FinishGameSession(fetch, { gameId: data.gameSession.id.toString() })}>Stop game</SecondaryButton>
+            <SecondaryButton onclick={() => StartNewRound(fetch, { gameId: data.gameSession.id })}>Start new round</SecondaryButton>
+        {:else if data.gameSession.status === 'Finished'}
+            <p>Winners: </p>
+        {/if}
+        <h3>Game Status: {data.gameSession.status}</h3>
     </div>
 
     <HUDFooter>

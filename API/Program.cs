@@ -33,6 +33,10 @@ namespace API;
 //      - it assumes delta is negative
 //      - Calculation of total time is off
 // - GetTimerState should have a result for the case where there is no timer.
+// - Finish and cancel game session should be single endpoint stop game session.
+// - Solve todos in player repository
+// - Search for more todos and fix them
+// Wrong parameters gave a 200 OK response. Maybe svelte issue.
 
 // v2:
 // - Always inject repository interfaces instead of concrete repositories

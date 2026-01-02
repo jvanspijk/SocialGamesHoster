@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { untrack } from 'svelte';
@@ -10,11 +10,12 @@
         rows,
         searchPlaceholder = "Search...",
         enableFilter = false,
-        filterOptions = []
+        filterOptions = [],
+        filterValue = $bindable("All"),
+        filterKey = "" as keyof T
     } = $props();
 
     let searchTerm = $state("");
-    let filterValue = $state("All");
     
     const currentPage = $derived(Number(page.url.searchParams.get('page')) || 1);
     const itemsPerPage = 5;
@@ -34,7 +35,11 @@
     const filteredData = $derived(
         data.filter(item => {
             const matchesSearch = JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = filterValue === "All" || (item as any).status === filterValue;
+            const matchesFilter = filterValue === "All" || (
+                filterKey && 
+                item[filterKey] && 
+                String(item[filterKey]).toLowerCase().trim() === filterValue.toLowerCase().trim()
+            );
             return matchesSearch && matchesFilter;
         })
     );
@@ -73,7 +78,7 @@
 
         {#if enableFilter}
             <select bind:value={filterValue} class="ledger-select">
-                <option value="All">All Statuses</option>
+                <option value="All">All</option>
                 {#each filterOptions as opt}
                     <option value={opt}>{opt}</option>
                 {/each}

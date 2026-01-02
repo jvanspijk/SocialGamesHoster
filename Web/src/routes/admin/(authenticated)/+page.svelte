@@ -27,8 +27,14 @@
         <NavBlock 
             href="/admin/rulesets" 
             title="Manage Rulesets" 
-            description="Define the roles, abilities, and laws that govern every game."
+            description="View and manage rulesets."
             icon="📜"
+        />
+        <NavBlock 
+            href="/admin/rulesets/new" 
+            title="Create New Ruleset" 
+            description="Create a new ruleset by defining roles and abilities."
+            icon="✍️"
         />
     </section>
 </div>

@@ -197,6 +197,11 @@ public static class Endpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        gamesGroup.MapPost("/delete", DeleteGameSession.HandleAsync)
+            .WithName(nameof(DeleteGameSession))
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound); 
+
         var playersGroup = gamesGroup.MapGroup("/players")
             .WithTags("Player");
 

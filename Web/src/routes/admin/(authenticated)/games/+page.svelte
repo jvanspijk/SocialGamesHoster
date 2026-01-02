@@ -2,10 +2,39 @@
     import type { GetAllGameSessionsResponse } from '$lib/client/GameSessions/GetAllGameSessions';
     import LedgerTable from '$lib/components/LedgerTable.svelte';
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
-    import { goto } from '$app/navigation';
+    import { goto, invalidateAll } from '$app/navigation';
 	import BackLink from '$lib/components/BackLink.svelte';
+    import { DeleteGameSession } from '$lib/client/GameSessions/DeleteGameSession';
+    import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
+
 
     let { data } = $props();
+    let isDeleting = $state(false);
+    let isDeleteModalOpen = $state(false);
+    let selectedGameId = $state<number | null>(null);
+    function openDeleteModal(gameId: number) {
+        selectedGameId = gameId;
+        isDeleteModalOpen = true;
+    }
+
+    async function handleDelete() {
+        if (!selectedGameId) return;
+
+		isDeleting = true;
+		try {
+			await DeleteGameSession(fetch, { gameId: selectedGameId.toString() });
+			isDeleteModalOpen = false;
+            await invalidateAll();
+		} catch (error) {
+			console.error("Failed to delete:", error);
+			alert("An error occurred while deleting the session.");
+		} finally {
+			isDeleting = false;
+            selectedGameId = null;
+		}
+	}
+
+
 </script>
 
 <div class="page-header">
@@ -15,8 +44,10 @@
 
 <LedgerTable 
     data={data.games} 
-    enableFilter={true} 
+    enableFilter={true}
+    filterKey='status'
     filterOptions={['Not started', 'Running', 'Paused', 'Stopped', 'Cancelled', 'Finished']}
+    filterValue='Not started'
 >
     {#snippet columns()}
         <tr>
@@ -37,12 +68,21 @@
             <td>
                 <div class="actions-wrapper">
                     <SecondaryButton onclick={() => goto(`/admin/games/${game.id}`)}>Manage</SecondaryButton>
-                    <SecondaryButton variant="danger" onclick={() => {}}>Stop Game</SecondaryButton>
+                    <SecondaryButton variant="danger" onclick={() => openDeleteModal(game.id)}>Delete</SecondaryButton>
                 </div>
             </td>
         </tr>
     {/snippet}
 </LedgerTable>
+
+<ConfirmationModal
+    bind:isOpen={isDeleteModalOpen}
+    title="Delete Game Session"
+    message="Are you sure you want to delete this session? This action cannot be undone."
+    confirmText={isDeleting ? "Deleting..." : "Delete Session"}
+    onConfirm={handleDelete}
+    onCancel={() => (isDeleteModalOpen = false)}
+/>
 
 <style>
     :global(th) {

@@ -10,9 +10,9 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-            user: { id: number; name: string; roleId: number | null; } | null;
-			admin: { id: number; name: string; roleId: number | null; } | null;
-        }
+			user: { id: number; name: string; roleId: number | null } | null;
+			admin: { id: number; name: string; roleId: number | null } | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

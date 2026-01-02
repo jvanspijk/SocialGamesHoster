@@ -181,6 +181,28 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
     #endregion
 
     #region Delete
+    public async Task<Result> DeleteAsync(int id)
+    {
+        if(!_context.Database.IsRelational())
+        {
+            var session = await _context.GameSessions.FindAsync(id);
+            if (session == null) return Errors.ResourceNotFound("Session", id);
+            _context.GameSessions.Remove(session);
+            await _context.SaveChangesAsync();
+            return Result.Success();
+        }
+
+        int rowsDeleted = await _context.GameSessions
+            .Where(g => g.Id == id)
+            .ExecuteDeleteAsync();
+
+        if (rowsDeleted == 0)
+        {
+            return Errors.ResourceNotFound("Game session", id);
+        }
+
+        return Result.Success();
+    }
     public Task DeleteAsync(GameSession entity)
     {
         throw new NotImplementedException();
