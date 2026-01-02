@@ -31,7 +31,7 @@
             icon="📜"
         />
         <NavBlock 
-            href="/admin/rulesets/new" 
+            href="/admin/rulesets/create" 
             title="Create New Ruleset" 
             description="Create a new ruleset by defining roles and abilities."
             icon="✍️"
