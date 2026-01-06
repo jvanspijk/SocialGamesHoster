@@ -24,18 +24,13 @@ Docker compose was used for the following reasons:
 
 The docker compose consists of four services:
 - The API (ASP.NET)
-- The Web app (React)
+- The Web app (Sveltekit)
 - A database (Postgres)
 - nginx
 
 ## Architecture
-The API and Web app are separate projects for the following reasons:
-- React offers a better and more comprehensive developer experience
-- A single page application provides a snappy feel without reloads, which is good for user experience in a gaming setting.
-- It enforces decoupling between the back end and front end
-- Multiple front ends can be made. For example a separate project for an admin panel.
-- To flex.
+The API and Web app are separate projects because Svelte offers a better and more comprehensive developer experience for creating a good looking UI and reactive user experience.
 
-The API has a monolithic structure to keep things simple. It's designed to be mostly stateless to keep the logic simple 
+The API is designed to be mostly stateless to keep the logic simple 
 and prevent data loss if the network is down.
-The API uses Entity Framework to easily store and retrieve C# objects in a database.
+The API uses Entity Framework to store and retrieve C# objects in a database without having to manually write queries. The database implementation can be swapped easily and an in-memory database is used for testing.
