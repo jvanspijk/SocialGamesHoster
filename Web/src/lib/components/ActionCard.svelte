@@ -33,60 +33,70 @@
 </div>
 
 <style>
-	.card {
-		background-color: white;
-		padding: 1.5rem;
-		border-radius: 0.75rem;
-		border: 1px solid #e2e8f0;
-		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		transition: border-color 0.2s;
-	}
+    .card {
+        /* Parchment Theme */
+        background-color: #fff9e6;
+        padding: 1.5rem;
+        border-radius: 3px; /* Sharper corners for old-paper feel */
+        border: 2px solid #5b4a3c;
+        box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.2);
+        
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
 
-	.card:hover {
-		border-color: #cbd5e1;
-	}
+    .card:hover {
+        border-color: #8c2a3e; /* Deep crimson on hover */
+        transform: translateY(-1px);
+        box-shadow: 3px 3px 0px rgba(140, 42, 62, 0.3);
+    }
 
-	.body {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
+    .body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
-	.title {
-		font-size: 1.125rem;
-		font-weight: 700;
-		color: #0f172a;
-		margin: 0;
-	}
+    .title {
+        font-family: 'IM Fell English', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #3e322b;
+        margin: 0;
+    }
 
-	.description {
-		font-size: 0.875rem;
-		color: #64748b;
-		margin: 0.25rem 0 0 0;
-	}
+    .description {
+        font-family: 'IM Fell English', serif;
+        font-size: 1rem;
+        color: #5b4a3c;
+        line-height: 1.4;
+        margin: 0.25rem 0 0 0;
+        font-style: italic;
+    }
 
-	.tag-pool {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
+    .tag-pool {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
 
-	.tag {
-		background-color: #eef2ff;
-		color: #4338ca;
-		padding: 0.125rem 0.5rem;
-		border-radius: 0.25rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-		border: 1px solid #e0e7ff;
-	}
+    .tag {
+        background-color: #f1e9d2;
+        color: #8c2a3e;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid #dcd3b6;
+    }
 
-	.actions {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 </style>

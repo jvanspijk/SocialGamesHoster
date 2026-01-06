@@ -5,6 +5,8 @@
 	import ActionCard from '$lib/components/ActionCard.svelte';
 	import SecondaryButton from '$lib/components/SecondaryButton.svelte';
 	import SelectionPool from '$lib/components/SelectionPool.svelte';
+	import TextInput from '$lib/components/TextInput.svelte';
+	import BackLink from '$lib/components/BackLink.svelte';
 
 	interface Ability {
 		id: string;
@@ -113,29 +115,32 @@
 	}
 </script>
 
-<nav class="nav-bar">
-	<div class="nav-brand">
-		<div class="brand-icon">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-			</svg>
-		</div>
-		<h1 class="brand-text">Ruleset Studio</h1>
-	</div>
+<div class="page-header">
+	<BackLink href="/admin" pageName="Admin Overview"></BackLink>
+	<h1>Ruleset creator</h1>
 	<SecondaryButton onclick={() => console.log($state.snapshot(ruleset))}>
-		Save Ruleset
+	Save Ruleset
 	</SecondaryButton>
-</nav>
+</div>
 
 <main class="container">
 	<section class="section header-section">
 		<div class="input-group">
 			<label for="rs-name">Ruleset Name</label>
-			<input id="rs-name" bind:value={ruleset.name} type="text" placeholder="e.g. Tournament 2024">
+			<TextInput 
+				bind:value={ruleset.name} 
+				placeholder="" 
+				name="rs-name"
+			/>
 		</div>
 		<div class="input-group">
 			<label for="rs-desc">Description</label>
-			<textarea id="rs-desc" bind:value={ruleset.description} rows="2" placeholder="Describe the purpose of this ruleset..."></textarea>
+			<TextInput 
+				bind:value={ruleset.description} 
+				placeholder="Describe the general goals and ideas behind this ruleset..." 
+				multiline={true} 
+				rows={4} 
+			/>
 		</div>
 	</section>
 
@@ -143,8 +148,7 @@
 		<div class="section-header">
 			<h2 class="title">Roles</h2>
 			<SecondaryButton variant="secondary" onclick={() => openRoleDrawer()}>
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-				Add Role
+				+ Add Role
 			</SecondaryButton>
 		</div>
 
@@ -181,15 +185,24 @@
 >
 	<div class="form-container">
 		<div class="form-section">
-			<input bind:value={roleForm.name} placeholder="Role Name" class="field">
-			<textarea bind:value={roleForm.description} placeholder="Description" class="field" rows="3"></textarea>
+			<TextInput 
+				bind:value={roleForm.name} 
+				placeholder="Role Name" 
+				name="roleName"
+			/>
+			<TextInput 
+				bind:value={roleForm.description} 
+				placeholder="Description" 
+				multiline={true} 
+				rows={4} 
+			/>
 		</div>
 		
 		<div class="form-divider">
 			<div class="divider-header">
 				<span class="label">Abilities</span>
 				<SecondaryButton onclick={() => abilityDrawerOpen = true}>
-					<span class="text-xs font-bold">+ NEW</span>
+					<span class="text-xs font-bold">+ New Ability</span>
 				</SecondaryButton>
 			</div>
 			
@@ -214,8 +227,8 @@
 	onclose={() => abilityDrawerOpen = false}
 >
 	<div class="form-section">
-		<input bind:value={abilityForm.name} placeholder="Ability Name" class="field">
-		<textarea bind:value={abilityForm.description} placeholder="Description" class="field" rows="4"></textarea>
+		<TextInput bind:value={abilityForm.name} placeholder="Ability Name"/>
+		<TextInput bind:value={abilityForm.description} placeholder="Description" multiline={true} rows={4}/>
 	</div>
 
 	{#snippet footer()}
@@ -234,166 +247,125 @@
 {/if}
 
 <style>
-	:global(body) {
-		background-color: #f8fafc;
-		margin: 0;
-		font-family: system-ui, -apple-system, sans-serif;
-	}
+    :global(body) {
+        background-color: #2d2319; 
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm66 3c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-46-45c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm54 0c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM57 7c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-8 48c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM25 34c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm23 47c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm50 35c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM21 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm54 44c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM8 33c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm56 56c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM33 51c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm65 11c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM42 2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-7 48c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm59 2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM40 76c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm57 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM60 28c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm39 67c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM46 39c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM28 89c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM71 81c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm18-68c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM42 29c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm8 40c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-6 25c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm22-97c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM1 31c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm7 51c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm33 4c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm60-46c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-9 52c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm20-17c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-44-20c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-69 60c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm13 14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm89-7c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM73 66c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM28 14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm1 90c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm77-76c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-79 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm54 39c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm32-1c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM32 6c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm51 38c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-75 37c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm55 35c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-61-14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM15 6c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm32 7c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm36 41c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM60 71c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM35 88c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM12 40c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm0 54c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM3 75c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm39-52c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm60-2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-9 30c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm20 35c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-44-14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-69 76c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm13-37c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm89-7c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM73 67c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-45-48c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%233e322b' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+        margin: 0;
+        font-family: 'IM Fell English', serif;
+        color: #3e322b;
+    }
 
-	.nav-bar {
-		background-color: white;
-		border-bottom: 1px solid #e2e8f0;
-		padding: 1rem 2rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		position: sticky;
-		top: 0;
-		z-index: 10;
-	}
+    .container {
+        max-width: 60rem;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
 
-	.nav-brand {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.brand-icon {
-		background-color: #4f46e5;
-		padding: 0.5rem;
-		border-radius: 0.5rem;
-		display: flex;
-	}
-
-	.brand-text {
-		font-size: 1.125rem;
-		font-weight: 700;
-		letter-spacing: -0.025em;
-		margin: 0;
-	}
-
-	.container {
-		max-width: 56rem;
+    .header-section {
+        background-color: #fff9e6;
+        padding: 2.5rem;
+        border-radius: 4px;
+        border: 2px solid #5b4a3c;
+        box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        position: relative;
 		margin: 0 auto;
-		padding: 3rem 1.5rem;
-	}
+		width: 100%;
+		margin-bottom: 2rem;
+    }
+
+    .header-section::before {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: #5b4a3c;
+        opacity: 0.3;
+        font-size: 2rem;
+    }
+
+    .title {
+        font-family: 'IM Fell English', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3e322b;
+        border-bottom: 2px solid #5b4a3c;
+        margin-bottom: 1rem;
+		width: 100%;
+    }
+
+    .input-group label {
+        font-family: 'IM Fell English', serif;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #5b4a3c;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }   
 
 	.section {
-		margin-bottom: 3rem;
-	}
-
-	.header-section {
-		background-color: white;
-		padding: 2rem;
-		border-radius: 0.75rem;
-		border: 1px solid #e2e8f0;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-		display: flex;
-		flex-direction: column;
+		width: 100%;
 		gap: 1.5rem;
 	}
 
-	.section-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1.5rem;
-	}
-
-	.title {
-		font-size: 1.5rem;
-		font-weight: 700;
-		margin: 0;
-	}
-
-	.input-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.input-group label {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: #334155;
-	}
-
-	.input-group input, .input-group textarea, .field {
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 1rem;
 		width: 100%;
-		padding: 0.625rem 1rem;
-		border-radius: 0.5rem;
-		border: 1px solid #e2e8f0;
-		font-size: 1rem;
-		transition: ring 0.2s;
-		box-sizing: border-box;
-	}
+		margin: 0 auto;
+		margin-top: 1rem;
+    }
 
-	.input-group input:focus, .input-group textarea:focus, .field:focus {
-		outline: none;
-		border-color: #4f46e5;
-		box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-	}
+    .empty-state {
+        grid-column: 1 / -1;
+        
+        display: flex;
+        align-items: center;
+        justify-content: center;
+		justify-self: center;
+		margin: 0 auto;
+        
+        width: 100%;
+        max-width: 600px;
+        
+        background-color: rgba(255, 249, 230, 0.5);
+        border: 2px dashed #5b4a3c;
+        padding: 3rem;
+        
+        color: #5b4a3c; 
+        font-style: italic;
+        text-align: center;
+    }
 
-	.grid {
-		display: grid;
-		gap: 1rem;
-	}
+    .toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        background-color: #fff9e6;
+        color: #3e322b;
+        padding: 1rem 2rem;
+        border: 2px solid #8c2a3e;
+        border-radius: 4px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-weight: bold;
+    }
 
-	.empty-state {
-		background-color: #f1f5f9;
-		border: 2px dashed #cbd5e1;
-		border-radius: 0.75rem;
-		padding: 3rem;
-		text-align: center;
-		color: #94a3b8;
-	}
+    .form-divider {
+        padding-top: 1.5rem;
+        border-top: 2px solid #e8e0c5;
+    }
 
-	.form-container {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-	}
-
-	.form-section {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.form-divider {
-		padding-top: 1.5rem;
-		border-top: 1px solid #f1f5f9;
-	}
-
-	.divider-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1rem;
-	}
-
-	.label {
-		font-size: 0.75rem;
-		font-weight: 700;
-		color: #64748b;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.toast {
-		position: fixed;
-		bottom: 1.5rem;
-		right: 1.5rem;
-		z-index: 100;
-		background-color: #0f172a;
-		color: white;
-		padding: 0.75rem 1.5rem;
-		border-radius: 0.75rem;
-		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		font-size: 0.875rem;
-		font-weight: 500;
-	}
+    .label {
+        font-family: 'IM Fell English', serif;
+        font-size: 1rem;
+        color: #5b4a3c;
+        font-weight: bold;
+    }
 </style>

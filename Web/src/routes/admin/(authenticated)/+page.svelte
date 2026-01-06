@@ -10,8 +10,8 @@
         <h2>Game sessions</h2>
         <NavBlock 
             href="/admin/games" 
-            title="Active Games" 
-            description="Manage active games."
+            title="Manage Games" 
+            description="Manage game sessions."
             icon="⚔️"
         />
         <NavBlock 
