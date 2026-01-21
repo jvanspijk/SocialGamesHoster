@@ -187,13 +187,8 @@ public static class Endpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        gamesGroup.MapPost("/finish", FinishGameSession.HandleAsync)
-            .WithName(nameof(FinishGameSession))
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        gamesGroup.MapPost("/cancel", CancelGameSession.HandleAsync)
-            .WithName(nameof(CancelGameSession))
+        gamesGroup.MapPost("/stop", StopGameSession.HandleAsync)
+            .WithName(nameof(StopGameSession))
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

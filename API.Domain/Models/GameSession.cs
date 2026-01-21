@@ -8,8 +8,7 @@ public enum GameStatus
     NotStarted = 0,
     Running = 100,
     Paused = 200,
-    Cancelled = 300,
-    Finished = 400,
+    Finished = 300,
 }
 public static partial class GameStatusExtensions
 {
@@ -34,7 +33,7 @@ public class GameSession
     public ICollection<ChatChannel> ChatChannels { get; set; } = [];
 
     [NotMapped]
-    public bool IsDone => Status == GameStatus.Finished || Status == GameStatus.Cancelled;
+    public bool IsDone => Status == GameStatus.Finished;
     [NotMapped]
     public bool IsActive => Status == GameStatus.Running || Status == GameStatus.Paused;
 }

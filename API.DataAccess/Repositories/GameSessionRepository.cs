@@ -133,7 +133,7 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         return session;
     }
 
-    public async Task<Result<GameSession>> FinishGameSession(int gameSessionId)
+    public async Task<Result<GameSession>> StopGameSession(int gameSessionId)
     {
         GameSession? session = await _context.GameSessions
             .Include(gs => gs.CurrentRound)
@@ -158,35 +158,19 @@ public class GameSessionRepository(APIDatabaseContext context) : IRepository<Gam
         await _context.SaveChangesAsync();
         return session;
     }
-
-    public async Task<Result<GameSession>> CancelGameSession(int gameSessionId)
-    {
-        GameSession? session = await _context.GameSessions
-            .FirstOrDefaultAsync(gs => gs.Id == gameSessionId);
-
-        if (session == null)
-        {
-            return Errors.ResourceNotFound(nameof(session), gameSessionId);
-        }
-
-        if (session.IsDone)
-        {
-            return Errors.InvalidOperation($"Game session with id {gameSessionId} has already completed.");
-        }
-
-        session.Status = GameStatus.Cancelled;
-        await _context.SaveChangesAsync();
-        return session;
-    }
     #endregion
 
     #region Delete
     public async Task<Result> DeleteAsync(int id)
     {
-        if(!_context.Database.IsRelational())
+        if(!_context.Database.IsRelational()) // For testing environments using InMemory database
         {
             var session = await _context.GameSessions.FindAsync(id);
-            if (session == null) return Errors.ResourceNotFound("Session", id);
+            if (session == null)
+            {
+                return Errors.ResourceNotFound("Session", id);
+            }
+
             _context.GameSessions.Remove(session);
             await _context.SaveChangesAsync();
             return Result.Success();
