@@ -16,9 +16,13 @@ public static class ResultMvcExtensions
     public static IResult AsIResult<T>(this Result<T> result) where T : notnull
     {
         return result.Match(
-            val => Results.Ok(val), 
-            err => Results.Problem(err.Message, statusCode: (int)err.StatusCode)
-        );        
+            val => Results.Ok(val),
+            err => Results.Problem(
+                detail: err.Message,
+                title: err.StatusCode.ToString(),
+                statusCode: (int)err.StatusCode
+            )
+        );
     }
 }
 

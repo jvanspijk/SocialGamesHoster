@@ -10,8 +10,6 @@ using API.Features.Players.Endpoints;
 using API.Features.Players.Hubs;
 using API.Features.Roles.Endpoints;
 using API.Features.Roles.Hubs;
-using API.Features.Rounds.Endpoints;
-using API.Features.Rounds.Hubs;
 using API.Features.Rulesets.Endpoints;
 using API.Features.Rulesets.Hubs;
 using API.Features.Timers.Endpoints;
@@ -45,19 +43,17 @@ public static class Endpoints
 
         builder.MapTimerEndpoints()
             .MapHub<TimersHub>("/hub")
-            .WithTags("Timers");
-
-        builder.MapRoundEndpoints()
-            .MapHub<RoundsHub>("/hub")
-            .WithTags("Rounds");
+            .WithTags("Timers")
+            .WithMetadata(new DisableCacheInvalidationAttribute());
 
         builder.MapAuthEndpoints()
             .MapHub<AuthenticationHub>("/hub")
-            .WithTags("Auth");
+            .WithTags("Auth")
+            .WithMetadata(new DisableCacheInvalidationAttribute());
 
         builder.MapChatEndpoints()
             .MapHub<ChatHub>("/hub")
-            .WithTags("Chat");
+            .WithTags("Chat");        
 
         return builder;
     }
@@ -116,9 +112,9 @@ public static class Endpoints
             .WithName(nameof(CreateAbility))
             .Produces<CreateAbility.Response>(StatusCodes.Status201Created);
 
-        abilitiesGroup.MapGet("/", GetAbilitiesFromRuleset.HandleAsync)
-            .WithName(nameof(GetAbilitiesFromRuleset))
-            .Produces<List<GetAbilitiesFromRuleset.Response>>(StatusCodes.Status200OK)
+        abilitiesGroup.MapGet("/", GetRulesetAbilities.HandleAsync)
+            .WithName(nameof(GetRulesetAbilities))
+            .Produces<List<GetRulesetAbilities.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         var rolesGroup = rulesetsGroup.MapGroup("/roles")
@@ -200,14 +196,9 @@ public static class Endpoints
         var playersGroup = gamesGroup.MapGroup("/players")
             .WithTags("Player");
 
-        playersGroup.MapGet("/", GetPlayersFromGame.HandleAsync)
-            .WithName(nameof(GetPlayersFromGame))
-            .Produces<List<GetPlayersFromGame.Response>>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        playersGroup.MapGet("/{playerId:int}", GetPlayerFromGame.HandleAsync)
-            .WithName(nameof(GetPlayerFromGame))
-            .Produces<GetPlayerFromGame.Response>(StatusCodes.Status200OK)
+        playersGroup.MapGet("/", GetGamePlayers.HandleAsync)
+            .WithName(nameof(GetGamePlayers))
+            .Produces<List<GetGamePlayers.Response>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         playersGroup.MapPost("/", CreatePlayer.HandleAsync)

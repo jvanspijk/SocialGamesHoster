@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Domain.Validation;
 using API.Features.Roles.Common;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,20 +19,15 @@ public static class UpdateRoleAbilities
                 role.Abilities.Select(a => new AbilityInfo(a.Id, a.Name, a.Description)).ToList()
             );
     }
-    public async static Task<IResult> HandleAsync(RoleRepository repository, AbilityRepository abilityRepository, IMemoryCache cache, int id, Request request)
+    public async static Task<IResult> HandleAsync(IRepository<Role> repository, IRepository<Ability> abilityRepository, IMemoryCache cache, int id, Request request)
     {
-        var abilitiesResult = await abilityRepository.GetMultipleAsync(request.AbilityIds);
-        if (abilitiesResult.IsFailure)
-        {
-            return abilitiesResult.AsIResult();
-        }
-
-        Role? role = await repository.GetAsync(id);
+        Role? role = await repository.GetWithTrackingAsync(id);
         if (role == null)
         {
             return Results.NotFound($"Role with id {id} not found.");
         }
-        var abilities = abilitiesResult.Value;
+
+        var abilities = await abilityRepository.GetListWithTrackingAsync(request.AbilityIds);
 
         var rulesetMismatchErrors = abilities
             .Where(ability => ability.RulesetId != role.RulesetId)
@@ -50,12 +44,9 @@ public static class UpdateRoleAbilities
         }
 
         role.Abilities = abilities;
-        Role updatedRole = await repository.UpdateAsync(role);
+        await repository.SaveChangesAsync();
 
-        GetRole.InvalidateCache(cache, id);
-        GetRoles.InvalidateCache(cache, role.RulesetId);
-
-        Response response = updatedRole.ConvertToResponse<Role, Response>();
+        Response response = role.ConvertToResponse<Role, Response>();
         return Results.Ok(response);
     }
 }

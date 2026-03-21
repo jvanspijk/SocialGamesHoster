@@ -1,4 +1,5 @@
 ﻿using API.DataAccess;
+using API.Domain.Entities;
 using API.Domain.Models;
 using System.Linq.Expressions;
 
@@ -21,7 +22,7 @@ public static class UpdateGameRuleset
         IRepository<Ruleset> rulesetRepository,
         IRepository<GameSession> gameSessionRepository)
     {
-        var existingGameSession = await gameSessionRepository.GetAsync(gameId);
+        var existingGameSession = await gameSessionRepository.GetWithTrackingAsync(gameId);
         if (existingGameSession == null)
         {
             return Results.NotFound();
@@ -37,14 +38,14 @@ public static class UpdateGameRuleset
             return Results.Ok(existingGameSession.ConvertToResponse<GameSession, Response>());
         }
 
-        var newRuleset = await rulesetRepository.GetAsync(request.RulesetId);
+        var newRuleset = await rulesetRepository.GetWithTrackingAsync(request.RulesetId);
         if (newRuleset == null)
         {
             return Results.NotFound($"Ruleset with id {request.RulesetId} not found.");
         }
 
         existingGameSession.RulesetId = request.RulesetId;
-        await gameSessionRepository.UpdateAsync(existingGameSession);
+        await gameSessionRepository.SaveChangesAsync();
         var response = existingGameSession.ConvertToResponse<GameSession, Response>();
         return Results.Ok(response);
     }

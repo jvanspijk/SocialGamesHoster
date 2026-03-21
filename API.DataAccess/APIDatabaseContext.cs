@@ -1,10 +1,11 @@
 ﻿using API.DataAccess.Seeders;
+using API.Domain.Entities;
 using API.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess;
 
-public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
+public class APIDatabaseContext(DbContextOptions<APIDatabaseContext> options) : DbContext(options)
 {
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -33,7 +34,9 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
         {
             Id = gameSessionId,
             RulesetId = 1,
-            Status = GameStatus.Running
+            Status = GameStatus.Running,
+            RoundStartedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            PhaseStartedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)
         };
 
         var globalChat = new ChatChannel
@@ -59,7 +62,7 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
     public DbSet<RoleKnowledge> RoleKnowledges { get; set; }
     public DbSet<Ability> Abilities { get; set; }
     public DbSet<Ruleset> Rulesets { get; set; }
-    public DbSet<Round> Rounds { get; set; }
+    public DbSet<RoundPhase> RoundPhases { get; set; }
     public DbSet<GameSession> GameSessions { get; set; }
     public DbSet<ChatChannel> ChatChannels { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
@@ -106,19 +109,6 @@ public class APIDatabaseContext(DbContextOptions options) : DbContext(options)
             .HasOne(p => p.Role)
             .WithMany(r => r.PlayersWithRole)
             .HasForeignKey(p => p.RoleId)
-            .IsRequired(false);
-
-        builder.Entity<Round>()
-            .HasOne(r => r.GameSession)              
-            .WithMany(gs => gs.Rounds)
-            .HasForeignKey(r => r.GameId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<GameSession>()
-            .HasOne(gs => gs.CurrentRound)
-            .WithOne()
-            .HasForeignKey<GameSession>(gs => gs.CurrentRoundId)
             .IsRequired(false);
 
         builder.Entity<GameSession>()

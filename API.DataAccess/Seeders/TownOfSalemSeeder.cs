@@ -1,4 +1,4 @@
-﻿using API.Domain.Models;
+﻿using API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

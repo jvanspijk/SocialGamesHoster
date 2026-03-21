@@ -18,7 +18,7 @@ public interface IProjectable<TDomain, TResponse>
     /// The expression used to project from <typeparamref name="TDomain"/> to <typeparamref name="TResponse"/>.
     /// Used by repositories to perform projections at the database level to ensure only necessary data is retrieved.
     /// </summary>
-    static abstract Expression<Func<TDomain, TResponse>> Projection { get; }
+    public static abstract Expression<Func<TDomain, TResponse>> Projection { get; }
     public static virtual Func<TDomain, TResponse> ConvertFunction
         => field ??= TResponse.Projection.Compile();
 }

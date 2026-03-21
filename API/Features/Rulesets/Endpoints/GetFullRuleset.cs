@@ -1,6 +1,6 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+
+using API.Domain.Entities;
 using API.Features.Rulesets.Common;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
@@ -9,6 +9,7 @@ namespace API.Features.Rulesets.Endpoints;
 
 public static class GetFullRuleset
 {
+    private static string CacheKey(int rulesetId) => $"{nameof(GetFullRuleset)}_{rulesetId}";
     public record Response(int Id, string Name, string Description, List<AbilityInfo> Abilities, List<RoleInfo> Roles)
     : IProjectable<Ruleset, Response>
     {
@@ -25,12 +26,12 @@ public static class GetFullRuleset
                     );
 
     }
-    public static async Task<IResult> HandleAsync(RulesetRepository repository, IMemoryCache cache, int rulesetId)
+    public static async Task<IResult> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache, int rulesetId)
     {
-        Response? response = await cache.GetOrCreateAsync($"{nameof(GetFullRuleset)}{rulesetId}", async entry =>
+        Response? response = await cache.GetOrCreateAsync(CacheKey(rulesetId), async entry =>
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-            return await repository.GetAsync<Response>(rulesetId);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(15);
+            return await repository.GetReadOnlyAsync<Response>(r => r.Id == rulesetId);
         });
         if (response == null)
         {

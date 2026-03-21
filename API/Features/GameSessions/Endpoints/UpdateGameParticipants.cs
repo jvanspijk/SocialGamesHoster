@@ -1,4 +1,5 @@
 ﻿using API.DataAccess;
+using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
 using System.Linq.Expressions;
@@ -29,7 +30,7 @@ public static class UpdateGameParticipants
         IRepository<Player> playerRepository,
         IRepository<GameSession> gameSessionRepository)
     {
-        var existingGameSession = await gameSessionRepository.GetAsync(gameId);
+        var existingGameSession = await gameSessionRepository.GetWithTrackingAsync(gameId);
         if (existingGameSession == null)
         {
             return Results.NotFound();
@@ -48,14 +49,16 @@ public static class UpdateGameParticipants
             return Results.BadRequest("Participants can only be added to games that have not been started.");
         }
 
-        var newPlayers = await playerRepository.GetMultipleAsync(request.ParticipantIds);
-        if (newPlayers.IsFailure)
+        var newPlayers = await playerRepository.GetListWithTrackingAsync(request.ParticipantIds);
+        if(newPlayers.Count != request.ParticipantIds.Count)
         {
-            return newPlayers.AsIResult();
+            return Results.BadRequest("One or more participant IDs are invalid.");
         }
-        existingGameSession.Participants = newPlayers.Value;
 
-        await gameSessionRepository.UpdateAsync(existingGameSession);
+        existingGameSession.Participants = newPlayers;
+
+        await gameSessionRepository.SaveChangesAsync();
+
         return Results.Ok(existingGameSession.ConvertToResponse<GameSession, Response>);
     }
 }

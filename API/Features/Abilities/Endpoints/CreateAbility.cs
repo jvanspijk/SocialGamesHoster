@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace API.Features.Abilities.Endpoints;
@@ -13,12 +12,15 @@ public static class CreateAbility
         public static Expression<Func<Ability, Response>> Projection =>
             ability => new Response(ability.Id, ability.Name, ability.Description);
     }
-    public static async Task<IResult> HandleAsync(AbilityRepository repository, Request request, int rulesetId)
+    public static async Task<IResult> HandleAsync(IRepository<Ability> repository, Request request, int rulesetId)
     {
         Ability ability = new() { Name = request.Name, Description = request.Description, RulesetId = rulesetId };
-        Ability result = await repository.CreateAsync(ability);
 
-        Response response = new(result.Id, result.Name, result.Description);
+        // TODO: validation
+        repository.Add(ability);
+        await repository.SaveChangesAsync();
+
+        Response response = new(ability.Id, ability.Name, ability.Description);    
 
         return Results.Ok(response);
     }

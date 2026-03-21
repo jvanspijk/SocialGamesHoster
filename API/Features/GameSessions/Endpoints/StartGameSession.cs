@@ -1,6 +1,4 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain;
 using API.Domain.Models;
 using System.Linq.Expressions;
 
@@ -16,14 +14,19 @@ public static class StartGameSession
                 gs.Status.ToString()
             );
     }
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
+    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, int gameId)
     {
-        Result<GameSession> result = await repository.StartGameSession(gameId);
-        if(result.IsFailure)
+        GameSession? session = await repository.GetWithTrackingAsync(gameId);
+        if(session == null)
         {
-            return result.AsIResult();
+            return Results.NotFound($"Game session with id `{gameId}` not found.");
         }
-        GameSession session = result.Value;
+
+        // TODO: check old logic for starting game sessions in the old repo
+        session.Status = GameStatus.Running;
+
+        await repository.SaveChangesAsync();
+
         var response = new Response(session.Id, session.Status.ToString());
         return Results.Ok(response);
     }

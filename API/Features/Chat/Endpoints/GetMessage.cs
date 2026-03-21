@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -20,16 +19,17 @@ public static class GetMessage
                 message.IsDeleted
             );
     }
-    public static async Task<IResult> HandleAsync(ChatRepository repository, IMemoryCache cache, Guid id)
+    public static async Task<IResult> HandleAsync(Repository<ChatChannel> repository, IMemoryCache cache, Guid id)
     {
         //TODO: add caching
         // Cache will get invalidated on message delete or player update / delete
-        var message = await repository.GetAsync(id);
+        var message = await repository.GetMessageAsync(id);
         if (message is null)
         {
             return Results.NotFound();
         }
-        
-        return Results.Ok();
+            
+        var response = message.ConvertToResponse<ChatMessage, Response>();
+        return Results.Ok(response);
     }
 }

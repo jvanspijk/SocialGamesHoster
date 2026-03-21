@@ -1,6 +1,7 @@
 using API.DataAccess;
-using API.DataAccess.Repositories;
+
 using API.Domain;
+using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.Auth;
 using API.Features.Timers;
@@ -12,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -19,13 +22,17 @@ namespace API;
 // Using scalar: http://localhost:9090/scalar
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 // TODO:
+// Big refactors:
+// - Apply new repository pattern.
+// - Remove docker entirely. Use install and run script instead.
 // v1:
+// - Maybe add Open telemetry for performance logging
 // - Fix login for admins
 //      - store admin credentials in database or environment variables
 // - Admin: force logout users, (decouple IP from user)
 // - Change participants in active game sessions
 //   - Remove players from game sessions
-// - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, lover, etc.
+// - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, nemesis, etc.
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
@@ -33,7 +40,6 @@ namespace API;
 //      - it assumes delta is negative
 //      - Calculation of total time is off
 // - GetTimerState should have a result for the case where there is no timer.
-// - Finish and cancel game session should be single endpoint stop game session.
 // - Solve todos in player repository
 // - Search for more todos and fix them
 // Wrong parameters gave a 200 OK response. Maybe svelte issue.
@@ -45,12 +51,17 @@ namespace API;
 // - chats
 // - roles have win conditions
 // - IAbility interface so that a DM can create custom abilities for roles (will be god object)
+//    - Parse abilities from JSON or scripting language instead so that users don't have to write code
 
 
 // Optional:
 // - Assign random roles to players
 //   - How do we come up with the general logic for how many roles of each type are assigned?
 //   Maybe with a percentage of particpants that can have a role per role in the ruleset? But then some roles are mandatory, or can always only have 1.
+
+// Performance optimizations:
+// - Streaming database results using IAsyncEnumerable where possible, especially for endpoints that return lists of data. <-- while the asp.net api result can return a stream, it needs to be handled client side too. There's also some latency involved in starting to return results, so it might not be worth it for smaller lists of data. But for larger lists, it can improve performance and reduce memory usage.
+// - Use JSON source generator for serialization where possible (see GetAbility endpoint for example). <-- Does it save enough time?
 
 
 
@@ -62,12 +73,20 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        //TODO: add these as env variables:
-        string hostUrl = "http://localhost:9090";
-        string[] corsUrls = ["http://web:9091", "http://localhost:9091", "http://chromebox:9091"];
-
         Console.WriteLine("Booting up app");
         var builder = WebApplication.CreateBuilder(args);
+
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"))
+            && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")))
+        {
+            builder.Environment.EnvironmentName = Environments.Development;
+        }
+
+        builder.Configuration
+            .AddJsonFile("Properties/appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile($"Properties/appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
+        string hostUrl = builder.Configuration["HOST_URL"] ?? "http://localhost:9090";
         var services = builder.Services;
         var environment = builder.Environment;
 
@@ -93,16 +112,17 @@ public class Program
 
         // Add services to the container.
 
+        bool isGeneratingDocs = IsDocumentGenerationRun(args);
+        string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
         services.AddDbContext<APIDatabaseContext>(options =>
         {
-            if (environment.IsDevelopment())
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
-                options.UseInMemoryDatabase("DevInMemoryDb");
+                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             }
-            else
-            {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-            }
+
+            options.UseNpgsql(connectionString);
         });
 
         services.AddDistributedMemoryCache(); //For session state
@@ -124,17 +144,6 @@ public class Program
         services.AddOpenApi(options =>
         {
             options.CreateSchemaReferenceId = typeInfo => typeInfo.Type.FullName?.Replace("+", "_");
-        });
-
-        services.AddCors(options =>
-        {
-            options.AddPolicy("CorsPolicy", builder =>
-            {
-                builder.SetIsOriginAllowed(origin => true)
-                       .AllowAnyMethod()
-                       .AllowAnyHeader()
-                       .AllowCredentials();
-            });
         });
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -160,22 +169,13 @@ public class Program
         // Dependency injection for concrete repositories
         // This should be replaced by IRepository<T> injections later
         services
-            .AddScoped<AbilityRepository>()
-            .AddScoped<PlayerRepository>()
-            .AddScoped<RoleRepository>()
-            .AddScoped<RoundRepository>()
-            .AddScoped<RulesetRepository>()
-            .AddScoped<GameSessionRepository>()
             .AddScoped<AuthService>();
 
         services
-            .AddScoped<IRepository<Ability>, AbilityRepository>()
-            .AddScoped<IRepository<Player>, PlayerRepository>()
-            .AddScoped<IRepository<Role>, RoleRepository>()
-            .AddScoped<IRepository<Round>, RoundRepository>()
-            .AddScoped<IRepository<Ruleset>, RulesetRepository>()
-            .AddScoped<IRepository<GameSession>, GameSessionRepository>()
-            .AddScoped<ChatRepository>();
+            .AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+        services // neccesary for repository extension methods, but should preferably be refactored out
+            .AddScoped(typeof(Repository<>), typeof(Repository<>));
 
         services
             .AddSingleton<RoundTimer>()
@@ -190,9 +190,15 @@ public class Program
 
         var app = builder.Build();
 
-        ApplyDatabaseMigrations(environment, app);
+        if (!isGeneratingDocs)
+        {
+            EnsureDatabaseConnection(app);
+        }
 
-        app.UseCors("CorsPolicy");
+        if(!args.Contains("--skip-migrations") && !isGeneratingDocs)
+        {
+            ApplyDatabaseMigrations(app);
+        }
 
         app.UseDefaultFiles();
 
@@ -227,39 +233,53 @@ public class Program
         var apiGroup = app.MapGroup("/api");
         apiGroup.MapEndpoints();        
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
-
-        // apiGroup.MapHub<PresenceHub>("/presenceHub");
+        apiGroup.AddEndpointFilter<CacheInvalidatorFilter>();
 
         app.Run();
         Console.WriteLine("Done booting up");
     }
 
-    private static void ApplyDatabaseMigrations(IWebHostEnvironment environment, WebApplication app)
+    private static void ApplyDatabaseMigrations(WebApplication app)
     {
         using var scope = app.Services.CreateScope();
-        var serviceProvider = scope.ServiceProvider;
-        try
+        APIDatabaseContext context = scope.ServiceProvider.GetRequiredService<APIDatabaseContext>()
+            ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
+
+        Console.WriteLine("Applying migrations...");
+        context.Database.Migrate();
+        Console.WriteLine("Database is up to date.");
+    }
+
+    private static void EnsureDatabaseConnection(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        APIDatabaseContext context = scope.ServiceProvider.GetRequiredService<APIDatabaseContext>()
+            ?? throw new InvalidOperationException("Couldn't get database context for connectivity check.");
+
+        if (!context.Database.CanConnect())
         {
-            APIDatabaseContext context = serviceProvider.GetRequiredService<APIDatabaseContext>()
-                ?? throw new InvalidOperationException("Couldn't get database context for applying migrations.");
-            if (environment.IsDevelopment())
-            {
-                Console.WriteLine("Creating in-memory database...");
-                context.Database.EnsureCreated();
-                Console.WriteLine("In-memory database created successfully.");
-            }
-            else
-            {
-                Console.WriteLine("Applying database migrations...");
-                context.Database.Migrate();
-                Console.WriteLine("Database migrations applied successfully.");
-            }
+            throw new InvalidOperationException("PostgreSQL is unavailable. Startup aborted.");
         }
-        catch (Exception ex)
+    }
+
+    private static bool IsDocumentGenerationRun(string[] args)
+    {
+        if (args.Contains("--get-document"))
         {
-            ILogger logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while applying database migrations.");
-            throw;
+            return true;
         }
+
+        if (Environment.GetCommandLineArgs().Any(a => a.Contains("dotnet-getdocument", StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        if (Environment.CommandLine.Contains("dotnet-getdocument", StringComparison.OrdinalIgnoreCase)
+            || Environment.CommandLine.Contains("Microsoft.Extensions.ApiDescription.Tool", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return AppDomain.CurrentDomain.FriendlyName.Contains("dotnet-getdocument", StringComparison.OrdinalIgnoreCase);
     }
 }

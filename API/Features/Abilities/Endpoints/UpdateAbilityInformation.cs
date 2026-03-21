@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace API.Features.Abilities.Endpoints;
@@ -14,9 +13,9 @@ public static class UpdateAbilityInformation
             ability => new Response(ability.Id, ability.Name, ability.Description);
     }
 
-    public static async Task<IResult> HandleAsync(AbilityRepository repository, int id, Request request)
+    public static async Task<IResult> HandleAsync(IRepository<Ability> repository, int id, Request request)
     {
-        Ability? ability = await repository.GetAsync(id);
+        Ability? ability = await repository.GetWithTrackingAsync(id);
         if (ability == null)
         {
             return Results.NotFound();
@@ -31,8 +30,9 @@ public static class UpdateAbilityInformation
             ability.Description = request.NewDescription;
         }
 
-        Ability updatedAbility = await repository.UpdateAsync(ability);
-        Response response = updatedAbility.ConvertToResponse<Ability, Response>();
+        await repository.SaveChangesAsync();
+
+        var response = ability.ConvertToResponse<Ability, Response>();
         return Results.Ok(response);
     }
 }

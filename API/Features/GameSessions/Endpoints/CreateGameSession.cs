@@ -1,6 +1,6 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
 using API.Domain;
+using API.Domain.Entities;
 using API.Domain.Models;
 using System.Linq.Expressions;
 
@@ -14,30 +14,21 @@ public static class CreateGameSession
         public static Expression<Func<GameSession, Response>> Projection =>
             gs => new Response(gs.Id, gs.RulesetId);
     }
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, PlayerRepository playerRepository, Request request)
-    {
-        List<Player> participants = new(request.PlayerNames.Count);
-        if (request.PlayerNames.Count > 0)
-        {
-            participants = await playerRepository.CreateMultipleAsync(
-                [.. request.PlayerNames.Select(name => new Player { Name = name })]
-            );
-        }
-
+    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, IRepository<Player> playerRepository, Request request)
+    {    
+        var participants = playerRepository.AddMultiple([.. request.PlayerNames.Select(name => new Player { Name = name })]);
         GameSession newSession = new()
         {
             RulesetId = request.RulesetId,
-            Participants = participants,
-            Rounds = [],
+            Participants = [.. participants],
+            RoundNumber = 0,
             Status = GameStatus.NotStarted
         };
-        Result<GameSession> result = await repository.CreateAsync(newSession);
-        if (result.IsFailure)
-        {
-            return result.AsIResult();
-        }
-        GameSession session = result.Value;
-        Response response = new(session.Id, session.RulesetId);
+
+        repository.Add(newSession);
+        await repository.SaveChangesAsync();
+
+        Response response = new(newSession.Id, newSession.RulesetId);
         return Results.Ok(response);
     }
 }

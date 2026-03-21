@@ -1,5 +1,5 @@
 ﻿
-using API.Domain.Models;
+using API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.DataAccess.Seeders;

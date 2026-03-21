@@ -1,21 +1,28 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+
+
+using API.Domain.Entities;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.Rulesets.Endpoints;
 
 public static class GetAllRulesets
 {
+    private static readonly string CacheKey = "GetAllRulesetsResponse";
     public record Response(int Id, string Name, string Description)
         : IProjectable<Ruleset, Response>
     {
         public static Expression<Func<Ruleset, Response>> Projection =>
             rs => new Response(rs.Id, rs.Name, rs.Description);
     }
-    public static async Task<IResult> HandleAsync(RulesetRepository repository)
+    public static async Task<IResult> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache)
     {
-        List<Response> response = await repository.GetAllAsync<Response>();
+        Response[]? response = await cache.GetOrCreateAsync(CacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await repository.GetArrayReadOnlyAsync<Response>();
+        }) ?? [];
         return Results.Ok(response);
     }
 }

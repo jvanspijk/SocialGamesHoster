@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Features.Roles.Common;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
@@ -20,14 +19,12 @@ public class GetRole
                 role.Abilities.Select(a => new AbilityInfo(a.Id, a.Name, a.Description)).ToList()
             );
     }
-    public static async Task<IResult> HandleAsync(RoleRepository repository, IMemoryCache cache, int id)
+    public static async Task<IResult> HandleAsync(IRepository<Role> repository, IMemoryCache cache, int id)
     {
-        string cacheKey = GetCacheKey(id);
-
-        Response? result = await cache.GetOrCreateAsync(cacheKey, async entry =>
+        Response? result = await cache.GetOrCreateAsync(GetCacheKey(id), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-            return await repository.GetAsync<Response>(id);
+            return await repository.GetReadOnlyAsync<Response>(r => r.Id == id);
         });
 
         if (result == null)
@@ -37,11 +34,5 @@ public class GetRole
         return Results.Ok(result);
     }
 
-    public static void InvalidateCache(IMemoryCache cache, int roleId)
-    {
-        string cacheKey = GetCacheKey(roleId);
-        cache.Remove(cacheKey);
-    }
-
-    private static string GetCacheKey(int roleId) => $"{nameof(GetRole)}_{roleId}";
+    private static string GetCacheKey(int roleId) => $"{nameof(Role)}_{roleId}";
 }

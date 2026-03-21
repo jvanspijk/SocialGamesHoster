@@ -1,12 +1,12 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
 using API.Domain.Models;
-using API.Features.GameSessions.Common;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
 public static class GetActiveGameSessions
 {
+    private static string CacheKey() => $"{nameof(GetActiveGameSessions)}_ActiveGames";
     public record Response(int Id, int RulesetId, string Status, int CurrentRoundNumber) 
         : IProjectable<GameSession, Response>
     {
@@ -15,16 +15,17 @@ public static class GetActiveGameSessions
                 gs.Id,
                 gs.RulesetId,
                 gs.Status.ToFriendlyString(),
-                gs.Rounds.Count(r => r.StartedTime.HasValue)
+                gs.RoundNumber
             );
     }
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository)     
+    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, IMemoryCache cache)     
     {
-        var activeGames = await repository.GetAllActiveAsync<Response>();
-        if (activeGames.Count == 0)
+        var activeGames = await cache.GetOrCreateAsync(CacheKey(), async entry =>
         {
-            return Results.NotFound("No active game sessions found.");
-        }
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+            return await repository.GetArrayReadOnlyAsync<Response>(gs => gs.IsActive);
+        }) ?? [];
+
         return Results.Ok(activeGames); 
     }
 

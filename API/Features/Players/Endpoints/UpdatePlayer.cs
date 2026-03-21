@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Features.Players.Common;
 using API.Features.Players.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -20,10 +19,10 @@ public static class UpdatePlayer
                 player.RoleId
             );
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, IHubContext<PlayersHub, IPlayersHub> hub, int id, Request request)
+    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IHubContext<PlayersHub, IPlayersHub> hub, int id, Request request)
     {
         // TODO: validation
-        Player? player = await repository.GetAsync(id);
+        Player? player = await repository.GetWithTrackingAsync(id);
 
         if (player == null)
         {
@@ -49,10 +48,10 @@ public static class UpdatePlayer
             return Results.Ok(player.ConvertToResponse<Player, Response>());
         }
 
-        var updatedPlayer = await repository.UpdateAsync(player);
-        await PlayersHub.NotifyPlayerUpdated(hub, updatedPlayer.Id);
+        await repository.SaveChangesAsync();        
+        await PlayersHub.NotifyPlayerUpdated(hub, player.Id);
 
-        Response response = new(updatedPlayer.Id, updatedPlayer.Name, updatedPlayer.RoleId);
+        Response response = new(player.Id, player.Name, player.RoleId);
         return Results.Ok(response);
     }
 }

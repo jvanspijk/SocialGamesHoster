@@ -1,4 +1,5 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.DataAccess;
+using API.Domain.Entities;
 using API.Features.Chat.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
@@ -7,15 +8,25 @@ namespace API.Features.Chat.Endpoints;
 public static class SendMessage
 {
     public record Request(int PlayerId, string Message);
-    public static async Task<IResult> HandleAsync(ChatRepository chatRepository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
+    public static async Task<IResult> HandleAsync(Repository<ChatChannel> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
     {
-        var result = await chatRepository.CreateAsync(request.PlayerId, channelId, request.Message);
-        if(result.IsFailure)
+        bool channelExists = await repository.ExistsAsync(channelId);
+        if(!channelExists)
         {
-            return result.AsIResult();
+            return Results.NotFound($"Channel with id {channelId} does not exist.");
         }
+      
+        ChatMessage message = new()
+        {
+            SenderId = request.PlayerId,
+            ChannelId = channelId,
+            Content = request.Message,
+            IsDeleted = false
+        };
 
-        await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId, result.Value.Id);
+        repository.AddMessage(message);
+        await repository.SaveChangesAsync();
+        await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId, message.Id);
         return Results.Created();
     }
 }

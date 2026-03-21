@@ -1,6 +1,5 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Domain.Validation;
 using System.Linq.Expressions;
 
@@ -22,7 +21,7 @@ public static class CreatePlayer
         public static Expression<Func<Player, Response>> Projection =>
             player => new Response(player.Id, player.Name);
     }
-    public static async Task<IResult> HandleAsync(PlayerRepository repository, Request request, int gameId)
+    public static async Task<IResult> HandleAsync(IRepository<Player> repository, Request request, int gameId)
     {
         var validationResult = request.Validate();
         if (validationResult.HasErrors())
@@ -31,9 +30,9 @@ public static class CreatePlayer
         }
 
         Player player = new() { Name = request.Name, GameId = gameId };
-        Player result = await repository.CreateAsync(player);
+        repository.Add(player);
 
-        Response response = new(result.Id, result.Name);
+        Response response = new(player.Id, player.Name);
 
         return Results.Ok(response);
     }

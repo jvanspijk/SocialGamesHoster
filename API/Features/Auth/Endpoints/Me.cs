@@ -1,7 +1,7 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Features.Auth.Common;
+using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
@@ -9,6 +9,7 @@ namespace API.Features.Auth.Endpoints;
 
 public static class Me
 {
+    private static string CacheKey(int playerId) => $"{nameof(Me)}_{playerId}";
     public record Response(int Id, string Name, RoleInfo? Role) : IProjectable<Player, Response>
     {
         public static Expression<Func<Player, Response>> Projection =>
@@ -23,7 +24,7 @@ public static class Me
                 )
             );
     }
-    public static async Task<IResult> HandleAsync(HttpRequest request, PlayerRepository repository)
+    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IMemoryCache cache, HttpRequest request)
     {
         var playerClaimsResult = AuthService.GetPlayerClaims(request);
         if (playerClaimsResult.IsFailure)
@@ -31,9 +32,13 @@ public static class Me
             return playerClaimsResult.AsIResult();
         }
 
-        (int playerId, int? _) = playerClaimsResult.Value;
+        (int playerId, int? _) = playerClaimsResult.Value;        
 
-        var response = await repository.GetAsync<Response>(playerId);
+        var response = cache.GetOrCreateAsync(CacheKey(playerId), async entry => { 
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+            return await repository.GetReadOnlyAsync<Response>(p => p.Id == playerId);
+        });
+
         if(response == null)
         {
             return Results.NotFound($"Player {playerId} not found");

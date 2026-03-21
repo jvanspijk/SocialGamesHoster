@@ -1,4 +1,5 @@
 ﻿using API.DataAccess;
+using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
 using System.Linq.Expressions;
@@ -29,8 +30,11 @@ public static class AddWinners
         IRepository<Player> playerRepository,
         IRepository<GameSession> gameSessionRepository)
     {
-        var session = await gameSessionRepository.GetAsync(gameId);
-        if (session is null) return TypedResults.NotFound();
+        var session = await gameSessionRepository.GetWithTrackingAsync(gameId);
+        if (session is null)
+        {
+            return TypedResults.NotFound();
+        }
 
         if (session.Status is GameStatus.NotStarted)
         {
@@ -46,24 +50,21 @@ public static class AddWinners
         }
 
         var currentWinnerIds = session.Winners.Select(w => w.Id).ToHashSet();
-        var alreadyWinners = request.PlayerIds.Where(id => currentWinnerIds.Contains(id)).ToList();
+        var alreadyWinners = request.PlayerIds.Where(currentWinnerIds.Contains).ToList();
 
         if (alreadyWinners.Count != 0)
         {
-            return TypedResults.Conflict($"Players {string.Join(", ", alreadyWinners)} are already winners.");
+            var alreadyWinnerNames = session.Winners.Where(p => alreadyWinners.Contains(p.Id)).Select(p => p.Name).ToList();
+            return TypedResults.Conflict($"Players {string.Join(", ", alreadyWinnerNames)} are already winners.");
         }
 
-        var playersResult = await playerRepository.GetMultipleAsync(request.PlayerIds);
-        if (playersResult.IsFailure)
-        {
-            return playersResult.AsIResult();
-        }
+        var playersResult = await playerRepository.GetListWithTrackingAsync(request.PlayerIds);
 
-        session.Winners = [.. session.Winners, .. playersResult.Value];
+        session.Winners = [.. session.Winners, .. playersResult];
 
-        await gameSessionRepository.UpdateAsync(session);
+        await gameSessionRepository.SaveChangesAsync();
 
-        var response = await gameSessionRepository.GetAsync<Response>(gameId);
-        return TypedResults.Ok(response!);
+        var response = session.ConvertToResponse<GameSession, Response>();
+        return TypedResults.Ok(response);
     }
 }

@@ -1,8 +1,6 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Domain.Validation;
-using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
 namespace API.Features.Roles.Endpoints;
@@ -34,7 +32,7 @@ public static class CreateRole
                 role.Description              
             );
     }
-    public static async Task<IResult> HandleAsync(RoleRepository repository, IMemoryCache cache, int rulesetId, Request request)
+    public static async Task<IResult> HandleAsync(IRepository<Role> repository, int rulesetId, Request request)
     {
         var validationResult = request.Validate();
         if (validationResult.HasErrors())
@@ -43,11 +41,9 @@ public static class CreateRole
         }
         string description = request.Description ?? "";
         Role role = new() { Name = request.Name, Description = description, RulesetId = rulesetId };
-        Role createdRole = await repository.CreateAsync(role); // Should this be a result type?
-
-        GetRoles.InvalidateCache(cache, rulesetId);
-
-        Response response = new(createdRole.Id, createdRole.Name, createdRole.Description);
+        repository.Add(role);
+        await repository.SaveChangesAsync();
+        Response response = new(role.Id, role.Name, role.Description);
         return Results.Ok(response); 
     }
 }

@@ -1,7 +1,6 @@
-﻿using API;
-using API.DataAccess.Repositories;
+﻿using API.DataAccess;
 using API.Domain;
-using API.Domain.Models;
+using API.Domain.Entities;
 using API.Domain.Validation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,7 +9,7 @@ using System.Text;
 
 namespace API.Features.Auth;
 
-public class AuthService(PlayerRepository playerRepository)
+public class AuthService(Repository<Player> playerRepository)
 {
     // TODO: these should be loaded from environment variables
     private const string _jwtSecurityKey = "Social-games-hoster_JWT_Security_Key";
@@ -19,11 +18,11 @@ public class AuthService(PlayerRepository playerRepository)
     private const string _playerTokenName = "player_token";
     private const string _adminTokenName = "admin_token";
 
-    private readonly string _adminUserName = "admin";
-    private readonly string _adminPassword = "admin";
-    private const string _adminRoleName = "admin";
+    private static readonly string _adminUserName = "admin";
+    private static readonly string _adminPassword = "admin";
+    private static readonly string _adminRoleName = "admin";
 
-    private readonly PlayerRepository _playerRepository = playerRepository;
+    private readonly Repository<Player> _playerRepository = playerRepository;
 
     public Task<bool> AdminCredentialsAreValid(string username, string passwordHash)
     {
@@ -99,22 +98,32 @@ public class AuthService(PlayerRepository playerRepository)
 
         (int userId, int? _) = playerClaimsResult.Value;
 
-        Player? sourcePlayer = await _playerRepository.GetAsync(userId);
+        Player? sourcePlayer = await _playerRepository.GetWithTrackingAsync(userId);
         if (sourcePlayer == null)
         {
             return Errors.ResourceNotFound(nameof(Player), nameof(Player.Name), userId.ToString());
         }
 
-        Player? targetPlayer = await _playerRepository.GetAsync(targetPlayerId);
+        Player? targetPlayer = await _playerRepository.GetWithTrackingAsync(targetPlayerId);
         if (targetPlayer == null)
         {
             return Errors.ResourceNotFound(nameof(Player), nameof(Player.Id), targetPlayerId.ToString());
         }
 
-        return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
+        // TODO: implement as an extension method on PlayerRepository that checks the CanSee and CanBeSeenBy relationships instead of loading the full player entities and their relationships into memory
+        //return await _playerRepository.Query()
+        //   .Where(p => p.Id == sourcePlayer.Id)
+        //   .SelectMany(p => p.CanSee)
+        //   .AnyAsync(p => p.Id == targetPlayer.Id);
+
+        // This will fail because the CanSee collection is not being eagerly loaded, but it illustrates the intended logic without needing to implement a custom repository method
+        // return sourcePlayer.CanSee.Any(p => p.Id == targetPlayer.Id);
+
+        // return await _playerRepository.IsVisibleToPlayerAsync(sourcePlayer, targetPlayer);
+        return true;
     }
 
-    public Result<bool> IsAdmin(HttpRequest request)
+    public static Result<bool> IsAdmin(HttpRequest request)
     {
         string? token = request.Cookies[_adminTokenName];
         if (string.IsNullOrEmpty(token))
@@ -145,10 +154,9 @@ public class AuthService(PlayerRepository playerRepository)
 
     public static Result<(int, int?)> GetPlayerClaims(HttpRequest request)
     {
-        Console.WriteLine($"Cookies found: {string.Join("; ", request.Cookies.Select(c => $"{c.Key}={c.Value}"))}");
         if (!request.Cookies.TryGetValue(_playerTokenName, out string? token) || string.IsNullOrEmpty(token))
         {
-            return Errors.MissingClaims("Player token cookie is missing.");
+            return Errors.MissingClaims("Player token cookie is missing.");          
         }
 
         try

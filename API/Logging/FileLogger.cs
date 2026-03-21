@@ -47,7 +47,7 @@ public class FileLogger : ILogger
             logEntry += $"Exception: {exception}{Environment.NewLine}";
         }
 
-        lock (_lock)
+        lock (_lock) // TODO: this can fail under high concurrency!
         {
             PerformRollingCheck();
             File.AppendAllText(_logFilePath, logEntry);

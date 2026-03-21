@@ -1,5 +1,4 @@
 ﻿using API.DataAccess;
-using API.DataAccess.Repositories;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
 using System.Linq.Expressions;
@@ -26,9 +25,9 @@ public static class DuplicateGameSession
                     .ToList()
             );
     }
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, Request request)
+    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, Request request)
     {
-        var gameSession = await repository.GetAsync(request.GameSessionId);
+        var gameSession = await repository.GetWithTrackingAsync(request.GameSessionId);
         if (gameSession == null)
         {
             return Results.NotFound($"Game session with id {request.GameSessionId} not found.");
@@ -38,13 +37,14 @@ public static class DuplicateGameSession
         {
             RulesetId = gameSession.RulesetId,
             Participants = [.. gameSession.Participants],
-            Rounds = [],
+            RoundNumber = 0,
             Status = GameStatus.NotStarted
         };
 
-        GameSession createdSession = await repository.CreateAsync(duplicatedSession);
+        repository.Add(duplicatedSession);
+        await repository.SaveChangesAsync();
 
-        var response = createdSession.ConvertToResponse<GameSession, Response>();
+        var response = duplicatedSession.ConvertToResponse<GameSession, Response>();
         return Results.Ok(response);
     }
 }

@@ -1,17 +1,20 @@
-﻿using API.DataAccess.Repositories;
+﻿using API.DataAccess;
 using API.Domain;
+using API.Domain.Models;
 
 namespace API.Features.GameSessions.Endpoints;
 
 public static class DeleteGameSession
 {
-    public static async Task<IResult> HandleAsync(GameSessionRepository repository, int gameId)
+    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, int gameId)
     {
-        Result result = await repository.DeleteAsync(gameId);
-        if(result.IsFailure)
+        var gameSession = await repository.GetWithTrackingAsync(gameId);
+        if(gameSession == null)
         {
-            return Results.Problem(result.Error?.Message);
+            return Results.NotFound($"Game session with id {gameId} not found.");
         }
+        repository.Remove(gameSession);
+        await repository.SaveChangesAsync();
         return Results.NoContent();
     }
 }
