@@ -7,8 +7,9 @@ namespace API.Features.Chat.Endpoints;
 
 public static class GetMessagesFromChannel
 {
-    public readonly record struct Request(int ChannelId, DateTime? Before, DateTime? After, int? Limit) : IValidatableObject
-    {
+    public readonly record struct Request(int ChannelId, DateTime? Before, DateTime? After, int? MaxMessages) : IValidatableObject
+    {       
+        public int Limit { get; init; } = MaxMessages ?? 50;
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (Limit <= 0)
@@ -33,7 +34,7 @@ public static class GetMessagesFromChannel
         }
     }
 
-    public record Response(Guid Id, string Content, DateTime SentAt, int? SenderId, string? SenderName)
+    public record Response(int Id, string Content, DateTime SentAt, int? SenderId, string? SenderName)
         : IProjectable<ChatMessage, Response>
     {
         public static Expression<Func<ChatMessage, Response>> Projection =>
@@ -45,21 +46,22 @@ public static class GetMessagesFromChannel
                 message.Sender == null ? null : message.Sender.Name);
     }
 
-    public static async Task<IResult> HandleAsync(Repository<ChatChannel> repository, [AsParameters] Request req)
+    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, [AsParameters] Request req)
     {       
-        const int defaultLimit = 50;
-        if (req.Limit is null)
-        {
-            req = req with { Limit = defaultLimit };
-        }       
-
         var channelExists = await repository.ExistsAsync(req.ChannelId);
         if (!channelExists)
         {
             return Results.NotFound($"Channel with id {req.ChannelId} not found.");
         }
 
-        var result = await repository.GetChannelMessagesAsync<Response>(req.ChannelId, req.Limit.Value, req.Before, req.After);
+        var result = await repository.QueryReadOnlyAsync<Response>(query =>
+            query.Where(c => c.ChannelId == req.ChannelId)
+                 .Where(m => (!req.Before.HasValue || m.SentAt < req.Before) &&
+                             (!req.After.HasValue || m.SentAt > req.After))
+                 .OrderByDescending(m => m.SentAt)
+                 .Take(req.Limit)
+        );
+      
         return Results.Ok(result);
     }
 }

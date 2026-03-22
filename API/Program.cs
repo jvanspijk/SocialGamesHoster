@@ -190,13 +190,9 @@ public class Program
 
         var app = builder.Build();
 
-        if (!isGeneratingDocs)
+        if (!isGeneratingDocs && !EF.IsDesignTime)
         {
             EnsureDatabaseConnection(app);
-        }
-
-        if(!args.Contains("--skip-migrations") && !isGeneratingDocs)
-        {
             ApplyDatabaseMigrations(app);
         }
 

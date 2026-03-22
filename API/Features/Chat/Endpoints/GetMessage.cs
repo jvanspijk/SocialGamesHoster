@@ -7,7 +7,8 @@ namespace API.Features.Chat.Endpoints;
 
 public static class GetMessage
 {
-    public record Response(Guid Id, string Content, DateTime SentAt, string SenderName, int? SenderId, bool IsDeleted) : IProjectable<ChatMessage, Response>
+    private static string CacheKey(int id) => $"{nameof(GetMessage)}_{id}";
+    public record Response(int Id, string Content, DateTime SentAt, string SenderName, int? SenderId, bool IsDeleted) : IProjectable<ChatMessage, Response>
     {
         public static Expression<Func<ChatMessage, Response>> Projection =>
             message => new Response(
@@ -19,17 +20,19 @@ public static class GetMessage
                 message.IsDeleted
             );
     }
-    public static async Task<IResult> HandleAsync(Repository<ChatChannel> repository, IMemoryCache cache, Guid id)
+    public static async Task<IResult> HandleAsync(Repository<ChatMessage> repository, IMemoryCache cache, int id)
     {
-        //TODO: add caching
-        // Cache will get invalidated on message delete or player update / delete
-        var message = await repository.GetMessageAsync(id);
+        Response? message = await cache.GetOrCreateAsync(CacheKey(id), async entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromMinutes(10);
+            return await repository.GetReadOnlyAsync<Response>(m => m.Id == id);
+        });
+
         if (message is null)
         {
             return Results.NotFound();
-        }
-            
-        var response = message.ConvertToResponse<ChatMessage, Response>();
-        return Results.Ok(response);
+        }           
+
+        return Results.Ok(message);
     }
 }

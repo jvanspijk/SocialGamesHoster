@@ -190,9 +190,11 @@ namespace API.DataAccess.Migrations
 
             modelBuilder.Entity("API.Domain.Entities.ChatMessage", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ChannelId")
                         .HasColumnType("integer");

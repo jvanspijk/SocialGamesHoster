@@ -1,12 +1,10 @@
 ﻿namespace API.Domain.Entities;
 
-public class ChatMessage
+public class ChatMessage : IEntity
 {
-    public Guid Id { get; init; } = Guid.CreateVersion7();
-
+    public int Id { get; init; }
     public required string Content { get; set; }
     public DateTime SentAt { get; init; } = DateTime.UtcNow;
-
     public Player? Sender { get; set; }
     public required int? SenderId { get; set; }
     public ChatChannel Channel { get; set; } = null!;

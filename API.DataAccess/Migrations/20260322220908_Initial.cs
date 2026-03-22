@@ -252,7 +252,8 @@ namespace API.DataAccess.Migrations
                 name: "ChatMessages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Content = table.Column<string>(type: "text", nullable: false),
                     SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SenderId = table.Column<int>(type: "integer", nullable: false),

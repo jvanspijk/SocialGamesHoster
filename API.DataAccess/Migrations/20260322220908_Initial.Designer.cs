@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.DataAccess.Migrations
 {
     [DbContext(typeof(APIDatabaseContext))]
-    [Migration("20260321220316_Initial")]
+    [Migration("20260322220908_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -193,9 +193,11 @@ namespace API.DataAccess.Migrations
 
             modelBuilder.Entity("API.Domain.Entities.ChatMessage", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ChannelId")
                         .HasColumnType("integer");
