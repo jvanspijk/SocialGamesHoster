@@ -23,7 +23,6 @@ namespace API;
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 // TODO:
 // Big refactors:
-// - Apply new repository pattern.
 // - Remove docker entirely. Use install and run script instead.
 // v1:
 // - Maybe add Open telemetry for performance logging
@@ -173,9 +172,6 @@ public class Program
 
         services
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-        services // neccesary for repository extension methods, but should preferably be refactored out
-            .AddScoped(typeof(Repository<>), typeof(Repository<>));
 
         services
             .AddSingleton<RoundTimer>()

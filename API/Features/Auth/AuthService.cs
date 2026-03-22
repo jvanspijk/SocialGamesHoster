@@ -9,7 +9,7 @@ using System.Text;
 
 namespace API.Features.Auth;
 
-public class AuthService(Repository<Player> playerRepository)
+public class AuthService(IRepository<Player> playerRepository)
 {
     // TODO: these should be loaded from environment variables
     private const string _jwtSecurityKey = "Social-games-hoster_JWT_Security_Key";
@@ -22,7 +22,7 @@ public class AuthService(Repository<Player> playerRepository)
     private static readonly string _adminPassword = "admin";
     private static readonly string _adminRoleName = "admin";
 
-    private readonly Repository<Player> _playerRepository = playerRepository;
+    private readonly IRepository<Player> _playerRepository = playerRepository;
 
     public Task<bool> AdminCredentialsAreValid(string username, string passwordHash)
     {

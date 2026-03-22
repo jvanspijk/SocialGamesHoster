@@ -20,7 +20,7 @@ public static class GetMessage
                 message.IsDeleted
             );
     }
-    public static async Task<IResult> HandleAsync(Repository<ChatMessage> repository, IMemoryCache cache, int id)
+    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, IMemoryCache cache, int id)
     {
         Response? message = await cache.GetOrCreateAsync(CacheKey(id), async entry =>
         {

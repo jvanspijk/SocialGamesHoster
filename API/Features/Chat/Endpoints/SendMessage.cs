@@ -8,7 +8,7 @@ namespace API.Features.Chat.Endpoints;
 public static class SendMessage
 {
     public record Request(int PlayerId, string Message);
-    public static async Task<IResult> HandleAsync(Repository<ChatMessage> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
+    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
     {
         bool channelExists = await repository.ExistsAsync(channelId);
         if(!channelExists)
