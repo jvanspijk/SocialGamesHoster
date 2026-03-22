@@ -1,18 +1,18 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
-using API.Domain.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
 namespace API.Features.Players.Endpoints;
 public static class CreatePlayer
 {
-    public readonly record struct Request(string Name) : IValidatable<Request>
+    public readonly record struct Request(string Name) : IValidatableObject
     {
-        public IEnumerable<ValidationError> Validate()
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (Name.Length is < 1 or > 32)
             {
-                yield return new ValidationError(nameof(Name), "Player name must be between 1 and 32 characters long.");
+                yield return new ValidationResult("Player name must be between 1 and 32 characters long.", [nameof(Name)]);
             }
         }
     }
@@ -22,13 +22,7 @@ public static class CreatePlayer
             player => new Response(player.Id, player.Name);
     }
     public static async Task<IResult> HandleAsync(IRepository<Player> repository, Request request, int gameId)
-    {
-        var validationResult = request.Validate();
-        if (validationResult.HasErrors())
-        {
-            return Results.ValidationProblem(validationResult.ToProblemDetails());
-        }
-
+    {        
         Player player = new() { Name = request.Name, GameId = gameId };
         repository.Add(player);
 
