@@ -3,6 +3,8 @@ import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
 export type GameSessionsHubEvents = {
+	OnRoundStarted: { gameSessionId: number; ts: number };
+	OnRoundEnded: { gameSessionId: number; ts: number };
 	GameSessionUpdated: { gameSessionId: number; ts: number };
 };
 
@@ -10,6 +12,8 @@ class GameSessionsHub {
 	private connection: signalR.HubConnection | null = null;
 
 	#state = $state<{ [K in keyof GameSessionsHubEvents]: GameSessionsHubEvents[K] | null }>({
+		OnRoundStarted: null,
+		OnRoundEnded: null,
 		GameSessionUpdated: null
 	});
 
@@ -43,6 +47,12 @@ class GameSessionsHub {
 	private registerListeners() {
 		if (!this.connection) return;
 
+		this.connection.on('OnRoundStarted', (gameSessionId: number) => {
+			this.#state.OnRoundStarted = { gameSessionId, ts: Date.now() };
+		});
+		this.connection.on('OnRoundEnded', (gameSessionId: number) => {
+			this.#state.OnRoundEnded = { gameSessionId, ts: Date.now() };
+		});
 		this.connection.on('GameSessionUpdated', (gameSessionId: number) => {
 			this.#state.GameSessionUpdated = { gameSessionId, ts: Date.now() };
 		});

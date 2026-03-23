@@ -3,10 +3,10 @@ export type GetMessagesFromChannelRequest = {
 	readonly channelId: number;
 	readonly before: string | null;
 	readonly after: string | null;
-	readonly limit: number | null;
+	readonly maxMessages: number | null;
 };
 export type GetMessagesFromChannelResponse = {
-	readonly id: string;
+	readonly id: number;
 	readonly content: string;
 	readonly sentAt: string;
 	readonly senderId: number | null;

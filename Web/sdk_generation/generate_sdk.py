@@ -325,6 +325,7 @@ def load_endpoints_cs():
     
 
 if __name__ == '__main__':
+    # TODO: make a backup
     curr_path = pathlib.Path.cwd()
     features_path = curr_path.parent / "API" / "Features"     
     output_base_path = curr_path / "src" / "lib" / "client"

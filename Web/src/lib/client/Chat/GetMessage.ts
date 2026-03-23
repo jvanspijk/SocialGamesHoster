@@ -3,7 +3,7 @@ export type GetMessageRequest = {
 	readonly id: string;
 };
 export type GetMessageResponse = {
-	readonly id: string;
+	readonly id: number;
 	readonly content: string;
 	readonly sentAt: string;
 	readonly senderName: string;

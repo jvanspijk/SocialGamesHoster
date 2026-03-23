@@ -1,6 +1,8 @@
 import { createEndpoint } from '../api';
-export type FinishCurrentRoundRequest = void;
+export type FinishCurrentRoundRequest = {
+	readonly gameId: string;
+};
 export const FinishCurrentRound = createEndpoint<FinishCurrentRoundRequest, void>(
-	'/api/rounds/current/finish',
+	'/api/games/{gameId}/current/finish',
 	'POST'
 );

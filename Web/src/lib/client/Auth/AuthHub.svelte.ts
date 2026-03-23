@@ -3,6 +3,8 @@ import { browser } from '$app/environment';
 import { untrack } from 'svelte';
 
 export type AuthHubEvents = {
+	PlayerForceLoggedOut: { gameId: number; playerId: number; ts: number };
+	PlayerLoggedOut: { gameId: number; playerId: number; ts: number };
 	PlayerLoggedIn: { gameId: number; playerId: number; ts: number };
 };
 
@@ -10,6 +12,8 @@ class AuthHub {
 	private connection: signalR.HubConnection | null = null;
 
 	#state = $state<{ [K in keyof AuthHubEvents]: AuthHubEvents[K] | null }>({
+		PlayerForceLoggedOut: null,
+		PlayerLoggedOut: null,
 		PlayerLoggedIn: null
 	});
 
@@ -43,6 +47,12 @@ class AuthHub {
 	private registerListeners() {
 		if (!this.connection) return;
 
+		this.connection.on('PlayerForceLoggedOut', (gameId: number, playerId: number) => {
+			this.#state.PlayerForceLoggedOut = { gameId, playerId, ts: Date.now() };
+		});
+		this.connection.on('PlayerLoggedOut', (gameId: number, playerId: number) => {
+			this.#state.PlayerLoggedOut = { gameId, playerId, ts: Date.now() };
+		});
 		this.connection.on('PlayerLoggedIn', (gameId: number, playerId: number) => {
 			this.#state.PlayerLoggedIn = { gameId, playerId, ts: Date.now() };
 		});

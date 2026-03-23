@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:9090';
+const BASE_URL = 'http://chromebox:9090';
 
 export type ApiError = {
 	status: number;

@@ -4,7 +4,13 @@ export type SendMessageRequest = {
 	readonly playerId: number;
 	readonly message: string;
 };
-export const SendMessage = createEndpoint<SendMessageRequest, void>(
+export type SendMessageResponse = {
+	readonly messageId: number;
+	readonly playerId: number;
+	readonly channelId: number;
+	readonly message: string;
+};
+export const SendMessage = createEndpoint<SendMessageRequest, SendMessageResponse>(
 	'/api/chat/channels/{channelId}/send',
 	'POST'
 );

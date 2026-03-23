@@ -8,3 +8,9 @@ export type Participant = {
 	readonly name: string;
 	readonly role: RoleInfo | null;
 };
+
+export type Phase = {
+	readonly id: number;
+	readonly name: string;
+	readonly description: string;
+};

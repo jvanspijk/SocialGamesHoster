@@ -33,7 +33,7 @@ public static class Endpoints
             .MapHub<PlayersHub>("/hub")
             .WithTags("Players");
 
-        builder.MapGameEndpoints()
+        builder.MapGameEndpoints().MapRoundEndpoints()
             .MapHub<GameSessionsHub>("/hub")
             .WithTags("GameSessions");
 
@@ -65,7 +65,7 @@ public static class Endpoints
         //    .WithName(nameof(GetRound))
         //    .Produces<GetRound.Response>(StatusCodes.Status200OK)
         //    .ProducesProblem(StatusCodes.Status404NotFound);
-        var currentRoundGroup = roundsGroup.MapGroup("/current")
+        var currentRoundGroup = builder.MapGroup("/current")
           .WithTags("Rounds");
 
         currentRoundGroup.MapGet("/", GetCurrentRound.HandleAsync)
@@ -330,6 +330,9 @@ public static class Endpoints
             .Produces<PlayerLogin.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        authGroup.MapPost("/player/logout", PlayerLogout.HandleAsync)
+            .WithName(nameof(PlayerLogout));
 
         authGroup.MapGet("/me", Me.HandleAsync)
             .WithName(nameof(Me))

@@ -4,7 +4,7 @@ import { untrack } from 'svelte';
 
 export type ChatHubEvents = {
 	ChannelCreated: { channelId: number; memberIds: number[]; gameId: number; ts: number };
-	MessageSent: { channelId: number; senderId: number; messageId: string; ts: number };
+	MessageSent: { channelId: number; senderId: number; messageId: number; ts: number };
 };
 
 class ChatHub {
@@ -51,7 +51,7 @@ class ChatHub {
 				this.#state.ChannelCreated = { channelId, memberIds, gameId, ts: Date.now() };
 			}
 		);
-		this.connection.on('MessageSent', (channelId: number, senderId: number, messageId: string) => {
+		this.connection.on('MessageSent', (channelId: number, senderId: number, messageId: number) => {
 			this.#state.MessageSent = { channelId, senderId, messageId, ts: Date.now() };
 		});
 

@@ -1,13 +1,16 @@
 import { createEndpoint } from '../api';
+import type { Phase } from './Common';
+
 export type GetCurrentRoundRequest = {
 	readonly gameId: number;
 };
 export type GetCurrentRoundResponse = {
 	readonly id: number;
+	readonly roundNumber: number;
 	readonly startTime: string | null;
-	readonly isFinished: boolean;
+	readonly currentPhase: Phase | null;
 };
 export const GetCurrentRound = createEndpoint<GetCurrentRoundRequest, GetCurrentRoundResponse>(
-	'/api/rounds/current',
+	'/api/games/{gameId}/current',
 	'GET'
 );
