@@ -225,6 +225,9 @@ public class Program
         var apiGroup = app.MapGroup("/api");
         apiGroup.MapEndpoints();        
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
+#if DEBUG
+        apiGroup.AddEndpointFilter<DebugRequireSaveChangesFilter>();
+#endif
         apiGroup.AddEndpointFilter<CacheInvalidatorFilter>();
 
         app.Run();
