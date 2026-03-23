@@ -5,7 +5,7 @@ namespace API.DataAccess;
 public interface IRepository<TEntity> where TEntity : class, IEntity
 {
     Task<TEntity?> GetReadOnlyAsync(Expression<Func<TEntity, bool>> predicate);
-    Task<TResult?> GetReadOnlyAsync<TResult>(Expression<Func<TEntity, bool>> predicate)
+    Task<TResult?> GetReadOnlyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, bool splitQuery = false)
         where TResult : class, IProjectable<TEntity, TResult>;
     Task<TEntity[]> GetArrayReadOnlyAsync();
     Task<TEntity[]> GetArrayReadOnlyAsync(Expression<Func<TEntity, bool>> predicate);

@@ -17,14 +17,20 @@ public class Repository<TEntity>(APIDatabaseContext context) : IRepository<TEnti
             .FirstOrDefaultAsync();
     }
 
-    public Task<TResult?> GetReadOnlyAsync<TResult>(Expression<Func<TEntity, bool>> predicate)
+    public Task<TResult?> GetReadOnlyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, bool splitQuery)
         where TResult : class, IProjectable<TEntity, TResult>
     {
-        return _dbSet
+        var query = _dbSet
             .AsNoTracking()
             .Where(predicate)
-            .Select(TResult.Projection)
-            .FirstOrDefaultAsync();
+            .Select(TResult.Projection);
+
+        if(splitQuery)
+        {
+            query = query.AsSplitQuery();
+        }
+  
+        return query.FirstOrDefaultAsync();
     }
 
     public Task<TResult[]> GetArrayReadOnlyAsync<TResult>()

@@ -32,7 +32,7 @@ public static class GetFullRuleset
         Response? response = await cache.GetOrCreateAsync(CacheKey(rulesetId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(15);
-            return await repository.GetReadOnlyAsync<Response>(r => r.Id == rulesetId);
+            return await repository.GetReadOnlyAsync<Response>(r => r.Id == rulesetId, splitQuery: true);
         });
         if (response == null)
         {
