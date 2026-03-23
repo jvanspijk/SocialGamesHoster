@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.Domain;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
@@ -15,12 +16,12 @@ public static class StopGameSession
                 gs.Status.ToString()
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, RoundTimer timer, int gameId)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, RoundTimer timer, int gameId)
     {
         GameSession? session = await repository.GetWithTrackingAsync(gameId);
         if (session == null)
         {
-            return Results.NotFound($"Game session with id `{gameId}` not found.");
+            return APIResults.NotFound<GameSession>(gameId);
         }
 
         // TODO: check old logic for starting game sessions in the old repo
@@ -29,6 +30,6 @@ public static class StopGameSession
         await repository.SaveChangesAsync();
 
         var response = new Response(session.Id, session.Status.ToString());
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

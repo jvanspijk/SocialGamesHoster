@@ -2,6 +2,7 @@
 using API.Domain.Entities;
 using API.Features.Players.Common;
 using API.Features.Players.Hubs;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using System.Linq.Expressions;
 
@@ -19,14 +20,14 @@ public static class UpdatePlayer
                 player.RoleId
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IHubContext<PlayersHub, IPlayersHub> hub, int id, Request request)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<Player> repository, IHubContext<PlayersHub, IPlayersHub> hub, int id, Request request)
     {
         // TODO: validation
         Player? player = await repository.GetWithTrackingAsync(id);
 
         if (player == null)
         {
-            return Results.NotFound($"Player with ID {id} not found.");
+            return APIResults.NotFound<Player>(id);
         }
 
         bool playerChanged = false;
@@ -45,13 +46,13 @@ public static class UpdatePlayer
 
         if(!playerChanged)
         {
-            return Results.Ok(player.ConvertToResponse<Player, Response>());
+            return APIResults.Ok(player.ConvertToResponse<Player, Response>());
         }
 
         await repository.SaveChangesAsync();        
         await PlayersHub.NotifyPlayerUpdated(hub, player.Id);
 
         Response response = new(player.Id, player.Name, player.RoleId);
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

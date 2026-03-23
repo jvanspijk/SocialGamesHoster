@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -19,12 +20,12 @@ public static class UpdateRoleInformation
             );
     }
 
-    public async static Task<IResult> HandleAsync(IRepository<Role> repository, IMemoryCache cache, int id, Request request)
+    public async static Task<Results<Ok<Response>, NoContent, ProblemHttpResult>> HandleAsync(IRepository<Role> repository, IMemoryCache cache, int id, Request request)
     {
         Role? role = await repository.GetWithTrackingAsync(id);
         if (role == null)
         {
-            return Results.NotFound($"Role with id {id} not found.");
+            return APIResults.NotFound<Role>(id);
         }
 
         bool hasChanged = false;
@@ -42,12 +43,12 @@ public static class UpdateRoleInformation
 
         if (!hasChanged)
         {
-            return Results.NoContent();
+            return APIResults.NoContent();
         }
 
         await repository.SaveChangesAsync();
 
         Response response = role.ConvertToResponse<Role, Response>();
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

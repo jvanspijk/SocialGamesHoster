@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -8,6 +9,7 @@ namespace API.Features.Roles.Endpoints;
 
 public class GetRoles
 {
+    private static string GetCacheKey(int ruleSetId) => $"{nameof(GetRoles)}_{ruleSetId}";
     public record Response(int Id, string Name, string Description)
     : IProjectable<Role, Response>
     {
@@ -18,8 +20,13 @@ public class GetRoles
                 role.Description
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<Role> repository, IMemoryCache cache, int ruleSetId)
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<Role> repository, IRepository<Ruleset> rulesetRepository, IMemoryCache cache, int ruleSetId)
     {
+        if (!await rulesetRepository.ExistsAsync(r => r.Id == ruleSetId))
+        {
+            return APIResults.NotFound<Ruleset>(ruleSetId);
+        }
+
         string cacheKey = GetCacheKey(ruleSetId);
         Response[] result = await cache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -27,11 +34,6 @@ public class GetRoles
             return await repository.GetArrayReadOnlyAsync<Response>(r => r.RulesetId == ruleSetId);
         }) ?? [];
 
-        if(result == null) // Not possible. TODO: Add the ruleset repo to check if the ruleset exists. If it doesn't, return NotFound. If it does, return an empty array.
-        {
-            return Results.NotFound();
-        }
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
-    private static string GetCacheKey(int ruleSetId) => $"{nameof(GetRoles)}_{ruleSetId}";
 }

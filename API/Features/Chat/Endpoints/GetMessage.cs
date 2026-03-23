@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -20,7 +21,7 @@ public static class GetMessage
                 message.IsDeleted
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, IMemoryCache cache, int id)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<ChatMessage> repository, IMemoryCache cache, int id)
     {
         Response? message = await cache.GetOrCreateAsync(CacheKey(id), async entry =>
         {
@@ -30,9 +31,9 @@ public static class GetMessage
 
         if (message is null)
         {
-            return Results.NotFound();
+            return APIResults.NotFound<ChatMessage>(id);
         }           
 
-        return Results.Ok(message);
+        return APIResults.Ok(message);
     }
 }

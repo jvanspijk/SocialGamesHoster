@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -18,15 +19,15 @@ public static class GetActiveGameSessions
                 gs.RoundNumber
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, IMemoryCache cache)     
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, IMemoryCache cache)     
     {
         var activeGames = await cache.GetOrCreateAsync(CacheKey(), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
-            return await repository.GetArrayReadOnlyAsync<Response>(gs => gs.IsActive);
+            return await repository.GetArrayReadOnlyAsync<Response>(gs => gs.Status == GameStatus.Running || gs.Status == GameStatus.Paused);
         }) ?? [];
 
-        return Results.Ok(activeGames); 
+        return APIResults.Ok(activeGames); 
     }
 
 }

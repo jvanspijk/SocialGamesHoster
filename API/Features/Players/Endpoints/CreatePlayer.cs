@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
@@ -21,13 +22,13 @@ public static class CreatePlayer
         public static Expression<Func<Player, Response>> Projection =>
             player => new Response(player.Id, player.Name);
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, Request request, int gameId)
+    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(IRepository<Player> repository, Request request, int gameId)
     {        
         Player player = new() { Name = request.Name, GameId = gameId };
         repository.Add(player);
+        await repository.SaveChangesAsync();
 
-        Response response = new(player.Id, player.Name);
-
-        return Results.Ok(response);
+        Response response = new(player.Id, player.Name);        
+        return APIResults.CreatedAtRoute(response, nameof(GetPlayer), player.Id);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
 using API.Features.Auth.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -24,26 +25,32 @@ public static class Me
                 )
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IMemoryCache cache, HttpRequest request)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(
+        IRepository<Player> repository,
+        IMemoryCache cache,
+        HttpRequest request)
     {
         var playerClaimsResult = AuthService.GetPlayerClaims(request);
+
         if (playerClaimsResult.IsFailure)
         {
-            return playerClaimsResult.AsIResult();
+            // TODO: return specific failure reason (e.g., token missing, token invalid, etc.)
+            return APIResults.Unauthorized();
         }
 
-        (int playerId, int? _) = playerClaimsResult.Value;        
+        var (playerId, _) = playerClaimsResult.Value;
 
-        var response = cache.GetOrCreateAsync(CacheKey(playerId), async entry => { 
+        var response = await cache.GetOrCreateAsync(CacheKey(playerId), async entry =>
+        {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return await repository.GetReadOnlyAsync<Response>(p => p.Id == playerId);
         });
 
-        if(response == null)
+        if (response == null)
         {
-            return Results.NotFound($"Player {playerId} not found");
+            return APIResults.NotFound<Player>(playerId);
         }
 
-        return Results.Ok(response);
+        return TypedResults.Ok(response);
     }
 }

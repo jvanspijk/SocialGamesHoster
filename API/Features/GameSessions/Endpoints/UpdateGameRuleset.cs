@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
@@ -16,7 +17,7 @@ public static class UpdateGameRuleset
                 gs.RulesetId
             );
     }
-    public static async Task<IResult> HandleAsync(
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(
         int gameId,
         Request request,
         IRepository<Ruleset> rulesetRepository,
@@ -25,28 +26,28 @@ public static class UpdateGameRuleset
         var existingGameSession = await gameSessionRepository.GetWithTrackingAsync(gameId);
         if (existingGameSession == null)
         {
-            return Results.NotFound();
+            return APIResults.NotFound<GameSession>(gameId);
         }
 
         if(existingGameSession.Status != GameStatus.NotStarted)
         {
-            return Results.BadRequest("Rulesets can only be changed for games that have not been started.");
+            return APIResults.BadRequest("Rulesets can only be changed for games that have not been started.");
         }
 
         if(existingGameSession.RulesetId == request.RulesetId)
         {
-            return Results.Ok(existingGameSession.ConvertToResponse<GameSession, Response>());
+            return APIResults.Ok(existingGameSession.ConvertToResponse<GameSession, Response>());
         }
 
         var newRuleset = await rulesetRepository.GetWithTrackingAsync(request.RulesetId);
         if (newRuleset == null)
         {
-            return Results.NotFound($"Ruleset with id {request.RulesetId} not found.");
+            return APIResults.NotFound($"Ruleset with id {request.RulesetId} not found.");
         }
 
         existingGameSession.RulesetId = request.RulesetId;
         await gameSessionRepository.SaveChangesAsync();
         var response = existingGameSession.ConvertToResponse<GameSession, Response>();
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

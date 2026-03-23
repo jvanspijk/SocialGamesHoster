@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.Abilities.Endpoints;
@@ -13,12 +14,12 @@ public static class UpdateAbilityInformation
             ability => new Response(ability.Id, ability.Name, ability.Description);
     }
 
-    public static async Task<IResult> HandleAsync(IRepository<Ability> repository, int id, Request request)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<Ability> repository, int id, Request request)
     {
         Ability? ability = await repository.GetWithTrackingAsync(id);
         if (ability == null)
         {
-            return Results.NotFound();
+            return APIResults.NotFound<Ability>(id);
         }
 
         if (!string.IsNullOrWhiteSpace(request.NewName))
@@ -33,6 +34,6 @@ public static class UpdateAbilityInformation
         await repository.SaveChangesAsync();
 
         var response = ability.ConvertToResponse<Ability, Response>();
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

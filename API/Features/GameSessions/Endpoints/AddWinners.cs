@@ -2,6 +2,7 @@
 using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
@@ -24,7 +25,7 @@ public static class AddWinners
                     .ToList()
             );
     }
-    public static async Task<IResult> HandleAsync(
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(
         int gameId,
         Request request,
         IRepository<Player> playerRepository,
@@ -33,12 +34,12 @@ public static class AddWinners
         var session = await gameSessionRepository.GetWithTrackingAsync(gameId);
         if (session is null)
         {
-            return TypedResults.NotFound();
+            return APIResults.NotFound<GameSession>(gameId);
         }
 
         if (session.Status is GameStatus.NotStarted)
         {
-            return TypedResults.BadRequest("Winners can only be added to active or finished sessions.");
+            return APIResults.BadRequest("Winners can only be added to active or finished sessions.");
         }
 
         var participantIds = session.Participants.Select(p => p.Id).ToHashSet();
@@ -46,7 +47,7 @@ public static class AddWinners
 
         if (nonParticipants.Count != 0)
         {
-            return TypedResults.BadRequest($"Players {string.Join(", ", nonParticipants)} are not participants.");
+            return APIResults.BadRequest($"Players {string.Join(", ", nonParticipants)} are not participants.");
         }
 
         var currentWinnerIds = session.Winners.Select(w => w.Id).ToHashSet();
@@ -55,7 +56,7 @@ public static class AddWinners
         if (alreadyWinners.Count != 0)
         {
             var alreadyWinnerNames = session.Winners.Where(p => alreadyWinners.Contains(p.Id)).Select(p => p.Name).ToList();
-            return TypedResults.Conflict($"Players {string.Join(", ", alreadyWinnerNames)} are already winners.");
+            return APIResults.Conflict($"Players {string.Join(", ", alreadyWinnerNames)} are already winners.");
         }
 
         var playersResult = await playerRepository.GetListWithTrackingAsync(request.PlayerIds);
@@ -65,6 +66,6 @@ public static class AddWinners
         await gameSessionRepository.SaveChangesAsync();
 
         var response = session.ConvertToResponse<GameSession, Response>();
-        return TypedResults.Ok(response);
+        return APIResults.Ok(response);
     }
 }

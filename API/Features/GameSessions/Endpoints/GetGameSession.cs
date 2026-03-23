@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -17,7 +18,7 @@ public static class GetGameSession
                 gs.Status.ToFriendlyString()
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, IMemoryCache cache, int gameId)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, IMemoryCache cache, int gameId)
     {
         Response? response = await cache.GetOrCreateAsync(CacheKey(gameId), async entry =>
         {
@@ -27,8 +28,9 @@ public static class GetGameSession
 
         if (response == null)
         {
-            return Results.NotFound($"Game session with ID {gameId} not found.");
+            return APIResults.NotFound<GameSession>(gameId);
         }
-        return Results.Ok(response);
+
+        return APIResults.Ok(response);
     }
 }

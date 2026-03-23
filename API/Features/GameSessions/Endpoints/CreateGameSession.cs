@@ -2,6 +2,7 @@
 using API.Domain;
 using API.Domain.Entities;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
@@ -14,7 +15,7 @@ public static class CreateGameSession
         public static Expression<Func<GameSession, Response>> Projection =>
             gs => new Response(gs.Id, gs.RulesetId);
     }
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, IRepository<Player> playerRepository, Request request)
+    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, IRepository<Player> playerRepository, Request request)
     {    
         var participants = playerRepository.AddMultiple([.. request.PlayerNames.Select(name => new Player { Name = name })]);
         GameSession newSession = new()
@@ -29,6 +30,6 @@ public static class CreateGameSession
         await repository.SaveChangesAsync();
 
         Response response = new(newSession.Id, newSession.RulesetId);
-        return Results.Ok(response);
+        return APIResults.CreatedAtRoute(response, nameof(GetGameSession), newSession.Id);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -15,25 +16,25 @@ public static class GetRulesetAbilities
             ability => new Response(ability.Id, ability.Name, ability.Description);
     }
 
-    public static async Task<IResult> HandleAsync(
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(
         IRepository<Ability> repository,
         IRepository<Ruleset> rulesetRepo,
         IMemoryCache cache,
         int rulesetId)
     {
-        var result = await cache.GetOrCreateAsync(CacheKey(rulesetId), async entry =>
+        Response[] result = await cache.GetOrCreateAsync(CacheKey(rulesetId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(30);
             bool exists = await rulesetRepo.CountAsync(r => r.Id == rulesetId) > 0;
             if (!exists) return null;
             return await repository.GetArrayReadOnlyAsync<Response>(a => a.RulesetId == rulesetId);
-        });
+        }) ?? [];
 
         if (result == null)
         {
-            return Results.NotFound($"Ruleset {rulesetId} does not exist.");
+            return APIResults.NotFound<Ruleset>(rulesetId);
         }
 
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
 }

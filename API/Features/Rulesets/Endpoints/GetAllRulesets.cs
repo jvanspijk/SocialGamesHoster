@@ -2,6 +2,7 @@
 
 
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -16,13 +17,13 @@ public static class GetAllRulesets
         public static Expression<Func<Ruleset, Response>> Projection =>
             rs => new Response(rs.Id, rs.Name, rs.Description);
     }
-    public static async Task<IResult> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache)
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache)
     {
         Response[]? response = await cache.GetOrCreateAsync(CacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return await repository.GetArrayReadOnlyAsync<Response>();
         }) ?? [];
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

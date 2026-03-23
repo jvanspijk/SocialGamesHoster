@@ -3,6 +3,7 @@ using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
 using API.Features.GameSessions.Hubs;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
@@ -21,12 +22,12 @@ public static class StartNewRound
             gamesession => new Response(gamesession.Id, gamesession.RoundNumber, gamesession.RoundStartedAt, gamesession.CurrentPhaseId);
     }
 
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> gameRepository, IRepository<RoundPhase> phaseRepository, IHubContext<GameSessionsHub, IGameSessionsHub> hub, IMemoryCache cache, Request request)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> gameRepository, IRepository<RoundPhase> phaseRepository, IHubContext<GameSessionsHub, IGameSessionsHub> hub, IMemoryCache cache, Request request)
     {
         GameSession? session = await gameRepository.GetWithTrackingAsync(request.GameId);
         if (session == null)
         {
-            return Results.NotFound($"Game with id {request.GameId} not found.");
+            return APIResults.NotFound<GameSession>(request.GameId);
         }
 
         RoundPhase[] allPhases = await cache.GetOrCreateAsync(CacheKey(session.RulesetId), async entry =>
@@ -38,7 +39,7 @@ public static class StartNewRound
         bool validPhase = allPhases.Any(phase => phase.Id == request.NewPhaseId);
         if (!validPhase)
         {
-            return Results.BadRequest($"Phase with id {request.NewPhaseId} is not valid for the ruleset of the game.");
+            return APIResults.BadRequest($"Phase with id {request.NewPhaseId} is not valid for the ruleset of the game.");
         }
 
         session.RoundNumber += 1;
@@ -47,6 +48,6 @@ public static class StartNewRound
 
         await GameSessionsHub.NotifyRoundStarted(hub, session.Id);
         Response response = new(session.Id, session.RoundNumber, session.RoundStartedAt, session.CurrentPhaseId);
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.Linq.Expressions;
 
 namespace API.Features.GameSessions.Endpoints;
@@ -25,12 +26,12 @@ public static class DuplicateGameSession
                     .ToList()
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, Request request)
+    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, Request request)
     {
         var gameSession = await repository.GetWithTrackingAsync(request.GameSessionId);
         if (gameSession == null)
         {
-            return Results.NotFound($"Game session with id {request.GameSessionId} not found.");
+            return APIResults.NotFound<GameSession>(request.GameSessionId);
         }
 
         GameSession duplicatedSession = new()
@@ -45,6 +46,6 @@ public static class DuplicateGameSession
         await repository.SaveChangesAsync();
 
         var response = duplicatedSession.ConvertToResponse<GameSession, Response>();
-        return Results.Ok(response);
+        return APIResults.CreatedAtRoute(response, nameof(GetGameSession), duplicatedSession.Id);
     }
 }

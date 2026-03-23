@@ -2,6 +2,7 @@
 using API.Domain.Entities;
 using API.Features.Auth;
 using API.Features.Players.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -24,17 +25,18 @@ public static class GetPlayer
                 )
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IMemoryCache cache, AuthService authService, HttpRequest request, int id)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<Player> repository, IMemoryCache cache, AuthService authService, HttpRequest request, int id)
     {
         var canSeeResult = await authService.CanSeePlayerAsync(request, id);
         if (canSeeResult.IsFailure)
         {
-            return canSeeResult.AsIResult();
+            //return canSeeResult.AsIResult();
+            return APIResults.Unauthorized();
         }
 
         if (canSeeResult.Value == false)
         {
-            return Results.Forbid();
+            return APIResults.Forbidden();
         }
 
         Response? result = await cache.GetOrCreateAsync(CacheKey(id), async entry =>
@@ -45,8 +47,8 @@ public static class GetPlayer
 
         if (result == null)
         {
-            return Results.NotFound($"Player with id {id} not found.");
+            return APIResults.NotFound<Player>(id);
         }
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
 }

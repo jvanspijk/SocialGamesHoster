@@ -1,20 +1,20 @@
 ﻿using API.DataAccess;
-using API.Domain;
 using API.Domain.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace API.Features.GameSessions.Endpoints;
 
 public static class DeleteGameSession
 {
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, int gameId)
+    public static async Task<Results<NoContent, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, int gameId)
     {
         var gameSession = await repository.GetWithTrackingAsync(gameId);
         if(gameSession == null)
         {
-            return Results.NotFound($"Game session with id {gameId} not found.");
+            return APIResults.NotFound<GameSession>(gameId);
         }
         repository.Remove(gameSession);
         await repository.SaveChangesAsync();
-        return Results.NoContent();
+        return APIResults.NoContent();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
@@ -46,22 +47,22 @@ public static class GetMessagesFromChannel
                 message.Sender == null ? null : message.Sender.Name);
     }
 
-    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, [AsParameters] Request req)
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<ChatMessage> repository, [AsParameters] Request req)
     {       
         var channelExists = await repository.ExistsAsync(req.ChannelId);
         if (!channelExists)
         {
-            return Results.NotFound($"Channel with id {req.ChannelId} not found.");
+            return APIResults.NotFound<ChatChannel>(req.ChannelId);
         }
 
-        var result = await repository.QueryReadOnlyAsync<Response>(query =>
+        Response[] result = await repository.QueryReadOnlyAsync<Response>(query =>
             query.Where(c => c.ChannelId == req.ChannelId)
                  .Where(m => (!req.Before.HasValue || m.SentAt < req.Before) &&
                              (!req.After.HasValue || m.SentAt > req.After))
                  .OrderByDescending(m => m.SentAt)
                  .Take(req.Limit)
-        );
+        ) ?? [];
       
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
 }

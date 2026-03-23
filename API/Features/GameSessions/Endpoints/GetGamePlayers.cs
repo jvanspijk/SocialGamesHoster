@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -13,13 +14,14 @@ public static class GetGamePlayers
         public static Expression<Func<Player, Response>> Projection =>
             player => new Response(player.Id, player.Name);
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IMemoryCache cache, int gameId)
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<Player> repository, IMemoryCache cache, int gameId)
     {
-        var result = await cache.GetOrCreateAsync(CacheKey(gameId), async entry =>
+        Response[] result = await cache.GetOrCreateAsync(CacheKey(gameId), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return await repository.GetArrayReadOnlyAsync<Response>(p => p.GameId == gameId);
         }) ?? [];
-        return Results.Ok(result);
+
+        return APIResults.Ok(result);
     }
 }

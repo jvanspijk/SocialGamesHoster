@@ -1,5 +1,6 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -13,7 +14,7 @@ public class GetAbility
         public static Expression<Func<Ability, Response>> Projection =>
             ability => new Response(ability.Id, ability.Name, ability.Description);
     }
-    public static async Task<IResult> HandleAsync(
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(
         IRepository<Ability> repository,
         IMemoryCache cache,
         int id)
@@ -28,9 +29,9 @@ public class GetAbility
 
         if (result == null)
         {
-            return Results.NotFound($"Ability with id {id} not found.");
+            return APIResults.NotFound<Ability>(id);
         }
 
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
 }

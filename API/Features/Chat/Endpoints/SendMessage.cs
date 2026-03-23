@@ -1,19 +1,21 @@
 ﻿using API.DataAccess;
 using API.Domain.Entities;
 using API.Features.Chat.Hubs;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.Features.Chat.Endpoints;
 
 public static class SendMessage
 {
-    public record Request(int PlayerId, string Message);
-    public static async Task<IResult> HandleAsync(IRepository<ChatMessage> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
+    public readonly record struct Request(int PlayerId, string Message);
+    public readonly record struct Response(int MessageId, int PlayerId, int ChannelId, string Message);
+    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(IRepository<ChatMessage> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
     {
         bool channelExists = await repository.ExistsAsync(channelId);
         if(!channelExists)
         {
-            return Results.NotFound($"Channel with id {channelId} does not exist.");
+            return APIResults.NotFound($"Channel with id {channelId} does not exist.");
         }
       
         ChatMessage message = new()
@@ -26,7 +28,8 @@ public static class SendMessage
 
         repository.Add(message);
         await repository.SaveChangesAsync();
+        var response = new Response(message.Id, message.SenderId!.Value, message.ChannelId, message.Content);
         await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId, message.Id);
-        return Results.Created();
+        return APIResults.CreatedAtRoute(response, nameof(GetMessage), message.Id);
     }
 }

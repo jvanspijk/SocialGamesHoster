@@ -1,6 +1,7 @@
 ﻿using API.DataAccess;
 using API.Domain.Models;
 using API.Features.GameSessions.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -24,15 +25,15 @@ public class GetCurrentRound
                 );
     }
 
-    public static async Task<IResult> HandleAsync(IRepository<GameSession> repository, [AsParameters] Request request)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, [AsParameters] Request request)
     {
-        var response = await repository.GetReadOnlyAsync<Response>(r => r.Id == request.GameId);
+        Response? response = await repository.GetReadOnlyAsync<Response>(r => r.Id == request.GameId);
         if (response is null)
         {
-            return Results.NotFound($"Can't find game session with id `{request.GameId}`");
+            return APIResults.NotFound<GameSession>(request.GameId);
         }
 
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }
 

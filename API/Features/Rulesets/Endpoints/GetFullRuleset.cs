@@ -2,6 +2,7 @@
 
 using API.Domain.Entities;
 using API.Features.Rulesets.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 
@@ -26,7 +27,7 @@ public static class GetFullRuleset
                     );
 
     }
-    public static async Task<IResult> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache, int rulesetId)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache, int rulesetId)
     {
         Response? response = await cache.GetOrCreateAsync(CacheKey(rulesetId), async entry =>
         {
@@ -35,8 +36,8 @@ public static class GetFullRuleset
         });
         if (response == null)
         {
-            return Results.Problem($"Ruleset with id {rulesetId} not found.");
+            return APIResults.NotFound<Ruleset>(rulesetId);
         }
-        return Results.Ok(response);
+        return APIResults.Ok(response);
     }
 }

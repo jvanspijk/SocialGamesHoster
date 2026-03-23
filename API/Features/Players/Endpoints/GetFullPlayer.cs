@@ -2,6 +2,7 @@
 using API.Domain.Entities;
 using API.Features.Auth;
 using API.Features.Players.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -30,7 +31,7 @@ public static class GetFullPlayer
                 player.CanBeSeenBy.Select(p => p.Id).ToList()
             );
     }
-    public static async Task<IResult> HandleAsync(IRepository<Player> repository, IMemoryCache cache, AuthService authService, ClaimsPrincipal claims, int id)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<Player> repository, IMemoryCache cache, AuthService authService, ClaimsPrincipal claims, int id)
     {
         // there's no admin login on the front end so turn this off for now     
         //var authResult = authService.IsAdmin(claims);
@@ -54,9 +55,9 @@ public static class GetFullPlayer
             
         if (result == null)
         {
-            return Results.NotFound($"Player with id {id} not found.");
+            return APIResults.NotFound<Player>(id);
         }
 
-        return Results.Ok(result);
+        return APIResults.Ok(result);
     }
 }
