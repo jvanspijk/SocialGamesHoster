@@ -8,6 +8,7 @@ import json
 import shutil
 from generate_hub_sdk import create_sdk_hubs
 from generate_api_sdk import create_api_sdk
+from generate_api_error_sdk import create_api_error_sdk
 
 
 def clear_output_dir(output_base_path: Path):
@@ -373,6 +374,7 @@ if __name__ == '__main__':
         create_sdk_endpoints(feature_structure["Endpoints"], output_base_path, feature_common_types_dict)
         create_sdk_hubs(feature_structure["Hubs"], output_base_path)
         create_api_sdk(output_base_path)
+        create_api_error_sdk(output_base_path)
 
     except Exception as e:
         print(f"Error: {e}")

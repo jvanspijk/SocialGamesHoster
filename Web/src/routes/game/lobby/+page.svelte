@@ -13,7 +13,7 @@
     let selectedGameId = $state(null);
 
     async function handleJoin() {
-                console.debug(`Joining game ${selectedGameId}`);
+        console.debug(`Joining game ${selectedGameId}`);
         if(selectedGameId == null) {
             return;
         }
@@ -52,7 +52,7 @@
                 disabled={selectedGameId === null || isLoading} 
                 isLoading={isLoading} 
                 onActivate={handleJoin}
-                label={'Enter Selected Game'} 
+                label='Enter Selected Game'
             />
             
             {#if selectedGameId !== null}
@@ -72,7 +72,7 @@
             </div>
         {:catch error}
             <div class="error-message">
-                ERROR: Could not retrieve game data.
+                ERROR: Could not retrieve game data. {error.message}
             </div>
         {/await}
     </div>

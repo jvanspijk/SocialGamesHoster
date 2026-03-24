@@ -24,6 +24,7 @@ namespace API;
 // TODO:
 // Big refactors:
 // - Remove docker entirely. Use install and run script instead.
+// - Uniform error handling. In svelte, add a CreateFail function to ApiError so that we can return after !res.ok something like: return res.error.fail()
 // v1:
 // - Maybe add Open telemetry for performance logging
 // - Fix login for admins

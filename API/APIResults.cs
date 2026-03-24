@@ -48,6 +48,4 @@ internal static class APIResults
     // 500
     internal static ProblemHttpResult InternalServerError(string detail)
         => TypedResults.Problem(detail: detail, statusCode: 500);
-
-
 }

@@ -1,8 +1,8 @@
 import { error, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { GetGameSession } from '$lib/client/GameSessions/GetGameSession';
-import { GetPlayersFromGame } from '$lib/client/Players/GetPlayersFromGame';
-import { GetCurrentRound } from '$lib/client/Rounds/GetCurrentRound';
+import { GetGamePlayers, type GetGamePlayersResponse } from '$lib/client/GameSessions/GetGamePlayers';
+import { GetCurrentRound } from '$lib/client/GameSessions/GetCurrentRound';
 import { GetRoles } from '$lib/client/Roles/GetRoles';
 import { UpdatePlayer } from '$lib/client/Players/UpdatePlayer';
 import { AddWinners } from '$lib/client/GameSessions/AddWinners';
@@ -24,7 +24,7 @@ export const load = (async ({ fetch, params }) => {
 
 	const [gameRes, playersRes, roundRes, timerRes] = await Promise.all([
 		GetGameSession(fetch, req),
-		GetPlayersFromGame(fetch, req),
+		GetGamePlayers(fetch, req),
 		GetCurrentRound(fetch, { gameId: Number(gameId) }),
 		GetTimerState(fetch)
 	]);
@@ -43,7 +43,7 @@ export const load = (async ({ fetch, params }) => {
 		timer: timerRes.ok ? timerRes.data : null,
 		streamed: {
 			fullPlayers: Promise.all(
-				playersSummary.map(async (p) => {
+				playersSummary.map(async (p: GetGamePlayersResponse) => {
 					const res = await GetFullPlayer(fetch, { id: p.id.toString() });
 					return res.ok ? res.data : null;
 				})

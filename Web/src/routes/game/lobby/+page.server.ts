@@ -9,8 +9,9 @@ import { error } from '@sveltejs/kit';
 export const load = (async ({ fetch }) => {
 	const result = await GetActiveGameSessions(fetch);
 	if (!result.ok) {
-		throw error(result.error.status, {
-			message: result.error.title || 'Failed to load games'
+		const message = result.error.detail || result.error.title || 'Failed to load games';
+		error(result.error.status, {
+			message: message,			
 		});
 	}
 

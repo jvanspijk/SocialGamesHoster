@@ -17,7 +17,7 @@ public static class GetAllRulesets
         public static Expression<Func<Ruleset, Response>> Projection =>
             rs => new Response(rs.Id, rs.Name, rs.Description);
     }
-    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache)
+    public static async Task<Ok<Response[]>> HandleAsync(IRepository<Ruleset> repository, IMemoryCache cache)
     {
         Response[]? response = await cache.GetOrCreateAsync(CacheKey, async entry =>
         {

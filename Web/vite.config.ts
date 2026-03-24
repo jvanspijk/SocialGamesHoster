@@ -7,6 +7,9 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
 	server: {
 		host: '0.0.0.0',
-		allowedHosts: true
+		port: 9091,
+		strictPort: true,
+		allowedHosts: true,
+        cors: true
 	}
 });

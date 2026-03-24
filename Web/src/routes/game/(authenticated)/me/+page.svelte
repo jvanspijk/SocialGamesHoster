@@ -55,7 +55,7 @@
                 <section class="abilities-section">
                     <h2>Abilities</h2>
                     <ul class="abilities-list">
-                        {#each role.abilities as ability}
+                        {#each role.abilities as ability (ability.id ?? ability.name)}
                             <li class="ability-item">
                                 <strong>{ability.name}:</strong> {ability.description || 'A mysterious power...'}
                             </li>

@@ -1,5 +1,6 @@
 import { AdminLogin } from '$lib/client/Auth/AdminLogin';
-import { fail, redirect, type Cookies } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
+import { invalidate_session, set_token } from '$lib/tokens.svelte';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -30,10 +31,10 @@ export const actions: Actions = {
 					message: res.error.title || 'Admin login failed.'
 				});
 			}
-			set_cookies(cookies, res.data.token);
+			set_token(cookies, res.data.token);
 		} catch (error) {
 			console.error('Admin login Exception:', error);
-			invalidate_cookies(cookies);
+			invalidate_session(cookies);
 
 			return fail(500, {
 				success: false,
@@ -46,23 +47,7 @@ export const actions: Actions = {
 };
 
 export async function load({ locals }) {
-	if (locals.admin) {
+	if (locals.user?.role.toLocaleLowerCase() === 'admin') {
 		redirect(303, '/admin');
 	}
-}
-
-function set_cookies(cookies: Cookies, token: string) {
-	cookies.set('admin_token', token, {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax',
-		secure: false,
-		maxAge: 60 * 60 * 24 * 7
-	});
-}
-
-function invalidate_cookies(cookies: Cookies) {
-	cookies.delete('admin_token', {
-		path: '/'
-	});
 }

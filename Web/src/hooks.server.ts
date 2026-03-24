@@ -1,20 +1,33 @@
 import type { Handle, HandleFetch } from '@sveltejs/kit';
+import { decode_jwt, get_token as get_session_token } from '$lib/tokens.svelte';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.user = null;
-	const playerToken = event.cookies.get('player_token');
-	const adminToken = event.cookies.get('admin_token');
-	if (playerToken) {
-		event.locals.user = parseToken(playerToken);
+    const start = performance.now();
+
+    const token = get_session_token(event.cookies);
+    if (!token || token === 'undefined') {
+        event.locals.user = null;
+    } else {
+		const payload = decode_jwt(token);
+		if (!payload) {
+			event.locals.user = null;
+		} else {
+			const userId = parseInt(payload.sub);
+			
+			event.locals.user = {
+				id: userId,
+				name: payload.name ?? payload.unique_name ?? 'Unknown',
+				role: payload.role
+			};
+		}
 	}
-	if (adminToken) {
-		event.locals.admin = parseToken(adminToken);
-	}
-	const endTotal = performance.now();
-	const resol = await resolve(event);
-	const resolEnd = performance.now();
-	console.debug(`resolve ${(resolEnd - endTotal).toFixed(1)}ms`);
-	return resol;
+	
+    const response = await resolve(event);
+    
+    const end = performance.now();
+    console.debug(`${event.request.method} ${event.url.pathname} - ${(end - start).toFixed(1)}ms`);
+    
+    return response;
 };
 
 export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
@@ -27,20 +40,3 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
 
 	return fetch(request);
 };
-
-function parseToken(token: string) {
-	try {
-		const payloadBase64 = token.split('.')[1];
-		const decodedPayload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
-
-		return {
-			id: decodedPayload.sub || decodedPayload.nameid,
-			name: decodedPayload.unique_name || decodedPayload.name,
-			roleId: decodedPayload.role,
-			isAdmin: false
-		};
-	} catch (e) {
-		console.error('JWT Decode failed', e);
-		return null;
-	}
-}

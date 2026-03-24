@@ -35,7 +35,7 @@ public static class Me
         if (playerClaimsResult.IsFailure)
         {
             // TODO: return specific failure reason (e.g., token missing, token invalid, etc.)
-            return APIResults.Unauthorized();
+            return APIResults.Unauthorized(playerClaimsResult.Error.Message);
         }
 
         var (playerId, _) = playerClaimsResult.Value;

@@ -1,7 +1,9 @@
 from pathlib import Path
 
 api_str = r"""
-const BASE_URL = "http://chromebox:9090"
+import type { ApiError } from "./ApiError";
+
+const BASE_URL = "http://localhost:9090"
 
 export type ApiError = {
     status: number;
@@ -19,7 +21,7 @@ type SvelteFetch = typeof fetch;
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 export interface ApiEndpoint<TReq, TRes> {
-    (fetch: SvelteFetch, request: TReq): Promise<TRes>;
+    (fetch: SvelteFetch, request: TReq, token: string | undefined): Promise<TRes>;
     readonly url: string;
     readonly method: HttpMethod;
 }
@@ -28,7 +30,7 @@ export function createEndpoint<TReq, TRes>(
     url: string, 
     method: HttpMethod = 'GET'
 ): ApiEndpoint<TReq, ApiResponse<TRes>> {
-    const endpoint = (async (f: SvelteFetch, request: TReq): Promise<ApiResponse<TRes>> => {
+    const endpoint = (async (f: SvelteFetch, request: TReq, token: string | undefined = undefined): Promise<ApiResponse<TRes>> => {
         let finalUrl = BASE_URL + url;
         
         const requestData: Record<string, unknown> = { ...(request as Record<string, unknown>) };
@@ -48,11 +50,19 @@ export function createEndpoint<TReq, TRes>(
             }
         }
 
-        const options: RequestInit = {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        };
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json'
+		};
+
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
+		}
+
+		const options: RequestInit = {
+			method,
+			headers,
+			credentials: 'include'
+		};	
 
         const remainingKeys = Object.keys(requestData);
         
