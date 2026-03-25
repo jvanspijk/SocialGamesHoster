@@ -32,7 +32,6 @@ namespace API;
 // - Admin: force logout users, (decouple IP from user)
 // - Change participants in active game sessions
 //   - Remove players from game sessions
-// - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, nemesis, etc.
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
@@ -42,10 +41,15 @@ namespace API;
 // - GetTimerState should have a result for the case where there is no timer.
 // - Solve todos in player repository
 // - Search for more todos and fix them
+// - General chat
+// - DM the DM
+// - Hide button for the role info
+// - Logout endpoitn and button
+// - Management panels for deleting and updating resources
 // Wrong parameters gave a 200 OK response. Maybe svelte issue.
 
 // v2:
-// - Always inject repository interfaces instead of concrete repositories
+// - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, nemesis, etc.
 // - Testing project with unit and/or integration tests
 // - Performance testing
 // - chats
@@ -63,12 +67,10 @@ namespace API;
 // - Streaming database results using IAsyncEnumerable where possible, especially for endpoints that return lists of data. <-- while the asp.net api result can return a stream, it needs to be handled client side too. There's also some latency involved in starting to return results, so it might not be worth it for smaller lists of data. But for larger lists, it can improve performance and reduce memory usage.
 // - Use JSON source generator for serialization where possible (see GetAbility endpoint for example). <-- Does it save enough time?
 
-
-
 // Bugs/issues:
 // - Minor issue: cancelling a round increments the round number (not talking about the id). This might be an issue for games where there's a fixed number of rounds.
 // - Rounds can only be created with a timer that is started at creation and overrides the previous one. There's no way to create a round without a timer.
-// - Admin name and password should be stored in the database, yet easily changeable. Maybe put it in the docker-compose environment variables.
+
 public class Program
 {
     public static void Main(string[] args)
@@ -109,6 +111,19 @@ public class Program
             options.ResponseHeaders.Clear();
             options.CombineLogs = true;
         });
+
+        // Configure CORS
+        services.AddCors(options =>
+        {
+            options.AddPolicy("Cors", policy =>
+            {
+                policy.SetIsOriginAllowed(_ => true)
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
+
 
         // Add services to the container.
 
@@ -186,6 +201,8 @@ public class Program
         });
 
         var app = builder.Build();
+        app.UseCors("Cors");
+        app.UseRouting();
 
         if (!isGeneratingDocs && !EF.IsDesignTime)
         {
@@ -194,6 +211,7 @@ public class Program
         }
 
         app.UseDefaultFiles();
+        
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -214,9 +232,7 @@ public class Program
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
-
-        app.UseRouting();
+        });        
 
         app.UseSession();
 
