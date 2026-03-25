@@ -38,7 +38,7 @@ internal static class APIResults
 
     internal static ProblemHttpResult NotFound<T>(int id)
         => TypedResults.Problem(
-            detail: $"Could not find an instance of `{nameof(T)}` with id `{id}`",
+            detail: $"Could not find an instance of `{typeof(T).Name}` with id `{id}`",
             statusCode: 404);
 
     // 409
