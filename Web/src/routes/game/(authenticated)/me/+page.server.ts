@@ -18,7 +18,7 @@ export const load = (async ({ fetch, locals, cookies }) => {
 	if (!playerResponse.ok) {
         console.error('Player Data Error:', playerResponse.error);
         
-        if (playerResponse.error?.status === 401) {
+        if (playerResponse.error?.status === 401 || playerResponse.error?.status === 404) {
             invalidate_session(cookies);
             throw redirect(302, '/game/lobby');
         }

@@ -3,16 +3,16 @@
     import LedgerTable from '$lib/components/LedgerTable.svelte';
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
 
-    import type { GetPlayersFromGameResponse } from '$lib/client/Players/GetPlayersFromGame';
-	import { StartNewRound } from '$lib/client/Rounds/StartNewRound.js';
+    import type { GetGamePlayersResponse } from '$lib/client/GameSessions/GetGamePlayers.js';
+	import { StartNewRound } from '$lib/client/GameSessions/StartNewRound.js';
 	import { invalidateAll } from '$app/navigation';
 	import HUDFooter from '$lib/components/HUDFooter.svelte';
-	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
-    import BackLink from '$lib/components/BackLink.svelte';
+	import BackLink from '$lib/components/BackLink.svelte';
     import { authHub } from '$lib/client/Auth/AuthHub.svelte';
-	import MainButton from '$lib/components/MainButton.svelte';
-	import { FinishGameSession } from '$lib/client/GameSessions/FinishGameSession';
+	//import { FinishGameSession } from '$lib/client/GameSessions/FinishGameSession';
 	import { StartGameSession } from '$lib/client/GameSessions/StartGameSession';
+    import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
+    import { DeletePlayer } from '$lib/client/Players/DeletePlayer';
 
 
     let { data } = $props();
@@ -21,8 +21,10 @@
     let winnerIds = $state<Set<number>>(new Set());
     let isSaving = $state(false);
 
+    let showKickConfirm = $state(false);
+    let playerToKick: GetGamePlayersResponse | null = $state(null);
+
     const isDirty = $derived(Object.keys(pendingRoles).length > 0);
-    const gameId = $derived(data.gameSession.id.toString());
 
     authHub.onEvent('PlayerLoggedIn', (event) => {
         console.debug(`Player ${event.playerId} logged in.`);
@@ -36,9 +38,31 @@
         if (winnerIds.has(id)) winnerIds.delete(id);
         else winnerIds.add(id);
     }
+
+    function handleKickClick(player: GetGamePlayersResponse) {
+        playerToKick = player;
+        showKickConfirm = true;
+    }
+
+    async function confirmKick() {
+        if (!playerToKick) return;
+        
+        await DeletePlayer(fetch, { id: playerToKick.id.toString() });
+        showKickConfirm = false;
+        playerToKick = null;
+        invalidateAll(); // Refresh data
+    }
 </script>
 
 <div class="page-main">
+    {#if showKickConfirm && playerToKick}
+        <ConfirmationModal
+            title="Confirm Kick"
+            message={`Are you sure you want to remove ${playerToKick.name} from the game? This action is immediate and cannot be undone.`}
+            onConfirm={confirmKick}
+            onCancel={() => showKickConfirm = false}
+        />
+    {/if}
     <div class="parchment-container">
         <header class="admin-header">
             <BackLink href="/admin/games" pageName="Games Overview"></BackLink>
@@ -64,7 +88,7 @@
                         </tr>
                     {/snippet}
 
-                    {#snippet rows(player: GetPlayersFromGameResponse)}
+                    {#snippet rows(player: GetGamePlayersResponse)}
                         {@const fullData = playerLookup.get(player.id)}
                         <tr>
                             <td data-label="Name">
@@ -80,7 +104,7 @@
                                         onchange={(e) => pendingRoles[player.id] = Number(e.currentTarget.value)}
                                     >
                                         <option value="">No Role</option>
-                                        {#each data.roles as role}
+                                        {#each data.roles as role (role.id)}
                                             <option value={role.id}>{role.name}</option>
                                         {/each}
                                     </select>
@@ -96,6 +120,12 @@
                                         title="Mark as Winner"
                                         onclick={() => toggleWinner(player.id)}
                                     >🏆</button>
+                                    <button 
+                                        type="button" 
+                                        class="action-btn-danger"
+                                        title="Remove Player from game"
+                                        onclick={() => handleKickClick(player)}
+                                    >❌</button>
                                 </div>
                             </td>
                         </tr>
@@ -129,7 +159,7 @@
 
             {#if winnerIds.size > 0}
                 <form method="POST" action="?/declareWinners" use:enhance>
-                    {#each Array.from(winnerIds) as id}
+                    {#each Array.from(winnerIds) as id (id)}
                         <input type="hidden" name="winnerIds" value={id} />
                     {/each}
                     <button type="submit" class="btn-finalize">Declare {winnerIds.size} Winner(s)</button>
@@ -139,15 +169,17 @@
     </div>
 
     <div class="game-controls">
+        <div class="button-group">
+            {#if data.gameSession.status === 'Not started'}
+                <SecondaryButton onclick={() => StartGameSession(fetch, { gameId: data.gameSession.id.toString() })}>Start game</SecondaryButton>
+            {:else if data.gameSession.status === 'Running'}
+                <SecondaryButton variant="danger" onclick={() => alert("not implemented")}>Stop game</SecondaryButton>
+                <SecondaryButton onclick={() => StartNewRound(fetch, { gameId: data.gameSession.id, newPhaseId: 1 })}>Start new round</SecondaryButton>
+            {:else if data.gameSession.status === 'Finished'}
+                <p>Winners: </p>
+            {/if}
+        </div>
 
-        {#if data.gameSession.status === 'Not started'}
-            <SecondaryButton onclick={() => StartGameSession(fetch, { gameId: data.gameSession.id.toString() })}>Start game</SecondaryButton>
-        {:else if data.gameSession.status === 'Running'}
-            <SecondaryButton variant="danger" onclick={() => FinishGameSession(fetch, { gameId: data.gameSession.id.toString() })}>Stop game</SecondaryButton>
-            <SecondaryButton onclick={() => StartNewRound(fetch, { gameId: data.gameSession.id })}>Start new round</SecondaryButton>
-        {:else if data.gameSession.status === 'Finished'}
-            <p>Winners: </p>
-        {/if}
         <h3>Game Status: {data.gameSession.status}</h3>
     </div>
 
@@ -187,6 +219,22 @@
         filter: grayscale(1);
     }
     .action-btn.active { filter: grayscale(0); background: #fcf5e5; }
+    .action-btn-danger {
+        background: none;
+        border: 1px solid #a62a2a;
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 5px 10px;
+        color: #a62a2a;
+        margin-left: 5px;
+    }
+    .action-btn-danger:hover {
+        background: #a62a2a;
+        color: white;
+    }
+    .action-cell {
+        display: flex;
+    }
 
     .winner-highlight { font-weight: bold; color: #856404; text-decoration: underline; }
 
@@ -226,5 +274,13 @@
         border: 1px solid #5b4a3c;
         font-family: inherit;
         padding: 2px;
+    }
+
+    .game-controls {
+        margin: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
     }
 </style>

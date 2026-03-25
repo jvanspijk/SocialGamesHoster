@@ -2,7 +2,6 @@
 	import { fade, scale } from 'svelte/transition';
 
 	interface Props {
-		isOpen: boolean;
 		title?: string;
 		message?: string;
 		confirmText?: string;
@@ -12,7 +11,6 @@
 	}
 
 	let {
-		isOpen = $bindable(false),
 		title = "Confirm Action",
 		message = "Are you sure you want to proceed?",
 		confirmText = "Yes",
@@ -23,65 +21,54 @@
 
 	let dialogElement = $state<HTMLDialogElement | null>(null);
 
-	$effect(() => {
-		if (isOpen) {
-			dialogElement?.showModal();
-		} else {
-			dialogElement?.close();
-		}
-	});
-
 	function handleCancel(e: MouseEvent): void {
         if (e.target === e.currentTarget) {
-            isOpen = false;
             onCancel();
         }
 	}
 
 	function handleConfirm(): void {
-		isOpen = false;
 		onConfirm();
 	}
 
-	function handleClose(e: Event): void {
-		isOpen = false;
+	function handleClose(): void {
 		onCancel();
 	}
 </script>
 
-{#if isOpen}
-	<dialog
-		bind:this={dialogElement}
-		onclose={handleClose}
-		onclick={handleCancel}
-		transition:fade={{ duration: 200 }}
-	>
-		<div 
-			class="modal-inner"
-			transition:scale={{ duration: 200, start: 0.95 }}
-		>
-			<h2>{title}</h2>
-			<p>{message}</p>
 
-			<div class="actions">
-				<button 
-					type="button" 
-					class="btn-cancel" 
-					onclick={handleCancel}
-				>
-					{cancelText}
-				</button>
-				<button 
-					type="button" 
-					class="btn-confirm" 
-					onclick={handleConfirm}
-				>
-					{confirmText}
-				</button>
-			</div>
+<dialog
+	bind:this={dialogElement}
+	onclose={handleClose}
+	onclick={handleCancel}
+	transition:fade={{ duration: 200 }}
+>
+	<div 
+		class="modal-inner"
+		transition:scale={{ duration: 200, start: 0.95 }}
+	>
+		<h2>{title}</h2>
+		<p>{message}</p>
+
+		<div class="actions">
+			<button 
+				type="button" 
+				class="btn-cancel" 
+				onclick={handleCancel}
+			>
+				{cancelText}
+			</button>
+			<button 
+				type="button" 
+				class="btn-confirm" 
+				onclick={handleConfirm}
+			>
+				{confirmText}
+			</button>
 		</div>
-	</dialog>
-{/if}
+	</div>
+</dialog>
+
 
 <style>
 	dialog {
