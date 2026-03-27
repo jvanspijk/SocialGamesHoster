@@ -1,0 +1,28 @@
+﻿@inherits LayoutComponentBase
+
+<div class="d-flex" style="min-height: 100vh;">
+    <div class="sidebar p-4 d-none d-md-block shadow" style="width: 260px; background: #1e293b; color: white;">
+        <h5 class="fw-bold mb-4">API Debug <span class="text-primary">Logs</span></h5>
+        <nav class="nav flex-column gap-2">
+            <a class="nav-link active text-white" href="#"><i class="bi bi-house-door me-2"></i> Dashboard</a>
+            <a class="nav-link text-white-50" href="#"><i class="bi bi-list-ul me-2"></i> Logs</a>
+            <a class="nav-link text-white-50" href="#"><i class="bi bi-gear me-2"></i> Settings</a>
+        </nav>
+    </div>
+
+    <div class="flex-grow-1 bg-light d-flex flex-column">
+        <header class="navbar bg-white border-bottom px-4 py-3 shadow-sm">
+            <span class="text-muted fw-medium">Overview</span>
+        </header>
+
+        <main class="p-4">
+            @Body
+        </main>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

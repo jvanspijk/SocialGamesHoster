@@ -5,6 +5,7 @@ using API.Domain.Entities;
 using API.Domain.Models;
 using API.Features.Auth;
 using API.Features.Timers;
+using API.Filters;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -95,22 +96,11 @@ public class Program
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
-        builder.Logging.AddFileLogger("logs/requests.log", 10, LogLevel.Information, LogLevel.Information);
-        builder.Logging.AddFileLogger("logs/errors.log", 5, LogLevel.Warning, LogLevel.Critical);
 
-        services.AddHttpLogging(options =>
-        {
-            options.LoggingFields = HttpLoggingFields.RequestMethod
-                                  | HttpLoggingFields.RequestPath
-                                  | HttpLoggingFields.RequestQuery
-                                  | HttpLoggingFields.RequestBody
-                                  | HttpLoggingFields.ResponseStatusCode;
-
-            options.RequestBodyLogLimit = 512;
-            options.RequestHeaders.Clear();
-            options.ResponseHeaders.Clear();
-            options.CombineLogs = true;
-        });
+#if DEBUG
+        builder.Logging.AddSqliteLogger("Data Source=logs/debug_logs.db;");        
+        EnsureLogDatabaseCreated();
+#endif
 
         // Configure CORS
         services.AddCors(options =>
@@ -130,7 +120,17 @@ public class Program
         bool isGeneratingDocs = IsDocumentGenerationRun(args);
         string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-        services.AddDbContext<APIDatabaseContext>(options =>
+#if DEBUG
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<SqliteDbInterceptor>();
+
+        builder.Services.AddDbContext<APIDatabaseContext>((sp, options) =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+                   .AddInterceptors(sp.GetRequiredService<SqliteDbInterceptor>());
+        });
+#else
+ services.AddDbContext<APIDatabaseContext>(options =>
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -139,6 +139,7 @@ public class Program
 
             options.UseNpgsql(connectionString);
         });
+#endif
 
         services.AddDistributedMemoryCache(); //For session state
         services.AddMemoryCache(); //For general caching
@@ -173,8 +174,24 @@ public class Program
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = hostUrl,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Social-games-hoster_JWT_Security_Key"))
-            };            
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    if (context.Request.Cookies.TryGetValue("session_token", out var token))
+                    {
+                        context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy("AdminOnly", policy => policy.RequireClaim("role", "admin"))
+            .AddPolicy("PlayerOnly", policy => policy.RequireClaim("role", "player"));
 
         // We use signalR for websockets
         // To track if users are online/offline
@@ -211,7 +228,6 @@ public class Program
         }
 
         app.UseDefaultFiles();
-        
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -220,8 +236,7 @@ public class Program
             app.MapScalarApiReference(o => o
                 .WithTheme(ScalarTheme.Alternate)
                 .Layout = ScalarLayout.Classic
-            );
-            app.UseHttpLogging();
+            );            
             app.UseDeveloperExceptionPage();            
         }
         else
@@ -243,12 +258,73 @@ public class Program
         apiGroup.MapEndpoints();        
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
 #if DEBUG
-        apiGroup.AddEndpointFilter<DebugRequireSaveChangesFilter>();
+        apiGroup
+            .AddEndpointFilter<RequestLoggingFilter>()
+            .AddEndpointFilter<ErrorLoggingFilter>()
+            .AddEndpointFilter<DebugRequireSaveChangesFilter>();
 #endif
         apiGroup.AddEndpointFilter<CacheInvalidatorFilter>();
 
         app.Run();
         Console.WriteLine("Done booting up");
+    }
+
+    private static void EnsureLogDatabaseCreated()
+    {
+        SQLitePCL.Batteries.Init();
+        const string dbPath = "logs/debug_logs.db";
+        const string connectionString = $"Data Source={dbPath};";
+
+        var folder = Path.GetDirectoryName(dbPath);
+        if (!string.IsNullOrEmpty(folder) && !Directory.Exists(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
+        using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            PRAGMA synchronous=OFF;
+
+            CREATE TABLE IF NOT EXISTS Requests (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                Endpoint TEXT,
+                Method TEXT,
+                RequestBody TEXT,
+                StatusCode INTEGER,
+                ElapsedMS REAL,
+                TraceId TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS QueryLogs (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                TraceId TEXT, 
+                QueryText TEXT,
+                ElapsedMS REAL,
+                Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS ErrorLogs (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                TraceId TEXT,
+                ExceptionType TEXT,
+                Message TEXT,
+                StackTrace TEXT,
+                Endpoint TEXT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_requests_trace ON Requests (TraceId);
+            CREATE INDEX IF NOT EXISTS idx_queries_request ON QueryLogs (TraceId);
+            CREATE INDEX IF NOT EXISTS idx_errors_trace ON ErrorLogs (TraceId);
+        ";
+
+        command.ExecuteNonQuery();
+
+        Console.WriteLine($"Database created at: {Path.GetFullPath(connection.DataSource)}");
     }
 
     private static void ApplyDatabaseMigrations(WebApplication app)
@@ -291,6 +367,9 @@ public class Program
         {
             return true;
         }
+
+        if (Environment.GetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES")?.Contains("Microsoft.AspNetCore.OpenApi") == true)
+            return true;
 
         return AppDomain.CurrentDomain.FriendlyName.Contains("dotnet-getdocument", StringComparison.OrdinalIgnoreCase);
     }

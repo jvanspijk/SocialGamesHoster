@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using API.Domain;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
 
 namespace API.DataAccess;
 
-public class Repository<TEntity>(APIDatabaseContext context) : IRepository<TEntity> where TEntity : class, IEntity
+public class Repository<TEntity>(APIDatabaseContext context, ILogger<Repository<TEntity>> logger) : IRepository<TEntity> where TEntity : class, IEntity
 {
     internal readonly APIDatabaseContext context = context;
     private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();

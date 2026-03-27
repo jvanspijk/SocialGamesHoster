@@ -1,16 +1,16 @@
 [
   {
-    "Name": "New Profile",
+    "Name": "Debug (Log View)",
     "Projects": [
       {
         "Path": "API\\API.csproj",
         "Action": "Start",
-        "DebugTarget": "Container (Dockerfile)"
+        "DebugTarget": "http"
       },
       {
-        "Path": "Web\\Web.esproj",
+        "Path": "API.LogViewer\\API.LogViewer.csproj",
         "Action": "Start",
-        "DebugTarget": "localhost (Edge)"
+        "DebugTarget": "http"
       }
     ]
   }

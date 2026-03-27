@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using System.Diagnostics;
 
-namespace API;
+namespace API.Filters;
 
 public class CacheInvalidatorFilter(IMemoryCache cache) : IEndpointFilter
 {

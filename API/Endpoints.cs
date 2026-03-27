@@ -14,6 +14,7 @@ using API.Features.Rulesets.Endpoints;
 using API.Features.Rulesets.Hubs;
 using API.Features.Timers.Endpoints;
 using API.Features.Timers.Hubs;
+using API.Filters;
 
 namespace API;
 

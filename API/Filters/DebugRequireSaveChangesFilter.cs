@@ -2,7 +2,7 @@ using API.DataAccess;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace API;
+namespace API.Filters;
 
 public sealed class DebugRequireSaveChangesFilter(APIDatabaseContext dbContext) : IEndpointFilter
 {
