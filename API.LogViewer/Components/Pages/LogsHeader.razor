@@ -1,0 +1,27 @@
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">System Debug Logs</h2>
+        <p class="text-muted small mb-0">Real-time monitoring.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <div class="text-end">
+            <div class="badge @(IsPaused ? "bg-warning-subtle text-warning" : "bg-success-subtle text-success") border">
+                <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>
+                @(IsPaused ? "PAUSED" : "POLLING")
+            </div>
+            <div class="text-muted" style="font-size: 0.7rem;">Refreshing every 3s</div>
+        </div>
+        <button class="btn btn-sm @(IsPaused ? "btn-primary" : "btn-outline-secondary") shadow-sm" @onclick="OnTogglePauseClicked">
+            <i class="bi @(IsPaused ? "bi-play-fill" : "bi-pause-fill")"></i>
+            @(IsPaused ? "Resume" : "Pause")
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsPaused { get; set; }
+    [Parameter] public EventCallback OnTogglePause { get; set; }
+
+    private Task OnTogglePauseClicked() => OnTogglePause.InvokeAsync();
+}

@@ -1,0 +1,193 @@
+@using System.Globalization
+
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive" style="max-height: 80vh;">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light sticky-top">
+                <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                    <th class="ps-4" style="width: 180px">
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Timestamp)">
+                            Timestamp @GetSortIndicator(SortColumn.Timestamp)
+                        </button>
+                    </th>
+                    <th style="width: 100px">
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Method)">
+                            Method @GetSortIndicator(SortColumn.Method)
+                        </button>
+                    </th>
+                    <th>
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Endpoint)">
+                            Endpoint @GetSortIndicator(SortColumn.Endpoint)
+                        </button>
+                    </th>
+                    <th class="text-center" style="width: 100px">
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Status)">
+                            Status @GetSortIndicator(SortColumn.Status)
+                        </button>
+                    </th>
+                    <th style="width: 120px">
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Duration)">
+                            Duration @GetSortIndicator(SortColumn.Duration)
+                        </button>
+                    </th>
+                    <th class="pe-4">
+                        <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.TraceId)">
+                            Trace ID @GetSortIndicator(SortColumn.TraceId)
+                        </button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var req in SortedRequests)
+                {
+                    var isError = req.StatusCode >= 400;
+                    var isExpanded = ExpandedTraceId == req.TraceId;
+
+                    <tr
+                        class="@(isExpanded ? "table-active border-primary-subtle" : "")">
+
+                        <td class="ps-4 text-muted small">@req.Timestamp</td>
+                        <td>
+                            <span class="badge rounded-pill bg-dark-subtle text-dark border fw-medium">@req.Method</span>
+                        </td>
+                        <td class="text-truncate" style="max-width: 400px;">
+                            <span class="fw-semibold">@req.Endpoint</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge @(isError ? "bg-danger-subtle text-danger" : "bg-success-subtle text-success") border px-2 py-1">
+                                @req.StatusCode
+                            </span>
+                        </td>
+                        <td class="text-muted">@req.ElapsedMS.ToString("N1") <small>ms</small></td>
+                        <td class="pe-4 font-monospace small">
+                            <button type="button"
+                                    class="btn btn-link p-0 text-decoration-none font-monospace small trace-link"
+                                    @onclick="async () => await ToggleTraceAsync(req.TraceId)"
+                                    aria-expanded="@isExpanded">
+                                @req.TraceId
+                            </button>
+                        </td>
+                    </tr>
+
+                    @if (isExpanded)
+                    {
+                        <tr class="bg-light">
+                            <td colspan="6" class="p-0 border-0">
+                                <TraceDetailsPanel RequestBody="@req.Body" Details="@Details" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<style>
+    .sort-header {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+    }
+
+    .sort-header:hover,
+    .sort-header:focus {
+        color: #0d6efd;
+    }
+
+    .btn-link.trace-link {
+        color: #0d6efd !important;
+    }
+
+    .btn-link.trace-link:hover,
+    .btn-link.trace-link:focus {
+        color: #0a58ca !important;
+    }
+</style>
+
+@code {
+    private SortColumn currentSortColumn = SortColumn.Timestamp;
+    private bool isSortAscending;
+
+    private IEnumerable<RequestEntry> SortedRequests => currentSortColumn switch
+    {
+        SortColumn.Timestamp => isSortAscending
+            ? Requests.OrderBy(r => ParseTimestamp(r.Timestamp)).ThenBy(r => r.Timestamp, StringComparer.OrdinalIgnoreCase)
+            : Requests.OrderByDescending(r => ParseTimestamp(r.Timestamp)).ThenByDescending(r => r.Timestamp, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Method => isSortAscending
+            ? Requests.OrderBy(r => r.Method, StringComparer.OrdinalIgnoreCase)
+            : Requests.OrderByDescending(r => r.Method, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Endpoint => isSortAscending
+            ? Requests.OrderBy(r => r.Endpoint, StringComparer.OrdinalIgnoreCase)
+            : Requests.OrderByDescending(r => r.Endpoint, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Status => isSortAscending
+            ? Requests.OrderBy(r => r.StatusCode)
+            : Requests.OrderByDescending(r => r.StatusCode),
+        SortColumn.Duration => isSortAscending
+            ? Requests.OrderBy(r => r.ElapsedMS)
+            : Requests.OrderByDescending(r => r.ElapsedMS),
+        SortColumn.TraceId => isSortAscending
+            ? Requests.OrderBy(r => r.TraceId, StringComparer.OrdinalIgnoreCase)
+            : Requests.OrderByDescending(r => r.TraceId, StringComparer.OrdinalIgnoreCase),
+        _ => Requests
+    };
+
+    [Parameter] public IReadOnlyList<RequestEntry> Requests { get; set; } = [];
+    [Parameter] public IReadOnlyList<TraceDetail> Details { get; set; } = [];
+    [Parameter] public string? ExpandedTraceId { get; set; }
+    [Parameter] public EventCallback<string> OnToggleTrace { get; set; }
+
+    private void SetSort(SortColumn column)
+    {
+        if (currentSortColumn == column)
+        {
+            isSortAscending = !isSortAscending;
+            return;
+        }
+
+        currentSortColumn = column;
+        isSortAscending = true;
+    }
+
+    private string GetSortIndicator(SortColumn column)
+    {
+        if (currentSortColumn != column)
+        {
+            return "↕";
+        }
+
+        return isSortAscending ? "▲" : "▼";
+    }
+
+    private static DateTimeOffset ParseTimestamp(string timestamp)
+    {
+        if (DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+        {
+            return parsed;
+        }
+
+        return DateTimeOffset.MinValue;
+    }
+
+    private async Task ToggleTraceAsync(string traceId)
+    {
+        if (OnToggleTrace.HasDelegate)
+        {
+            await OnToggleTrace.InvokeAsync(traceId);
+        }
+    }
+
+    private enum SortColumn
+    {
+        Timestamp,
+        Method,
+        Endpoint,
+        Status,
+        Duration,
+        TraceId
+    }
+}

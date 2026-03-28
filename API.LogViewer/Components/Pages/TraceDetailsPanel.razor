@@ -1,0 +1,79 @@
+@inject IJSRuntime JSRuntime
+
+<div class="detail-panel p-4 border-start border-4 border-primary bg-white mx-3 my-2 shadow-sm rounded">
+    <div class="mb-4">
+        <h6 class="text-uppercase fw-bold text-muted small mb-2">Request Body</h6>
+        <pre class="json-block p-3 rounded border"><code>@(string.IsNullOrWhiteSpace(RequestBody) ? "No body provided" : RequestBody)</code></pre>
+    </div>
+
+    <div>
+        <h6 class="text-uppercase fw-bold text-muted small mb-2">Internal Activity Pipeline</h6>
+        @if (Details.Count == 0)
+        {
+            <div class="alert alert-light border small text-muted">
+                No database queries or exceptions were captured for this trace.
+            </div>
+        }
+
+        @foreach (var detail in Details)
+        {
+            var copyId = detail.Timestamp + detail.Type;
+
+            <div class="card mb-3 border-0 shadow-sm bg-dark">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary">
+                        <span class="badge @(detail.Type == "SQL" ? "bg-info-subtle text-info" : "bg-danger-subtle text-danger") border-0 small">
+                            @detail.Type
+                        </span>
+
+                        <button class="btn btn-link btn-sm text-decoration-none p-0 transition-all"
+                                @onclick="() => CopyToClipboard(detail.DetailText, copyId)">
+
+                            @if (lastCopiedId == copyId)
+                            {
+                                <span class="text-success fw-bold animate-fade-in">
+                                    <i class="bi bi-check-lg me-1"></i> Copied!
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-white-100 hover-bright">
+                                    <i class="bi bi-clipboard me-1"></i> Copy
+                                </span>
+                            }
+                        </button>
+                    </div>
+
+                    <pre class="m-0 border-0" style="border-radius: 0 0 8px 8px;"><code>@detail.DetailText</code></pre>
+
+                    @if (detail.Duration > 0)
+                    {
+                        <div class="px-3 pb-2 text-end" style="font-size: 0.7rem;">
+                            <span class="text-muted small">Execution Time:</span>
+                            <span class="text-info fw-bold">@detail.Duration.ToString("N2") ms</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string? lastCopiedId;
+
+    [Parameter] public string? RequestBody { get; set; }
+    [Parameter] public IReadOnlyList<TraceDetail> Details { get; set; } = [];
+
+    private async Task CopyToClipboard(string text, string uniqueId)
+    {
+        await JSRuntime.InvokeVoidAsync("copyToClipboard", text);
+        lastCopiedId = uniqueId;
+
+        _ = Task.Delay(2000).ContinueWith(_ =>
+        {
+            lastCopiedId = null;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}

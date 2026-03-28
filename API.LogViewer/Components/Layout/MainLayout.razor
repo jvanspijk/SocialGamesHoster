@@ -4,9 +4,15 @@
     <div class="sidebar p-4 d-none d-md-block shadow" style="width: 260px; background: #1e293b; color: white;">
         <h5 class="fw-bold mb-4">API Debug <span class="text-primary">Logs</span></h5>
         <nav class="nav flex-column gap-2">
-            <a class="nav-link active text-white" href="#"><i class="bi bi-house-door me-2"></i> Dashboard</a>
-            <a class="nav-link text-white-50" href="#"><i class="bi bi-list-ul me-2"></i> Logs</a>
-            <a class="nav-link text-white-50" href="#"><i class="bi bi-gear me-2"></i> Settings</a>
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <i class="bi bi-list-ul me-2"></i> Requests
+            </NavLink>
+            <NavLink class="nav-link" href="/queries">
+                <i class="bi bi-database me-2"></i> Queries
+            </NavLink>
+            <NavLink class="nav-link" href="/errors">
+                <i class="bi bi-exclamation-octagon me-2"></i> Errors
+            </NavLink>
         </nav>
     </div>
 

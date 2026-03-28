@@ -1,4 +1,5 @@
 using API.LogViewer.Components;
+using API.LogViewer.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,8 @@ SQLitePCL.Batteries.Init();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<ILogService, LogService>();
 
 var app = builder.Build();
 
