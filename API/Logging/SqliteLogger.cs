@@ -2,6 +2,8 @@
 
 using API.Features.Chat.Common;
 using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
+using System.Text;
 
 public sealed class SqliteLogger : ILogger, IDisposable
 {
@@ -46,21 +48,41 @@ public sealed class SqliteLogger : ILogger, IDisposable
             using var cmd = _connection.CreateCommand();
 
             string message = formatter(state, exception);
-            if (message.Contains("RequestMethod=") || message.Contains("RequestPath="))
-            {
-                int two = 2;
-            }
 
             // error logs
             if (logLevel >= LogLevel.Error || exception != null)
             {
+                var stackTrace = exception?.StackTrace ?? string.Empty;
+                var stackTraceHash = string.IsNullOrWhiteSpace(stackTrace)
+                    ? string.Empty
+                    : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(stackTrace)));
+
+                if (!string.IsNullOrWhiteSpace(stackTraceHash))
+                {
+                    using var stackCommand = _connection.CreateCommand();
+                    stackCommand.CommandText = @"
+                        INSERT INTO StackTraces (StackTraceHash, StackTraceText)
+                        VALUES (@hash, @text)
+                        ON CONFLICT(StackTraceHash) DO UPDATE SET
+                            LastSeenUtc = CURRENT_TIMESTAMP,
+                            SeenCount = SeenCount + 1;";
+                    stackCommand.Parameters.AddWithValue("@hash", stackTraceHash);
+                    stackCommand.Parameters.AddWithValue("@text", stackTrace);
+                    stackCommand.ExecuteNonQuery();
+                }
+
                 cmd.CommandText = @"
-                    INSERT INTO ErrorLogs (TraceId, ExceptionType, Message, StackTrace)
-                    VALUES (@tid, @type, @msg, @stack)";
+                    INSERT INTO ErrorLogs (TraceId, ErrorMethod, ExceptionType, Message, StackTrace, StackTraceHash, ExceptionSource, TargetSite, Endpoint)
+                    VALUES (@tid, @method, @type, @msg, @stack, @hash, @source, @target, @endpoint)";
                 cmd.Parameters.AddWithValue("@tid", traceId ?? "N/A");
+                cmd.Parameters.AddWithValue("@method", dict.GetValueOrDefault("Method")?.ToString() ?? string.Empty);
                 cmd.Parameters.AddWithValue("@type", exception?.GetType().Name ?? "Manual Error");
                 cmd.Parameters.AddWithValue("@msg", exception?.Message ?? formatter(state, exception));
-                cmd.Parameters.AddWithValue("@stack", exception?.StackTrace ?? string.Empty);
+                cmd.Parameters.AddWithValue("@stack", stackTrace);
+                cmd.Parameters.AddWithValue("@hash", string.IsNullOrWhiteSpace(stackTraceHash) ? DBNull.Value : stackTraceHash);
+                cmd.Parameters.AddWithValue("@source", exception?.Source ?? string.Empty);
+                cmd.Parameters.AddWithValue("@target", exception?.TargetSite?.ToString() ?? string.Empty);
+                cmd.Parameters.AddWithValue("@endpoint", dict.GetValueOrDefault("Path")?.ToString() ?? string.Empty);
             }
             // query logs
             else if (traceId != null && dict.TryGetValue("CommandText", out var query))

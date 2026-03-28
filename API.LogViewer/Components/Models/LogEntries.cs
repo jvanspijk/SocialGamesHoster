@@ -10,7 +10,11 @@ public record ErrorEntry(
     long Id,
     string Timestamp,
     string TraceId,
+    string ErrorMethod,
     string ExceptionType,
     string Message,
     string StackTrace,
+    string StackTraceHash,
+    string ExceptionSource,
+    string TargetSite,
     string Endpoint);

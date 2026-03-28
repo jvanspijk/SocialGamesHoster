@@ -19,7 +19,7 @@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body d-flex flex-wrap gap-2 align-items-center">
             <input class="form-control" style="max-width: 360px;"
-                   placeholder="Search message, trace, endpoint..."
+                   placeholder="Search message, trace, endpoint, method..."
                    @bind="searchText"
                    @bind:event="oninput" />
 
@@ -41,6 +41,7 @@
                 <thead class="bg-light sticky-top">
                     <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                         <th class="ps-4" style="width: 180px;">Timestamp</th>
+                        <th style="width: 110px;">Method</th>
                         <th style="width: 220px;">Exception</th>
                         <th>Message</th>
                         <th style="width: 280px;">Endpoint</th>
@@ -51,13 +52,13 @@
                     @if (isLoading)
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">Loading errors...</td>
+                            <td colspan="6" class="text-center text-muted py-4">Loading errors...</td>
                         </tr>
                     }
                     else if (FilteredErrors.Count == 0)
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No errors found.</td>
+                            <td colspan="6" class="text-center text-muted py-4">No errors found.</td>
                         </tr>
                     }
                     else
@@ -69,6 +70,16 @@
 
                             <tr class="@(isExpanded ? "table-active" : string.Empty)">
                                 <td class="ps-4 text-muted small">@error.Timestamp</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(error.ErrorMethod))
+                                    {
+                                        <span class="text-muted small">N/A</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-dark-subtle text-dark border">@error.ErrorMethod</span>
+                                    }
+                                </td>
                                 <td><span class="badge bg-danger-subtle text-danger border">@error.ExceptionType</span></td>
                                 <td class="text-break">@error.Message</td>
                                 <td class="small font-monospace text-muted">@error.Endpoint</td>
@@ -84,8 +95,22 @@
                             @if (isExpanded)
                             {
                                 <tr class="bg-light">
-                                    <td colspan="5" class="p-0 border-0">
+                                    <td colspan="6" class="p-0 border-0">
                                         <div class="p-3 mx-3 my-2 border-start border-4 border-danger rounded bg-white shadow-sm">
+                                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                                @if (!string.IsNullOrWhiteSpace(error.ExceptionSource))
+                                                {
+                                                    <span class="badge bg-light text-dark border">Source: @error.ExceptionSource</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(error.TargetSite))
+                                                {
+                                                    <span class="badge bg-light text-dark border">Target: @error.TargetSite</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(error.StackTraceHash))
+                                                {
+                                                    <span class="badge bg-secondary-subtle text-secondary border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
+                                                }
+                                            </div>
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <h6 class="mb-0 text-uppercase text-muted small fw-bold">Stack Trace</h6>
                                                 <button class="btn btn-link btn-sm p-0 text-decoration-none"
@@ -128,6 +153,7 @@
                 || error.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase)
                 || error.TraceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
                 || error.Endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                || error.ErrorMethod.Contains(searchText, StringComparison.OrdinalIgnoreCase)
                 || error.ExceptionType.Contains(searchText, StringComparison.OrdinalIgnoreCase))
             .ToList();
 

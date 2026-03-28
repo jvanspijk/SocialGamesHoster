@@ -11,10 +11,22 @@ public class ErrorLoggingFilter(ILogger<ErrorLoggingFilter> logger) : IEndpointF
         catch (Exception ex)
         {
 #if DEBUG
+            var method = context.HttpContext.Items.TryGetValue(RequestLoggingFilter.LoggedMethodItemKey, out var methodValue)
+                ? methodValue?.ToString() ?? context.HttpContext.Request.Method
+                : context.HttpContext.Request.Method;
+            var path = context.HttpContext.Items.TryGetValue(RequestLoggingFilter.LoggedPathItemKey, out var pathValue)
+                ? pathValue?.ToString() ?? context.HttpContext.Request.Path.ToString()
+                : context.HttpContext.Request.Path.ToString();
+            var body = context.HttpContext.Items.TryGetValue(RequestLoggingFilter.LoggedBodyItemKey, out var bodyValue)
+                ? bodyValue?.ToString() ?? string.Empty
+                : string.Empty;
+
             logger.LogError(ex,
-                "An unhandled exception occurred at {Path}. Trace: {TraceIdentifier}",
-                context.HttpContext.Request.Path,
-                context.HttpContext.TraceIdentifier);
+                "Unhandled exception {Method} {Path} {TraceIdentifier} {Body}",
+                method,
+                path,
+                context.HttpContext.TraceIdentifier,
+                body);
 #endif
 
             throw; // Re-throw so ASP.NET's error pages/handlers still work

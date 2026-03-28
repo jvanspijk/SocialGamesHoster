@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 public sealed class RequestLoggingFilter(ILogger<RequestLoggingFilter> logger) : IEndpointFilter
 {
     private const int MaxBodyLength = 2048;
+    internal const string LoggedMethodItemKey = "DebugLog.Method";
+    internal const string LoggedPathItemKey = "DebugLog.Path";
+    internal const string LoggedBodyItemKey = "DebugLog.Body";
     private readonly ILogger<RequestLoggingFilter> _logger = logger;
 
     public async ValueTask<object?> InvokeAsync(
@@ -30,20 +33,15 @@ public sealed class RequestLoggingFilter(ILogger<RequestLoggingFilter> logger) :
             http.Request.Body.Position = 0;
         }
 
-        var sw = Stopwatch.StartNew();
+        http.Items[LoggedMethodItemKey] = method;
+        http.Items[LoggedPathItemKey] = path;
+        http.Items[LoggedBodyItemKey] = body ?? string.Empty;
 
-        object? result = null;
-        Exception? exception = null;
+        var sw = Stopwatch.StartNew();
 
         try
         {
-            result = await next(context);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            exception = ex;
-            throw;
+            return await next(context);
         }
         finally
         {

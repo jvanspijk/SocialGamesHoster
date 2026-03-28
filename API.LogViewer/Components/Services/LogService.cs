@@ -131,27 +131,63 @@ public class LogService : ILogService
         using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
 
-        const string sql = @"
-            SELECT ID, Timestamp, TraceId, ExceptionType, Message, StackTrace, Endpoint
-            FROM ErrorLogs
-            ORDER BY ID DESC
-            LIMIT @limit";
-
-        using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@limit", limit);
-
-        using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        try
         {
-            errors.Add(new ErrorEntry(
-                reader.GetInt64(0),
-                reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                reader.IsDBNull(3) ? "UnknownException" : reader.GetString(3),
-                reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
-            ));
+            const string sql = @"
+                SELECT ID, Timestamp, TraceId, ErrorMethod, ExceptionType, Message, StackTrace, StackTraceHash, ExceptionSource, TargetSite, Endpoint
+                FROM ErrorLogs
+                ORDER BY ID DESC
+                LIMIT @limit";
+
+            using var cmd = new SqliteCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@limit", limit);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                errors.Add(new ErrorEntry(
+                    reader.GetInt64(0),
+                    reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    reader.IsDBNull(4) ? "UnknownException" : reader.GetString(4),
+                    reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                    reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                    reader.IsDBNull(10) ? string.Empty : reader.GetString(10)
+                ));
+            }
+        }
+        catch (SqliteException ex) when (ex.Message.Contains("no such column", StringComparison.OrdinalIgnoreCase))
+        {
+            const string legacySql = @"
+                SELECT ID, Timestamp, TraceId, ExceptionType, Message, StackTrace, Endpoint
+                FROM ErrorLogs
+                ORDER BY ID DESC
+                LIMIT @limit";
+
+            using var legacyCmd = new SqliteCommand(legacySql, conn);
+            legacyCmd.Parameters.AddWithValue("@limit", limit);
+
+            using var legacyReader = await legacyCmd.ExecuteReaderAsync();
+            while (await legacyReader.ReadAsync())
+            {
+                errors.Add(new ErrorEntry(
+                    legacyReader.GetInt64(0),
+                    legacyReader.IsDBNull(1) ? string.Empty : legacyReader.GetString(1),
+                    legacyReader.IsDBNull(2) ? string.Empty : legacyReader.GetString(2),
+                    string.Empty,
+                    legacyReader.IsDBNull(3) ? "UnknownException" : legacyReader.GetString(3),
+                    legacyReader.IsDBNull(4) ? string.Empty : legacyReader.GetString(4),
+                    legacyReader.IsDBNull(5) ? string.Empty : legacyReader.GetString(5),
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    legacyReader.IsDBNull(6) ? string.Empty : legacyReader.GetString(6)
+                ));
+            }
         }
 
         return errors;

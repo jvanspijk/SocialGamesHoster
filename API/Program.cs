@@ -286,6 +286,7 @@ public class Program
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
+            PRAGMA journal_mode=WAL;
             PRAGMA synchronous=OFF;
 
             CREATE TABLE IF NOT EXISTS Requests (
@@ -311,20 +312,61 @@ public class Program
                 ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 TraceId TEXT,
+                ErrorMethod TEXT,
                 ExceptionType TEXT,
                 Message TEXT,
                 StackTrace TEXT,
+                StackTraceHash TEXT,
+                ExceptionSource TEXT,
+                TargetSite TEXT,
                 Endpoint TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS StackTraces (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                StackTraceHash TEXT NOT NULL UNIQUE,
+                StackTraceText TEXT NOT NULL,
+                FirstSeenUtc DATETIME DEFAULT CURRENT_TIMESTAMP,
+                LastSeenUtc DATETIME DEFAULT CURRENT_TIMESTAMP,
+                SeenCount INTEGER NOT NULL DEFAULT 1
             );
 
             CREATE INDEX IF NOT EXISTS idx_requests_trace ON Requests (TraceId);
             CREATE INDEX IF NOT EXISTS idx_queries_request ON QueryLogs (TraceId);
             CREATE INDEX IF NOT EXISTS idx_errors_trace ON ErrorLogs (TraceId);
+            CREATE INDEX IF NOT EXISTS idx_errors_timestamp ON ErrorLogs (Timestamp);
+            CREATE INDEX IF NOT EXISTS idx_errors_stackhash ON ErrorLogs (StackTraceHash);
+            CREATE INDEX IF NOT EXISTS idx_queries_timestamp ON QueryLogs (Timestamp);
         ";
 
         command.ExecuteNonQuery();
 
+        EnsureColumnExists(connection, "ErrorLogs", "StackTraceHash", "TEXT");
+        EnsureColumnExists(connection, "ErrorLogs", "ExceptionSource", "TEXT");
+        EnsureColumnExists(connection, "ErrorLogs", "TargetSite", "TEXT");
+        EnsureColumnExists(connection, "ErrorLogs", "ErrorMethod", "TEXT");
+
         Console.WriteLine($"Database created at: {Path.GetFullPath(connection.DataSource)}");
+    }
+
+    private static void EnsureColumnExists(Microsoft.Data.Sqlite.SqliteConnection connection, string tableName, string columnName, string columnType)
+    {
+        using var checkCommand = connection.CreateCommand();
+        checkCommand.CommandText = $"PRAGMA table_info({tableName});";
+
+        using var reader = checkCommand.ExecuteReader();
+        while (reader.Read())
+        {
+            var existingColumnName = reader.GetString(1);
+            if (string.Equals(existingColumnName, columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+
+        using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnType};";
+        alterCommand.ExecuteNonQuery();
     }
 
     private static void ApplyDatabaseMigrations(WebApplication app)
