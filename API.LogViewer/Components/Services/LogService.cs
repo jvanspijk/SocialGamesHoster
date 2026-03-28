@@ -8,6 +8,7 @@ public interface ILogService
         Task<List<RequestEntry>> GetLatestRequestsAsync(int limit = 50);
         Task<List<TraceDetail>> GetTraceDetailsAsync(string traceId);
         Task<List<QuerySummary>> GetQuerySummariesAsync();
+        Task<List<ErrorEntry>> GetLatestErrorsAsync(int limit = 200);
 }
 
 public class LogService : ILogService
@@ -121,6 +122,39 @@ public class LogService : ILogService
         }
 
         return summaries;
+    }
+
+    public async Task<List<ErrorEntry>> GetLatestErrorsAsync(int limit = 200)
+    {
+        var errors = new List<ErrorEntry>();
+
+        using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT ID, Timestamp, TraceId, ExceptionType, Message, StackTrace, Endpoint
+            FROM ErrorLogs
+            ORDER BY ID DESC
+            LIMIT @limit";
+
+        using var cmd = new SqliteCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@limit", limit);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            errors.Add(new ErrorEntry(
+                reader.GetInt64(0),
+                reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                reader.IsDBNull(3) ? "UnknownException" : reader.GetString(3),
+                reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+            ));
+        }
+
+        return errors;
     }
 }
 
