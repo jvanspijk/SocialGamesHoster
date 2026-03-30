@@ -14,37 +14,33 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System;
-using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 
 namespace API;
 // Using scalar: http://localhost:9090/scalar
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
+
 // TODO:
-// Big refactors:
+// Refactors:
 // - Remove docker entirely. Use install and run script instead.
 // - Uniform error handling. In svelte, add a CreateFail function to ApiError so that we can return after !res.ok something like: return res.error.fail()
+
 // v1:
-// - Fix login for admins
-//      - store admin credentials in database or environment variables
+// Figure out logging out -> if log out, how log back in? We need way to identify user so they can log back in.
 // - Admin: force logout users, (decouple IP from user)
 // - Change participants in active game sessions
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
-// - Fix adjust timer endpoint:
-//      - it assumes delta is negative
-//      - Calculation of total time is off
-// - GetTimerState should have a result for the case where there is no timer.
-// - Solve todos in player repository
 // - Search for more todos and fix them
 // - General chat
 // - DM the DM
 // - Hide button for the role info
 // - Logout endpoitn and button
 // - Management panels for deleting and updating resources
+// - Timer management
+// - Hide timer if no current timer.
 // Wrong parameters gave a 200 OK response. Maybe svelte issue.
 
 // v2:
@@ -65,6 +61,8 @@ namespace API;
 // Performance optimizations:
 // - Streaming database results using IAsyncEnumerable where possible, especially for endpoints that return lists of data. <-- while the asp.net api result can return a stream, it needs to be handled client side too. There's also some latency involved in starting to return results, so it might not be worth it for smaller lists of data. But for larger lists, it can improve performance and reduce memory usage.
 // - Use JSON source generator for serialization where possible (see GetAbility endpoint for example). <-- Does it save enough time? 
+// Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead
+// GET /admin/games - 6.5ms
 
 // Errors:
 /*
@@ -75,6 +73,8 @@ Error: Cannot use `cookies.set(...)` after the response has been generated
     at invalidate_session (src\lib\tokens.svelte.ts:33:10)
     at load (src\routes\game\(authenticated)\me\+page.server.ts:22:13)
 */
+// On enter Manage games -> Delete modal
+
 
 public class Program
 {
