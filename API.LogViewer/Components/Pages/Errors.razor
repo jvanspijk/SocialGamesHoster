@@ -1,6 +1,10 @@
 @page "/errors"
+@using System.Globalization
+@using System.Timers
 @inject ILogService LogService
 @inject IJSRuntime JSRuntime
+@implements IDisposable
+@rendermode InteractiveServer
 
 <PageTitle>Errors</PageTitle>
 
@@ -16,13 +20,17 @@
         </button>
     </div>
 
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex flex-wrap gap-2 align-items-center">
-            <input class="form-control" style="max-width: 360px;"
-                   placeholder="Search message, trace, endpoint, method..."
-                   @bind="searchText"
-                   @bind:event="oninput" />
-
+    <Table TItem="ErrorEntry"
+                  Items="FilteredAndSortedErrors"
+                  ColumnCount="6"
+                  SearchText="@searchText"
+                  SearchTextChanged="OnSearchChanged"
+                  SearchPlaceholder="Search message, trace, endpoint, method..."
+                  IsLoading="@isLoading"
+                  LoadingText="Loading errors..."
+                  EmptyText="No errors found."
+                  CountLabel="errors">
+        <ToolbarContent>
             <select class="form-select" style="max-width: 260px;" @bind="selectedExceptionType">
                 <option value="">All exceptions</option>
                 @foreach (var exceptionType in ExceptionTypes)
@@ -30,113 +38,152 @@
                     <option value="@exceptionType">@exceptionType</option>
                 }
             </select>
+        </ToolbarContent>
+        <HeaderTemplate>
+            <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                <th class="ps-4" style="width: 180px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Timestamp)">
+                        Timestamp @GetSortIndicator(SortColumn.Timestamp)
+                    </button>
+                </th>
+                <th style="width: 110px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Method)">
+                        Method @GetSortIndicator(SortColumn.Method)
+                    </button>
+                </th>
+                <th style="width: 220px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Exception)">
+                        Exception @GetSortIndicator(SortColumn.Exception)
+                    </button>
+                </th>
+                <th>
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Message)">
+                        Message @GetSortIndicator(SortColumn.Message)
+                    </button>
+                </th>
+                <th style="width: 280px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Endpoint)">
+                        Endpoint @GetSortIndicator(SortColumn.Endpoint)
+                    </button>
+                </th>
+                <th class="pe-4" style="width: 190px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.TraceId)">
+                        Trace ID @GetSortIndicator(SortColumn.TraceId)
+                    </button>
+                </th>
+            </tr>
+        </HeaderTemplate>
+        <RowTemplate Context="error">
+            @{
+                var isExpanded = expandedErrorId == error.Id;
+                var stackTraceCopyId = $"stacktrace-{error.Id}";
+            }
 
-            <span class="badge bg-light text-dark border">@FilteredErrors.Count errors</span>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="table-responsive" style="max-height: 80vh;">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light sticky-top">
-                    <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                        <th class="ps-4" style="width: 180px;">Timestamp</th>
-                        <th style="width: 110px;">Method</th>
-                        <th style="width: 220px;">Exception</th>
-                        <th>Message</th>
-                        <th style="width: 280px;">Endpoint</th>
-                        <th class="pe-4" style="width: 190px;">Trace ID</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (isLoading)
+            <tr class="@(isExpanded ? "table-active" : string.Empty)">
+                <td class="ps-4 text-muted small">@error.Timestamp</td>
+                <td>
+                    @if (string.IsNullOrWhiteSpace(error.ErrorMethod))
                     {
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Loading errors...</td>
-                        </tr>
-                    }
-                    else if (FilteredErrors.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No errors found.</td>
-                        </tr>
+                        <span class="text-muted small">N/A</span>
                     }
                     else
                     {
-                        @foreach (var error in FilteredErrors)
-                        {
-                            var isExpanded = expandedErrorId == error.Id;
-                            var stackTraceCopyId = $"stacktrace-{error.Id}";
+                        <span class="badge bg-dark-subtle text-dark border">@error.ErrorMethod</span>
+                    }
+                </td>
+                <td><span class="badge bg-danger-subtle text-danger border">@error.ExceptionType</span></td>
+                <td class="text-break">@error.Message</td>
+                <td class="small font-monospace text-muted">@error.Endpoint</td>
+                <td class="pe-4 small font-monospace">
+                    <button type="button"
+                            class="btn btn-link p-0 text-decoration-none trace-link text-start w-100"
+                            @onclick="() => ToggleExpandedAsync(error)"
+                            aria-expanded="@isExpanded">
+                        @error.TraceId
+                    </button>
+                </td>
+            </tr>
 
-                            <tr class="@(isExpanded ? "table-active" : string.Empty)">
-                                <td class="ps-4 text-muted small">@error.Timestamp</td>
-                                <td>
-                                    @if (string.IsNullOrWhiteSpace(error.ErrorMethod))
+            @if (isExpanded)
+            {
+                <tr class="bg-light">
+                    <td colspan="6" class="p-0 border-0">
+                        <div class="p-3 mx-3 my-2 border-start border-4 border-danger rounded bg-white shadow-sm">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @if (!string.IsNullOrWhiteSpace(error.ExceptionSource))
+                                {
+                                    <span class="badge bg-light text-dark border">Source: @error.ExceptionSource</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(error.TargetSite))
+                                {
+                                    <span class="badge bg-light text-dark border">Target: @error.TargetSite</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(error.StackTraceHash))
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
+                                }
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-uppercase text-muted small fw-bold">Stack Trace</h6>
+                                <button class="btn btn-link btn-sm p-0 text-decoration-none"
+                                        @onclick="() => CopyToClipboard(error.StackTrace, stackTraceCopyId)">
+                                    @if (lastCopiedId == stackTraceCopyId)
                                     {
-                                        <span class="text-muted small">N/A</span>
+                                        <span class="text-success"><i class="bi bi-check-lg me-1"></i>Copied</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-dark-subtle text-dark border">@error.ErrorMethod</span>
+                                        <span class="text-primary"><i class="bi bi-clipboard me-1"></i>Copy</span>
                                     }
-                                </td>
-                                <td><span class="badge bg-danger-subtle text-danger border">@error.ExceptionType</span></td>
-                                <td class="text-break">@error.Message</td>
-                                <td class="small font-monospace text-muted">@error.Endpoint</td>
-                                <td class="pe-4 small font-monospace">
-                                    <button type="button"
-                                            class="btn btn-link p-0 text-decoration-none trace-link"
-                                            @onclick="() => ToggleExpanded(error.Id)">
-                                        @error.TraceId
-                                    </button>
-                                </td>
-                            </tr>
+                                </button>
+                            </div>
+                            <pre class="m-0"><code>@(string.IsNullOrWhiteSpace(error.StackTrace) ? "No stack trace available." : error.StackTrace)</code></pre>
+                        </div>
 
-                            @if (isExpanded)
-                            {
-                                <tr class="bg-light">
-                                    <td colspan="6" class="p-0 border-0">
-                                        <div class="p-3 mx-3 my-2 border-start border-4 border-danger rounded bg-white shadow-sm">
-                                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                                @if (!string.IsNullOrWhiteSpace(error.ExceptionSource))
-                                                {
-                                                    <span class="badge bg-light text-dark border">Source: @error.ExceptionSource</span>
-                                                }
-                                                @if (!string.IsNullOrWhiteSpace(error.TargetSite))
-                                                {
-                                                    <span class="badge bg-light text-dark border">Target: @error.TargetSite</span>
-                                                }
-                                                @if (!string.IsNullOrWhiteSpace(error.StackTraceHash))
-                                                {
-                                                    <span class="badge bg-secondary-subtle text-secondary border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
-                                                }
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <h6 class="mb-0 text-uppercase text-muted small fw-bold">Stack Trace</h6>
-                                                <button class="btn btn-link btn-sm p-0 text-decoration-none"
-                                                        @onclick="() => CopyToClipboard(error.StackTrace, stackTraceCopyId)">
-                                                    @if (lastCopiedId == stackTraceCopyId)
-                                                    {
-                                                        <span class="text-success"><i class="bi bi-check-lg me-1"></i>Copied</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-primary"><i class="bi bi-clipboard me-1"></i>Copy</span>
-                                                    }
-                                                </button>
-                                            </div>
-                                            <pre class="m-0"><code>@(string.IsNullOrWhiteSpace(error.StackTrace) ? "No stack trace available." : error.StackTrace)</code></pre>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                        @if (isLoadingTraceContext)
+                        {
+                            <div class="px-4 pb-3 text-muted small">Loading request context...</div>
                         }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+                        else
+                        {
+                            <TraceDetailsPanel RequestBody="@expandedRequest?.Body" Details="@expandedTraceDetails" />
+                        }
+                    </td>
+                </tr>
+            }
+        </RowTemplate>
+    </Table>
 </div>
+
+<style>
+    .sort-header {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+    }
+
+    .sort-header:hover,
+    .sort-header:focus {
+        color: #0d6efd;
+    }
+
+    .trace-link {
+        color: #0d6efd !important;
+        white-space: normal;
+        word-break: break-all;
+        max-width: 100%;
+    }
+
+    .trace-link:hover,
+    .trace-link:focus {
+        color: #0a58ca !important;
+    }
+</style>
 
 @code {
     private List<ErrorEntry> errors = [];
@@ -145,17 +192,19 @@
     private string searchText = string.Empty;
     private long? expandedErrorId;
     private string? lastCopiedId;
+    private Timer? timer;
+    private SortColumn currentSortColumn = SortColumn.Timestamp;
+    private bool isSortAscending;
+    private RequestEntry? expandedRequest;
+    private List<TraceDetail> expandedTraceDetails = [];
+    private bool isLoadingTraceContext;
 
-    private List<ErrorEntry> FilteredErrors =>
+    private IReadOnlyList<ErrorEntry> FilteredAndSortedErrors => SortErrors(FilteredErrors).ToList();
+
+    private IEnumerable<ErrorEntry> FilteredErrors =>
         errors
             .Where(error => string.IsNullOrWhiteSpace(selectedExceptionType) || error.ExceptionType == selectedExceptionType)
-            .Where(error => string.IsNullOrWhiteSpace(searchText)
-                || error.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                || error.TraceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                || error.Endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                || error.ErrorMethod.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                || error.ExceptionType.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+            .Where(MatchesSearch);
 
     private List<string> ExceptionTypes =>
         errors
@@ -167,6 +216,18 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadErrorsAsync();
+
+        timer = new Timer(2500);
+        timer.Elapsed += async (_, _) =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadErrorsAsync();
+                StateHasChanged();
+            });
+        };
+
+        timer.Start();
     }
 
     private async Task LoadErrorsAsync()
@@ -178,6 +239,8 @@
             if (expandedErrorId.HasValue && errors.All(error => error.Id != expandedErrorId.Value))
             {
                 expandedErrorId = null;
+                expandedRequest = null;
+                expandedTraceDetails = [];
             }
         }
         catch (Exception ex)
@@ -191,9 +254,42 @@
         }
     }
 
-    private void ToggleExpanded(long errorId)
+    private async Task ToggleExpandedAsync(ErrorEntry error)
     {
-        expandedErrorId = expandedErrorId == errorId ? null : errorId;
+        if (expandedErrorId == error.Id)
+        {
+            expandedErrorId = null;
+            expandedRequest = null;
+            expandedTraceDetails = [];
+            return;
+        }
+
+        expandedErrorId = error.Id;
+        expandedRequest = null;
+        expandedTraceDetails = [];
+        isLoadingTraceContext = true;
+        StateHasChanged();
+
+        try
+        {
+            var requestTask = LogService.GetRequestByTraceIdAsync(error.TraceId);
+            var detailsTask = LogService.GetTraceDetailsAsync(error.TraceId);
+
+            await Task.WhenAll(requestTask, detailsTask);
+
+            expandedRequest = await requestTask;
+            expandedTraceDetails = await detailsTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            expandedRequest = null;
+            expandedTraceDetails = [];
+        }
+        finally
+        {
+            isLoadingTraceContext = false;
+        }
     }
 
     private async Task CopyToClipboard(string text, string uniqueId)
@@ -206,5 +302,92 @@
             lastCopiedId = null;
             InvokeAsync(StateHasChanged);
         });
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    private Task OnSearchChanged(string value)
+    {
+        searchText = value;
+        return Task.CompletedTask;
+    }
+
+    private bool MatchesSearch(ErrorEntry error)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return true;
+        }
+
+        return error.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || error.TraceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || error.Endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || error.ErrorMethod.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || error.ExceptionType.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void SetSort(SortColumn column)
+    {
+        if (currentSortColumn == column)
+        {
+            isSortAscending = !isSortAscending;
+            return;
+        }
+
+        currentSortColumn = column;
+        isSortAscending = column != SortColumn.Timestamp;
+    }
+
+    private string GetSortIndicator(SortColumn column)
+    {
+        if (currentSortColumn != column)
+        {
+            return "↕";
+        }
+
+        return isSortAscending ? "▲" : "▼";
+    }
+
+    private static DateTimeOffset ParseTimestamp(string timestamp)
+    {
+        if (DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+        {
+            return parsed;
+        }
+
+        return DateTimeOffset.MinValue;
+    }
+
+    private IEnumerable<ErrorEntry> SortErrors(IEnumerable<ErrorEntry> source) => currentSortColumn switch
+    {
+        SortColumn.Timestamp => isSortAscending
+            ? source.OrderBy(error => ParseTimestamp(error.Timestamp)).ThenBy(error => error.Timestamp, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => ParseTimestamp(error.Timestamp)).ThenByDescending(error => error.Timestamp, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Method => isSortAscending
+            ? source.OrderBy(error => error.ErrorMethod, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => error.ErrorMethod, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Exception => isSortAscending
+            ? source.OrderBy(error => error.ExceptionType, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => error.ExceptionType, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Message => isSortAscending
+            ? source.OrderBy(error => error.Message, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => error.Message, StringComparer.OrdinalIgnoreCase),
+        SortColumn.Endpoint => isSortAscending
+            ? source.OrderBy(error => error.Endpoint, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => error.Endpoint, StringComparer.OrdinalIgnoreCase),
+        SortColumn.TraceId => isSortAscending
+            ? source.OrderBy(error => error.TraceId, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(error => error.TraceId, StringComparer.OrdinalIgnoreCase),
+        _ => source
+    };
+
+    private enum SortColumn
+    {
+        Timestamp,
+        Method,
+        Exception,
+        Message,
+        Endpoint,
+        TraceId
     }
 }

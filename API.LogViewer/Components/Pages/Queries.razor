@@ -1,5 +1,9 @@
 @page "/queries"
+@using System.Globalization
+@using System.Timers
 @inject ILogService LogService
+@implements IDisposable
+@rendermode InteractiveServer
 
 <PageTitle>Query Statistics</PageTitle>
 
@@ -11,50 +15,106 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="table-responsive" style="max-height: 80vh;">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light sticky-top">
-                    <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                        <th class="ps-4">Query</th>
-                        <th style="width: 180px;">Avg Duration</th>
-                        <th class="pe-4" style="width: 140px;">Executions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (querySummaries.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">
-                                No query logs were found.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var summary in querySummaries)
-                        {
-                            <tr>
-                                <td class="ps-4">
-                                    <pre class="m-0"><code>@summary.QueryText</code></pre>
-                                </td>
-                                <td class="text-muted">@summary.AverageElapsedMs.ToString("N2") ms</td>
-                                <td class="pe-4 text-muted">@summary.ExecutionCount</td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <Table TItem="QuerySummary"
+                  Items="FilteredAndSortedSummaries"
+                  ColumnCount="4"
+                  SearchText="@searchText"
+                  SearchTextChanged="OnSearchChanged"
+                  SearchPlaceholder="Search SQL text..."
+                  EmptyText="No query logs were found."
+                  CountLabel="queries">
+        <ToolbarContent>
+            <select class="form-select" style="max-width: 240px;" @bind="selectedActivityFilter">
+                <option value="all">All activity</option>
+                <option value="high">High activity (5+ executions)</option>
+                <option value="slow">Slow queries (100ms+ avg)</option>
+            </select>
+        </ToolbarContent>
+        <HeaderTemplate>
+            <tr class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                <th class="ps-4" style="width: 180px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Latest)">
+                        Last Seen @GetSortIndicator(SortColumn.Latest)
+                    </button>
+                </th>
+                <th>
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Query)">
+                        Query @GetSortIndicator(SortColumn.Query)
+                    </button>
+                </th>
+                <th style="width: 180px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.AverageDuration)">
+                        Avg Duration @GetSortIndicator(SortColumn.AverageDuration)
+                    </button>
+                </th>
+                <th class="pe-4" style="width: 140px;">
+                    <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Executions)">
+                        Executions @GetSortIndicator(SortColumn.Executions)
+                    </button>
+                </th>
+            </tr>
+        </HeaderTemplate>
+        <RowTemplate Context="summary">
+            <tr>
+                <td class="ps-4 text-muted small">@summary.LatestTimestamp</td>
+                <td>
+                    <pre class="m-0"><code>@summary.QueryText</code></pre>
+                </td>
+                <td class="text-muted">@summary.AverageElapsedMs.ToString("N2") ms</td>
+                <td class="pe-4 text-muted">@summary.ExecutionCount</td>
+            </tr>
+        </RowTemplate>
+    </Table>
 </div>
+
+<style>
+    .sort-header {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font-size: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+    }
+
+    .sort-header:hover,
+    .sort-header:focus {
+        color: #0d6efd;
+    }
+</style>
 
 @code {
     private List<QuerySummary> querySummaries = [];
+    private Timer? timer;
+    private SortColumn currentSortColumn = SortColumn.Latest;
+    private bool isSortAscending;
+    private string searchText = string.Empty;
+    private string selectedActivityFilter = "all";
+
+    private IReadOnlyList<QuerySummary> FilteredAndSortedSummaries => SortSummaries(FilteredSummaries).ToList();
+
+    private IEnumerable<QuerySummary> FilteredSummaries =>
+        querySummaries
+            .Where(MatchesSearch)
+            .Where(MatchesActivityFilter);
 
     protected override async Task OnInitializedAsync()
     {
         await LoadQueryStatsAsync();
+
+        timer = new Timer(2500);
+        timer.Elapsed += async (_, _) =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadQueryStatsAsync();
+                StateHasChanged();
+            });
+        };
+
+        timer.Start();
     }
 
     private async Task LoadQueryStatsAsync()
@@ -68,5 +128,87 @@
             Console.WriteLine(ex.Message);
             querySummaries = [];
         }
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    private Task OnSearchChanged(string value)
+    {
+        searchText = value;
+        return Task.CompletedTask;
+    }
+
+    private void SetSort(SortColumn column)
+    {
+        if (currentSortColumn == column)
+        {
+            isSortAscending = !isSortAscending;
+            return;
+        }
+
+        currentSortColumn = column;
+        isSortAscending = column != SortColumn.Latest;
+    }
+
+    private string GetSortIndicator(SortColumn column)
+    {
+        if (currentSortColumn != column)
+        {
+            return "↕";
+        }
+
+        return isSortAscending ? "▲" : "▼";
+    }
+
+    private static DateTimeOffset ParseTimestamp(string timestamp)
+    {
+        if (DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+        {
+            return parsed;
+        }
+
+        return DateTimeOffset.MinValue;
+    }
+
+    private bool MatchesSearch(QuerySummary summary)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return true;
+        }
+
+        return summary.QueryText.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool MatchesActivityFilter(QuerySummary summary) => selectedActivityFilter switch
+    {
+        "high" => summary.ExecutionCount >= 5,
+        "slow" => summary.AverageElapsedMs >= 100,
+        _ => true
+    };
+
+    private IEnumerable<QuerySummary> SortSummaries(IEnumerable<QuerySummary> source) => currentSortColumn switch
+    {
+        SortColumn.Latest => isSortAscending
+            ? source.OrderBy(summary => ParseTimestamp(summary.LatestTimestamp))
+            : source.OrderByDescending(summary => ParseTimestamp(summary.LatestTimestamp)),
+        SortColumn.Query => isSortAscending
+            ? source.OrderBy(summary => summary.QueryText, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(summary => summary.QueryText, StringComparer.OrdinalIgnoreCase),
+        SortColumn.AverageDuration => isSortAscending
+            ? source.OrderBy(summary => summary.AverageElapsedMs)
+            : source.OrderByDescending(summary => summary.AverageElapsedMs),
+        SortColumn.Executions => isSortAscending
+            ? source.OrderBy(summary => summary.ExecutionCount)
+            : source.OrderByDescending(summary => summary.ExecutionCount),
+        _ => source
+    };
+
+    private enum SortColumn
+    {
+        Latest,
+        Query,
+        AverageDuration,
+        Executions
     }
 }

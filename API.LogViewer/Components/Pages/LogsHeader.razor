@@ -10,7 +10,7 @@
                 <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>
                 @(IsPaused ? "PAUSED" : "POLLING")
             </div>
-            <div class="text-muted" style="font-size: 0.7rem;">Refreshing every 3s</div>
+            <div class="text-muted" style="font-size: 0.7rem;">Refreshing every 2.5s</div>
         </div>
         <button class="btn btn-sm @(IsPaused ? "btn-primary" : "btn-outline-secondary") shadow-sm" @onclick="OnTogglePauseClicked">
             <i class="bi @(IsPaused ? "bi-play-fill" : "bi-pause-fill")"></i>

@@ -1,7 +1,6 @@
-﻿namespace API.Logging;
+﻿using System.Diagnostics;
 
-using System.Diagnostics;
-using Microsoft.AspNetCore.Http;
+namespace API.Logging;
 
 public sealed class RequestLoggingFilter(ILogger<RequestLoggingFilter> logger) : IEndpointFilter
 {

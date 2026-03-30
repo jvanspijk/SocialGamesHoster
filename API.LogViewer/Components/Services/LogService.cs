@@ -6,6 +6,7 @@ namespace API.LogViewer.Components.Services;
 public interface ILogService
 {
         Task<List<RequestEntry>> GetLatestRequestsAsync(int limit = 50);
+        Task<RequestEntry?> GetRequestByTraceIdAsync(string traceId);
         Task<List<TraceDetail>> GetTraceDetailsAsync(string traceId);
         Task<List<QuerySummary>> GetQuerySummariesAsync();
         Task<List<ErrorEntry>> GetLatestErrorsAsync(int limit = 200);
@@ -95,6 +96,43 @@ public class LogService : ILogService
         return details;
     }
 
+    public async Task<RequestEntry?> GetRequestByTraceIdAsync(string traceId)
+    {
+        if (string.IsNullOrWhiteSpace(traceId))
+        {
+            return null;
+        }
+
+        using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT Timestamp, Method, Endpoint, RequestBody, StatusCode, ElapsedMS, TraceId
+            FROM Requests
+            WHERE TraceId = @tid
+            ORDER BY ID DESC
+            LIMIT 1";
+
+        using var cmd = new SqliteCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@tid", traceId);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return new RequestEntry(
+            reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+            reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+            reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+            reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+            reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+            reader.IsDBNull(5) ? 0 : reader.GetDouble(5),
+            reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+        );
+    }
+
     public async Task<List<QuerySummary>> GetQuerySummariesAsync()
     {
         var summaries = new List<QuerySummary>();
@@ -103,11 +141,11 @@ public class LogService : ILogService
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT QueryText, AVG(ElapsedMS) AS AvgElapsedMs, COUNT(*) AS ExecutionCount
+            SELECT QueryText, AVG(ElapsedMS) AS AvgElapsedMs, COUNT(*) AS ExecutionCount, MAX(Timestamp) AS LatestTimestamp
             FROM QueryLogs
             WHERE QueryText IS NOT NULL AND TRIM(QueryText) <> ''
             GROUP BY QueryText
-            ORDER BY AvgElapsedMs DESC";
+            ORDER BY LatestTimestamp DESC";
 
         using var cmd = new SqliteCommand(sql, conn);
         using var reader = await cmd.ExecuteReaderAsync();
@@ -117,7 +155,8 @@ public class LogService : ILogService
             summaries.Add(new QuerySummary(
                 reader.GetString(0),
                 reader.IsDBNull(1) ? 0 : reader.GetDouble(1),
-                reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
+                reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
             ));
         }
 

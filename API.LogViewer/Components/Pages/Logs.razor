@@ -92,7 +92,7 @@
     {
         await LoadLogsAsync();
 
-        timer = new Timer(3000);
+        timer = new Timer(2500);
         timer.Elapsed += async (_, _) =>
         {
             if (!isPaused)

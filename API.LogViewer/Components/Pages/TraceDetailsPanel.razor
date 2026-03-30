@@ -37,14 +37,14 @@
                             }
                             else
                             {
-                                <span class="text-white-100 hover-bright">
+                                <span class="text-light">
                                     <i class="bi bi-clipboard me-1"></i> Copy
                                 </span>
                             }
                         </button>
                     </div>
 
-                    <pre class="m-0 border-0" style="border-radius: 0 0 8px 8px;"><code>@detail.DetailText</code></pre>
+                    <pre class="m-0 border-0 detail-block" style="border-radius: 0 0 8px 8px;"><code>@detail.DetailText</code></pre>
 
                     @if (detail.Duration > 0)
                     {
@@ -58,6 +58,45 @@
         }
     </div>
 </div>
+
+<style>
+    .detail-panel {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .detail-panel .json-block,
+    .detail-panel .detail-block {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .detail-panel .json-block {
+        background: #f8fafc;
+        color: #1f2937;
+    }
+
+    .detail-panel .detail-block {
+        background: #111827;
+        color: #e5e7eb;
+    }
+
+    .detail-panel .json-block code,
+    .detail-panel .detail-block code {
+        text-shadow: none;
+    }
+
+    .detail-panel .json-block code {
+        color: #1f2937 !important;
+    }
+
+    .detail-panel .detail-block code {
+        color: #e5e7eb !important;
+    }
+</style>
 
 @code {
     private string? lastCopiedId;

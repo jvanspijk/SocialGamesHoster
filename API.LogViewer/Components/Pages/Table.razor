@@ -1,0 +1,107 @@
+@typeparam TItem
+
+<div class="table-page-width mx-auto" style="max-width: @MaxWidth;">
+    <div class="card border-0 shadow-sm overflow-hidden">
+        @if (EnableToolbar)
+        {
+            <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+                @if (EnableSearch)
+                {
+                    <input class="form-control"
+                           style="max-width: 360px;"
+                           placeholder="@SearchPlaceholder"
+                           value="@SearchText"
+                           @oninput="OnSearchChanged" />
+                }
+
+                @if (ToolbarContent is not null)
+                {
+                    @ToolbarContent
+                }
+
+                @if (ShowCount)
+                {
+                    <span class="badge bg-light text-dark border">@Items.Count @CountLabel</span>
+                }
+            </div>
+        }
+
+        <div class="table-responsive" style="max-height: @MaxHeight;">
+            <table class="table table-hover align-middle mb-0 table-fixed">
+                <thead class="bg-light sticky-top">
+                    @HeaderTemplate
+                </thead>
+                <tbody>
+                    @if (IsLoading)
+                    {
+                        <tr>
+                            <td colspan="@ColumnCount" class="text-center text-muted py-4">@LoadingText</td>
+                        </tr>
+                    }
+                    else if (Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="@ColumnCount" class="text-center text-muted py-4">@EmptyText</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Items)
+                        {
+                            @RowTemplate(item)
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-page-width {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .table-page-width .table-responsive {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .table-page-width .table-fixed {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .table-page-width .table-fixed th,
+    .table-page-width .table-fixed td {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+</style>
+
+@code {
+    [Parameter] public IReadOnlyList<TItem> Items { get; set; } = [];
+    [Parameter] public RenderFragment? ToolbarContent { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public int ColumnCount { get; set; }
+    [Parameter] public string SearchText { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+    [Parameter] public bool EnableSearch { get; set; } = true;
+    [Parameter] public bool EnableToolbar { get; set; } = true;
+    [Parameter] public bool ShowCount { get; set; } = true;
+    [Parameter] public string CountLabel { get; set; } = "rows";
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search...";
+    [Parameter] public string MaxHeight { get; set; } = "80vh";
+    [Parameter] public string MaxWidth { get; set; } = "1400px";
+    [Parameter] public string LoadingText { get; set; } = "Loading...";
+    [Parameter] public string EmptyText { get; set; } = "No data found.";
+
+    private Task OnSearchChanged(ChangeEventArgs args)
+    {
+        SearchText = args.Value?.ToString() ?? string.Empty;
+        return SearchTextChanged.InvokeAsync(SearchText);
+    }
+}

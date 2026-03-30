@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="d-flex" style="min-height: 100vh;">
-    <div class="sidebar p-4 d-none d-md-block shadow" style="width: 260px; background: #1e293b; color: white;">
+    <div class="sidebar p-4 d-none d-md-block shadow flex-shrink-0" style="width: 260px; background: #1e293b; color: white;">
         <h5 class="fw-bold mb-4">API Debug <span class="text-primary">Logs</span></h5>
         <nav class="nav flex-column gap-2">
             <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
@@ -16,12 +16,12 @@
         </nav>
     </div>
 
-    <div class="flex-grow-1 bg-light d-flex flex-column">
+    <div class="flex-grow-1 bg-light d-flex flex-column" style="min-width: 0;">
         <header class="navbar bg-white border-bottom px-4 py-3 shadow-sm">
             <span class="text-muted fw-medium">Overview</span>
         </header>
 
-        <main class="p-4">
+        <main class="p-4 page-main">
             @Body
         </main>
     </div>
