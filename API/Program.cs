@@ -78,24 +78,9 @@ Error: Cannot use `cookies.set(...)` after the response has been generated
 
 public class Program
 {
-    private readonly static string _solutionDirectory = Directory.GetParent(Environment.CurrentDirectory)?.FullName
-        ?? throw new InvalidOperationException("Couldn't determine solution directory.");
     public static void Main(string[] args)
     {
         Console.WriteLine("Booting up app");
-        string configPath = Path.Combine(_solutionDirectory, "config.ini");
-
-        var config = new ConfigurationBuilder()
-            .AddIniFile(configPath, optional: false, reloadOnChange: true)
-            .Build();
-
-        string? adminName = config["Admin:Username"];
-        string? adminPass = config["Admin:Password"];
-
-        if(adminName is null || adminPass is null)
-        {
-            throw new InvalidOperationException("Admin credentials not found in config.ini");
-        }
 
         var builder = WebApplication.CreateBuilder(args);
 

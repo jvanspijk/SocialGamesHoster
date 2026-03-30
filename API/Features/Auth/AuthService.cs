@@ -9,17 +9,48 @@ using System.Text;
 
 namespace API.Features.Auth;
 
-public class AuthService(IRepository<Player> playerRepository)
+public class AuthService
 {
-    private readonly IRepository<Player> _playerRepository = playerRepository;
-    // TODO: these should be loaded from environment variables
+    private readonly IRepository<Player> _playerRepository;
     private const string _jwtSecurityKey = "Social-games-hoster_JWT_Security_Key";
     private const string _jwtIssuer = "http://localhost:9090";
     private const string _jwtAudience = "http://localhost:9091";
     private const string _tokenName = "session_token";
 
-    private static readonly string _adminUserName = "admin";
-    private static readonly string _adminPassword = "admin";
+    public AuthService(IRepository<Player> playerRepository)
+    {
+        _playerRepository = playerRepository;
+        string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Social Games Hoster");
+        Directory.CreateDirectory(folderPath);
+        string configPath = Path.Combine(folderPath, "config.ini");
+        if(!File.Exists(configPath))
+        {
+            string defaultContent =
+                @"[Admin]
+                Username=admin
+                Password=admin";
+
+            File.WriteAllText(configPath, defaultContent);
+        }
+
+        var config = new ConfigurationBuilder()
+            .AddIniFile(configPath, optional: false, reloadOnChange: true)
+            .Build();
+
+        string? adminName = config["Admin:Username"];
+        string? adminPass = config["Admin:Password"];
+
+        if (adminName is null || adminPass is null)
+        {
+            throw new InvalidOperationException("Admin credentials not found in config.ini");
+        }
+
+        _adminUserName = adminName;
+        _adminPassword = adminPass;
+    }
+
+    private readonly string _adminUserName;
+    private readonly string _adminPassword;
     private static readonly string _adminRoleName = "admin";   
 
     public Task<bool> AdminCredentialsAreValid(string username, string passwordHash)
@@ -121,7 +152,7 @@ public class AuthService(IRepository<Player> playerRepository)
         return true;
     }
 
-    public static Result<bool> IsAdmin(HttpRequest request)
+    public Result<bool> IsAdmin(HttpRequest request)
     {
         string? token = request.Cookies[_tokenName];
         if (string.IsNullOrEmpty(token))
