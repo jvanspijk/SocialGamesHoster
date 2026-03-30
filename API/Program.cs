@@ -1,17 +1,13 @@
 using API.DataAccess;
 
 using API.Domain;
-using API.Domain.Entities;
-using API.Domain.Models;
 using API.Features.Auth;
 using API.Features.Timers;
 using API.Filters;
 using API.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -52,6 +48,7 @@ namespace API;
 // - IAbility interface so that a DM can create custom abilities for roles (will be god object)
 //    - Parse abilities from JSON or scripting language instead so that users don't have to write code
 // - Maybe add Open telemetry for performance logging
+// - Make it so that the admin can play along if they want, without cheating.
 
 // Optional:
 // - Assign random roles to players
