@@ -66,7 +66,7 @@ namespace API;
 
 // Performance optimizations:
 // - Streaming database results using IAsyncEnumerable where possible, especially for endpoints that return lists of data. <-- while the asp.net api result can return a stream, it needs to be handled client side too. There's also some latency involved in starting to return results, so it might not be worth it for smaller lists of data. But for larger lists, it can improve performance and reduce memory usage.
-// - Use JSON source generator for serialization where possible (see GetAbility endpoint for example). <-- Does it save enough time?
+// - Use JSON source generator for serialization where possible (see GetAbility endpoint for example). <-- Does it save enough time? 
 
 // Bugs/issues:
 // - Minor issue: cancelling a round increments the round number (not talking about the id). This might be an issue for games where there's a fixed number of rounds.
@@ -254,16 +254,24 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        var apiGroup = app.MapGroup("/api");
+        var apiGroup = app.MapGroup("/api");        
         apiGroup.MapEndpoints();        
         apiGroup.MapGet("/health", () => Results.Ok("API is running")).WithTags("Health");
+        apiGroup
+            .AddEndpointFilter<HttpErrorFormattingFilter>()
+            .AddEndpointFilter<CacheInvalidatorFilter>();
 #if DEBUG
+        // Ensure that we can read and inspect the http request
+        apiGroup.AddEndpointFilter(async (context, next) => 
+        {
+            context.HttpContext.Request.EnableBuffering();
+            return await next(context);
+        });
         apiGroup
             .AddEndpointFilter<RequestLoggingFilter>()
-            .AddEndpointFilter<ErrorLoggingFilter>()
+            .AddEndpointFilter<ExceptionLoggingFilter>()
             .AddEndpointFilter<DebugRequireSaveChangesFilter>();
 #endif
-        apiGroup.AddEndpointFilter<CacheInvalidatorFilter>();
 
         app.Run();
         Console.WriteLine("Done booting up");
