@@ -207,7 +207,7 @@ public class Program
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         services
-            .AddSingleton<RoundTimer>()
+            .AddSingleton<IGameTimer, GameTimer>()
             .AddSingleton<TimerNotifier>();
 
         services.AddHostedService(provider => provider.GetRequiredService<TimerNotifier>());

@@ -8,7 +8,7 @@ namespace API.Features.Timers.Endpoints;
 public static class ResumeTimer
 {
     public record Response(int RemainingSeconds);
-    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(RoundTimer timer, IHubContext<TimersHub, ITimersHub> hub)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IGameTimer timer, IHubContext<TimersHub, ITimersHub> hub)
     {
         timer.Resume();
         await TimersHub.NotifyTimerResumed(hub, (int)timer.RemainingTime.TotalSeconds, (int)timer.TotalTime.TotalSeconds);

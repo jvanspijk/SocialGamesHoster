@@ -8,9 +8,9 @@ namespace API.Features.Timers;
 /// <summary>
 /// Singleton service that listens for timer finished events and notifies connected clients via the RoundsHub.
 /// </summary>
-public class TimerNotifier(RoundTimer timer, IHubContext<TimersHub, ITimersHub> hubContext) : IHostedService
+public class TimerNotifier(IGameTimer timer, IHubContext<TimersHub, ITimersHub> hubContext) : IHostedService
 {
-    private readonly RoundTimer _timer = timer;
+    private readonly IGameTimer _timer = timer;
     private readonly IHubContext<TimersHub, ITimersHub> _hubContext = hubContext;
 
     public Task StartAsync(CancellationToken cancellationToken)

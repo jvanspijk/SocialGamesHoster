@@ -6,11 +6,16 @@ namespace API.Features.Timers.Endpoints;
 public class GetTimerState
 {
     public readonly record struct Response(int RemainingSeconds, int TotalSeconds, bool IsRunning);
-    public static Ok<Response> Handle(RoundTimer timer)
+    public static Results<Ok<Response>, ProblemHttpResult> Handle(IGameTimer timer)
     {
+        if (timer.CurrentState == TimerState.Inactive)
+        {
+            return APIResults.NotFound("No active timer exists.");
+        }
+
         return APIResults.Ok(new Response(
             (int)timer.RemainingTime.TotalSeconds,
             (int)timer.TotalTime.TotalSeconds,
-            timer.State == TimerState.Running));
+            timer.CurrentState == TimerState.Running));
     }
 }

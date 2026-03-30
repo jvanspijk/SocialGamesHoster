@@ -7,7 +7,7 @@ namespace API.Features.Timers.Endpoints;
 
 public static class StopTimer
 {    
-    public static async Task<Results<NoContent, ProblemHttpResult>> HandleAsync(RoundTimer timer, IHubContext<TimersHub, ITimersHub> hub)
+    public static async Task<Results<NoContent, ProblemHttpResult>> HandleAsync(IGameTimer timer, IHubContext<TimersHub, ITimersHub> hub)
     {
         timer.Stop();
         await TimersHub.NotifyTimerStopped(hub);

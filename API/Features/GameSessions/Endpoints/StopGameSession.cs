@@ -16,7 +16,7 @@ public static class StopGameSession
                 gs.Status.ToString()
             );
     }
-    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, RoundTimer timer, int gameId)
+    public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IRepository<GameSession> repository, IGameTimer timer, int gameId)
     {
         GameSession? session = await repository.GetWithTrackingAsync(gameId);
         if (session == null)
