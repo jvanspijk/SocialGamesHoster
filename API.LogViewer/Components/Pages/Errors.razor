@@ -8,7 +8,7 @@
 
 <PageTitle>Errors</PageTitle>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 errors-page">
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <h2 class="fw-bold mb-1">Errors</h2>
@@ -79,7 +79,7 @@
                 var stackTraceCopyId = $"stacktrace-{error.Id}";
             }
 
-            <tr class="@(isExpanded ? "table-active" : string.Empty)">
+            <tr class="@(isExpanded ? "table-active app-row-expanded" : string.Empty)">
                 <td class="ps-4 text-muted small">@error.Timestamp</td>
                 <td>
                     @if (string.IsNullOrWhiteSpace(error.ErrorMethod))
@@ -88,10 +88,10 @@
                     }
                     else
                     {
-                        <span class="badge bg-dark-subtle text-dark border">@error.ErrorMethod</span>
+                        <span class="badge app-badge-neutral border">@error.ErrorMethod</span>
                     }
                 </td>
-                <td><span class="badge bg-danger-subtle text-danger border">@error.ExceptionType</span></td>
+                <td><span class="badge app-badge-danger border">@error.ExceptionType</span></td>
                 <td class="text-break">@error.Message</td>
                 <td class="small font-monospace text-muted">@error.Endpoint</td>
                 <td class="pe-4 small font-monospace">
@@ -106,21 +106,21 @@
 
             @if (isExpanded)
             {
-                <tr class="bg-light">
+                <tr class="app-expanded-row">
                     <td colspan="6" class="p-0 border-0">
-                        <div class="p-3 mx-3 my-2 border-start border-4 border-danger rounded bg-white shadow-sm">
+                        <div class="error-details-panel p-3 mx-3 my-2 border-start border-4 rounded shadow-sm">
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 @if (!string.IsNullOrWhiteSpace(error.ExceptionSource))
                                 {
-                                    <span class="badge bg-light text-dark border">Source: @error.ExceptionSource</span>
+                                    <span class="badge app-badge-neutral border">Source: @error.ExceptionSource</span>
                                 }
                                 @if (!string.IsNullOrWhiteSpace(error.TargetSite))
                                 {
-                                    <span class="badge bg-light text-dark border">Target: @error.TargetSite</span>
+                                    <span class="badge app-badge-neutral border">Target: @error.TargetSite</span>
                                 }
                                 @if (!string.IsNullOrWhiteSpace(error.StackTraceHash))
                                 {
-                                    <span class="badge bg-secondary-subtle text-secondary border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
+                                    <span class="badge app-badge-muted border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
                                 }
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -133,7 +133,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-primary"><i class="bi bi-clipboard me-1"></i>Copy</span>
+                                        <span class="app-link"><i class="bi bi-clipboard me-1"></i>Copy</span>
                                     }
                                 </button>
                             </div>
@@ -154,36 +154,6 @@
         </RowTemplate>
     </Table>
 </div>
-
-<style>
-    .sort-header {
-        background: transparent;
-        border: 0;
-        padding: 0;
-        font-size: inherit;
-        font-weight: inherit;
-        text-transform: inherit;
-        letter-spacing: inherit;
-        color: inherit;
-    }
-
-    .sort-header:hover,
-    .sort-header:focus {
-        color: #0d6efd;
-    }
-
-    .trace-link {
-        color: #0d6efd !important;
-        white-space: normal;
-        word-break: break-all;
-        max-width: 100%;
-    }
-
-    .trace-link:hover,
-    .trace-link:focus {
-        color: #0a58ca !important;
-    }
-</style>
 
 @code {
     private List<ErrorEntry> errors = [];

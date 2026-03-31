@@ -10,6 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<ILogService, LogService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

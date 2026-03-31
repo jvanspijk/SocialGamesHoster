@@ -1,0 +1,43 @@
+.app-link {
+    color: var(--app-color-link);
+}
+
+.app-link:hover,
+.app-link:focus {
+    color: var(--app-color-link-hover);
+}
+
+.app-badge-neutral {
+    background-color: var(--app-badge-neutral-bg) !important;
+    color: var(--app-badge-neutral-text) !important;
+}
+
+.app-badge-success {
+    background-color: var(--app-badge-success-bg) !important;
+    color: var(--app-badge-success-text) !important;
+}
+
+.app-badge-danger {
+    background-color: var(--app-badge-danger-bg) !important;
+    color: var(--app-badge-danger-text) !important;
+}
+
+.app-badge-warning {
+    background-color: var(--app-badge-warning-bg) !important;
+    color: var(--app-badge-warning-text) !important;
+}
+
+.app-badge-info {
+    background-color: var(--app-badge-info-bg) !important;
+    color: var(--app-badge-info-text) !important;
+}
+
+.app-badge-muted {
+    background-color: var(--app-badge-muted-bg) !important;
+    color: var(--app-badge-muted-text) !important;
+}
+
+.table > :not(caption) > * > * {
+    color: var(--app-color-text);
+    border-bottom-color: var(--app-color-border);
+}

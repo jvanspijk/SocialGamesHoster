@@ -1,0 +1,56 @@
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --app-color-bg: #0b1220;
+    --app-color-surface: #111827;
+    --app-color-surface-elevated: #0f172a;
+    --app-color-text: #e2e8f0;
+    --app-color-muted: #94a3b8;
+    --app-color-border: #273449;
+    --app-color-border-subtle: #334155;
+    --app-color-border-strong: #475569;
+
+    --app-color-accent: #60a5fa;
+    --app-color-link: #93c5fd;
+    --app-color-link-hover: #bfdbfe;
+
+    --app-color-success: #4ade80;
+    --app-color-danger: #f87171;
+    --app-color-warning: #fbbf24;
+    --app-color-info: #67e8f9;
+
+    --app-sidebar-bg: #020617;
+    --app-sidebar-text: #e2e8f0;
+    --app-sidebar-link: rgba(226, 232, 240, 0.72);
+    --app-sidebar-link-active: #f8fafc;
+    --app-sidebar-link-bg-active: rgba(148, 163, 184, 0.26);
+
+    --app-code-bg: #020617;
+    --app-code-text: #e2e8f0;
+    --app-json-bg: #0f172a;
+    --app-json-text: #cbd5e1;
+    --app-json-code-text: #cbd5e1;
+
+    --app-table-head-bg: #1e293b;
+    --app-table-row-hover: #172132;
+    --app-table-row-active: #1c2a42;
+    --app-table-row-expanded: #152033;
+
+    --app-badge-neutral-bg: #334155;
+    --app-badge-neutral-text: #e2e8f0;
+    --app-badge-success-bg: rgba(74, 222, 128, 0.16);
+    --app-badge-success-text: #86efac;
+    --app-badge-danger-bg: rgba(248, 113, 113, 0.18);
+    --app-badge-danger-text: #fca5a5;
+    --app-badge-warning-bg: rgba(251, 191, 36, 0.18);
+    --app-badge-warning-text: #fcd34d;
+    --app-badge-info-bg: rgba(103, 232, 249, 0.16);
+    --app-badge-info-text: #a5f3fc;
+    --app-badge-muted-bg: rgba(148, 163, 184, 0.2);
+    --app-badge-muted-text: #cbd5e1;
+
+    --app-error-boundary-bg: #7f1d1d;
+    --app-error-boundary-text: #fee2e2;
+    --app-error-ui-bg: #3f2c00;
+    --app-error-ui-text: #fef3c7;
+}

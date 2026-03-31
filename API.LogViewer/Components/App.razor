@@ -1,11 +1,37 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
+<html lang="en" data-theme="@InitialTheme" data-bs-theme="@InitialTheme">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <script>
+        (() => {
+            const key = "api-logviewer-theme";
+            const cookieKey = "api-logviewer-theme";
+            const storedTheme = localStorage.getItem(key);
+            const cookieMatch = document.cookie.match(new RegExp(`(?:^|; )${cookieKey}=([^;]+)`));
+            const cookieTheme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+            const serverTheme = document.documentElement.getAttribute("data-theme");
+            const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            const candidateTheme = storedTheme ?? cookieTheme ?? serverTheme ?? preferredTheme;
+            const activeTheme = candidateTheme === "dark" ? "dark" : "light";
+
+            document.documentElement.setAttribute("data-theme", activeTheme);
+            document.documentElement.setAttribute("data-bs-theme", activeTheme);
+
+            if (storedTheme !== activeTheme) {
+                localStorage.setItem(key, activeTheme);
+            }
+        })();
+    </script>
     <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["styles/theme.tokens.css"]" />
+    <link rel="stylesheet" href="@Assets["styles/theme.light.css"]" />
+    <link rel="stylesheet" href="@Assets["styles/theme.dark.css"]" />
+    <link rel="stylesheet" href="@Assets["styles/theme.components.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["API.LogViewer.styles.css"]" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,6 +43,7 @@
 <body>
     <Routes />
     <ReconnectModal />
+    <script src="@Assets["theme.js"]"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script>
         window.copyToClipboard = (text) => {
@@ -31,3 +58,16 @@
 </body>
 
 </html>
+
+@code {
+    private const string ThemeCookieName = "api-logviewer-theme";
+    private const string DarkTheme = "dark";
+
+    private string InitialTheme => ResolveInitialTheme();
+
+    private string ResolveInitialTheme()
+    {
+        var cookieValue = HttpContextAccessor.HttpContext?.Request.Cookies[ThemeCookieName];
+        return string.Equals(cookieValue, DarkTheme, StringComparison.OrdinalIgnoreCase) ? DarkTheme : "light";
+    }
+}

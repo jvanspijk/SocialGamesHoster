@@ -6,7 +6,7 @@
 
 <PageTitle>Debug Dashboard</PageTitle>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 logs-page">
     <LogsHeader IsPaused="@isPaused" OnTogglePause="@TogglePause" />
 
     <LogsTable Requests="@requests"
@@ -14,72 +14,6 @@
               ExpandedTraceId="@expandedTraceId"
               OnToggleTrace="@ToggleTrace" />
 </div>
-
-<style>
-    pre { font-size: 0.8rem; margin-bottom: 0; }
-
-    .table-active {
-        background-color: #f0f7ff !important;
-    }
-
-    .table thead th {
-        background-color: #f1f5f9;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.025em;
-        color: #64748b;
-        border: none;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: #f1f5f9;
-    }
-
-    pre {
-        background: #1e293b !important;
-        color: #e2e8f0 !important;
-        border-radius: 8px;
-        padding: 1rem;
-        font-size: 0.8rem;
-    }
-
-    pre code {
-        color: #e2e8f0 !important;
-        font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
-        font-size: 0.85rem;
-        line-height: 1.5;
-        text-shadow: none;
-    }
-
-    .animate-fade-in {
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .btn-link:active {
-        transform: scale(0.95);
-    }
-
-    .hover-bright {
-        transition: all 0.2s ease;
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0);
-    }
-
-    .hover-bright:hover {
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-        color: #fff !important;
-        transform: translateY(-1px);
-    }
-
-    .btn-link {
-        color: #ffffff;
-    }
-</style>
 
 @code {
     private List<RequestEntry> requests = [];

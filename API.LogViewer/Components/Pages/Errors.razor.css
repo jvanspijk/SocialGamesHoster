@@ -1,0 +1,40 @@
+.errors-page .sort-header {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+}
+
+.errors-page .sort-header:hover,
+.errors-page .sort-header:focus {
+    color: var(--app-color-link);
+}
+
+.errors-page .trace-link {
+    color: var(--app-color-link) !important;
+    white-space: normal;
+    word-break: break-all;
+    max-width: 100%;
+}
+
+.errors-page .trace-link:hover,
+.errors-page .trace-link:focus {
+    color: var(--app-color-link-hover) !important;
+}
+
+.errors-page .app-row-expanded {
+    border-color: var(--app-color-border-strong) !important;
+}
+
+.errors-page .app-expanded-row {
+    background-color: var(--app-table-row-expanded);
+}
+
+.errors-page .error-details-panel {
+    border-color: var(--app-color-danger) !important;
+    background-color: var(--app-color-surface-elevated);
+}

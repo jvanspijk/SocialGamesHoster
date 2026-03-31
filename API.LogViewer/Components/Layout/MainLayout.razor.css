@@ -1,8 +1,8 @@
 #blazor-error-ui {
-    color-scheme: light only;
-    background: lightyellow;
+    background: var(--app-error-ui-bg);
+    color: var(--app-error-ui-text);
     bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--app-shadow-sm);
     box-sizing: border-box;
     display: none;
     left: 0;
@@ -19,8 +19,34 @@
         top: 0.5rem;
     }
 
+.app-shell {
+    min-height: 100vh;
+    background-color: var(--app-color-bg);
+    color: var(--app-color-text);
+}
+
+.app-sidebar {
+    width: 260px;
+    background: var(--app-sidebar-bg);
+    color: var(--app-sidebar-text);
+}
+
+.app-accent-text {
+    color: var(--app-color-accent);
+}
+
+.app-content {
+    min-width: 0;
+    background-color: var(--app-color-bg);
+}
+
+.app-header {
+    background-color: var(--app-color-surface);
+    border-color: var(--app-color-border) !important;
+}
+
 .sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--app-sidebar-link);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -28,8 +54,8 @@
 
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.12);
+    color: var(--app-sidebar-link-active);
+    background: var(--app-sidebar-link-bg-active);
 }
 
 .page-main {

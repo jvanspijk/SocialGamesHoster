@@ -1,8 +1,8 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="d-flex" style="min-height: 100vh;">
-    <div class="sidebar p-4 d-none d-md-block shadow flex-shrink-0" style="width: 260px; background: #1e293b; color: white;">
-        <h5 class="fw-bold mb-4">API Debug <span class="text-primary">Logs</span></h5>
+<div class="app-shell d-flex">
+    <div class="sidebar app-sidebar p-4 d-none d-md-block shadow flex-shrink-0">
+        <h5 class="fw-bold mb-4">API Debug <span class="app-accent-text">Logs</span></h5>
         <nav class="nav flex-column gap-2">
             <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                 <i class="bi bi-list-ul me-2"></i> Requests
@@ -16,9 +16,14 @@
         </nav>
     </div>
 
-    <div class="flex-grow-1 bg-light d-flex flex-column" style="min-width: 0;">
-        <header class="navbar bg-white border-bottom px-4 py-3 shadow-sm">
+    <div class="app-content flex-grow-1 d-flex flex-column">
+        <header class="navbar app-header border-bottom px-4 py-3 shadow-sm">
             <span class="text-muted fw-medium">Overview</span>
+
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-theme-toggle>
+                <i class="bi bi-moon me-1" data-theme-toggle-icon></i>
+                <span data-theme-toggle-text>Dark mode</span>
+            </button>
         </header>
 
         <main class="p-4 page-main">

@@ -1,0 +1,15 @@
+.queries-page .sort-header {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+}
+
+.queries-page .sort-header:hover,
+.queries-page .sort-header:focus {
+    color: var(--app-color-link);
+}

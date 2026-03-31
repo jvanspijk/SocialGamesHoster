@@ -1,0 +1,32 @@
+.sort-header {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+}
+
+.sort-header:hover,
+.sort-header:focus {
+    color: var(--app-color-link);
+}
+
+.btn-link.trace-link {
+    color: var(--app-color-link) !important;
+}
+
+.btn-link.trace-link:hover,
+.btn-link.trace-link:focus {
+    color: var(--app-color-link-hover) !important;
+}
+
+.app-row-expanded {
+    border-color: var(--app-color-border-strong) !important;
+}
+
+.app-expanded-row {
+    background-color: var(--app-table-row-expanded);
+}

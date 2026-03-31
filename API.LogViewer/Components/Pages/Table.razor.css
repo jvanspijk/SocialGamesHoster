@@ -1,0 +1,33 @@
+.table-page-width {
+    width: 100%;
+    min-width: 0;
+}
+
+.table-page-width .app-card {
+    background-color: var(--app-color-surface);
+    border: 1px solid var(--app-color-border) !important;
+}
+
+.table-page-width .app-card-toolbar {
+    border-bottom: 1px solid var(--app-color-border);
+}
+
+.table-page-width .table-responsive {
+    width: 100%;
+    max-width: 100%;
+}
+
+.table-page-width .table-fixed {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table-page-width .table-fixed th,
+.table-page-width .table-fixed td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.table-page-width .app-table-head {
+    background-color: var(--app-table-head-bg);
+}

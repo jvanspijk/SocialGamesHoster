@@ -1,0 +1,66 @@
+.detail-panel {
+    max-width: 100%;
+    overflow: hidden;
+    border-color: var(--app-color-accent) !important;
+    background-color: var(--app-color-surface-elevated);
+}
+
+.detail-panel .json-block,
+.detail-panel .detail-block {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.detail-panel .json-block {
+    background: var(--app-json-bg);
+    color: var(--app-json-text);
+    border-color: var(--app-color-border) !important;
+}
+
+.detail-panel .detail-card {
+    background-color: var(--app-code-bg);
+}
+
+.detail-panel .detail-card-header {
+    border-color: var(--app-color-border-subtle) !important;
+}
+
+.detail-panel .detail-copy-text {
+    color: var(--app-code-text);
+}
+
+.detail-panel .detail-block {
+    background: var(--app-code-bg);
+    color: var(--app-code-text);
+    border-radius: 0 0 8px 8px;
+}
+
+.detail-panel .json-block code,
+.detail-panel .detail-block code {
+    text-shadow: none;
+}
+
+.detail-panel .json-block code {
+    color: var(--app-json-code-text) !important;
+}
+
+.detail-panel .detail-block code {
+    color: var(--app-code-text) !important;
+}
+
+.detail-panel .detail-duration {
+    font-size: 0.7rem;
+}
+
+.detail-panel .detail-duration-value {
+    color: var(--app-color-info);
+}
+
+.detail-panel .trace-empty-state {
+    background-color: var(--app-table-row-expanded);
+    border-color: var(--app-color-border) !important;
+    color: var(--app-color-muted);
+}

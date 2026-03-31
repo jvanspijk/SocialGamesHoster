@@ -1,0 +1,53 @@
+.logs-page pre {
+    margin-bottom: 0;
+    font-size: 0.8rem;
+    background: var(--app-code-bg) !important;
+    color: var(--app-code-text) !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.logs-page pre code {
+    color: var(--app-code-text) !important;
+    font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-shadow: none;
+}
+
+.logs-page .table-active {
+    background-color: var(--app-table-row-active) !important;
+}
+
+.logs-page .table thead th {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    color: var(--app-color-muted);
+    border: none;
+}
+
+.logs-page .table-hover tbody tr:hover {
+    background-color: var(--app-table-row-hover);
+}
+
+.logs-page .animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logs-page .btn-link:active {
+    transform: scale(0.95);
+}
