@@ -346,7 +346,7 @@ public static class Endpoints
     {
         var chatGroup = builder.MapGroup("/chat");
 
-        chatGroup.MapGet("/{id:guid}", GetMessage.HandleAsync)
+        chatGroup.MapGet("/{id:int}", GetMessage.HandleAsync)
             .WithName(nameof(GetMessage))
             .Produces<GetMessage.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
