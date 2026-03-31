@@ -1,4 +1,4 @@
-.errors-page .sort-header {
+.exceptions-page .sort-header {
     background: transparent;
     border: 0;
     padding: 0;
@@ -9,32 +9,32 @@
     color: inherit;
 }
 
-.errors-page .sort-header:hover,
-.errors-page .sort-header:focus {
+.exceptions-page .sort-header:hover,
+.exceptions-page .sort-header:focus {
     color: var(--app-color-link);
 }
 
-.errors-page .trace-link {
+.exceptions-page .trace-link {
     color: var(--app-color-link) !important;
     white-space: normal;
     word-break: break-all;
     max-width: 100%;
 }
 
-.errors-page .trace-link:hover,
-.errors-page .trace-link:focus {
+.exceptions-page .trace-link:hover,
+.exceptions-page .trace-link:focus {
     color: var(--app-color-link-hover) !important;
 }
 
-.errors-page .app-row-expanded {
+.exceptions-page .app-row-expanded {
     border-color: var(--app-color-border-strong) !important;
 }
 
-.errors-page .app-expanded-row {
+.exceptions-page .app-expanded-row {
     background-color: var(--app-table-row-expanded);
 }
 
-.errors-page .error-details-panel {
+.exceptions-page .exception-details-panel {
     border-color: var(--app-color-danger) !important;
     background-color: var(--app-color-surface-elevated);
 }

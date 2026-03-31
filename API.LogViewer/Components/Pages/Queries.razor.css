@@ -13,3 +13,9 @@
 .queries-page .sort-header:focus {
     color: var(--app-color-link);
 }
+
+.queries-page .query-endpoint-badge {
+    font-weight: 500;
+    max-width: 260px;
+    overflow-wrap: anywhere;
+}

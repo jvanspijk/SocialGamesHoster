@@ -4,9 +4,14 @@ public record RequestEntry(string Timestamp, string Method, string Endpoint, str
 
 public record TraceDetail(string Type, string DetailText, double Duration, string Timestamp);
 
-public record QuerySummary(string QueryText, double AverageElapsedMs, int ExecutionCount, string LatestTimestamp);
+public record QuerySummary(
+    string QueryText,
+    double AverageElapsedMs,
+    int ExecutionCount,
+    string LatestTimestamp,
+    IReadOnlyList<string> Endpoints);
 
-public record ErrorEntry(
+public record ExceptionEntry(
     long Id,
     string Timestamp,
     string TraceId,

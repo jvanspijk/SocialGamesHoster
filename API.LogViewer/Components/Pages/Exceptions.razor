@@ -1,4 +1,4 @@
-@page "/errors"
+@page "/exceptions"
 @using System.Globalization
 @using System.Timers
 @inject ILogService LogService
@@ -6,30 +6,30 @@
 @implements IDisposable
 @rendermode InteractiveServer
 
-<PageTitle>Errors</PageTitle>
+<PageTitle>Exceptions</PageTitle>
 
-<div class="container-fluid py-4 errors-page">
+<div class="container-fluid py-4 exceptions-page">
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h2 class="fw-bold mb-1">Errors</h2>
+            <h2 class="fw-bold mb-1">Exceptions</h2>
             <p class="text-muted small mb-0">Inspect recent exceptions with trace context.</p>
         </div>
-        <button class="btn btn-sm btn-outline-secondary" @onclick="LoadErrorsAsync" disabled="@isLoading">
+        <button class="btn btn-sm btn-outline-secondary" @onclick="LoadExceptionsAsync" disabled="@isLoading">
             <i class="bi bi-arrow-clockwise me-1"></i>
             Refresh
         </button>
     </div>
 
-    <Table TItem="ErrorEntry"
-                  Items="FilteredAndSortedErrors"
+    <Table TItem="ExceptionEntry"
+                  Items="FilteredAndSortedExceptions"
                   ColumnCount="6"
                   SearchText="@searchText"
                   SearchTextChanged="OnSearchChanged"
                   SearchPlaceholder="Search message, trace, endpoint, method..."
                   IsLoading="@isLoading"
-                  LoadingText="Loading errors..."
-                  EmptyText="No errors found."
-                  CountLabel="errors">
+                  LoadingText="Loading exceptions..."
+                  EmptyText="No exceptions found."
+                  CountLabel="exceptions">
         <ToolbarContent>
             <select class="form-select" style="max-width: 260px;" @bind="selectedExceptionType">
                 <option value="">All exceptions</option>
@@ -73,33 +73,33 @@
                 </th>
             </tr>
         </HeaderTemplate>
-        <RowTemplate Context="error">
+        <RowTemplate Context="exceptionEntry">
             @{
-                var isExpanded = expandedErrorId == error.Id;
-                var stackTraceCopyId = $"stacktrace-{error.Id}";
+                var isExpanded = expandedExceptionId == exceptionEntry.Id;
+                var stackTraceCopyId = $"stacktrace-{exceptionEntry.Id}";
             }
 
             <tr class="@(isExpanded ? "table-active app-row-expanded" : string.Empty)">
-                <td class="ps-4 text-muted small">@error.Timestamp</td>
+                <td class="ps-4 text-muted small">@exceptionEntry.Timestamp</td>
                 <td>
-                    @if (string.IsNullOrWhiteSpace(error.ErrorMethod))
+                    @if (string.IsNullOrWhiteSpace(exceptionEntry.ErrorMethod))
                     {
                         <span class="text-muted small">N/A</span>
                     }
                     else
                     {
-                        <span class="badge app-badge-neutral border">@error.ErrorMethod</span>
+                        <span class="badge app-badge-neutral border">@exceptionEntry.ErrorMethod</span>
                     }
                 </td>
-                <td><span class="badge app-badge-danger border">@error.ExceptionType</span></td>
-                <td class="text-break">@error.Message</td>
-                <td class="small font-monospace text-muted">@error.Endpoint</td>
+                <td><span class="badge app-badge-danger border">@exceptionEntry.ExceptionType</span></td>
+                <td class="text-break">@exceptionEntry.Message</td>
+                <td class="small font-monospace text-muted">@exceptionEntry.Endpoint</td>
                 <td class="pe-4 small font-monospace">
                     <button type="button"
                             class="btn btn-link p-0 text-decoration-none trace-link text-start w-100"
-                            @onclick="() => ToggleExpandedAsync(error)"
+                            @onclick="() => ToggleExpandedAsync(exceptionEntry)"
                             aria-expanded="@isExpanded">
-                        @error.TraceId
+                        @exceptionEntry.TraceId
                     </button>
                 </td>
             </tr>
@@ -108,25 +108,25 @@
             {
                 <tr class="app-expanded-row">
                     <td colspan="6" class="p-0 border-0">
-                        <div class="error-details-panel p-3 mx-3 my-2 border-start border-4 rounded shadow-sm">
+                        <div class="exception-details-panel p-3 mx-3 my-2 border-start border-4 rounded shadow-sm">
                             <div class="d-flex flex-wrap gap-2 mb-3">
-                                @if (!string.IsNullOrWhiteSpace(error.ExceptionSource))
+                                @if (!string.IsNullOrWhiteSpace(exceptionEntry.ExceptionSource))
                                 {
-                                    <span class="badge app-badge-neutral border">Source: @error.ExceptionSource</span>
+                                    <span class="badge app-badge-neutral border">Source: @exceptionEntry.ExceptionSource</span>
                                 }
-                                @if (!string.IsNullOrWhiteSpace(error.TargetSite))
+                                @if (!string.IsNullOrWhiteSpace(exceptionEntry.TargetSite))
                                 {
-                                    <span class="badge app-badge-neutral border">Target: @error.TargetSite</span>
+                                    <span class="badge app-badge-neutral border">Target: @exceptionEntry.TargetSite</span>
                                 }
-                                @if (!string.IsNullOrWhiteSpace(error.StackTraceHash))
+                                @if (!string.IsNullOrWhiteSpace(exceptionEntry.StackTraceHash))
                                 {
-                                    <span class="badge app-badge-muted border font-monospace">Hash: @error.StackTraceHash[..Math.Min(12, error.StackTraceHash.Length)]</span>
+                                    <span class="badge app-badge-muted border font-monospace">Hash: @exceptionEntry.StackTraceHash[..Math.Min(12, exceptionEntry.StackTraceHash.Length)]</span>
                                 }
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0 text-uppercase text-muted small fw-bold">Stack Trace</h6>
                                 <button class="btn btn-link btn-sm p-0 text-decoration-none"
-                                        @onclick="() => CopyToClipboard(error.StackTrace, stackTraceCopyId)">
+                                        @onclick="() => CopyToClipboard(exceptionEntry.StackTrace, stackTraceCopyId)">
                                     @if (lastCopiedId == stackTraceCopyId)
                                     {
                                         <span class="text-success"><i class="bi bi-check-lg me-1"></i>Copied</span>
@@ -137,7 +137,7 @@
                                     }
                                 </button>
                             </div>
-                            <pre class="m-0"><code>@(string.IsNullOrWhiteSpace(error.StackTrace) ? "No stack trace available." : error.StackTrace)</code></pre>
+                            <pre class="m-0"><code>@(string.IsNullOrWhiteSpace(exceptionEntry.StackTrace) ? "No stack trace available." : exceptionEntry.StackTrace)</code></pre>
                         </div>
 
                         @if (isLoadingTraceContext)
@@ -156,11 +156,11 @@
 </div>
 
 @code {
-    private List<ErrorEntry> errors = [];
+    private List<ExceptionEntry> exceptions = [];
     private bool isLoading;
     private string? selectedExceptionType;
     private string searchText = string.Empty;
-    private long? expandedErrorId;
+    private long? expandedExceptionId;
     private string? lastCopiedId;
     private Timer? timer;
     private SortColumn currentSortColumn = SortColumn.Timestamp;
@@ -169,30 +169,30 @@
     private List<TraceDetail> expandedTraceDetails = [];
     private bool isLoadingTraceContext;
 
-    private IReadOnlyList<ErrorEntry> FilteredAndSortedErrors => SortErrors(FilteredErrors).ToList();
+    private IReadOnlyList<ExceptionEntry> FilteredAndSortedExceptions => SortExceptions(FilteredExceptions).ToList();
 
-    private IEnumerable<ErrorEntry> FilteredErrors =>
-        errors
-            .Where(error => string.IsNullOrWhiteSpace(selectedExceptionType) || error.ExceptionType == selectedExceptionType)
+    private IEnumerable<ExceptionEntry> FilteredExceptions =>
+        exceptions
+            .Where(exceptionEntry => string.IsNullOrWhiteSpace(selectedExceptionType) || exceptionEntry.ExceptionType == selectedExceptionType)
             .Where(MatchesSearch);
 
     private List<string> ExceptionTypes =>
-        errors
-            .Select(error => error.ExceptionType)
+        exceptions
+            .Select(exceptionEntry => exceptionEntry.ExceptionType)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(exceptionType => exceptionType, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadErrorsAsync();
+        await LoadExceptionsAsync();
 
         timer = new Timer(2500);
         timer.Elapsed += async (_, _) =>
         {
             await InvokeAsync(async () =>
             {
-                await LoadErrorsAsync();
+                await LoadExceptionsAsync();
                 StateHasChanged();
             });
         };
@@ -200,15 +200,15 @@
         timer.Start();
     }
 
-    private async Task LoadErrorsAsync()
+    private async Task LoadExceptionsAsync()
     {
         isLoading = true;
         try
         {
-            errors = await LogService.GetLatestErrorsAsync();
-            if (expandedErrorId.HasValue && errors.All(error => error.Id != expandedErrorId.Value))
+            exceptions = await LogService.GetLatestExceptionsAsync();
+            if (expandedExceptionId.HasValue && exceptions.All(exceptionEntry => exceptionEntry.Id != expandedExceptionId.Value))
             {
-                expandedErrorId = null;
+                expandedExceptionId = null;
                 expandedRequest = null;
                 expandedTraceDetails = [];
             }
@@ -216,7 +216,7 @@
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            errors = [];
+            exceptions = [];
         }
         finally
         {
@@ -224,17 +224,17 @@
         }
     }
 
-    private async Task ToggleExpandedAsync(ErrorEntry error)
+    private async Task ToggleExpandedAsync(ExceptionEntry exceptionEntry)
     {
-        if (expandedErrorId == error.Id)
+        if (expandedExceptionId == exceptionEntry.Id)
         {
-            expandedErrorId = null;
+            expandedExceptionId = null;
             expandedRequest = null;
             expandedTraceDetails = [];
             return;
         }
 
-        expandedErrorId = error.Id;
+        expandedExceptionId = exceptionEntry.Id;
         expandedRequest = null;
         expandedTraceDetails = [];
         isLoadingTraceContext = true;
@@ -242,8 +242,8 @@
 
         try
         {
-            var requestTask = LogService.GetRequestByTraceIdAsync(error.TraceId);
-            var detailsTask = LogService.GetTraceDetailsAsync(error.TraceId);
+            var requestTask = LogService.GetRequestByTraceIdAsync(exceptionEntry.TraceId);
+            var detailsTask = LogService.GetTraceDetailsAsync(exceptionEntry.TraceId);
 
             await Task.WhenAll(requestTask, detailsTask);
 
@@ -282,18 +282,18 @@
         return Task.CompletedTask;
     }
 
-    private bool MatchesSearch(ErrorEntry error)
+    private bool MatchesSearch(ExceptionEntry exceptionEntry)
     {
         if (string.IsNullOrWhiteSpace(searchText))
         {
             return true;
         }
 
-        return error.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            || error.TraceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            || error.Endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            || error.ErrorMethod.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            || error.ExceptionType.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+        return exceptionEntry.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || exceptionEntry.TraceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || exceptionEntry.Endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || exceptionEntry.ErrorMethod.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || exceptionEntry.ExceptionType.Contains(searchText, StringComparison.OrdinalIgnoreCase);
     }
 
     private void SetSort(SortColumn column)
@@ -328,26 +328,26 @@
         return DateTimeOffset.MinValue;
     }
 
-    private IEnumerable<ErrorEntry> SortErrors(IEnumerable<ErrorEntry> source) => currentSortColumn switch
+    private IEnumerable<ExceptionEntry> SortExceptions(IEnumerable<ExceptionEntry> source) => currentSortColumn switch
     {
         SortColumn.Timestamp => isSortAscending
-            ? source.OrderBy(error => ParseTimestamp(error.Timestamp)).ThenBy(error => error.Timestamp, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => ParseTimestamp(error.Timestamp)).ThenByDescending(error => error.Timestamp, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => ParseTimestamp(exceptionEntry.Timestamp)).ThenBy(exceptionEntry => exceptionEntry.Timestamp, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => ParseTimestamp(exceptionEntry.Timestamp)).ThenByDescending(exceptionEntry => exceptionEntry.Timestamp, StringComparer.OrdinalIgnoreCase),
         SortColumn.Method => isSortAscending
-            ? source.OrderBy(error => error.ErrorMethod, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => error.ErrorMethod, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => exceptionEntry.ErrorMethod, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => exceptionEntry.ErrorMethod, StringComparer.OrdinalIgnoreCase),
         SortColumn.Exception => isSortAscending
-            ? source.OrderBy(error => error.ExceptionType, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => error.ExceptionType, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => exceptionEntry.ExceptionType, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => exceptionEntry.ExceptionType, StringComparer.OrdinalIgnoreCase),
         SortColumn.Message => isSortAscending
-            ? source.OrderBy(error => error.Message, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => error.Message, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => exceptionEntry.Message, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => exceptionEntry.Message, StringComparer.OrdinalIgnoreCase),
         SortColumn.Endpoint => isSortAscending
-            ? source.OrderBy(error => error.Endpoint, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => error.Endpoint, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => exceptionEntry.Endpoint, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => exceptionEntry.Endpoint, StringComparer.OrdinalIgnoreCase),
         SortColumn.TraceId => isSortAscending
-            ? source.OrderBy(error => error.TraceId, StringComparer.OrdinalIgnoreCase)
-            : source.OrderByDescending(error => error.TraceId, StringComparer.OrdinalIgnoreCase),
+            ? source.OrderBy(exceptionEntry => exceptionEntry.TraceId, StringComparer.OrdinalIgnoreCase)
+            : source.OrderByDescending(exceptionEntry => exceptionEntry.TraceId, StringComparer.OrdinalIgnoreCase),
         _ => source
     };
 

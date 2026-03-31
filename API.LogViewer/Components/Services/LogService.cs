@@ -9,7 +9,7 @@ public interface ILogService
         Task<RequestEntry?> GetRequestByTraceIdAsync(string traceId);
         Task<List<TraceDetail>> GetTraceDetailsAsync(string traceId);
         Task<List<QuerySummary>> GetQuerySummariesAsync();
-        Task<List<ErrorEntry>> GetLatestErrorsAsync(int limit = 200);
+        Task<List<ExceptionEntry>> GetLatestExceptionsAsync(int limit = 200);
 }
 
 public class LogService : ILogService
@@ -76,7 +76,7 @@ public class LogService : ILogService
         const string sql = @"
             SELECT 'SQL' as Type, QueryText, ElapsedMS, Timestamp FROM QueryLogs WHERE TraceId = @tid
             UNION ALL
-            SELECT 'ERROR' as Type, Message || CHAR(10) || StackTrace, 0, Timestamp FROM ErrorLogs WHERE TraceId = @tid
+            SELECT 'EXCEPTION' as Type, Message || CHAR(10) || StackTrace, 0, Timestamp FROM Exceptions WHERE TraceId = @tid
             ORDER BY Timestamp ASC";
 
         using var cmd = new SqliteCommand(sql, conn);
@@ -135,37 +135,86 @@ public class LogService : ILogService
 
     public async Task<List<QuerySummary>> GetQuerySummariesAsync()
     {
-        var summaries = new List<QuerySummary>();
+        var queryLogs = new List<QueryLogProjection>();
 
         using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT QueryText, AVG(ElapsedMS) AS AvgElapsedMs, COUNT(*) AS ExecutionCount, MAX(Timestamp) AS LatestTimestamp
-            FROM QueryLogs
+            SELECT q.QueryText,
+                   q.ElapsedMS,
+                   q.Timestamp,
+                   COALESCE(r.Endpoint, '') AS Endpoint
+            FROM QueryLogs q
+            LEFT JOIN Requests r ON r.ID = (
+                SELECT MAX(r2.ID)
+                FROM Requests r2
+                WHERE r2.TraceId = q.TraceId
+            )
             WHERE QueryText IS NOT NULL AND TRIM(QueryText) <> ''
-            GROUP BY QueryText
-            ORDER BY LatestTimestamp DESC";
+            ORDER BY q.Timestamp DESC";
 
         using var cmd = new SqliteCommand(sql, conn);
         using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
-            summaries.Add(new QuerySummary(
+            queryLogs.Add(new QueryLogProjection(
                 reader.GetString(0),
                 reader.IsDBNull(1) ? 0 : reader.GetDouble(1),
-                reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                 reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
             ));
         }
 
-        return summaries;
+        return queryLogs
+            .GroupBy(log => log.QueryText, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var endpoints = group
+                    .Select(log => NormalizeEndpoint(log.Endpoint))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(endpoint => endpoint, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                return new QuerySummary(
+                    group.Key,
+                    group.Average(log => log.ElapsedMs),
+                    group.Count(),
+                    group.Max(log => log.Timestamp),
+                    endpoints);
+            })
+            .OrderByDescending(summary => summary.LatestTimestamp, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
-    public async Task<List<ErrorEntry>> GetLatestErrorsAsync(int limit = 200)
+    private static string NormalizeEndpoint(string endpoint)
     {
-        var errors = new List<ErrorEntry>();
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            return "Unknown endpoint";
+        }
+
+        var path = endpoint;
+        var querySeparatorIndex = path.IndexOf('?');
+        if (querySeparatorIndex >= 0)
+        {
+            path = path[..querySeparatorIndex];
+        }
+
+        var segments = path
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Select(segment => long.TryParse(segment, out _) || Guid.TryParse(segment, out _) ? "{id}" : segment)
+            .ToArray();
+
+        return segments.Length == 0 ? "/" : $"/{string.Join('/', segments)}";
+    }
+
+    private sealed record QueryLogProjection(string QueryText, double ElapsedMs, string Timestamp, string Endpoint);
+
+    public async Task<List<ExceptionEntry>> GetLatestExceptionsAsync(int limit = 200)
+    {
+        var exceptions = new List<ExceptionEntry>();
 
         using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync();
@@ -174,7 +223,7 @@ public class LogService : ILogService
         {
             const string sql = @"
                 SELECT ID, Timestamp, TraceId, ErrorMethod, ExceptionType, Message, StackTrace, StackTraceHash, ExceptionSource, TargetSite, Endpoint
-                FROM ErrorLogs
+                FROM Exceptions
                 ORDER BY ID DESC
                 LIMIT @limit";
 
@@ -184,7 +233,7 @@ public class LogService : ILogService
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                errors.Add(new ErrorEntry(
+                exceptions.Add(new ExceptionEntry(
                     reader.GetInt64(0),
                     reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                     reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
@@ -203,7 +252,7 @@ public class LogService : ILogService
         {
             const string legacySql = @"
                 SELECT ID, Timestamp, TraceId, ExceptionType, Message, StackTrace, Endpoint
-                FROM ErrorLogs
+                FROM Exceptions
                 ORDER BY ID DESC
                 LIMIT @limit";
 
@@ -213,7 +262,7 @@ public class LogService : ILogService
             using var legacyReader = await legacyCmd.ExecuteReaderAsync();
             while (await legacyReader.ReadAsync())
             {
-                errors.Add(new ErrorEntry(
+                exceptions.Add(new ExceptionEntry(
                     legacyReader.GetInt64(0),
                     legacyReader.IsDBNull(1) ? string.Empty : legacyReader.GetString(1),
                     legacyReader.IsDBNull(2) ? string.Empty : legacyReader.GetString(2),
@@ -229,7 +278,7 @@ public class LogService : ILogService
             }
         }
 
-        return errors;
+        return exceptions;
     }
 }
 

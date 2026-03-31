@@ -18,6 +18,7 @@ namespace API;
 // OpenAPI scheme hosted at: http://localhost:9090/openapi/v1.json
 
 // TODO:
+// Regenerate API SDK
 // Refactors:
 // - Remove docker entirely. Use install and run script instead.
 // - Uniform error handling. In svelte, add a CreateFail function to ApiError so that we can return after !res.ok something like: return res.error.fail()
@@ -25,7 +26,7 @@ namespace API;
 // v1:
 // Figure out logging out -> if log out, how log back in? We need way to identify user so they can log back in.
 // - Admin: force logout users, (decouple IP from user)
-// - Change participants in active game sessions
+// - Change participants in active game sessions (e.g. change name)
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
@@ -35,11 +36,17 @@ namespace API;
 // - Hide button for the role info
 // - Logout endpoitn and button
 // - Management panels for deleting and updating resources
+// - Ruleset details
 // - Timer management
 // - Hide timer if no current timer.
 // Wrong parameters gave a 200 OK response. Maybe svelte issue.
+// Names should be unique
+// Status 400 logged as status 200
+// After time runs out, adding time using adjust timer gives status 400.
+
 
 // v2:
+// - Make backup of client sdk before regenerating it.
 // - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, nemesis, etc.
 // - Testing project with unit and/or integration tests
 // - Performance testing
@@ -70,7 +77,7 @@ Error: Cannot use `cookies.set(...)` after the response has been generated
     at invalidate_session (src\lib\tokens.svelte.ts:33:10)
     at load (src\routes\game\(authenticated)\me\+page.server.ts:22:13)
 */
-// On enter Manage games -> Delete modal
+// On enter Manage games -> Delete modal <-- probably fixed
 
 
 public class Program
@@ -222,6 +229,9 @@ public class Program
         var app = builder.Build();
         app.UseCors("Cors");
         app.UseRouting();
+#if DEBUG
+        app.UseMiddleware<DebugLoggingMiddleware>();
+#endif
 
         if (!isGeneratingDocs && !EF.IsDesignTime)
         {
@@ -270,8 +280,8 @@ public class Program
             return await next(context);
         });
         apiGroup
-            .AddEndpointFilter<RequestLoggingFilter>()
-            .AddEndpointFilter<ExceptionLoggingFilter>()
+            //.AddEndpointFilter<RequestLoggingFilter>()
+            //.AddEndpointFilter<ExceptionLoggingFilter>()
             .AddEndpointFilter<DebugRequireSaveChangesFilter>();
 #endif
 
@@ -318,7 +328,7 @@ public class Program
                 Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS ErrorLogs (
+            CREATE TABLE IF NOT EXISTS Exceptions (
                 ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 TraceId TEXT,
@@ -343,40 +353,15 @@ public class Program
 
             CREATE INDEX IF NOT EXISTS idx_requests_trace ON Requests (TraceId);
             CREATE INDEX IF NOT EXISTS idx_queries_request ON QueryLogs (TraceId);
-            CREATE INDEX IF NOT EXISTS idx_errors_trace ON ErrorLogs (TraceId);
-            CREATE INDEX IF NOT EXISTS idx_errors_timestamp ON ErrorLogs (Timestamp);
-            CREATE INDEX IF NOT EXISTS idx_errors_stackhash ON ErrorLogs (StackTraceHash);
+            CREATE INDEX IF NOT EXISTS idx_exceptions_trace ON Exceptions (TraceId);
+            CREATE INDEX IF NOT EXISTS idx_exceptions_timestamp ON Exceptions (Timestamp);
+            CREATE INDEX IF NOT EXISTS idx_exceptions_stackhash ON Exceptions (StackTraceHash);
             CREATE INDEX IF NOT EXISTS idx_queries_timestamp ON QueryLogs (Timestamp);
         ";
 
         command.ExecuteNonQuery();
 
-        EnsureColumnExists(connection, "ErrorLogs", "StackTraceHash", "TEXT");
-        EnsureColumnExists(connection, "ErrorLogs", "ExceptionSource", "TEXT");
-        EnsureColumnExists(connection, "ErrorLogs", "TargetSite", "TEXT");
-        EnsureColumnExists(connection, "ErrorLogs", "ErrorMethod", "TEXT");
-
         Console.WriteLine($"Database created at: {Path.GetFullPath(connection.DataSource)}");
-    }
-
-    private static void EnsureColumnExists(Microsoft.Data.Sqlite.SqliteConnection connection, string tableName, string columnName, string columnType)
-    {
-        using var checkCommand = connection.CreateCommand();
-        checkCommand.CommandText = $"PRAGMA table_info({tableName});";
-
-        using var reader = checkCommand.ExecuteReader();
-        while (reader.Read())
-        {
-            var existingColumnName = reader.GetString(1);
-            if (string.Equals(existingColumnName, columnName, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-        }
-
-        using var alterCommand = connection.CreateCommand();
-        alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnType};";
-        alterCommand.ExecuteNonQuery();
     }
 
     private static void ApplyDatabaseMigrations(WebApplication app)

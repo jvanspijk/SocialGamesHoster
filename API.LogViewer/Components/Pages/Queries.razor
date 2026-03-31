@@ -17,13 +17,20 @@
 
     <Table TItem="QuerySummary"
                   Items="FilteredAndSortedSummaries"
-                  ColumnCount="4"
+                  ColumnCount="5"
                   SearchText="@searchText"
                   SearchTextChanged="OnSearchChanged"
-                  SearchPlaceholder="Search SQL text..."
+                  SearchPlaceholder="Search SQL text or endpoints..."
                   EmptyText="No query logs were found."
                   CountLabel="queries">
         <ToolbarContent>
+            <select class="form-select" style="max-width: 300px;" @bind="selectedEndpointFilter">
+                <option value="">All endpoints</option>
+                @foreach (var endpoint in AvailableEndpoints)
+                {
+                    <option value="@endpoint">@endpoint</option>
+                }
+            </select>
             <select class="form-select" style="max-width: 240px;" @bind="selectedActivityFilter">
                 <option value="all">All activity</option>
                 <option value="high">High activity (5+ executions)</option>
@@ -47,6 +54,7 @@
                         Avg Duration @GetSortIndicator(SortColumn.AverageDuration)
                     </button>
                 </th>
+                <th style="width: 280px;">Endpoints</th>
                 <th class="pe-4" style="width: 140px;">
                     <button type="button" class="sort-header" @onclick="() => SetSort(SortColumn.Executions)">
                         Executions @GetSortIndicator(SortColumn.Executions)
@@ -61,6 +69,14 @@
                     <pre class="m-0"><code>@summary.QueryText</code></pre>
                 </td>
                 <td class="text-muted">@summary.AverageElapsedMs.ToString("N2") ms</td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach (var endpoint in summary.Endpoints)
+                        {
+                            <span class="badge app-badge-neutral query-endpoint-badge">@endpoint</span>
+                        }
+                    </div>
+                </td>
                 <td class="pe-4 text-muted">@summary.ExecutionCount</td>
             </tr>
         </RowTemplate>
@@ -74,13 +90,22 @@
     private bool isSortAscending;
     private string searchText = string.Empty;
     private string selectedActivityFilter = "all";
+    private string selectedEndpointFilter = string.Empty;
 
     private IReadOnlyList<QuerySummary> FilteredAndSortedSummaries => SortSummaries(FilteredSummaries).ToList();
 
     private IEnumerable<QuerySummary> FilteredSummaries =>
         querySummaries
             .Where(MatchesSearch)
+            .Where(MatchesEndpointFilter)
             .Where(MatchesActivityFilter);
+
+    private IReadOnlyList<string> AvailableEndpoints =>
+        querySummaries
+            .SelectMany(summary => summary.Endpoints)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(endpoint => endpoint, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -159,7 +184,8 @@
             return true;
         }
 
-        return summary.QueryText.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+        return summary.QueryText.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || summary.Endpoints.Any(endpoint => endpoint.Contains(searchText, StringComparison.OrdinalIgnoreCase));
     }
 
     private bool MatchesActivityFilter(QuerySummary summary) => selectedActivityFilter switch
@@ -168,6 +194,16 @@
         "slow" => summary.AverageElapsedMs >= 100,
         _ => true
     };
+
+    private bool MatchesEndpointFilter(QuerySummary summary)
+    {
+        if (string.IsNullOrWhiteSpace(selectedEndpointFilter))
+        {
+            return true;
+        }
+
+        return summary.Endpoints.Contains(selectedEndpointFilter, StringComparer.OrdinalIgnoreCase);
+    }
 
     private IEnumerable<QuerySummary> SortSummaries(IEnumerable<QuerySummary> source) => currentSortColumn switch
     {

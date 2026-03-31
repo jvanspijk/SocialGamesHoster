@@ -72,7 +72,7 @@ public sealed class SqliteLogger : ILogger, IDisposable
                 }
 
                 cmd.CommandText = @"
-                    INSERT INTO ErrorLogs (TraceId, ErrorMethod, ExceptionType, Message, StackTrace, StackTraceHash, ExceptionSource, TargetSite, Endpoint)
+                    INSERT INTO Exceptions (TraceId, ErrorMethod, ExceptionType, Message, StackTrace, StackTraceHash, ExceptionSource, TargetSite, Endpoint)
                     VALUES (@tid, @method, @type, @msg, @stack, @hash, @source, @target, @endpoint)";
                 cmd.Parameters.AddWithValue("@tid", traceId ?? "N/A");
                 cmd.Parameters.AddWithValue("@method", dict.GetValueOrDefault("Method")?.ToString() ?? string.Empty);
