@@ -10,8 +10,7 @@ public static class AdjustTimer
     public readonly record struct Response(int RemainingSeconds);
     public static async Task<Results<Ok<Response>, ProblemHttpResult>> HandleAsync(IGameTimer timer, IHubContext<TimersHub, ITimersHub> hub, Request request)
     {
-        //TODO: fix the logic below
-        if(timer.RemainingTime.TotalSeconds - request.DeltaSeconds < 0)
+        if(timer.RemainingTime.TotalSeconds + request.DeltaSeconds < 0)
         {                
             return APIResults.BadRequest("Cannot reduce time below zero.");                
         }
