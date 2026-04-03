@@ -6,14 +6,8 @@
 	import { onMount } from 'svelte';
 	import { SendMessage } from '$lib/client/Chat/SendMessage';
 
-	function generateID() {
-		const timestamp = new Date().getTime();
-		const randomNum = Math.floor(Math.random() * 10000);
-		return `id-${timestamp}-${randomNum}`;
-	}
-
 	interface Message {
-		id: string;
+		id: number;
 		text: string;
 		sender: string;
 		isMe: boolean;
@@ -74,11 +68,13 @@
         const textToSend = newMessage;
         const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        messages.push({ id: generateID(), text: textToSend, sender: "You", isMe: true, time: timestamp });
-        newMessage = '';
-
         try {
-            await SendMessage(fetch, { channelId, playerId: readerId, message: textToSend });
+            const res = await SendMessage(fetch, { channelId, playerId: readerId, message: textToSend });
+			if(!res.ok) {
+				throw new Error(res.error?.detail);
+			}
+			messages.push({ id: res.data.messageId, text: textToSend, sender: "You", isMe: true, time: timestamp });
+			newMessage = '';
         } catch (err) {
             console.error("Failed to send message:", err);
         }
@@ -132,7 +128,7 @@
                     <TextInput 
                         bind:value={newMessage} 
                         placeholder="Type a message..." 
-                        on:keydown={(e: KeyboardEvent) => e.key === 'Enter' && sendMessage()}
+                        onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && sendMessage()}
                     />
                 </div>
                 <div class="send-wrapper">
