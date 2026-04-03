@@ -5,6 +5,7 @@
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
     import type { GetAllRulesetsResponse } from '$lib/client/Rulesets/GetAllRulesets';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 
     let { data }: PageProps = $props();
@@ -33,7 +34,7 @@
                 <td data-label="Ruleset">{ruleset.name}</td>
                 <td>
                     <div class="actions-wrapper">
-                        <SecondaryButton onclick={() => goto(`/admin/rulesets/${ruleset.id}`)}>Edit</SecondaryButton>
+                        <SecondaryButton onclick={() => goto(resolve(`/admin/rulesets/${ruleset.id}`))}>Edit</SecondaryButton>
                         <SecondaryButton variant="danger" onclick={() => {}}>Delete</SecondaryButton>
                     </div>
                 </td>

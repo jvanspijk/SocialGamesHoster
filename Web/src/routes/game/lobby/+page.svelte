@@ -4,13 +4,14 @@
     import { goto } from '$app/navigation';
 	import MainButton from '$lib/components/MainButton.svelte';
     import MainSelect from '$lib/components/MainSelect.svelte';
+    import { resolve } from '$app/paths';
 
     let { data }: PageProps = $props();
     let games = $derived((data.games as GetActiveGameSessionsResponse[] | undefined) ?? []);
 
-    let message = $state("");
-    let isLoading = $state(false);
-    let selectedGameId = $state(null);
+    let message: string = $state("");
+    let isLoading: boolean = $state(false);
+    let selectedGameId: number | null= $state(null);
 
     async function handleJoin() {
         console.debug(`Joining game ${selectedGameId}`);
@@ -18,7 +19,7 @@
             return;
         }
 
-        await goto(`/game/login/${selectedGameId}`);
+        await goto(resolve(`/game/login/${selectedGameId}`));
     };    
 </script>
 

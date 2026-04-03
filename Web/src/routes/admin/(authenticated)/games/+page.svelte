@@ -6,6 +6,7 @@
 	import BackLink from '$lib/components/BackLink.svelte';
     import { DeleteGameSession } from '$lib/client/GameSessions/DeleteGameSession';
     import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
+    import { resolve } from '$app/paths';
 
 
     let { data } = $props();
@@ -67,7 +68,7 @@
             <td data-label="Status"><span class="status-stamp">{game.status}</span></td>
             <td>
                 <div class="actions-wrapper">
-                    <SecondaryButton onclick={() => goto(`/admin/games/${game.id}`)}>Manage</SecondaryButton>
+                    <SecondaryButton onclick={() => goto(resolve(`/admin/games/${game.id}`))}>Manage</SecondaryButton>
                     <SecondaryButton variant="danger" onclick={() => openDeleteModal(game.id)}>Delete</SecondaryButton>
                 </div>
             </td>
@@ -75,14 +76,15 @@
     {/snippet}
 </LedgerTable>
 
-<ConfirmationModal
-    bind:isOpen={isDeleteModalOpen}
-    title="Delete Game Session"
-    message="Are you sure you want to delete this session? This action cannot be undone."
-    confirmText={isDeleting ? "Deleting..." : "Delete Session"}
-    onConfirm={handleDelete}
-    onCancel={() => (isDeleteModalOpen = false)}
-/>
+{#if isDeleteModalOpen}
+    <ConfirmationModal
+        title="Delete Game Session"
+        message="Are you sure you want to delete this session? This action cannot be undone."
+        confirmText={isDeleting ? "Deleting..." : "Delete Session"}
+        onConfirm={handleDelete}
+        onCancel={() => (isDeleteModalOpen = false)}
+    />
+{/if}
 
 <style>
     :global(th) {
