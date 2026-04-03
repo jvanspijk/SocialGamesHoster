@@ -10,6 +10,7 @@
 	import ChatToggle from '$lib/components/ChatToggle.svelte';
     import ChatChannel from '$lib/components/ChatChannel.svelte';
 
+    let hideRoleInfo = $state(false);
     let isChatOpen = $state(false);
     let hasNewMessages = $state(true); // Example: start with a notification
 
@@ -46,12 +47,15 @@
         <div class="character-sheet">                   
             <header class="sheet-header">
                 <h1>{player.name}</h1>
+                {#if !hideRoleInfo}
                 <h3 class="role-title">The {role?.name || 'Unassigned'}</h3>
+                {/if}
+                <button class="toggle-btn" onclick={() => hideRoleInfo = !hideRoleInfo}>Toggle role info.</button>
             </header>
 
-            <Description text={role?.description} isHidden={!role}/>
+            <Description text={role?.description} isHidden={!role || hideRoleInfo}/>
 
-            {#if role?.abilities && role.abilities.length > 0}
+            {#if !hideRoleInfo && role?.abilities && role.abilities.length > 0}
                 <section class="abilities-section">
                     <h2>Abilities</h2>
                     <ul class="abilities-list">
