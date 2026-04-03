@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms';
     import LedgerTable from '$lib/components/LedgerTable.svelte';
     import SecondaryButton from '$lib/components/SecondaryButton.svelte';
+    import TimeDisplay from '$lib/components/TimeDisplay.svelte';
 
     import type { GetGamePlayersResponse } from '$lib/client/GameSessions/GetGamePlayers.js';
 	import { StartNewRound } from '$lib/client/GameSessions/StartNewRound.js';
@@ -186,8 +187,19 @@
     <HUDFooter>
         <div class="round-controls-mini">
             <span>Round #{data.currentRound?.id}</span>
-            
-            <!-- <TimeDisplay/> -->
+            {#if data.timer}
+                <TimeDisplay 
+                    initialSeconds={data.timer.totalSeconds} 
+                    remainingTime={data.timer.remainingSeconds}
+                    isTimerRunning={data.timer.isRunning}
+                    onFinished={() => {}}
+                />
+                <p>TODO: timer pause/resume button.</p>
+                <p>TODO: timer stop button.</p>
+                <p>TODO: timer adjust UI.</p>
+            {:else}
+                <p>TODO: timer start button.</p>
+            {/if}
         </div>        
     </HUDFooter>
 </div>
