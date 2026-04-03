@@ -1,5 +1,5 @@
 import type { Handle, HandleFetch } from '@sveltejs/kit';
-import { decode_jwt, get_token as get_session_token } from '$lib/tokens.svelte';
+import { decode_jwt, get_token as get_session_token } from '$lib/cookie_utils';
 
 export const handle: Handle = async ({ event, resolve }) => {
     const start = performance.now();

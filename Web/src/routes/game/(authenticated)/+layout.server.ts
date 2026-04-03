@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { invalidate_session } from '$lib/tokens.svelte';
+import { invalidate_session } from '$lib/cookie_utils';
 
 export const load = (async ({ locals, cookies }) => {
 	if (!locals.user || !locals.user.id || !locals.user.name) {

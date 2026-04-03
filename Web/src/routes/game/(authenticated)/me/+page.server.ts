@@ -2,7 +2,7 @@ import { GetTimerState } from '$lib/client/Timers/GetTimerState';
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { Me } from '$lib/client/Auth/Me';
-import { invalidate_session } from '$lib/tokens.svelte';
+import { invalidate_session } from '$lib/cookie_utils';
 
 export const load = (async ({ fetch, locals, cookies }) => {
 	if (!locals.user) {
@@ -17,18 +17,20 @@ export const load = (async ({ fetch, locals, cookies }) => {
 
 	if (!playerResponse.ok) {
         console.error('Player Data Error:', playerResponse.error);
+        const status = playerResponse.error?.status || 500;
         
-        if (playerResponse.error?.status === 401 || playerResponse.error?.status === 404) {
+        if (status === 401 || status === 404) {
             invalidate_session(cookies);
             throw redirect(302, '/game/lobby');
         }
 
         const message = playerResponse.error?.detail || 'Failed to load player';
-        error(playerResponse.error?.status || 500, message);
+        error(status, message);
     }
 
     if (!timerResponse.ok) {
-        error(timerResponse.error?.status || 500, timerResponse.error?.title || 'Timer failed');
+        const status = timerResponse.error?.status || 500;
+        error(status, timerResponse.error?.title || 'Timer failed');
     }
 
     return {

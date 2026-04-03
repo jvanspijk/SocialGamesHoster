@@ -11,29 +11,27 @@ export interface TokenContent {
     role: string;      // "admin" or roleId string
     jti: string;       // Unique token ID
     exp: number;       // Expiration timestamp
-}
+};
 
-const getOptions = () => ({
+const COOKIE_NAME = 'session_token';
+
+const COOKIE_OPTIONS = {
     path: '/',
     httpOnly: true,
     secure: false, // For local network setup
-    sameSite: 'lax' as const,
-    maxAge: SESSION_DURATION
-});
+    sameSite: 'lax' as const
+};
 
 export const set_token = (cookies: Cookies, token: string): void => {
-    cookies.set('session_token', token, getOptions());
+    cookies.set(COOKIE_NAME, token, {...COOKIE_OPTIONS, maxAge: SESSION_DURATION});
 };
 
 export const get_token = (cookies: Cookies): string | undefined => {
-    return cookies.get('session_token');
+    return cookies.get(COOKIE_NAME);
 };
 
 export const invalidate_session = (cookies: Cookies): void => {
-	cookies.delete('session_token', { 
-        path: '/', 
-        secure: false 
-    });
+	cookies.delete(COOKIE_NAME, COOKIE_OPTIONS);
 };
 
 /**

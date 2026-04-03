@@ -1,6 +1,6 @@
 import { AdminLogin } from '$lib/client/Auth/AdminLogin';
 import { fail, redirect } from '@sveltejs/kit';
-import { invalidate_session, set_token } from '$lib/tokens.svelte';
+import { invalidate_session, set_token } from '$lib/cookie_utils';
 import type { Actions } from './$types';
 
 export const actions: Actions = {

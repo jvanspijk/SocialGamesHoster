@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { CreatePlayer } from '$lib/client/Players/CreatePlayer';
 import { PlayerLogin } from '$lib/client/Auth/PlayerLogin';
-import { set_token, invalidate_session } from '$lib/tokens.svelte';
+import { set_token, invalidate_session } from '$lib/cookie_utils';
 
 export const load = (async ({ locals }) => {
     if (locals.user) {
