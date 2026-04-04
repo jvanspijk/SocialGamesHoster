@@ -9,6 +9,9 @@
     import Spacer from '$lib/components/Spacer.svelte';
 	import ChatToggle from '$lib/components/ChatToggle.svelte';
     import ChatChannel from '$lib/components/ChatChannel.svelte';
+	import IconToggleButton from '$lib/components/IconToggleButton.svelte';
+    import eyeOpenIcon from '$lib/assets/icons/eye-open.svg';
+    import eyeClosedIcon from '$lib/assets/icons/eye-closed.svg';
 
     let hideRoleInfo = $state(false);
     let isChatOpen = $state(false);
@@ -46,11 +49,10 @@
     {#if player}
         <div class="character-sheet">                   
             <header class="sheet-header">
-                <h1>{player.name}</h1>
+                <h1>{player.name}</h1>                
                 {#if !hideRoleInfo}
                 <h3 class="role-title">The {role?.name || 'Unassigned'}</h3>
-                {/if}
-                <button class="toggle-btn" onclick={() => hideRoleInfo = !hideRoleInfo}>Toggle role info.</button>
+                {/if}                
             </header>
 
             <Description text={role?.description} isHidden={!role || hideRoleInfo}/>
@@ -84,6 +86,13 @@
         <ChatToggle 
             hasNewMessage={hasNewMessages} 
             on:click={openChat} 
+        />     
+        <IconToggleButton
+            bind:pressed={hideRoleInfo}
+            onIconSrc={eyeOpenIcon}
+            offIconSrc={eyeClosedIcon}
+            label="Hide role information"
+            size={52}
         />
         <Spacer/>
         <TimeDisplay 
