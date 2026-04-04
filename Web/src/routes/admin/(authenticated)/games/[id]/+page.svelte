@@ -218,43 +218,43 @@
         padding: 40px;
         text-align: center;
         font-style: italic;
-        color: #7a634e;
+        color: var(--color-text-muted);
     }
 
     /* Action Buttons */
     .action-btn {
         background: none;
-        border: 1px solid #5b4a3c;
+        border: 1px solid var(--color-border);
         cursor: pointer;
         font-size: 1.2rem;
         padding: 5px 10px;
         filter: grayscale(1);
     }
-    .action-btn.active { filter: grayscale(0); background: #fcf5e5; }
+    .action-btn.active { filter: grayscale(0); background: var(--color-surface-soft); }
     .action-btn-danger {
         background: none;
-        border: 1px solid #a62a2a;
+        border: 1px solid var(--color-accent-strong);
         cursor: pointer;
         font-size: 1.2rem;
         padding: 5px 10px;
-        color: #a62a2a;
+        color: var(--color-accent-strong);
         margin-left: 5px;
     }
     .action-btn-danger:hover {
-        background: #a62a2a;
-        color: white;
+        background: var(--color-accent-strong);
+        color: var(--color-on-accent);
     }
     .action-cell {
         display: flex;
     }
 
-    .winner-highlight { font-weight: bold; color: #856404; text-decoration: underline; }
+    .winner-highlight { font-weight: bold; color: var(--color-warning-text); text-decoration: underline; }
 
     .sticky-action-bar {
         position: sticky;
         bottom: 0;
-        background: #f7e7c4;
-        border: 2px solid #5b4a3c;
+        background: var(--color-surface);
+        border: 2px solid var(--color-border);
         padding: 15px;
         margin-top: 20px;
         text-align: center;
@@ -262,9 +262,9 @@
     }
 
     .btn-finalize {
-        background: #5b4a3c;
-        color: #f7e7c4;
-        font-family: 'Cinzel', serif;
+        background: var(--color-border);
+        color: var(--color-surface);
+        font-family: var(--font-heading);
         padding: 15px 30px;
         border: none;
         cursor: pointer;
@@ -275,7 +275,7 @@
     .text-link {
         background: none;
         border: none;
-        color: #a62a2a;
+        color: var(--color-accent-strong);
         text-decoration: underline;
         cursor: pointer;
         margin-left: 10px;
@@ -283,7 +283,7 @@
 
     .ledger-select-inline {
         background: transparent;
-        border: 1px solid #5b4a3c;
+        border: 1px solid var(--color-border);
         font-family: inherit;
         padding: 2px;
     }

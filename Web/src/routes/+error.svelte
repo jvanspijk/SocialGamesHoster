@@ -97,13 +97,13 @@
 		font-size: 1.15rem;
 		font-style: italic;
 		margin-bottom: 0.25rem;
-		color: #5b4a3c;
+		color: var(--color-border);
 	}
 
 	.error-block {
 		text-align: left;
-		background: #fff9e6;
-		border: 2px solid #5b4a3c;
+		background: var(--color-surface-soft);
+		border: 2px solid var(--color-border);
 		border-radius: 4px;
 		padding: 0.85rem 1rem;
 		box-shadow: 2px 2px 0 rgba(91, 74, 60, 0.2);
@@ -112,8 +112,8 @@
 	.error-block h2 {
 		font-size: 1.2rem;
 		margin: 0 0 0.45rem;
-		color: #8c2a3e;
-		border-bottom: 1px solid #8c2a3e;
+		color: var(--color-accent);
+		border-bottom: 1px solid var(--color-accent);
 		padding-bottom: 0.35rem;
 	}
 
@@ -130,19 +130,19 @@
 	}
 
 	.validation-item {
-		background: #f7f3e8;
-		border: 1px solid #d4c5a1;
+		background: var(--color-surface-alt);
+		border: 1px solid var(--color-border-soft);
 		padding: 0.6rem 0.75rem;
 		border-radius: 3px;
 	}
 
 	.validation-item h3 {
 		margin: 0 0 0.35rem;
-		font-family: 'Cinzel', serif;
+		font-family: var(--font-heading);
 		font-size: 0.95rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: #5b4a3c;
+		color: var(--color-border);
 	}
 
 	.validation-item ul {

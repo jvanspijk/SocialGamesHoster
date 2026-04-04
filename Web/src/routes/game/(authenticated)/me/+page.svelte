@@ -114,14 +114,14 @@
     }
 
     .ability-item {
-        background-color: #f0e0b8;
+        background-color: var(--color-surface-alt);
         padding: 10px;
-        border-left: 5px solid #a62a2a;
+        border-left: 5px solid var(--color-accent-strong);
         box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
     }
     
     .ability-item strong {
-        font-family: 'Cinzel', serif;
-        color: #4f4135;
+        font-family: var(--font-heading);
+        color: var(--color-text);
     }
 </style>

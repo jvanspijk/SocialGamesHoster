@@ -32,17 +32,17 @@
 
 <style>
     .secondary-btn {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         font-weight: bold;
         padding: 2px 10px; 
         cursor: pointer;
-        border: 1px solid #5b4a3c;
-        background: #fcf5e5;
-        color: #5b4a3c;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-soft);
+        color: var(--color-border);
         text-transform: uppercase;
         font-size: 0.77rem;
         transition: all 0.1s ease;
-        box-shadow: 1px 1px 0px #5b4a3c;
+        box-shadow: 1px 1px 0px var(--color-border);
         line-height: 2.4;
         height: fit-content;
     }
@@ -53,25 +53,25 @@
     }
 
     .secondary-btn:not(:disabled).primary:hover {
-        background: #5b4a3c;
-        color: #f7e7c4;
+        background: var(--color-border);
+        color: var(--color-surface);
     }
 
     .secondary-btn:not(:disabled).danger:hover {
-        background: #a62a2a;
+        background: var(--color-accent-strong);
         color: white;
     }
 
     .danger {
-        color: #a62a2a;
-        border-color: #a62a2a;
+        color: var(--color-accent-strong);
+        border-color: var(--color-accent-strong);
     }
 
     .secondary-btn:disabled {
         cursor: not-allowed;
         filter: grayscale(0.8);
         opacity: 0.5;
-        box-shadow: 1px 1px 0px #5b4a3c;
+        box-shadow: 1px 1px 0px var(--color-border);
         border-style: dashed;
     }
 </style>

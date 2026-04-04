@@ -104,8 +104,8 @@
 
     .message-bar {
         text-align: center;
-        font-family: 'Cinzel', serif;
-        color: #a62a2a;
+        font-family: var(--font-heading);
+        color: var(--color-accent-strong);
         font-size: 1.1em;
         height: 1.5em;
     }

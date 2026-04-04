@@ -3,7 +3,7 @@
         title, 
         items = [], 
         icon = '✒️',
-        accentColor = '#5b4a3c' 
+        accentColor = 'var(--color-border)'
     } = $props<{
         title: string,
         items: string[],
@@ -37,9 +37,9 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: 'IM Fell English', serif;
+        font-family: var(--font-body);
         font-size: 1rem;
-        color: #3e322b;
+        color: var(--color-text);
         position: relative;
     }
 
@@ -70,8 +70,8 @@
         bottom: 130%;
         left: 50%;
         transform: translateX(-50%);
-        background-color: #fcf5e5; /* Lighter parchment */
-        border: 2px solid #5b4a3c;
+        background-color: var(--color-surface-soft); /* Lighter parchment */
+        border: 2px solid var(--color-border);
         box-shadow: 3px 3px 15px rgba(0,0,0,0.2);
         z-index: 100;
         min-width: 150px;
@@ -87,7 +87,7 @@
         margin-left: -8px;
         border-width: 8px;
         border-style: solid;
-        border-color: #5b4a3c transparent transparent transparent;
+        border-color: var(--color-border) transparent transparent transparent;
     }
 
     .ink-container:hover .scroll-popover {
@@ -95,7 +95,7 @@
     }
 
     h4 {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         font-size: 0.8rem;
         margin: 0 0 5px 0;
         border-bottom: 1px solid rgba(0,0,0,0.1);

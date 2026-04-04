@@ -17,7 +17,7 @@
 			height="24"
 			viewBox="0 0 24 24"
 			fill="none"
-			stroke="#f7e7c4"
+			stroke="var(--color-surface)"
 			stroke-width="2"
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -42,9 +42,9 @@
 
 	.toggle-button {
 		position: relative;
-		background: #5b4a3c;
+		background: var(--color-border);
 		color: white;
-		border: 2px solid #5b4a3c;
+		border: 2px solid var(--color-border);
 		border-radius: 50%;
 		width: 56px;
 		height: 56px;
@@ -58,7 +58,7 @@
 	}
 
 	.toggle-button:hover {
-		background: #6d5a4a;
+		background: var(--color-text-muted);
 		transform: scale(1.05);
 	}
 
@@ -72,15 +72,15 @@
 		right: 2px;
 		width: 14px;
 		height: 14px;
-		background-color: #ff4444;
+		background-color: var(--color-accent-strong);
 		border: 2px solid white;
 		border-radius: 50%;
 		animation: pulse 2s infinite;
 	}
 
 	@keyframes pulse {
-		0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-		70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(255, 68, 68, 0); }
-		100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+		0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(166, 42, 42, 0.7); }
+		70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(166, 42, 42, 0); }
+		100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(166, 42, 42, 0); }
 	}
 </style>

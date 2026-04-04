@@ -19,19 +19,19 @@
 	}
 
 	.primary {
-		background-color: #eef2ff;
-		color: #4338ca;
-		border-color: #e0e7ff;
+		background-color: var(--color-surface-soft);
+		color: var(--color-border);
+		border-color: var(--color-border-soft);
 	}
 
 	.secondary {
-		background-color: #f1f5f9;
-		color: #475569;
+		background-color: var(--color-surface-alt);
+		color: var(--color-text);
 	}
 
 	.outline {
-		background-color: white;
-		border-color: #e2e8f0;
-		color: #64748b;
+		background-color: var(--color-on-accent);
+		border-color: var(--color-border-soft);
+		color: var(--color-text-muted);
 	}
 </style>

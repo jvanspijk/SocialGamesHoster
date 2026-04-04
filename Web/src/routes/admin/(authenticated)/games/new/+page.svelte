@@ -77,26 +77,26 @@
     }
 
     h2 {
-        font-family: 'Cinzel', serif;
-        color: #5b4a3c;
+        font-family: var(--font-heading);
+        color: var(--color-border);
         text-transform: uppercase;
         letter-spacing: 2px;
         font-size: 2.5em;
         text-align: center;
-        border-bottom: 3px double #5b4a3c;
+        border-bottom: 3px double var(--color-border);
         padding-bottom: 15px;
         margin-bottom: 30px;
         text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
     }
     
     p:not(.ruleset-description) {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         font-size: 1.4em;
-        color: #8c2a3e;
+        color: var(--color-accent);
         text-align: left;
         margin-top: 30px;
         margin-bottom: 10px;
-        border-bottom: 1px solid #c9b48c;
+        border-bottom: 1px solid var(--color-border-soft);
         padding-bottom: 5px;
     }
 
@@ -106,7 +106,7 @@
     }    
 
     button {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         text-transform: uppercase;
         letter-spacing: 1px;
         padding: 10px 20px;
@@ -115,29 +115,29 @@
         cursor: pointer;
         transition: background-color 0.2s, box-shadow 0.2s;
         
-        background-color: #8c2a3e;
-        color: #f7e7c4;
-        border: 2px solid #5b4a3c;
+        background-color: var(--color-accent);
+        color: var(--color-surface);
+        border: 2px solid var(--color-border);
         box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
         font-weight: 700;
         white-space: nowrap;
     }
 
     button:hover:not(:disabled) {
-        background-color: #a6384a;
+        background-color: var(--color-accent-strong);
         box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
     }
 
     button:disabled {
-        background-color: #5b4a3c;
-        color: #c9b48c;
+        background-color: var(--color-border);
+        color: var(--color-border-soft);
         cursor: not-allowed;
         box-shadow: none;
     }
 
     h3 {
-        font-family: 'Cinzel', serif;
-        color: #5b4a3c;
+        font-family: var(--font-heading);
+        color: var(--color-border);
         font-size: 1.5em;
         text-align: left;
         margin-top: 30px;
@@ -146,8 +146,8 @@
     
     .success-state {
         padding: 40px 20px;
-        background-color: #e7fce7;
-        border: 3px solid #387038;
+        background-color: var(--color-success-soft);
+        border: 3px solid var(--color-success);
         border-radius: 5px;
         text-align: center;
         margin-top: 50px;
@@ -155,14 +155,14 @@
 
     .success-state h3 {
         font-size: 2em;
-        color: #387038;
+        color: var(--color-success);
         margin-bottom: 15px;
     }
     
     .success-state p {
-        font-family: 'IM Fell English', serif;
+        font-family: var(--font-body);
         font-size: 1.3em;
-        color: #3e322b;
+        color: var(--color-text);
         margin-bottom: 30px;
         text-align: center;
     }

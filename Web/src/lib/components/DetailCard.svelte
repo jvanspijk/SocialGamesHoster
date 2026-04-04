@@ -9,19 +9,19 @@
 
 <style>
     .detail-card {
-        background-color: #f7f3e8;
-        border: 1px solid #d4c5a1;
+        background-color: var(--color-surface-alt);
+        border: 1px solid var(--color-border-soft);
         padding: 20px;
         box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
         border-radius: 4px;
     }
 
     .detail-card h2 {
-        font-family: 'Cinzel', serif;
-        color: #a62a2a;
+        font-family: var(--font-heading);
+        color: var(--color-accent-strong);
         margin-top: 0;
         margin-bottom: 10px;
-        border-bottom: 2px solid #a62a2a;
+        border-bottom: 2px solid var(--color-accent-strong);
         padding-bottom: 5px;
         font-size: 1.25em;
     }

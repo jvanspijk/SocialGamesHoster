@@ -27,15 +27,15 @@
 
 <style>
 	button {
-		font-family: 'Cinzel', serif;
+		font-family: var(--font-heading);
 		font-size: 1.2em;
 		text-transform: uppercase;
 		letter-spacing: 1.5px;
 		padding: 12px 24px;
 		margin: 12px 0;
 
-		color: #f7e7c4;
-		background-color: #a62a2a;
+		color: var(--color-surface);
+		background-color: var(--color-accent-strong);
 		border: none;
 		border-radius: 5px;
 
@@ -43,38 +43,38 @@
 		transition: all 0.2s ease-out;
 
 		box-shadow:
-			0 4px 0 0 #7a1d1d,
+			0 4px 0 0 var(--color-accent),
 			0 5px 8px rgba(0, 0, 0, 0.5);
 	}
 
 	button:hover:enabled {
-		background-color: #b83a3a;
+		background-color: var(--color-accent-strong);
 		transform: translateY(-1px);
 		box-shadow:
-			0 5px 0 0 #7a1d1d,
+			0 5px 0 0 var(--color-accent),
 			0 7px 10px rgba(0, 0, 0, 0.6);
 	}
 
 	button:active:enabled {
-		background-color: #7a1d1d;
+		background-color: var(--color-accent);
 		transform: translateY(3px);
 		box-shadow:
-			0 1px 0 0 #7a1d1d,
+			0 1px 0 0 var(--color-accent),
 			0 2px 5px rgba(0, 0, 0, 0.4);
 	}
 
 	button:focus-visible {
-		outline: 3px solid #f7e7c4;
+		outline: 3px solid var(--color-surface);
 		outline-offset: 2px;
 	}
 
 	button:disabled {
-		background-color: #5b4a3c;
-		color: #b3a598;
+		background-color: var(--color-border);
+		color: var(--color-text-disabled);
 		cursor: not-allowed;
 		transform: none;
 		box-shadow:
-			0 4px 0 0 #3e332a,
+			0 4px 0 0 var(--color-border-dark),
 			0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 </style>

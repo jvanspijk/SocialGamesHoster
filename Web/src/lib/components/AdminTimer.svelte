@@ -87,7 +87,7 @@
         justify-content: center;
         background: rgba(0, 0, 0, 0.4);
         border-radius: 50%;
-        color: #f7e7c4;
+        color: var(--color-surface);
         opacity: 0;
         transition: opacity 0.2s ease;
         pointer-events: none;

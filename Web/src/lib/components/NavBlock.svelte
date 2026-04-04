@@ -15,21 +15,21 @@
         display: flex;
         align-items: center;
         text-decoration: none;
-        background-color: #fcf5e5;
-        border: 2px solid #5b4a3c;
+        background-color: var(--color-surface-soft);
+        border: 2px solid var(--color-border);
         padding: 1.5rem;
         margin: 1rem 0;
         transition: all 0.2s ease-in-out;
-        box-shadow: 3px 3px 0px #5b4a3c;
+        box-shadow: 3px 3px 0px var(--color-border);
         cursor: pointer;
         text-align: left;
     }
 
     .nav-block:hover {
         transform: translate(-2px, -2px);
-        box-shadow: 6px 6px 0px #a62a2a;
-        background-color: #fffcf5;
-        border-color: #a62a2a;
+        box-shadow: 6px 6px 0px var(--color-accent-strong);
+        background-color: var(--color-on-accent)cf5;
+        border-color: var(--color-accent-strong);
     }
 
     .icon {
@@ -40,8 +40,8 @@
 
     h3 {
         margin: 0;
-        color: #a62a2a !important;
-        font-family: 'Cinzel', serif;
+        color: var(--color-accent-strong) !important;
+        font-family: var(--font-heading);
         font-style: normal !important;
         text-transform: uppercase;
         font-size: 1.2rem;
@@ -49,7 +49,7 @@
 
     p {
         margin: 4px 0 0 0;
-        color: #5b4a3c;
+        color: var(--color-border);
         font-size: 0.95rem;
         line-height: 1.2;
     }

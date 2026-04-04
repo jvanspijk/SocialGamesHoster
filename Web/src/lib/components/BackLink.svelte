@@ -22,12 +22,12 @@
 
 <style>
     .back-link {
-        font-family: 'Cinzel', serif;
-        color: #8b7355;
+        font-family: var(--font-heading);
+        color: var(--color-text-muted);
         text-decoration: none;
         font-size: 0.9rem;
         transition: color 0.2s;
     }
 
-    .back-link:hover { color: #5b4a3c; }
+    .back-link:hover { color: var(--color-border); }
 </style>

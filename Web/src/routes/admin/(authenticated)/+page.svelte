@@ -48,7 +48,7 @@
     h2 {
         text-align: left;
         font-size: 1.2rem;
-        border-bottom: 2px solid #5b4a3c;
+        border-bottom: 2px solid var(--color-border);
         margin-top: 1.5rem;
     }
 </style>

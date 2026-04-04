@@ -25,13 +25,13 @@
 
 <style>
 	select {
-		font-family: 'IM Fell English', serif;
+		font-family: var(--font-body);
 		font-size: 1.2em;
 		padding: 10px 15px;
-		background-color: #fff9e6;
-		border: 2px solid #5b4a3c;
+		background-color: var(--color-surface-soft);
+		border: 2px solid var(--color-border);
 		border-radius: 3px;
-		color: #3e322b;
+		color: var(--color-text);
 		display: block;
 		width: 320px;
 		max-width: 320px;
@@ -47,11 +47,11 @@
 	}
 
 	select:disabled {
-        background-color: #f2ede0;
-        border-color: #a09388;
-        color: #8a7e72;
-        cursor: not-allowed;
-        filter: grayscale(0.3);
-        opacity: 0.7;
-    }
+		background-color: var(--color-surface-alt);
+		border-color: var(--color-border-soft);
+		color: var(--color-text-muted);
+		cursor: not-allowed;
+		filter: grayscale(0.3);
+		opacity: 0.7;
+	}
 </style>

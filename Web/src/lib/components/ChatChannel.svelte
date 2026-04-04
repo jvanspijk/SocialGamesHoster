@@ -158,8 +158,8 @@
 		width: 95vw;
 		max-width: 600px;
 		height: 85vh;
-		background-color: #fff9e6; /* Parchment Color */
-		border: 4px solid #5b4a3c;
+		background-color: var(--color-surface-soft); /* Parchment Color */
+		border: 4px solid var(--color-border);
 		border-radius: 8px;
 		display: flex;
 		flex-direction: column;
@@ -168,14 +168,14 @@
 	}
 
 	header {
-		background: #3e322b;
+		background: var(--color-text);
 		padding: 15px 20px;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		border-bottom: 3px solid #5b4a3c;
-		color: #f7e7c4;
-		font-family: 'Cinzel', serif;
+		border-bottom: 3px solid var(--color-border);
+		color: var(--color-surface);
+		font-family: var(--font-heading);
 	}
 
 	.channel-info {
@@ -187,9 +187,9 @@
 	.status-dot {
 		width: 10px;
 		height: 10px;
-		background: #44ff44;
+		background: var(--color-success);
 		border-radius: 50%;
-		box-shadow: 0 0 8px #44ff44;
+		box-shadow: 0 0 8px var(--color-success);
 	}
 
 	h2 {
@@ -202,14 +202,14 @@
 	.close-btn {
 		background: none;
 		border: none;
-		color: #f7e7c4;
+		color: var(--color-surface);
 		font-size: 1.5rem;
 		cursor: pointer;
 		transition: color 0.2s;
 	}
 
 	.close-btn:hover {
-		color: #8c2a3e;
+		color: var(--color-accent);
 	}
 
 	.message-container {
@@ -219,9 +219,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		background-image: radial-gradient(#5b4a3c 0.5px, transparent 0.5px);
+		background-image: radial-gradient(var(--color-border) 0.5px, transparent 0.5px);
 		background-size: 20px 20px;
-		background-color: #fffdf5;
+		background-color: var(--color-surface-soft);
 	}
 
 	.message-wrapper {
@@ -237,21 +237,21 @@
 		padding: 4px 12px;
 		border-radius: 12px;
 		position: relative;
-		font-family: 'IM Fell English', serif;
+		font-family: var(--font-body);
 		font-size: 1.1rem;
-		border: 2px solid #5b4a3c;
+		border: 2px solid var(--color-border);
 		box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
 	}
 
 	.me .bubble {
-		background: #f7e7c4;
-		color: #3e322b;
+		background: var(--color-surface);
+		color: var(--color-text);
 		border-bottom-right-radius: 2px;
 	}
 
 	.them .bubble {
-		background: #ffffff;
-		color: #3e322b;
+		background: var(--color-on-accent);
+		color: var(--color-text);
 		border-bottom-left-radius: 2px;
 	}
 
@@ -259,7 +259,7 @@
 		display: block;
 		font-size: 0.8rem;
 		font-weight: bold;
-		color: #8c2a3e;
+		color: var(--color-accent);
 		margin-bottom: 4px;
 		text-transform: uppercase;
 	}
@@ -274,8 +274,8 @@
 
 	footer {
 		padding: 15px;
-		background: #3e322b;
-		border-top: 3px solid #5b4a3c;
+		background: var(--color-text);
+		border-top: 3px solid var(--color-border);
 		display: flex;
 		align-items: center;
 		gap: 10px;

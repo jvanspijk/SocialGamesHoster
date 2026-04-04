@@ -88,8 +88,8 @@
 <style>
     :global(th) {
         text-align: left;
-        font-family: 'Cinzel', serif;
-        border-bottom: 2px solid #5b4a3c;
+        font-family: var(--font-heading);
+        border-bottom: 2px solid var(--color-border);
         padding-bottom: 10px;
     }
     :global(td) {
@@ -100,7 +100,7 @@
         text-transform: uppercase;
         font-size: 0.8rem;
         font-weight: bold;
-        color: #a62a2a;
+        color: var(--color-accent-strong);
     }
 
     .actions-wrapper {

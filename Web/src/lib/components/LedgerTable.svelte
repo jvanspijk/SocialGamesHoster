@@ -133,12 +133,12 @@
         align-items: center;
         gap: 1rem;
         margin-top: 1.5rem;
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
     }
 
     .page-info {
         font-size: 0.9rem;
-        color: #5b4a3c;
+        color: var(--color-border);
     }
 
     .ledger-container {
@@ -157,11 +157,11 @@
     }
     
     .ledger-input, .ledger-select {
-        background: #fcf5e5;
-        border: 2px solid #5b4a3c;
-        font-family: 'IM Fell English', serif;
+        background: var(--color-surface-soft);
+        border: 2px solid var(--color-border);
+        font-family: var(--font-body);
         padding: 8px 8px 8px 35px;
-        color: #3e322b;
+        color: var(--color-text);
         width: 100%;
         box-sizing: border-box;
         font-size: 16px;
@@ -184,9 +184,9 @@
     }
 
     .ledger :global(th) {
-        font-family: 'Cinzel', serif;
-        border-bottom: 2px solid #5b4a3c;
-        color: #5b4a3c;
+        font-family: var(--font-heading);
+        border-bottom: 2px solid var(--color-border);
+        color: var(--color-border);
         text-transform: uppercase;
         letter-spacing: 1px;
         white-space: nowrap;
@@ -214,7 +214,7 @@
             border-bottom: none; 
         }
         .ledger {
-            border: 2px double #3e322b;
+            border: 2px double var(--color-text);
             border-radius: 2px;
         }
     }
@@ -227,7 +227,7 @@
             display: block;
             
             margin-bottom: 2rem;
-            border: 2px solid #5b4a3c;
+            border: 2px solid var(--color-border);
             padding: 15px;
             box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.1);
         }
@@ -249,10 +249,10 @@
 
         .ledger :global(td::before) {
             content: attr(data-label);
-            font-family: 'Cinzel', serif;
+            font-family: var(--font-heading);
             font-weight: bold;
             font-size: 0.75rem;
-            color: #5b4a3c;
+            color: var(--color-border);
             text-transform: uppercase;
         }
     }

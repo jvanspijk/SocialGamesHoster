@@ -119,17 +119,15 @@
 </div>
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-    
     .timer-wrapper {
         position: relative;
         width: 75px; 
         height: 75px;
-        background-color: #5b4a3c; 
+        background-color: var(--color-border); 
         border-radius: 50%;
         box-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 
                     inset 0 0 15px rgba(0, 0, 0, 0.9);
-        border: 2px solid #5b4a3c;
+        border: 2px solid var(--color-border);
         transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
         overflow: hidden;
     }
@@ -174,7 +172,7 @@
     }
 
     .inactive .ring-progress {
-        stroke: #a62a2a; 
+        stroke: var(--color-accent-strong); 
     }
 
     .progress-ring {
@@ -187,13 +185,13 @@
 
     .ring-track {
         fill: none;
-        stroke: #311e1c; 
+        stroke: var(--color-ink-deep);
         stroke-width: 6; 
     }
 
     .ring-progress {
         fill: none;
-        stroke: #a62a2a; 
+        stroke: var(--color-accent-strong); 
         stroke-width: 10;
         stroke-linecap: round;
         transition: stroke-dashoffset 0.05s linear;
@@ -204,20 +202,20 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         font-size: 1em;
         font-weight: 700;
-        color: #f7e7c4;         
+        color: var(--color-surface);         
         user-select: none;
     }
 
     .urgent .ring-progress {
-        stroke: #d48e15;
-        filter: drop-shadow(0 0 5px #d48e15);
+        stroke: var(--color-warning);
+        filter: drop-shadow(0 0 5px var(--color-warning));
     }
 
     .urgent .time-text {
-        color: #fff;
+        color: var(--color-on-accent);
         animation: pulse 1s infinite alternate;
     }
 

@@ -11,14 +11,14 @@
 
 <style>
     .description {
-        background-color: #e3d8b8;
-        border: 1px solid #c9b48c;
+        background-color: var(--color-surface-alt);
+        border: 1px solid var(--color-border-soft);
         padding: 15px;
         margin-top: 15px;
         border-radius: 3px;
         line-height: 1.5;
         font-size: 1.1em;
         text-align: left;
-        color: #3e322b;
+        color: var(--color-text);
     }
 </style>

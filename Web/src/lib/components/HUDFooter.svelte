@@ -24,14 +24,14 @@
         left: 0;
         width: 100%;
         z-index: 100;
-        background: #3e322b;
+        background: var(--color-text);
         
-        border-top: 3px solid #5b4a3c; 
+        border-top: 3px solid var(--color-border); 
         box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.7); 
         padding: 0;
         
-        font-family: 'Cinzel', serif;
-        color: #f7e7c4;
+        font-family: var(--font-heading);
+        color: var(--color-surface);
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
         letter-spacing: 1px;
         transition: transform 0.3s ease-in-out;
@@ -63,15 +63,15 @@
         display: flex;
         justify-content: center;
         width: 100%;
-        background-color: #3e322b;
-        border-bottom: 1px solid #5b4a3c;
+        background-color: var(--color-text);
+        border-bottom: 1px solid var(--color-border);
         height: 40px;
     }
 
     .toggle-control button {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         font-size: 1.4em;
-        color: #e7c58d;
+        color: var(--color-highlight);
         background: none;
         border: none;
         cursor: pointer;
@@ -84,13 +84,13 @@
     }
 
     .toggle-control button:hover {
-        color: #f7e7c4;
+        color: var(--color-surface);
     }
     
     :global(footer a), :global(footer button) {
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-heading);
         text-transform: uppercase;
-        color: #f7e7c4;
+        color: var(--color-surface);
         background: none;
         border: none;
         padding: 5px 10px;
@@ -100,6 +100,6 @@
     }
 
     :global(footer a:hover), :global(footer button:hover) {
-        color: #e7c58d;
+        color: var(--color-highlight);
     }
 </style>

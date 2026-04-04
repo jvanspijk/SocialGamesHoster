@@ -87,7 +87,7 @@
 	}
 
 	.modal-inner {
-		background: white;
+		background: var(--color-on-accent);
 		padding: 1.5rem;
 		border-radius: 12px;
 		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -99,11 +99,13 @@
 	h2 {
 		margin-top: 0;
 		font-size: 1.25rem;
-		color: #111827;
+		font-family: var(--font-heading);
+		color: var(--color-neutral-900);
 	}
 
 	p {
-		color: #4b5563;
+		font-family: var(--font-body);
+		color: var(--color-neutral-600);
 		margin-bottom: 2rem;
 		line-height: 1.5;
 	}
@@ -114,6 +116,7 @@
 	}
 
 	button {
+		font-family: var(--font-heading);
 		flex: 1;
 		padding: 0.75rem;
 		border: none;
@@ -129,13 +132,13 @@
 	}
 
 	.btn-cancel {
-		background: #f3f4f6;
-		color: #374151;
+		background: var(--color-neutral-100);
+		color: var(--color-neutral-700);
 	}
 
 	.btn-confirm {
-		background: #2563eb;
-		color: white;
+		background: var(--color-link);
+		color: var(--color-on-accent);
 	}
 
 	@media (max-width: 480px) {

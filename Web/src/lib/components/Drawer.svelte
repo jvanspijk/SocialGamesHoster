@@ -73,8 +73,8 @@
         display: flex;
         flex-direction: column;
         
-        background-color: #5b4a3c;
-        border-left: 4px solid #5b4a3c;
+        background-color: var(--color-border);
+        border-left: 4px solid var(--color-border);
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
     }
 
@@ -83,18 +83,18 @@
 
     .header {
         padding: 1.5rem;
-        border-bottom: 2px solid #e8e0c5;
+        border-bottom: 2px solid var(--color-border-soft);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: #f3edd7;
+        background-color: var(--color-surface-alt);
     }
 
     .title {
-        font-family: 'IM Fell English', serif;
+        font-family: var(--font-body);
         font-size: 1.75rem;
         font-weight: 700;
-        color: #3e322b;
+        color: var(--color-text);
         margin: 0;
     }
 
@@ -103,7 +103,7 @@
         border: 2px solid transparent;
         background: transparent;
         cursor: pointer;
-        color: #5b4a3c;
+        color: var(--color-border);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -112,23 +112,23 @@
     }
 
     .close-btn:hover {
-        color: #8c2a3e;
-        background-color: #e8e0c5;
-        border-color: #5b4a3c;
+        color: var(--color-accent);
+        background-color: var(--color-border-soft);
+        border-color: var(--color-border);
     }
 
     .content {
         flex: 1;
         overflow-y: auto;
         padding: 2rem;
-        background-image: radial-gradient(#5b4a3c11 1px, transparent 1px);
+        background-image: radial-gradient(var(--color-border)11 1px, transparent 1px);
         background-size: 20px 20px;
     }
 
     .footer {
         padding: 1.5rem;
-        border-top: 2px solid #e8e0c5;
-        background-color: #f3edd7;
+        border-top: 2px solid var(--color-border-soft);
+        background-color: var(--color-surface-alt);
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
