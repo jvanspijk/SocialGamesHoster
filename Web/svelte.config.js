@@ -10,7 +10,7 @@ const config = {
         adapter: adapter(),
         csrf: {
             // This allows connection via any IP or hostname
-            checkOrigin: false, 
+            trustedOrigins: ['*'], 
         }
     }
 };
