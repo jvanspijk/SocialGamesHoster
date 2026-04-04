@@ -83,31 +83,42 @@
 	}
 
 	dialog::backdrop {
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(34, 27, 22, 0.65);
 	}
 
 	.modal-inner {
-		background: var(--color-on-accent);
+		background: var(--color-surface-soft);
+		color: var(--color-text);
 		padding: 1.5rem;
-		border-radius: 12px;
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+		border-radius: 3px;
+		border: 2px solid var(--color-border);
+		box-shadow:
+			0 8px 18px rgba(0, 0, 0, 0.45),
+			inset 0 0 24px rgba(91, 74, 60, 0.15),
+			2px 2px 0 rgba(91, 74, 60, 0.35);
 		width: 90vw;
-		max-width: 400px;
+		max-width: 430px;
 		text-align: center;
 	}
 
 	h2 {
 		margin-top: 0;
-		font-size: 1.25rem;
+		margin-bottom: 0.65rem;
+		font-size: 1.35rem;
 		font-family: var(--font-heading);
-		color: var(--color-neutral-900);
+		color: var(--color-border);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		border-bottom: 1px solid var(--color-border);
+		padding-bottom: 0.4rem;
 	}
 
 	p {
 		font-family: var(--font-body);
-		color: var(--color-neutral-600);
-		margin-bottom: 2rem;
+		color: var(--color-text);
+		margin-bottom: 1.5rem;
 		line-height: 1.5;
+		font-size: 1.06rem;
 	}
 
 	.actions {
@@ -118,27 +129,50 @@
 	button {
 		font-family: var(--font-heading);
 		flex: 1;
-		padding: 0.75rem;
-		border: none;
-		border-radius: 8px;
+		padding: 0.65rem 0.85rem;
+		border: 1px solid var(--color-border);
+		border-radius: 3px;
 		font-weight: 600;
-		font-size: 1rem;
+		font-size: 0.9rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
-		transition: filter 0.2s;
+		transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+		box-shadow: 1px 1px 0 rgba(91, 74, 60, 0.8);
+	}
+
+	button:hover {
+		transform: translateY(-1px);
+		box-shadow: 2px 2px 0 rgba(91, 74, 60, 0.8);
 	}
 
 	button:active {
-		filter: brightness(0.9);
+		transform: translateY(1px);
+		box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.18);
+	}
+
+	button:focus-visible {
+		outline: 3px solid var(--color-focus);
+		outline-offset: 2px;
 	}
 
 	.btn-cancel {
-		background: var(--color-neutral-100);
-		color: var(--color-neutral-700);
+		background: var(--color-surface);
+		color: var(--color-border);
+	}
+
+	.btn-cancel:hover {
+		background: var(--color-surface-alt);
 	}
 
 	.btn-confirm {
-		background: var(--color-link);
+		background: var(--color-accent-strong);
+		border-color: var(--color-accent);
 		color: var(--color-on-accent);
+	}
+
+	.btn-confirm:hover {
+		background: var(--color-accent);
 	}
 
 	@media (max-width: 480px) {
