@@ -1,7 +1,10 @@
-import { error, type Actions } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { GetGameSession } from '$lib/client/GameSessions/GetGameSession';
-import { GetGamePlayers, type GetGamePlayersResponse } from '$lib/client/GameSessions/GetGamePlayers';
+import {
+	GetGamePlayers,
+	type GetGamePlayersResponse
+} from '$lib/client/GameSessions/GetGamePlayers';
 import { GetCurrentRound } from '$lib/client/GameSessions/GetCurrentRound';
 import { GetRoles } from '$lib/client/Roles/GetRoles';
 import { UpdatePlayer } from '$lib/client/Players/UpdatePlayer';
@@ -12,6 +15,8 @@ import { PauseTimer } from '$lib/client/Timers/PauseTimer';
 import { ResumeTimer } from '$lib/client/Timers/ResumeTimer';
 import { StartTimer } from '$lib/client/Timers/StartTimer';
 import { StopTimer } from '$lib/client/Timers/StopTimer';
+import type { Actions } from './$types';
+import { AdjustTimer } from '$lib/client/Timers/AdjustTimer';
 
 interface RoleUpdate {
 	id: number;
@@ -52,7 +57,7 @@ export const load = (async ({ fetch, params }) => {
 	};
 }) satisfies PageServerLoad;
 
-export const actions = {
+export const actions: Actions = {
 	saveRoles: async ({ request, fetch }) => {
 		const formData = await request.formData();
 		const updatesJson = formData.get('updates');
@@ -90,12 +95,26 @@ export const actions = {
 	},
 	startTimer: async ({ request, fetch }) => {
 		const formData = await request.formData();
-		const seconds = Number(formData.get('seconds')) || 0;
+		const providedSeconds = Number(formData.get('seconds')) || 0;
+		const minutes = Number(formData.get('minutes')) || 0;
+		const secondsPart = Number(formData.get('secondsPart')) || 0;
+		const seconds = providedSeconds || minutes * 60 + secondsPart;
 		const res = await StartTimer(fetch, { durationSeconds: seconds });
 		return { success: res.ok };
 	},
-	stopTimer: async ({ fetch }) => {
+	finishTimer: async ({ fetch }) => {
 		const res = await StopTimer(fetch);
 		return { success: res.ok };
+	},
+	adjustTimer: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const operation = String(formData.get('operation') ?? 'add');
+		const minutes = Number(formData.get('minutes')) || 0;
+		const secondsPart = Number(formData.get('secondsPart')) || 0;
+		const delta = minutes * 60 + secondsPart;
+
+		const deltaSeconds = operation === 'subtract' ? -delta : delta;
+		const res = await AdjustTimer(fetch, { deltaSeconds });
+		return { success: res.ok };
 	}
-} satisfies Actions;
+};
