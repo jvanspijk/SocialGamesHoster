@@ -12,6 +12,7 @@ Guidance for agentic coding assistants working in `SocialGamesHoster`.
 
 - Copilot rules present: `/.github/copilot-instructions.md`.
 - Additional project instructions present: `/copilot-instructions.md`.
+- Frontend visual language source: `/Web/DESIGN.MD`.
 - Cursor rules: no `.cursorrules` and no `.cursor/rules/` directory were found at time of writing.
 
 ## Repository Layout
