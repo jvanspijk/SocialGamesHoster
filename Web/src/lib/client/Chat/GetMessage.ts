@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type GetMessageRequest = {
-	readonly id: string;
+	readonly id: number;
 };
 export type GetMessageResponse = {
 	readonly id: number;
