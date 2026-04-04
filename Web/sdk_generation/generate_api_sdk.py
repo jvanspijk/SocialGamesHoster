@@ -5,13 +5,6 @@ import type { ApiError } from "./ApiError";
 
 const BASE_URL = "http://localhost:9090"
 
-export type ApiError = {
-    status: number;
-    title: string;
-    errors?: Record<string, string[]>; 
-    detail?: string;
-};
-
 export type ApiResponse<T> = 
     | { ok: true; data: T } 
     | { ok: false; error: ApiError };
@@ -21,7 +14,7 @@ type SvelteFetch = typeof fetch;
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 export interface ApiEndpoint<TReq, TRes> {
-    (fetch: SvelteFetch, request: TReq, token: string | undefined): Promise<TRes>;
+    (fetch: SvelteFetch, request: TReq): Promise<TRes>;
     readonly url: string;
     readonly method: HttpMethod;
 }
@@ -115,7 +108,7 @@ export function createEndpoint<TReq, TRes>(
 """
 
 def create_api_sdk(output_base_path: Path):
-    output_file = output_base_path / "api.ts"
+    output_file = output_base_path / "Api.ts"
     with open(output_file, "w") as f:
         f.write(api_str)
         f.close()

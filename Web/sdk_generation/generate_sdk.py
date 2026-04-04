@@ -2,14 +2,41 @@ import pathlib
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List
+from datetime import datetime
 import re
 import urllib.request
 import json
 import shutil
+import tempfile
 from generate_hub_sdk import create_sdk_hubs
 from generate_api_sdk import create_api_sdk
 from generate_api_error_sdk import create_api_error_sdk
 
+def make_backup(location: Path):
+    location = Path(location).resolve()
+    backup_dir = location.parent.parent.parent / f"{location.name}_backup"
+
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir) / "staging"
+            
+            shutil.copytree(
+                location, 
+                temp_path, 
+                ignore=shutil.ignore_patterns("backup*", ".git"),
+                dirs_exist_ok=True
+            )
+
+            if backup_dir.exists():
+                shutil.rmtree(backup_dir)
+
+            shutil.move(str(temp_path), str(backup_dir))
+            
+        print(f"Backup successful: {backup_dir.absolute()}")
+
+    except Exception as e:
+        print(f"Backup failed: {e}")
+        raise e
 
 def clear_output_dir(output_base_path: Path):
     dont_delete = ["api.ts", "config.json"]
@@ -20,6 +47,9 @@ def clear_output_dir(output_base_path: Path):
 
     for item in output_base_path.iterdir():
         if item.name in dont_delete:
+            continue
+
+        if item.name.startswith("backup_"):
             continue
         
         if item.is_dir():
@@ -333,6 +363,12 @@ if __name__ == '__main__':
     open_api_url = "http://localhost:9090/openapi/v1.json"
 
     feature_structure = {"Endpoints": [], "Common": [], "Hubs": []}
+
+    try:
+        make_backup(output_base_path)
+    except Exception as e:
+        print(f"Error: {e}")
+        raise e
 
     try:
         clear_output_dir(output_base_path)
