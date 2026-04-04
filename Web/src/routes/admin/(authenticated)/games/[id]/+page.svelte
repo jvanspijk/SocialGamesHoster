@@ -13,6 +13,7 @@
 	//import { FinishGameSession } from '$lib/client/GameSessions/FinishGameSession';
 	import { StartGameSession } from '$lib/client/GameSessions/StartGameSession';
     import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
+    import TimerControlModal from '$lib/components/TimerControlModal.svelte';
     import { DeletePlayer } from '$lib/client/Players/DeletePlayer';
 
 
@@ -24,6 +25,7 @@
 
     let showKickConfirm = $state(false);
     let playerToKick: GetGamePlayersResponse | null = $state(null);
+    let showTimerModal = $state(false);
 
     const isDirty = $derived(Object.keys(pendingRoles).length > 0);
 
@@ -185,7 +187,6 @@
     </div>
 
     <HUDFooter>
-        <div class="round-controls-mini">
             <span>Round #{data.currentRound?.id}</span>
             {#if data.timer}
                 <TimeDisplay 
@@ -194,14 +195,18 @@
                     isTimerRunning={data.timer.isRunning}
                     onFinished={() => {}}
                 />
-                <p>TODO: timer pause/resume button.</p>
-                <p>TODO: timer stop button.</p>
-                <p>TODO: timer adjust UI.</p>
-            {:else}
-                <p>TODO: timer start button.</p>
             {/if}
-        </div>        
+            <SecondaryButton onclick={() => showTimerModal = true}>
+                {data.timer ? 'Timer' : 'Start Timer'}
+            </SecondaryButton>
     </HUDFooter>
+
+    {#if showTimerModal}
+        <TimerControlModal 
+            timer={data.timer ?? null} 
+            onClose={() => showTimerModal = false} 
+        />
+    {/if}
 </div>
 
 <style>
