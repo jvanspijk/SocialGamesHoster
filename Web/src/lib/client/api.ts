@@ -1,4 +1,4 @@
-import type { ApiError } from "./ApiError";
+import type { ApiError } from './ApiError';
 
 const BASE_URL = 'http://localhost:9090';
 
@@ -18,7 +18,11 @@ export function createEndpoint<TReq, TRes>(
 	url: string,
 	method: HttpMethod = 'GET'
 ): ApiEndpoint<TReq, ApiResponse<TRes>> {
-	const endpoint = (async (f: SvelteFetch, request: TReq, token: string | undefined = undefined): Promise<ApiResponse<TRes>> => {
+	const endpoint = (async (
+		f: SvelteFetch,
+		request: TReq,
+		token: string | undefined = undefined
+	): Promise<ApiResponse<TRes>> => {
 		let finalUrl = BASE_URL + url;
 
 		const requestData: Record<string, unknown> = { ...(request as Record<string, unknown>) };
@@ -50,7 +54,7 @@ export function createEndpoint<TReq, TRes>(
 			method,
 			headers,
 			credentials: 'include'
-		};		
+		};
 
 		const remainingKeys = Object.keys(requestData);
 

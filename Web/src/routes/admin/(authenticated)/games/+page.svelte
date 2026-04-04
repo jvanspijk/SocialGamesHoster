@@ -8,7 +8,6 @@
     import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
     import { resolve } from '$app/paths';
 
-
     let { data } = $props();
     let isDeleting = $state(false);
     let isDeleteModalOpen = $state(false);
