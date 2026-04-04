@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		title?: string;
@@ -19,7 +20,14 @@
 		onCancel
 	}: Props = $props();
 
-	let dialogElement = $state<HTMLDialogElement | null>(null);
+	onMount(() => {
+		const previousOverflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+
+		return () => {
+			document.body.style.overflow = previousOverflow;
+		};
+	});
 
 	function handleCancel(e: MouseEvent): void {
         if (e.target === e.currentTarget) {
@@ -31,16 +39,17 @@
 		onConfirm();
 	}
 
-	function handleClose(): void {
-		onCancel();
-	}
 </script>
 
 
-<dialog
-	bind:this={dialogElement}
-	onclose={handleClose}
+<div
+	class="modal-overlay"
+	role="dialog"
+	aria-modal="true"
+	aria-label={title}
+	tabindex="0"
 	onclick={handleCancel}
+	onkeydown={(e) => e.key === 'Escape' && onCancel()}
 	transition:fade={{ duration: 200 }}
 >
 	<div 
@@ -67,23 +76,21 @@
 			</button>
 		</div>
 	</div>
-</dialog>
+</div>
 
 
 <style>
-	dialog {
-		border: none;
-		padding: 0;
-		background: transparent;
-		max-width: 100vw;
-		max-height: 100vh;
+	.modal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1100;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	dialog::backdrop {
-		background: rgba(34, 27, 22, 0.65);
+		padding: 1rem;
+		background: rgba(34, 27, 22, 0.5);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
 	}
 
 	.modal-inner {
