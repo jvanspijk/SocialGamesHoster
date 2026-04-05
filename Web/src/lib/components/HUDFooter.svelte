@@ -34,7 +34,7 @@
         color: var(--color-surface);
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
         letter-spacing: 1px;
-        transition: transform 0.3s ease-in-out;
+        transition: transform 0.2s ease-out;
         box-sizing: border-box;
     }
 

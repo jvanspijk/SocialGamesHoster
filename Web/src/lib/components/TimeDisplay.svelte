@@ -180,7 +180,7 @@
         width: 100%;
         height: 100%;
         transform: rotate(-90deg);
-        transition: transform 0.3s ease; 
+        transition: transform 0.15s ease-out; 
     }
 
     .ring-track {

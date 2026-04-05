@@ -36,10 +36,10 @@ style="width: {size}px; height: {size}px;"
 	padding: 0;
 	font-family: var(--font-heading);
 	transition:
-		transform 0.12s ease,
-		box-shadow 0.12s ease,
-		border-color 0.12s ease,
-		background-color 0.12s ease;
+		transform 0.08s ease,
+		box-shadow 0.08s ease,
+		border-color 0.08s ease,
+		background-color 0.08s ease;
 	overflow: hidden;
 	box-shadow:
 		0 3px 0 var(--color-border-dark),
@@ -59,7 +59,7 @@ style="width: {size}px; height: {size}px;"
 
 .icon-toggle[aria-pressed="true"] {
 	border-color: var(--color-accent-strong);
-	background: linear-gradient(180deg, #e9d5b2 0%, var(--color-surface) 100%);
+	background: linear-gradient(180deg, var(--color-surface-alt) 0%, var(--color-surface) 100%);
 	box-shadow:
 		0 2px 0 var(--color-border-dark),
 		0 4px 8px rgba(0, 0, 0, 0.25),

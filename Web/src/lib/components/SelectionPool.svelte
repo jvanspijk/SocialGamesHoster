@@ -47,7 +47,7 @@
         background-color: var(--color-surface-alt);
         color: var(--color-border);
         border: 1px solid var(--color-border-soft);
-        border-radius: 16px;
+        border-radius: 6px;
         box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
     }
 
