@@ -24,33 +24,32 @@ namespace API;
 // - Uniform error handling. In svelte, add a CreateFail function to ApiError so that we can return after !res.ok something like: return res.error.fail()
 
 // v1:
-// Figure out logging out -> if log out, how log back in? We need way to identify user so they can log back in.
-// - Admin: force logout users, (decouple IP from user)
 // - Change participants in active game sessions (e.g. change name)
 // - Fix login for players
 //      - login using player id (?)
 //      - Use local IP address to identify players
+//      - Fix various login bugs
 // - Search for more todos and fix them
-// - General chat
 // - DM the DM
 // - Hide button for the role info
 // - Logout endpoitn and button
 // - Management panels for deleting and updating resources
 // - Ruleset details
-// - Timer management
 // - Hide timer if no current timer.
 // Wrong parameters gave a 200 OK response. Maybe svelte issue.
 // Names should be unique
 // Status 400 logged as status 200
 // After time runs out, adding time using adjust timer gives status 400.
 // Admin can't send messages because you need to be player to send messages
+// Delete messages from admin panel
+// Deleting players that have sent messages
+// Mark player as winner
 
 // v2:
-// - Make backup of client sdk before regenerating it.
 // - relationship class, relationship types are stored in ruleset e,g, neighbor, teammate, nemesis, etc.
 // - Testing project with unit and/or integration tests
 // - Performance testing
-// - chats
+// - private chats with players (whispers) and team chats
 // - roles have win conditions
 // - IAbility interface so that a DM can create custom abilities for roles (will be god object)
 //    - Parse abilities from JSON or scripting language instead so that users don't have to write code
