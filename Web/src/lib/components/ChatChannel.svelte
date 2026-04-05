@@ -156,7 +156,7 @@
 			<div class="message-container" bind:this={scrollContainer}>
 				{#if isLoading}
 					<div class="loading-overlay">Loading messages...</div>
-				{:else}"
+				{:else}
 					{#each messages as msg (msg.id)}
 						<div class="message-wrapper {msg.isMe ? 'me' : 'them'}">
 							<div class="bubble">

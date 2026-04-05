@@ -33,7 +33,7 @@
 
 	// No transformation - show real sender names
 	function transformSender(_senderId: number | null, senderName: string | null): string {
-		return senderName ?? 'Unknown';
+		return senderName ?? 'Unknown' + '(' + _senderId + ')';
 	}
 
 	onMount(async () => {
