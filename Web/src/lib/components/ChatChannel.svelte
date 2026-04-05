@@ -261,7 +261,7 @@
 	.message-container {
 		flex: 1;
 		overflow-y: auto;
-		padding: 8px;
+		padding: 12px;
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
@@ -286,14 +286,15 @@
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
-		max-width: 80%;
-		padding: 2px 12px;
+		max-width: 85%;
+		padding: 4px 12px;
 		border-radius: 12px;
 		position: relative;
 		font-family: var(--font-body);
 		font-size: 1rem;
 		border: 2px solid var(--color-border);
 		box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+		line-height: 1.25;
 	}
 
 	.bubble p {
