@@ -247,7 +247,6 @@
 		color: var(--color-text-muted);
 	}
 
-	/* Action Buttons */
 	.action-btn {
 		background: none;
 		border: 1px solid var(--color-border);
@@ -315,10 +314,11 @@
 	}
 
 	.ledger-select-inline {
-		background: transparent;
+		background: var(--color-surface-soft);
 		border: 1px solid var(--color-border);
 		font-family: inherit;
-		padding: 2px;
+		padding: 4px;
+        min-width: fit-content;
 	}
 
 	.game-controls {
@@ -328,4 +328,8 @@
 		align-items: center;
 		gap: 1rem;
 	}
+
+    option {
+        color: var(--color-on-accent);
+    }
 </style>
