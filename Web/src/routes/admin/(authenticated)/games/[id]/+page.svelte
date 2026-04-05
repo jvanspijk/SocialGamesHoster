@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import LedgerTable from '$lib/components/LedgerTable.svelte';
 	import SecondaryButton from '$lib/components/SecondaryButton.svelte';
-	import TimeDisplay from '$lib/components/TimeDisplay.svelte';
+	import AdminTimer from '$lib/components/AdminTimer.svelte';
 
 	import type { GetGamePlayersResponse } from '$lib/client/GameSessions/GetGamePlayers.js';
 	import { StartNewRound } from '$lib/client/GameSessions/StartNewRound.js';
@@ -218,20 +218,13 @@
 		<ChatToggle hasNewMessage={hasNewMessages} onclick={openChat} />
 		<span>Round #{data.currentRound?.id}</span>
 		{#if data.timer}
-			<TimeDisplay
-				initialSeconds={data.timer.totalSeconds}
-				remainingTime={data.timer.remainingSeconds}
-				isTimerRunning={data.timer.isRunning}
-				onFinished={() => {}}
-			/>
+			<AdminTimer timer={data.timer} />
 		{/if}
-		<SecondaryButton onclick={() => (showTimerModal = true)}>
-			{data.timer ? 'Timer' : 'Start Timer'}
-		</SecondaryButton>
+		<SecondaryButton onclick={() => (showTimerModal = true)}>Adjust Timer</SecondaryButton>
 	</HUDFooter>
 
 	{#if showTimerModal}
-		<TimerControlModal timer={data.timer ?? null} onClose={() => (showTimerModal = false)} />
+		<TimerControlModal on:close={() => (showTimerModal = false)} />
 	{/if}
 
 	<AdminChatChannel gameId={data.gameSession.id} isOpen={isChatOpen} onClose={closeChat} />

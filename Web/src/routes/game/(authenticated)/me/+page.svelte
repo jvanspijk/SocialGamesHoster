@@ -95,9 +95,9 @@
 		/>
 		<Spacer />
 		<TimeDisplay
-			initialSeconds={data.timer.totalSeconds}
-			remainingTime={data.timer.remainingSeconds}
-			isTimerRunning={data.timer.isRunning}
+			initialTotalSeconds={data.timer.totalSeconds}
+			initialRemainingTime={data.timer.remainingSeconds}
+			initialIsRunning={data.timer.isRunning}
 			onFinished={() => {}}
 		/>
 	</HUDFooter>

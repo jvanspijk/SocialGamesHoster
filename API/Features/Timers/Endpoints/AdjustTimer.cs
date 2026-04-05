@@ -16,7 +16,7 @@ public static class AdjustTimer
         }
 
         timer.Adjust(TimeSpan.FromSeconds(request.DeltaSeconds));
-        await TimersHub.NotifyTimerChanged(hub, (int)timer.RemainingTime.TotalSeconds, (int)(timer.RemainingTime.TotalSeconds + request.DeltaSeconds));
+        await TimersHub.NotifyTimerChanged(hub, (int)timer.RemainingTime.TotalSeconds, (int)timer.TotalTime.TotalSeconds);
         return APIResults.Ok(new Response((int)timer.RemainingTime.TotalSeconds));
     }
 }

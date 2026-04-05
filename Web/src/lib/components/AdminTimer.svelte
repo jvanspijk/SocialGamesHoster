@@ -31,9 +31,9 @@
 			class:non-interactive={isTimerFinished}
 		>
 			<TimeDisplay
-				initialSeconds={timer.totalSeconds}
-				remainingTime={timer.remainingSeconds}
-				isTimerRunning={timer.isRunning}
+				initialTotalSeconds={timer.totalSeconds}
+				initialRemainingTime={timer.remainingSeconds}
+				initialIsRunning={timer.isRunning}
 				onFinished={() => {}}
 			/>
 

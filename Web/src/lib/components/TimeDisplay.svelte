@@ -1,38 +1,53 @@
 <script lang="ts">
 	import { timersHub } from '$lib/client/Timers/TimersHub.svelte';
-	let lastProcessedTs = $state(0);
+
 	let {
-		initialSeconds = 0,
-		remainingTime = $bindable(0),
-		isTimerRunning = false,
+		// These are the initial values passed from the parent.
+		// After mount, the component is driven by the SignalR hub.
+		initialRemainingTime = 0,
+		initialTotalSeconds = 0,
+		initialIsRunning = false,
 		onFinished,
 		onclick
 	}: {
-		initialSeconds: number;
-		remainingTime: number;
-		isTimerRunning?: boolean;
+		initialRemainingTime: number;
+		initialTotalSeconds: number;
+		initialIsRunning?: boolean;
 		onFinished?: () => void;
 		onclick?: () => void;
 	} = $props();
 
-	let internalTotal = $state(0);
-	let isRunning = $state(false);
-	let lastUpdate = $state(Date.now());
+	// --- Server State ---
+	// This is the authoritative state received from the server via SignalR.
+	let remaining = $state(initialRemainingTime);
+	let total = $state(initialTotalSeconds);
+	let isRunning = $state(initialIsRunning);
+	let lastServerUpdate = $state(Date.now());
 
+	// --- Display State ---
+	// This is the interpolated value for smooth animation between server updates.
+	let displayTime = $state(remaining);
+
+	// Sync display with server state when the timer is not running.
 	$effect(() => {
-		internalTotal = initialSeconds;
-		isRunning = isTimerRunning;
+		if (!isRunning) {
+			displayTime = remaining;
+		}
 	});
 
+	// --- SVG Progress Bar Calculation ---
 	const R = 45;
 	const C = 2 * Math.PI * R;
-	const progressOffset = $derived(C - (Math.max(0, remainingTime) / (internalTotal || 1)) * C);
+	const progressOffset = $derived(C - (Math.max(0, displayTime) / (total || 1)) * C);
 
+	// --- SignalR Event Handlers ---
+	// These handlers update the server state variables.
 	const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
-		remainingTime = payload.remainingSeconds;
-		internalTotal = payload.totalSeconds;
+		remaining = payload.remainingSeconds;
+		total = payload.totalSeconds;
 		isRunning = true;
-		lastUpdate = Date.now();
+		lastServerUpdate = Date.now();
+		displayTime = remaining; // Immediately jump to the correct time
 	};
 
 	timersHub.onEvent('OnTimerStarted', handleSync);
@@ -40,38 +55,36 @@
 	timersHub.onEvent('OnTimerChanged', handleSync);
 
 	timersHub.onEvent('OnTimerPaused', (payload) => {
-		remainingTime = payload.remainingSeconds;
+		remaining = payload.remainingSeconds;
 		isRunning = false;
 	});
 
 	timersHub.onEvent('OnTimerStopped', () => {
 		isRunning = false;
-		remainingTime = 0;
+		remaining = 0;
 		onFinished?.();
 	});
 
 	timersHub.onEvent('OnTimerFinished', () => {
 		isRunning = false;
-		remainingTime = 0;
+		remaining = 0;
 		onFinished?.();
 	});
 
+	// --- Interpolation Effect ---
+	// This effect runs the client-side animation loop.
 	$effect(() => {
-		if (!isRunning || remainingTime <= 0) return;
+		if (!isRunning) return;
 
 		let frame: number;
 		const tick = () => {
-			const now = Date.now();
-			const delta = (now - lastUpdate) / 1000;
-			lastUpdate = now;
+			const elapsed = (Date.now() - lastServerUpdate) / 1000;
+			const interpolated = remaining - elapsed;
 
-			remainingTime = Math.max(0, remainingTime - delta);
+			displayTime = Math.max(0, interpolated);
 
-			if (remainingTime > 0) {
+			if (interpolated > 0) {
 				frame = requestAnimationFrame(tick);
-			} else {
-				isRunning = false;
-				onFinished?.();
 			}
 		};
 
@@ -79,12 +92,13 @@
 		return () => cancelAnimationFrame(frame);
 	});
 
+	// --- Utility Functions ---
 	function formatTime(seconds: number): string {
 		const safe = Math.max(0, Math.floor(seconds));
 		return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
 	}
 
-	const isUrgent = $derived(remainingTime < internalTotal * 0.25);
+	const isUrgent = $derived(displayTime < total * 0.25);
 </script>
 
 <div class="timer-container" class:urgent={isUrgent} class:inactive={!isRunning}>
@@ -101,7 +115,7 @@
 			/>
 		</svg>
 		<div class="time-text">
-			{formatTime(remainingTime)}
+			{formatTime(displayTime)}
 		</div>
 
 		{#if onclick}
