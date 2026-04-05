@@ -1,6 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
 @import 'tailwindcss';
 @import './lib/styles/tokens.css';
 
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
-
