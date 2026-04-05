@@ -5,7 +5,6 @@
 	import TimeInput from './TimeInput.svelte';
 	import SecondaryButton from './SecondaryButton.svelte';
 	import { AdjustTimer } from '$lib/client/Timers/AdjustTimer';
-	import { invalidateAll } from '$app/navigation';
 
 	const dispatch = createEventDispatcher();
 
@@ -26,7 +25,6 @@
 		const result = await AdjustTimer(fetch, { deltaSeconds: secondsToAdjust });
 
 		if (result.ok) {
-			await invalidateAll();
 			close();
 		} else {
 			alert(result.error.detail ?? 'Failed to adjust timer');

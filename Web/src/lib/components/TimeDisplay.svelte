@@ -1,32 +1,53 @@
 <script lang="ts">
 	import { timersHub } from '$lib/client/Timers/TimersHub.svelte';
+	import { onMount } from 'svelte';
 
 	let {
-		// These are the initial values passed from the parent.
-		// After mount, the component is driven by the SignalR hub.
 		initialRemainingTime = 0,
 		initialTotalSeconds = 0,
 		initialIsRunning = false,
 		onFinished,
-		onclick
+		onclick,
+		// Bindable state - allows parent components to react to timer state changes.
+		// PERF: displayTime updates at ~60fps when running. Binding it is safe because
+		// Svelte only re-renders when $derived values change. Use $derived in the parent
+		// to coalesce updates (e.g., `$derived(displayTime < 10)` only triggers on threshold crossing).
+		currentTime = $bindable(0),
+		running = $bindable(false)
 	}: {
 		initialRemainingTime: number;
 		initialTotalSeconds: number;
 		initialIsRunning?: boolean;
 		onFinished?: () => void;
 		onclick?: () => void;
+		currentTime?: number;
+		running?: boolean;
 	} = $props();
 
 	// --- Server State ---
-	// This is the authoritative state received from the server via SignalR.
-	let remaining = $state(initialRemainingTime);
-	let total = $state(initialTotalSeconds);
-	let isRunning = $state(initialIsRunning);
+	let remaining = $state(0);
+	let total = $state(0);
+	let isRunning = $state(false);
 	let lastServerUpdate = $state(Date.now());
 
 	// --- Display State ---
-	// This is the interpolated value for smooth animation between server updates.
-	let displayTime = $state(remaining);
+	let displayTime = $state(0);
+
+	// Sync bindable props with internal state
+	$effect(() => {
+		currentTime = displayTime;
+	});
+	$effect(() => {
+		running = isRunning;
+	});
+
+	// Initialize from props on mount. After this, SignalR takes over.
+	onMount(() => {
+		remaining = initialRemainingTime;
+		total = initialTotalSeconds;
+		isRunning = initialIsRunning;
+		displayTime = initialRemainingTime;
+	});
 
 	// Sync display with server state when the timer is not running.
 	$effect(() => {
@@ -40,14 +61,12 @@
 	const C = 2 * Math.PI * R;
 	const progressOffset = $derived(C - (Math.max(0, displayTime) / (total || 1)) * C);
 
-	// --- SignalR Event Handlers ---
-	// These handlers update the server state variables.
 	const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
 		remaining = payload.remainingSeconds;
 		total = payload.totalSeconds;
 		isRunning = true;
 		lastServerUpdate = Date.now();
-		displayTime = remaining; // Immediately jump to the correct time
+		displayTime = remaining;
 	};
 
 	timersHub.onEvent('OnTimerStarted', handleSync);
