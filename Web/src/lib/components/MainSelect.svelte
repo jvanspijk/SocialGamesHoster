@@ -13,7 +13,7 @@
 	export let enabled: boolean = true;
 </script>
 
-<select name={name} bind:value={selectedValue} disabled={!enabled}>
+<select {name} bind:value={selectedValue} disabled={!enabled}>
 	<option value={null} disabled selected={selectedValue === null}>
 		{placeholder}
 	</option>

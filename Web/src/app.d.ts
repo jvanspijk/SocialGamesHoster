@@ -6,12 +6,12 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			token: string | undefined;
-            user: {
-                id: int;
-                name: string;
-                role: string;
-            } | null;
-        }
+			user: {
+				id: int;
+				name: string;
+				role: string;
+			} | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

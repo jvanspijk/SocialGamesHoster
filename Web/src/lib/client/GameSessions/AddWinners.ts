@@ -2,7 +2,7 @@ import { createEndpoint } from '../api';
 import type { Participant } from './Common';
 
 export type AddWinnersRequest = {
-	readonly gameId: string;
+	readonly gameId: number;
 	readonly playerIds: number[];
 };
 export type AddWinnersResponse = {

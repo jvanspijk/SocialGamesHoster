@@ -1,5 +1,5 @@
 export type Message = {
-	readonly id: string;
+	readonly id: number;
 	readonly content: string;
 	readonly sentAt: string;
 	readonly senderId: number | null;

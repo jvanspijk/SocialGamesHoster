@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type GetRulesetRequest = {
-	readonly rulesetId: string;
+	readonly rulesetId: number;
 };
 export type GetRulesetResponse = {
 	readonly id: number;

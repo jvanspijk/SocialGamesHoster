@@ -2,7 +2,7 @@ import { createEndpoint } from '../api';
 import type { RoleInfo } from './Common';
 
 export type GetFullPlayerRequest = {
-	readonly id: string;
+	readonly id: number;
 };
 export type GetFullPlayerResponse = {
 	readonly id: number;

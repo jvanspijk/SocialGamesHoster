@@ -138,6 +138,7 @@ If/when frontend tests are added (examples):
 - Follow existing formatting tools instead of manual style drift:
   - Prettier config: tabs, single quotes, no trailing commas, print width 100.
   - ESLint config: JS + TS + Svelte recommended configs with Prettier integration.
+- For chat admin viewers, use `readerId = 0` to indicate no real player identity.
 
 ## Architecture-Specific Practices
 

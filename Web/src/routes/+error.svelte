@@ -64,7 +64,9 @@
 
 	<section class="error-block">
 		<h2>Details</h2>
-		<p class="error-value">{apiError?.detail ?? fallbackMessage ?? 'No additional details were provided.'}</p>
+		<p class="error-value">
+			{apiError?.detail ?? fallbackMessage ?? 'No additional details were provided.'}
+		</p>
 	</section>
 
 	{#if validationEntries.length > 0}

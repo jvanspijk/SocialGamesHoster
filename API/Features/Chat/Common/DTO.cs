@@ -1,4 +1,4 @@
 ﻿namespace API.Features.Chat.Common;
 
-public readonly record struct Message(Guid Id, string Content, DateTime SentAt, int? SenderId, string? SenderName);
+public readonly record struct Message(int Id, string Content, DateTime SentAt, int? SenderId, string? SenderName);
 

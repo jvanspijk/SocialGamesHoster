@@ -2,7 +2,7 @@ import { createEndpoint } from '../api';
 import type { Participant } from './Common';
 
 export type UpdateGameParticipantsRequest = {
-	readonly gameId: string;
+	readonly gameId: number;
 	readonly participantIds: number[];
 };
 export type UpdateGameParticipantsResponse = {

@@ -6,12 +6,7 @@
 		onchange?: (seconds: number) => void;
 	}
 
-	let {
-		value = $bindable(0),
-		placeholder = '00:00',
-		disabled = false,
-		onchange
-	}: Props = $props();
+	let { value = $bindable(0), placeholder = '00:00', disabled = false, onchange }: Props = $props();
 
 	let displayValue = $state('');
 
@@ -94,7 +89,17 @@
 
 	function handleKeyDown(e: KeyboardEvent) {
 		// Allow: backspace, delete, tab, escape, enter, arrows
-		const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+		const allowedKeys = [
+			'Backspace',
+			'Delete',
+			'Tab',
+			'Escape',
+			'Enter',
+			'ArrowLeft',
+			'ArrowRight',
+			'Home',
+			'End'
+		];
 		if (allowedKeys.includes(e.key)) return;
 
 		// Block non-numeric
@@ -131,7 +136,9 @@
 		color: var(--color-text);
 		letter-spacing: 0.1em;
 		box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
-		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+		transition:
+			border-color 0.15s ease,
+			box-shadow 0.15s ease;
 	}
 
 	.time-input:focus {

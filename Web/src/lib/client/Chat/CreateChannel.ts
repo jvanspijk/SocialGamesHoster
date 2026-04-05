@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type CreateChannelRequest = {
-	readonly channelId: string;
+	readonly channelId: number;
 	readonly name: string;
 	readonly gameId: number;
 };

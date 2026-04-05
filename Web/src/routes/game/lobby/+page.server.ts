@@ -11,7 +11,7 @@ export const load = (async ({ fetch }) => {
 	if (!result.ok) {
 		const message = result.error.detail || result.error.title || 'Failed to load games';
 		error(result.error.status, {
-			message: message,			
+			message: message
 		});
 	}
 
@@ -35,7 +35,7 @@ async function fetchAllRulesets(f: typeof fetch, games: GetActiveGameSessionsRes
 
 	const rulesetResults = await Promise.all(
 		uniqueRulesetIds.map(async (id) => {
-			const res = await GetRuleset(f, { rulesetId: id.toString() });
+			const res = await GetRuleset(f, { rulesetId: id });
 			return res.ok ? res.data : null;
 		})
 	);

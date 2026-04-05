@@ -1,16 +1,14 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-
-	export let hasNewMessage = false;
-
-	function handleToggle() {
-		dispatch('click');
+	interface Props {
+		hasNewMessage?: boolean;
+		onclick?: () => void;
 	}
+
+	let { hasNewMessage = false, onclick }: Props = $props();
 </script>
 
 <div class="chat-toggle-container">
-	<button class="toggle-button" on:click={handleToggle} aria-label="Open Chat">
+	<button class="toggle-button" {onclick} aria-label="Open Chat">
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
@@ -33,12 +31,12 @@
 
 <style>
 	.chat-toggle-container {
-		position: relative; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		z-index: 1000;
-	}	
+	}
 
 	.toggle-button {
 		position: relative;
@@ -53,8 +51,9 @@
 		align-items: center;
 		justify-content: center;
 		transition: all 0.2s ease;
-		box-shadow: 0 0 5px rgba(255, 255, 255, 0.1), 
-                    inset 0 0 15px rgba(0, 0, 0, 0.8);
+		box-shadow:
+			0 0 5px rgba(255, 255, 255, 0.1),
+			inset 0 0 15px rgba(0, 0, 0, 0.8);
 	}
 
 	.toggle-button:hover {
@@ -79,8 +78,17 @@
 	}
 
 	@keyframes pulse {
-		0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(166, 42, 42, 0.7); }
-		70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(166, 42, 42, 0); }
-		100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(166, 42, 42, 0); }
+		0% {
+			transform: scale(1);
+			box-shadow: 0 0 0 0 rgba(166, 42, 42, 0.7);
+		}
+		70% {
+			transform: scale(1.1);
+			box-shadow: 0 0 0 6px rgba(166, 42, 42, 0);
+		}
+		100% {
+			transform: scale(1);
+			box-shadow: 0 0 0 0 rgba(166, 42, 42, 0);
+		}
 	}
 </style>

@@ -6,13 +6,13 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
-    kit: {
-        adapter: adapter(),
-        csrf: {
-            // This allows connection via any IP or hostname
-            trustedOrigins: ['*'], 
-        }
-    }
+	kit: {
+		adapter: adapter(),
+		csrf: {
+			// This allows connection via any IP or hostname
+			trustedOrigins: ['*']
+		}
+	}
 };
 
 export default config;

@@ -12,10 +12,10 @@
 	}
 
 	let {
-		title = "Confirm Action",
-		message = "Are you sure you want to proceed?",
-		confirmText = "Yes",
-		cancelText = "No",
+		title = 'Confirm Action',
+		message = 'Are you sure you want to proceed?',
+		confirmText = 'Yes',
+		cancelText = 'No',
 		onConfirm,
 		onCancel
 	}: Props = $props();
@@ -30,17 +30,15 @@
 	});
 
 	function handleCancel(e: MouseEvent): void {
-        if (e.target === e.currentTarget) {
-            onCancel();
-        }
+		if (e.target === e.currentTarget) {
+			onCancel();
+		}
 	}
 
 	function handleConfirm(): void {
 		onConfirm();
 	}
-
 </script>
-
 
 <div
 	class="modal-overlay"
@@ -52,32 +50,20 @@
 	onkeydown={(e) => e.key === 'Escape' && onCancel()}
 	transition:fade={{ duration: 200 }}
 >
-	<div 
-		class="modal-inner"
-		transition:scale={{ duration: 200, start: 0.95 }}
-	>
+	<div class="modal-inner" transition:scale={{ duration: 200, start: 0.95 }}>
 		<h2>{title}</h2>
 		<p>{message}</p>
 
 		<div class="actions">
-			<button 
-				type="button" 
-				class="btn-cancel" 
-				onclick={handleCancel}
-			>
+			<button type="button" class="btn-cancel" onclick={handleCancel}>
 				{cancelText}
 			</button>
-			<button 
-				type="button" 
-				class="btn-confirm" 
-				onclick={handleConfirm}
-			>
+			<button type="button" class="btn-confirm" onclick={handleConfirm}>
 				{confirmText}
 			</button>
 		</div>
 	</div>
 </div>
-
 
 <style>
 	.modal-overlay {
@@ -144,7 +130,10 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		cursor: pointer;
-		transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+		transition:
+			transform 0.12s ease,
+			box-shadow 0.12s ease,
+			background-color 0.12s ease;
 		box-shadow: 1px 1px 0 rgba(91, 74, 60, 0.8);
 	}
 
@@ -186,7 +175,7 @@
 		.modal-inner {
 			padding: 1.25rem;
 		}
-		
+
 		.actions {
 			flex-direction: column-reverse;
 		}

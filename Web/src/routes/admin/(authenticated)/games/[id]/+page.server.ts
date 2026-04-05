@@ -24,7 +24,7 @@ interface RoleUpdate {
 }
 
 export const load = (async ({ fetch, params }) => {
-	const gameId = params.id;
+	const gameId = Number(params.id);
 	const req = { gameId };
 
 	const [gameRes, playersRes, roundRes, timerRes] = await Promise.all([
@@ -38,7 +38,7 @@ export const load = (async ({ fetch, params }) => {
 
 	const playersSummary = playersRes.ok ? (playersRes.data ?? []) : [];
 
-	const rolesRes = await GetRoles(fetch, { rulesetId: gameRes.data.rulesetId.toString() });
+	const rolesRes = await GetRoles(fetch, { rulesetId: gameRes.data.rulesetId });
 
 	return {
 		gameSession: gameRes.data,
@@ -49,7 +49,7 @@ export const load = (async ({ fetch, params }) => {
 		streamed: {
 			fullPlayers: Promise.all(
 				playersSummary.map(async (p: GetGamePlayersResponse) => {
-					const res = await GetFullPlayer(fetch, { id: p.id.toString() });
+					const res = await GetFullPlayer(fetch, { id: p.id });
 					return res.ok ? res.data : null;
 				})
 			)
@@ -70,7 +70,7 @@ export const actions: Actions = {
 		const results = await Promise.all(
 			updates.map((u) =>
 				UpdatePlayer(fetch, {
-					id: u.id.toString(),
+					id: u.id,
 					newName: null,
 					newRoleId: u.roleId
 				})
@@ -82,7 +82,7 @@ export const actions: Actions = {
 	declareWinners: async ({ request, fetch, params }) => {
 		const formData = await request.formData();
 		const playerIds = formData.getAll('winnerIds').map(Number);
-		const res = await AddWinners(fetch, { gameId: params.id!, playerIds });
+		const res = await AddWinners(fetch, { gameId: Number(params.id!), playerIds });
 		return { success: res.ok };
 	},
 	pauseTimer: async ({ fetch }) => {

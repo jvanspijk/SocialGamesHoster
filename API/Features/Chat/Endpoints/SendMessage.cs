@@ -10,9 +10,11 @@ public static class SendMessage
 {
     public readonly record struct Request(int PlayerId, string Message);
     public readonly record struct Response(int MessageId, int PlayerId, int ChannelId, string Message);
-    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(IRepository<ChatMessage> repository, IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
+    public static async Task<Results<CreatedAtRoute<Response>, ProblemHttpResult>> HandleAsync(
+        IRepository<ChatMessage> messageRepository, IRepository<ChatChannel> channelRepository, 
+        IHubContext<ChatHub, IChatHub> hub, int channelId, Request request)
     {
-        bool channelExists = await repository.ExistsAsync(channelId);
+        bool channelExists = await channelRepository.ExistsAsync(channelId);
         if(!channelExists)
         {
             return APIResults.NotFound($"Channel with id {channelId} does not exist.");
@@ -26,10 +28,12 @@ public static class SendMessage
             IsDeleted = false
         };
 
-        repository.Add(message);
-        await repository.SaveChangesAsync();
+        messageRepository.Add(message);
+        await messageRepository.SaveChangesAsync();
+
         var response = new Response(message.Id, message.SenderId!.Value, message.ChannelId, message.Content);
         await ChatHub.NotifyMessageSent(hub, channelId, request.PlayerId, message.Id);
+
         return APIResults.CreatedAtRoute(response, nameof(GetMessage), message.Id);
     }
 }

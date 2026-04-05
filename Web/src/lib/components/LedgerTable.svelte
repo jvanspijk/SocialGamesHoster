@@ -1,259 +1,262 @@
 <script lang="ts" generics="T">
-    import { page } from '$app/state';
-    import { goto } from '$app/navigation';
-    import { untrack } from 'svelte';
-    import SecondaryButton from '$lib/components/SecondaryButton.svelte';
-    
-    let { 
-        data = [], 
-        columns,
-        rows,
-        searchPlaceholder = "Search...",
-        enableFilter = false,
-        filterOptions = [],
-        filterValue = $bindable("All"),
-        filterKey = "" as keyof T
-    } = $props();
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
+	import SecondaryButton from '$lib/components/SecondaryButton.svelte';
 
-    let searchTerm = $state("");
-    
-    const currentPage = $derived(Number(page.url.searchParams.get('page')) || 1);
-    const itemsPerPage = 5;
+	let {
+		data = [],
+		columns,
+		rows,
+		searchPlaceholder = 'Search...',
+		enableFilter = false,
+		filterOptions = [],
+		filterValue = $bindable('All'),
+		filterKey = '' as keyof T
+	} = $props();
 
-    async function changePage(newPage: number) {
-        const url = new URL(page.url);
-        url.searchParams.set('page', newPage.toString());
-        
-        await goto(url, { 
-            keepFocus: true, 
-            noScroll: true, 
-            replaceState: true,
-            invalidateAll: false 
-        });
-    }
+	let searchTerm = $state('');
 
-    const filteredData = $derived(
-        data.filter(item => {
-            const matchesSearch = JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = filterValue === "All" || (
-                filterKey && 
-                item[filterKey] && 
-                String(item[filterKey]).toLowerCase().trim() === filterValue.toLowerCase().trim()
-            );
-            return matchesSearch && matchesFilter;
-        })
-    );
+	const currentPage = $derived(Number(page.url.searchParams.get('page')) || 1);
+	const itemsPerPage = 5;
 
-    const paginatedData = $derived(
-        filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    );
+	async function changePage(newPage: number) {
+		const url = new URL(page.url);
+		url.searchParams.set('page', newPage.toString());
 
-    const totalPages = $derived(Math.ceil(filteredData.length / itemsPerPage));
+		await goto(url, {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true,
+			invalidateAll: false
+		});
+	}
 
-    let lastSearch = $derived(searchTerm);
-    let lastFilter = $derived(filterValue);
+	const filteredData = $derived(
+		data.filter((item) => {
+			const matchesSearch = JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
+			const matchesFilter =
+				filterValue === 'All' ||
+				(filterKey &&
+					item[filterKey] &&
+					String(item[filterKey]).toLowerCase().trim() === filterValue.toLowerCase().trim());
+			return matchesSearch && matchesFilter;
+		})
+	);
 
-    $effect(() => {
-        if (searchTerm !== lastSearch || filterValue !== lastFilter) {
-            lastSearch = searchTerm;
-            lastFilter = filterValue;
-            
-            if (currentPage !== 1) {
-                untrack(() => changePage(1));
-            }
-        }
-    });
+	const paginatedData = $derived(
+		filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+	);
+
+	const totalPages = $derived(Math.ceil(filteredData.length / itemsPerPage));
+
+	let lastSearch = $derived(searchTerm);
+	let lastFilter = $derived(filterValue);
+
+	$effect(() => {
+		if (searchTerm !== lastSearch || filterValue !== lastFilter) {
+			lastSearch = searchTerm;
+			lastFilter = filterValue;
+
+			if (currentPage !== 1) {
+				untrack(() => changePage(1));
+			}
+		}
+	});
 </script>
 
 <div class="ledger-container">
-    <div class="ledger-tools">
-        <div class="search-wrapper">
-            <input 
-                type="text" 
-                bind:value={searchTerm} 
-                placeholder={searchPlaceholder} 
-                class="ledger-input"
-            />
-        </div>
+	<div class="ledger-tools">
+		<div class="search-wrapper">
+			<input
+				type="text"
+				bind:value={searchTerm}
+				placeholder={searchPlaceholder}
+				class="ledger-input"
+			/>
+		</div>
 
-        {#if enableFilter}
-            <select bind:value={filterValue} class="ledger-select">
-                <option value="All">All</option>
-                {#each filterOptions as opt}
-                    <option value={opt}>{opt}</option>
-                {/each}
-            </select>
-        {/if}
-    </div>
+		{#if enableFilter}
+			<select bind:value={filterValue} class="ledger-select">
+				<option value="All">All</option>
+				{#each filterOptions as opt}
+					<option value={opt}>{opt}</option>
+				{/each}
+			</select>
+		{/if}
+	</div>
 
-    <div class="table-scroll-shield">
-        <table class="ledger">
-            <thead>
-                {@render columns()}
-            </thead>
-            <tbody>
-                {#each paginatedData as item}
-                    {@render rows(item)}
-                {:else}
-                    <tr>
-                        <td colspan="100" class="no-data">Nothing found matching your criteria.</td>
-                    </tr>
-                {/each}
-            </tbody>
-        </table>
-    </div>
+	<div class="table-scroll-shield">
+		<table class="ledger">
+			<thead>
+				{@render columns()}
+			</thead>
+			<tbody>
+				{#each paginatedData as item}
+					{@render rows(item)}
+				{:else}
+					<tr>
+						<td colspan="100" class="no-data">Nothing found matching your criteria.</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 
-    {#if totalPages > 1}
-        <div class="pagination">
-            <SecondaryButton 
-                onclick={() => changePage(currentPage - 1)} 
-                enabled={currentPage > 1}
-            >Previous</SecondaryButton>
-            
-            <span class="page-info">Page {currentPage} of {totalPages}</span>
-            
-            <SecondaryButton 
-                onclick={() => changePage(currentPage + 1)} 
-                enabled={currentPage < totalPages}
-            >Next</SecondaryButton>
-        </div>
-    {/if}
+	{#if totalPages > 1}
+		<div class="pagination">
+			<SecondaryButton onclick={() => changePage(currentPage - 1)} enabled={currentPage > 1}
+				>Previous</SecondaryButton
+			>
+
+			<span class="page-info">Page {currentPage} of {totalPages}</span>
+
+			<SecondaryButton
+				onclick={() => changePage(currentPage + 1)}
+				enabled={currentPage < totalPages}>Next</SecondaryButton
+			>
+		</div>
+	{/if}
 </div>
 
-<style>    
-    .search-wrapper {
-        position: relative;
-        flex-grow: 1;
-    }
+<style>
+	.search-wrapper {
+		position: relative;
+		flex-grow: 1;
+	}
 
-    .pagination {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        margin-top: 1.5rem;
-        font-family: var(--font-heading);
-    }
+	.pagination {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 1.5rem;
+		font-family: var(--font-heading);
+	}
 
-    .page-info {
-        font-size: 0.9rem;
-        color: var(--color-border);
-    }
+	.page-info {
+		font-size: 0.9rem;
+		color: var(--color-border);
+	}
 
-    .ledger-container {
-        width: 100%;
-        margin-top: 1rem;
-        border-radius: 2px;
-        overflow: hidden;
-        border: 1px solid rgba(0, 0, 0, 0);          
-    }
+	.ledger-container {
+		width: 100%;
+		margin-top: 1rem;
+		border-radius: 2px;
+		overflow: hidden;
+		border: 1px solid rgba(0, 0, 0, 0);
+	}
 
-    .ledger-tools {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .ledger-input, .ledger-select {
-        background: var(--color-surface-soft);
-        border: 2px solid var(--color-border);
-        font-family: var(--font-body);
-        padding: 8px 8px 8px 35px;
-        color: var(--color-text);
-        width: 100%;
-        box-sizing: border-box;
-        font-size: 16px;
-    }
+	.ledger-tools {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
 
-    .ledger-select {
-        padding-left: 10px;
-        width: auto;
-    }
+	.ledger-input,
+	.ledger-select {
+		background: var(--color-surface-soft);
+		border: 2px solid var(--color-border);
+		font-family: var(--font-body);
+		padding: 8px 8px 8px 35px;
+		color: var(--color-text);
+		width: 100%;
+		box-sizing: border-box;
+		font-size: 16px;
+	}
 
-    .ledger {
-        width: 100%;
-        border-collapse: collapse;
-    }
+	.ledger-select {
+		padding-left: 10px;
+		width: auto;
+	}
 
-    .ledger :global(th), .ledger :global(td) {
-        padding: 12px 10px;
-        text-align: left;
-        border-bottom: 1px solid rgba(91, 74, 60, 0.2);
-    }
+	.ledger {
+		width: 100%;
+		border-collapse: collapse;
+	}
 
-    .ledger :global(th) {
-        font-family: var(--font-heading);
-        border-bottom: 2px solid var(--color-border);
-        color: var(--color-border);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        white-space: nowrap;
-        font-size: 0.85rem;
-    }
+	.ledger :global(th),
+	.ledger :global(td) {
+		padding: 12px 10px;
+		text-align: left;
+		border-bottom: 1px solid rgba(91, 74, 60, 0.2);
+	}
 
-    .ledger :global(tr) {
-        background: rgba(91, 74, 60, 0.16);
-    }   
+	.ledger :global(th) {
+		font-family: var(--font-heading);
+		border-bottom: 2px solid var(--color-border);
+		color: var(--color-border);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		white-space: nowrap;
+		font-size: 0.85rem;
+	}
 
-    .ledger :global(thead) {
-        background-color: rgba(91, 74, 60, 0.08);
-    }
+	.ledger :global(tr) {
+		background: rgba(91, 74, 60, 0.16);
+	}
 
-    /* desktop */
-    @media (min-width: 650px) {
-        .ledger-tools {
-            flex-direction: row;
-        }
-        .ledger :global(td:not(:last-child)), 
-        .ledger :global(th:not(:last-child)) {
-            border-right: 1px solid rgba(91, 74, 60, 0.1);
-        }
-        .ledger :global(tbody tr:last-child td) {
-            border-bottom: none; 
-        }
-        .ledger {
-            border: 2px double var(--color-text);
-            border-radius: 2px;
-        }
-    }
+	.ledger :global(thead) {
+		background-color: rgba(91, 74, 60, 0.08);
+	}
 
-    /* mobile */
-    @media (max-width: 650px) {
-        .ledger :global(thead) { display: none; }
+	/* desktop */
+	@media (min-width: 650px) {
+		.ledger-tools {
+			flex-direction: row;
+		}
+		.ledger :global(td:not(:last-child)),
+		.ledger :global(th:not(:last-child)) {
+			border-right: 1px solid rgba(91, 74, 60, 0.1);
+		}
+		.ledger :global(tbody tr:last-child td) {
+			border-bottom: none;
+		}
+		.ledger {
+			border: 2px double var(--color-text);
+			border-radius: 2px;
+		}
+	}
 
-        .ledger :global(tr) {
-            display: block;
-            
-            margin-bottom: 2rem;
-            border: 2px solid var(--color-border);
-            padding: 15px;
-            box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.1);
-        }
+	/* mobile */
+	@media (max-width: 650px) {
+		.ledger :global(thead) {
+			display: none;
+		}
 
-        .ledger :global(td) {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px double rgba(91, 74, 60, 0.1);
-        }
+		.ledger :global(tr) {
+			display: block;
 
-        .ledger :global(td:last-child) {
-            border-bottom: none;
-            padding-top: 1.5rem;
-            flex-direction: column; 
-            gap: 2px;
-        }
+			margin-bottom: 2rem;
+			border: 2px solid var(--color-border);
+			padding: 15px;
+			box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.1);
+		}
 
-        .ledger :global(td::before) {
-            content: attr(data-label);
-            font-family: var(--font-heading);
-            font-weight: bold;
-            font-size: 0.75rem;
-            color: var(--color-border);
-            text-transform: uppercase;
-        }
-    }
+		.ledger :global(td) {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10px 0;
+			border-bottom: 1px double rgba(91, 74, 60, 0.1);
+		}
+
+		.ledger :global(td:last-child) {
+			border-bottom: none;
+			padding-top: 1.5rem;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.ledger :global(td::before) {
+			content: attr(data-label);
+			font-family: var(--font-heading);
+			font-weight: bold;
+			font-size: 0.75rem;
+			color: var(--color-border);
+			text-transform: uppercase;
+		}
+	}
 </style>

@@ -6,10 +6,7 @@
 			"request": "launch",
 			"name": "Vite: Debug",
 			"runtimeExecutable": "npm",
-			"runtimeArgs": [
-				"run",
-				"dev"
-			],
+			"runtimeArgs": ["run", "dev"],
 			"serverReadyAction": {
 				"pattern": "Local:   (https?://.+)",
 				"uriFormat": "%s",

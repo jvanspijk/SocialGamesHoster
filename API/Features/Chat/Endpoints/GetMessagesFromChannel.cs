@@ -47,15 +47,17 @@ public static class GetMessagesFromChannel
                 message.Sender == null ? null : message.Sender.Name);
     }
 
-    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(IRepository<ChatMessage> repository, [AsParameters] Request req)
+    public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(
+        IRepository<ChatMessage> messageRepository, IRepository<ChatChannel> channelRepository,
+        [AsParameters] Request req)
     {       
-        var channelExists = await repository.ExistsAsync(req.ChannelId);
+        var channelExists = await channelRepository.ExistsAsync(req.ChannelId);
         if (!channelExists)
         {
             return APIResults.NotFound<ChatChannel>(req.ChannelId);
         }
 
-        Response[] result = await repository.QueryReadOnlyAsync<Response>(query =>
+        Response[] result = await messageRepository.QueryReadOnlyAsync<Response>(query =>
             query.Where(c => c.ChannelId == req.ChannelId)
                  .Where(m => (!req.Before.HasValue || m.SentAt < req.Before) &&
                              (!req.After.HasValue || m.SentAt > req.After))

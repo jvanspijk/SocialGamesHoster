@@ -1,33 +1,31 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
-    
-    export let href = '/';
-    export let className = '';
-    export let pageName = '';
+	import { goto } from '$app/navigation';
 
-    function handleNavigation(e: MouseEvent) {
-        // Prevent actual anchor navigation to let Svelte handle it
-        e.preventDefault();
-        goto(href);
-    }
+	export let href = '/';
+	export let className = '';
+	export let pageName = '';
+
+	function handleNavigation(e: MouseEvent) {
+		// Prevent actual anchor navigation to let Svelte handle it
+		e.preventDefault();
+		goto(href);
+	}
 </script>
 
-<a 
-    href={href} 
-    class="back-link {className}" 
-    on:click={handleNavigation}
->
-    ← <slot>Back to {pageName}</slot>
+<a {href} class="back-link {className}" on:click={handleNavigation}>
+	← <slot>Back to {pageName}</slot>
 </a>
 
 <style>
-    .back-link {
-        font-family: var(--font-heading);
-        color: var(--color-text-muted);
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: color 0.2s;
-    }
+	.back-link {
+		font-family: var(--font-heading);
+		color: var(--color-text-muted);
+		text-decoration: none;
+		font-size: 0.9rem;
+		transition: color 0.2s;
+	}
 
-    .back-link:hover { color: var(--color-border); }
+	.back-link:hover {
+		color: var(--color-border);
+	}
 </style>

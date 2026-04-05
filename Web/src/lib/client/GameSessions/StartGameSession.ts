@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type StartGameSessionRequest = {
-	readonly gameId: string;
+	readonly gameId: number;
 };
 export type StartGameSessionResponse = {
 	readonly id: number;

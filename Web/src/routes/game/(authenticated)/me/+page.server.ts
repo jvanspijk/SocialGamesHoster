@@ -6,35 +6,32 @@ import { invalidate_session } from '$lib/cookie_utils';
 
 export const load = (async ({ fetch, locals, cookies }) => {
 	if (!locals.user) {
-        invalidate_session(cookies);
-        throw redirect(302, '/game/lobby');
-    }
+		invalidate_session(cookies);
+		throw redirect(302, '/game/lobby');
+	}
 
-    const [playerResponse, timerResponse] = await Promise.all([
-        Me(fetch), 
-        GetTimerState(fetch)
-    ]);	
+	const [playerResponse, timerResponse] = await Promise.all([Me(fetch), GetTimerState(fetch)]);
 
 	if (!playerResponse.ok) {
-        console.error('Player Data Error:', playerResponse.error);
-        const status = playerResponse.error?.status || 500;
-        
-        if (status === 401 || status === 404) {
-            invalidate_session(cookies);
-            throw redirect(302, '/game/lobby');
-        }
+		console.error('Player Data Error:', playerResponse.error);
+		const status = playerResponse.error?.status || 500;
 
-        const message = playerResponse.error?.detail || 'Failed to load player';
-        error(status, message);
-    }
+		if (status === 401 || status === 404) {
+			invalidate_session(cookies);
+			throw redirect(302, '/game/lobby');
+		}
 
-    if (!timerResponse.ok) {
-        const status = timerResponse.error?.status || 500;
-        error(status, timerResponse.error?.title || 'Timer failed');
-    }
+		const message = playerResponse.error?.detail || 'Failed to load player';
+		error(status, message);
+	}
 
-    return {
-        player: playerResponse.data,
-        timer: timerResponse.data
-    };
+	if (!timerResponse.ok) {
+		const status = timerResponse.error?.status || 500;
+		error(status, timerResponse.error?.title || 'Timer failed');
+	}
+
+	return {
+		player: playerResponse.data,
+		timer: timerResponse.data
+	};
 }) satisfies PageServerLoad;

@@ -3,7 +3,15 @@ from pathlib import Path
 api_str = r"""
 import type { ApiError } from "./ApiError";
 
-const BASE_URL = "http://localhost:9090"
+function getBaseUrl(): string {
+    if (typeof window === 'undefined') {
+        return 'http://localhost:9090';
+    }
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:9090`;
+}
+
+const BASE_URL = getBaseUrl();
 
 export type ApiResponse<T> = 
     | { ok: true; data: T } 
@@ -62,9 +70,12 @@ export function createEndpoint<TReq, TRes>(
         if (remainingKeys.length > 0) {
             if (method === 'GET') {
                 const queryObj: Record<string, string> = {};
-                for (const k of remainingKeys) {
-                    queryObj[k] = String(requestData[k]);
-                }
+				for (const k of remainingKeys) {
+					const value = requestData[k];
+					if (value !== undefined && value !== null) {
+						queryObj[k] = String(value);
+					}
+				}
                 const queryString = new URLSearchParams(queryObj).toString();
                 if (queryString) {
                     finalUrl += (finalUrl.includes('?') ? '&' : '?') + queryString;

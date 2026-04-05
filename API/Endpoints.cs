@@ -159,6 +159,11 @@ public static class Endpoints
             .Produces<GetGameSession.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        gamesGroup.MapGet("/chat/global", GetGlobalChat.HandleAsync)
+            .WithName(nameof(GetGlobalChat))
+            .Produces<GetGlobalChat.Response>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         gamesGroup.MapPatch("/players", UpdateGameParticipants.HandleAsync)
             .WithName(nameof(UpdateGameParticipants))
             .Produces<UpdateGameParticipants.Response>(StatusCodes.Status200OK)

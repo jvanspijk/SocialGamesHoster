@@ -43,7 +43,7 @@ namespace API;
 // Names should be unique
 // Status 400 logged as status 200
 // After time runs out, adding time using adjust timer gives status 400.
-
+// Admin can't send messages because you need to be player to send messages
 
 // v2:
 // - Make backup of client sdk before regenerating it.

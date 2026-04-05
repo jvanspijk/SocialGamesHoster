@@ -243,7 +243,7 @@ def GetTypeFromEndpoint(endpoint: Endpoint, object_name: str) -> TypescriptClass
     
     match = re.search(pattern, content, re.DOTALL)
 
-    members = {placeholder: "string" for placeholder in endpoint.placeholders} if object_name == "Request" else {}
+    members = {placeholder: "number" for placeholder in endpoint.placeholders} if object_name == "Request" else {} # So far we only use IDs in route parameter, and those are always integers
     if match:
         params_content = match.group(1).strip()
         parts = re.split(r',\s*(?![^<>]*>)', params_content)

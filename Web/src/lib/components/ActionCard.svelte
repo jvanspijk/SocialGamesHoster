@@ -2,9 +2,9 @@
 	import type { Snippet } from 'svelte';
 
 	export let title;
-    export let description: string | null = null;
-    export let tags: string[] = [];
-    export let actions: Snippet | null = null;
+	export let description: string | null = null;
+	export let tags: string[] = [];
+	export let actions: Snippet | null = null;
 </script>
 
 <div class="card">
@@ -33,70 +33,72 @@
 </div>
 
 <style>
-    .card {
-        /* Parchment Theme */
-        background-color: var(--color-surface-soft);
-        padding: 1.5rem;
-        border-radius: 3px; /* Sharper corners for old-paper feel */
-        border: 2px solid var(--color-border);
-        box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.2);
-        
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
+	.card {
+		/* Parchment Theme */
+		background-color: var(--color-surface-soft);
+		padding: 1.5rem;
+		border-radius: 3px; /* Sharper corners for old-paper feel */
+		border: 2px solid var(--color-border);
+		box-shadow: 2px 2px 0px rgba(91, 74, 60, 0.2);
 
-    .card:hover {
-        border-color: var(--color-accent); /* Deep crimson on hover */
-        transform: translateY(-1px);
-        box-shadow: 3px 3px 0px rgba(140, 42, 62, 0.3);
-    }
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		transition:
+			transform 0.1s ease,
+			box-shadow 0.1s ease;
+	}
 
-    .body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
+	.card:hover {
+		border-color: var(--color-accent); /* Deep crimson on hover */
+		transform: translateY(-1px);
+		box-shadow: 3px 3px 0px rgba(140, 42, 62, 0.3);
+	}
 
-    .title {
-        font-family: var(--font-body);
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--color-text);
-        margin: 0;
-    }
+	.body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
 
-    .description {
-        font-family: var(--font-body);
-        font-size: 1rem;
-        color: var(--color-border);
-        line-height: 1.4;
-        margin: 0.25rem 0 0 0;
-        font-style: italic;
-    }
+	.title {
+		font-family: var(--font-body);
+		font-size: 1.4rem;
+		font-weight: 700;
+		color: var(--color-text);
+		margin: 0;
+	}
 
-    .tag-pool {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
+	.description {
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--color-border);
+		line-height: 1.4;
+		margin: 0.25rem 0 0 0;
+		font-style: italic;
+	}
 
-    .tag {
-        background-color: var(--color-surface-alt);
-        color: var(--color-accent);
-        padding: 0.2rem 0.6rem;
-        border-radius: 2px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border: 1px solid var(--color-border-soft);
-    }
+	.tag-pool {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
 
-    .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+	.tag {
+		background-color: var(--color-surface-alt);
+		color: var(--color-accent);
+		padding: 0.2rem 0.6rem;
+		border-radius: 2px;
+		font-size: 0.75rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		border: 1px solid var(--color-border-soft);
+	}
+
+	.actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
 </style>

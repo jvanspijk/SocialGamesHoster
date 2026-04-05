@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type UpdateAbilityInformationRequest = {
-	readonly id: string;
+	readonly id: number;
 	readonly newName: string | null;
 	readonly newDescription: string | null;
 };

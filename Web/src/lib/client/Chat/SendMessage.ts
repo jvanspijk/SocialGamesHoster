@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type SendMessageRequest = {
-	readonly channelId: string;
+	readonly channelId: number;
 	readonly playerId: number;
 	readonly message: string;
 };

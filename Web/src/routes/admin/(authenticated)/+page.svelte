@@ -1,54 +1,54 @@
 <script lang="ts">
-    import NavBlock from "$lib/components/NavBlock.svelte";
+	import NavBlock from '$lib/components/NavBlock.svelte';
 </script>
 
 <div class="container">
-    <h1>Admin Console</h1>
-    <h3>With great power comes great responsibility.</h3>
+	<h1>Admin Console</h1>
+	<h3>With great power comes great responsibility.</h3>
 
-    <section class="nav-section">
-        <h2>Game sessions</h2>
-        <NavBlock 
-            href="/admin/games" 
-            title="Manage Games" 
-            description="Manage game sessions."
-            icon="⚔️"
-        />
-        <NavBlock 
-            href="/admin/games/new" 
-            title="Start New Game" 
-            description="Start a new game."
-            icon="🔔"
-        />
-    </section>
+	<section class="nav-section">
+		<h2>Game sessions</h2>
+		<NavBlock
+			href="/admin/games"
+			title="Manage Games"
+			description="Manage game sessions."
+			icon="⚔️"
+		/>
+		<NavBlock
+			href="/admin/games/new"
+			title="Start New Game"
+			description="Start a new game."
+			icon="🔔"
+		/>
+	</section>
 
-    <section class="nav-section">
-        <h2>Rulesets</h2>
-        <NavBlock 
-            href="/admin/rulesets" 
-            title="Manage Rulesets" 
-            description="View and manage rulesets."
-            icon="📜"
-        />
-        <NavBlock 
-            href="/admin/rulesets/create" 
-            title="Create New Ruleset" 
-            description="Create a new ruleset by defining roles and abilities."
-            icon="✍️"
-        />
-    </section>
+	<section class="nav-section">
+		<h2>Rulesets</h2>
+		<NavBlock
+			href="/admin/rulesets"
+			title="Manage Rulesets"
+			description="View and manage rulesets."
+			icon="📜"
+		/>
+		<NavBlock
+			href="/admin/rulesets/create"
+			title="Create New Ruleset"
+			description="Create a new ruleset by defining roles and abilities."
+			icon="✍️"
+		/>
+	</section>
 </div>
 
 <style>
-    .nav-section {
-        width: 100%;
-        margin-bottom: 2rem;
-    }
+	.nav-section {
+		width: 100%;
+		margin-bottom: 2rem;
+	}
 
-    h2 {
-        text-align: left;
-        font-size: 1.2rem;
-        border-bottom: 2px solid var(--color-border);
-        margin-top: 1.5rem;
-    }
+	h2 {
+		text-align: left;
+		font-size: 1.2rem;
+		border-bottom: 2px solid var(--color-border);
+		margin-top: 1.5rem;
+	}
 </style>

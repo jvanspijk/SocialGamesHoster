@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type UpdateGameRulesetRequest = {
-	readonly gameId: string;
+	readonly gameId: number;
 	readonly rulesetId: number;
 };
 export type UpdateGameRulesetResponse = {

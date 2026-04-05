@@ -2,7 +2,7 @@ import { createEndpoint } from '../api';
 import type { AbilityInfo } from './Common';
 
 export type GetRoleRequest = {
-	readonly id: string;
+	readonly id: number;
 };
 export type GetRoleResponse = {
 	readonly id: number;

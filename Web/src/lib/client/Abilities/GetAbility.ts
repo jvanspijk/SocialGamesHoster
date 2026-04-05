@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type GetAbilityRequest = {
-	readonly id: string;
+	readonly id: number;
 };
 export type GetAbilityResponse = {
 	readonly id: number;

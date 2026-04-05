@@ -11,12 +11,13 @@ namespace API.Features.Auth.Endpoints;
 public static class Me
 {
     private static string CacheKey(int playerId) => $"{nameof(Me)}_{playerId}";
-    public record Response(int Id, string Name, RoleInfo? Role) : IProjectable<Player, Response>
+    public record Response(int Id, string Name, int? GameId, RoleInfo? Role) : IProjectable<Player, Response>
     {
         public static Expression<Func<Player, Response>> Projection =>
             player => new Response(
                 player.Id,
                 player.Name,
+                player.GameId,
                 player.Role == null ? null :
                 new RoleInfo(player.Role.Id, player.Role.Name, player.Role.Description,
                     player.Role.Abilities

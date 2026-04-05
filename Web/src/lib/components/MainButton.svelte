@@ -1,9 +1,19 @@
 <script lang="ts">
-	export let label: string;
-	export let disabled = false;
-	export let isLoading = false;
-	export let type: 'button' | 'submit' | 'reset' = 'button';
-	export let onActivate: (() => void) | null = null;
+	interface Props {
+		label: string;
+		disabled?: boolean;
+		isLoading?: boolean;
+		type?: 'button' | 'submit' | 'reset';
+		onActivate?: () => void;
+	}
+
+	let {
+		label,
+		disabled = false,
+		isLoading = false,
+		type = 'button',
+		onActivate = undefined
+	}: Props = $props();
 
 	function handleClick(event: MouseEvent) {
 		if (onActivate) {
@@ -13,11 +23,7 @@
 	}
 </script>
 
-<button
-	type={type}
-	disabled={disabled || isLoading}
-	on:click={handleClick}
->
+<button {type} disabled={disabled || isLoading} onclick={handleClick}>
 	{#if isLoading}
 		Loading...
 	{:else}

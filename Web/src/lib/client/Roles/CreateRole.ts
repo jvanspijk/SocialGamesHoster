@@ -1,6 +1,6 @@
 import { createEndpoint } from '../api';
 export type CreateRoleRequest = {
-	readonly rulesetId: string;
+	readonly rulesetId: number;
 	readonly name: string;
 	readonly description: string | null;
 };

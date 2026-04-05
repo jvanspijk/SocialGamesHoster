@@ -1,226 +1,229 @@
 <script lang="ts">
-    import { timersHub } from "$lib/client/Timers/TimersHub.svelte";
-    let lastProcessedTs = $state(0);
-    let {
-        initialSeconds = 0,
-        remainingTime = $bindable(0),
-        isTimerRunning = false,
-        onFinished,
-        onclick
-    }: {
-        initialSeconds: number;
-        remainingTime: number;
-        isTimerRunning?: boolean;
-        onFinished?: () => void;
-        onclick?: () => void;
-    } = $props();
+	import { timersHub } from '$lib/client/Timers/TimersHub.svelte';
+	let lastProcessedTs = $state(0);
+	let {
+		initialSeconds = 0,
+		remainingTime = $bindable(0),
+		isTimerRunning = false,
+		onFinished,
+		onclick
+	}: {
+		initialSeconds: number;
+		remainingTime: number;
+		isTimerRunning?: boolean;
+		onFinished?: () => void;
+		onclick?: () => void;
+	} = $props();
 
+	let internalTotal = $state(0);
+	let isRunning = $state(false);
+	let lastUpdate = $state(Date.now());
 
-    let internalTotal = $state(0);
-    let isRunning = $state(false); 
-    let lastUpdate = $state(Date.now());
+	$effect(() => {
+		internalTotal = initialSeconds;
+		isRunning = isTimerRunning;
+	});
 
-    $effect(() => {
-        internalTotal = initialSeconds;
-        isRunning = isTimerRunning;
-    });
+	const R = 45;
+	const C = 2 * Math.PI * R;
+	const progressOffset = $derived(C - (Math.max(0, remainingTime) / (internalTotal || 1)) * C);
 
-    const R = 45;
-    const C = 2 * Math.PI * R;
-    const progressOffset = $derived(
-        C - (Math.max(0, remainingTime) / (internalTotal || 1)) * C
-    );
+	const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
+		remainingTime = payload.remainingSeconds;
+		internalTotal = payload.totalSeconds;
+		isRunning = true;
+		lastUpdate = Date.now();
+	};
 
-    const handleSync = (payload: { remainingSeconds: number; totalSeconds: number }) => {
-        remainingTime = payload.remainingSeconds;
-        internalTotal = payload.totalSeconds;
-        isRunning = true;
-        lastUpdate = Date.now();
-    };
+	timersHub.onEvent('OnTimerStarted', handleSync);
+	timersHub.onEvent('OnTimerResumed', handleSync);
+	timersHub.onEvent('OnTimerChanged', handleSync);
 
-    timersHub.onEvent('OnTimerStarted', handleSync);
-    timersHub.onEvent('OnTimerResumed', handleSync);
-    timersHub.onEvent('OnTimerChanged', handleSync);
+	timersHub.onEvent('OnTimerPaused', (payload) => {
+		remainingTime = payload.remainingSeconds;
+		isRunning = false;
+	});
 
-    timersHub.onEvent('OnTimerPaused', (payload) => {
-        remainingTime = payload.remainingSeconds;
-        isRunning = false;
-    });
+	timersHub.onEvent('OnTimerStopped', () => {
+		isRunning = false;
+		remainingTime = 0;
+		onFinished?.();
+	});
 
-    timersHub.onEvent('OnTimerStopped', () => {
-        isRunning = false;
-        remainingTime = 0;
-        onFinished?.();
-    });
+	timersHub.onEvent('OnTimerFinished', () => {
+		isRunning = false;
+		remainingTime = 0;
+		onFinished?.();
+	});
 
-    timersHub.onEvent('OnTimerFinished', () => {
-        isRunning = false;
-        remainingTime = 0;
-        onFinished?.();
-    });
+	$effect(() => {
+		if (!isRunning || remainingTime <= 0) return;
 
-    $effect(() => {
-        if (!isRunning || remainingTime <= 0) return;
+		let frame: number;
+		const tick = () => {
+			const now = Date.now();
+			const delta = (now - lastUpdate) / 1000;
+			lastUpdate = now;
 
-        let frame: number;
-        const tick = () => {
-            const now = Date.now();
-            const delta = (now - lastUpdate) / 1000;
-            lastUpdate = now;
+			remainingTime = Math.max(0, remainingTime - delta);
 
-            remainingTime = Math.max(0, remainingTime - delta);
-            
-            if (remainingTime > 0) {
-                frame = requestAnimationFrame(tick);
-            } else {
-                isRunning = false;
-                onFinished?.();
-            }
-        };
+			if (remainingTime > 0) {
+				frame = requestAnimationFrame(tick);
+			} else {
+				isRunning = false;
+				onFinished?.();
+			}
+		};
 
-        frame = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(frame);
-    });
+		frame = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(frame);
+	});
 
-    function formatTime(seconds: number): string {
-        const safe = Math.max(0, Math.floor(seconds));
-        return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
-    }
+	function formatTime(seconds: number): string {
+		const safe = Math.max(0, Math.floor(seconds));
+		return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
+	}
 
-    const isUrgent = $derived(remainingTime < (internalTotal * 0.25));
+	const isUrgent = $derived(remainingTime < internalTotal * 0.25);
 </script>
 
 <div class="timer-container" class:urgent={isUrgent} class:inactive={!isRunning}>
-    <div class="timer-wrapper">
-        <svg class="progress-ring" viewBox="0 0 100 100">
-            <circle class="ring-track" cx="50" cy="50" r="{R}" />
-            <circle
-                class="ring-progress"
-                cx="50"
-                cy="50"
-                r="{R}"
-                stroke-dasharray="{C}"
-                stroke-dashoffset="{progressOffset}"
-            />
-        </svg>
-        <div class="time-text">
-            {formatTime(remainingTime)}
-        </div>
+	<div class="timer-wrapper">
+		<svg class="progress-ring" viewBox="0 0 100 100">
+			<circle class="ring-track" cx="50" cy="50" r={R} />
+			<circle
+				class="ring-progress"
+				cx="50"
+				cy="50"
+				r={R}
+				stroke-dasharray={C}
+				stroke-dashoffset={progressOffset}
+			/>
+		</svg>
+		<div class="time-text">
+			{formatTime(remainingTime)}
+		</div>
 
-        {#if onclick}
-            <button 
-                type="button" 
-                class="hitbox" 
-                onclick={() => onclick?.()}
-                aria-label="Timer action"
-            ></button>
-        {/if}
-    </div>
+		{#if onclick}
+			<button type="button" class="hitbox" onclick={() => onclick?.()} aria-label="Timer action"
+			></button>
+		{/if}
+	</div>
 </div>
 
 <style>
-    .timer-wrapper {
-        position: relative;
-        width: 75px; 
-        height: 75px;
-        background-color: var(--color-border); 
-        border-radius: 50%;
-        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 
-                    inset 0 0 15px rgba(0, 0, 0, 0.9);
-        border: 2px solid var(--color-border);
-        transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-        overflow: hidden;
-    }
+	.timer-wrapper {
+		position: relative;
+		width: 75px;
+		height: 75px;
+		background-color: var(--color-border);
+		border-radius: 50%;
+		box-shadow:
+			0 0 5px rgba(255, 255, 255, 0.2),
+			inset 0 0 15px rgba(0, 0, 0, 0.9);
+		border: 2px solid var(--color-border);
+		transition:
+			transform 0.1s ease-out,
+			box-shadow 0.1s ease-out;
+		overflow: hidden;
+	}
 
-    .timer-wrapper:has(.hitbox:active) {
-        transform: scale(0.92);
-        box-shadow: 0 0 2px rgba(255, 255, 255, 0.1), 
-                    inset 0 0 20px rgba(0, 0, 0, 1);
-    }
+	.timer-wrapper:has(.hitbox:active) {
+		transform: scale(0.92);
+		box-shadow:
+			0 0 2px rgba(255, 255, 255, 0.1),
+			inset 0 0 20px rgba(0, 0, 0, 1);
+	}
 
-    .hitbox {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10;
-        
-        appearance: none;
-        background: transparent;
-        border: none;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
-        
-        border-radius: 50%;
-        
-        outline: none;
-    }
+	.hitbox {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 10;
 
-    .hitbox:hover {
-        background: rgba(255, 255, 255, 0.025);
-    }
+		appearance: none;
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0;
+		cursor: pointer;
 
-    .hitbox:focus-visible {
-        box-shadow: 0 0 0 3px rgba(212, 142, 21, 0.5);
-    }
+		border-radius: 50%;
 
-    .inactive {
-        opacity: 0.5;
-        filter: grayscale(0.6) brightness(0.8);
-    }
+		outline: none;
+	}
 
-    .inactive .ring-progress {
-        stroke: var(--color-accent-strong); 
-    }
+	.hitbox:hover {
+		background: rgba(255, 255, 255, 0.025);
+	}
 
-    .progress-ring {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        transform: rotate(-90deg);
-        transition: transform 0.15s ease-out; 
-    }
+	.hitbox:focus-visible {
+		box-shadow: 0 0 0 3px rgba(212, 142, 21, 0.5);
+	}
 
-    .ring-track {
-        fill: none;
-        stroke: var(--color-ink-deep);
-        stroke-width: 6; 
-    }
+	.inactive {
+		opacity: 0.5;
+		filter: grayscale(0.6) brightness(0.8);
+	}
 
-    .ring-progress {
-        fill: none;
-        stroke: var(--color-accent-strong); 
-        stroke-width: 10;
-        stroke-linecap: round;
-        transition: stroke-dashoffset 0.05s linear;
-    }
+	.inactive .ring-progress {
+		stroke: var(--color-accent-strong);
+	}
 
-    .time-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-family: var(--font-heading);
-        font-size: 1em;
-        font-weight: 700;
-        color: var(--color-surface);         
-        user-select: none;
-    }
+	.progress-ring {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		transform: rotate(-90deg);
+		transition: transform 0.15s ease-out;
+	}
 
-    .urgent .ring-progress {
-        stroke: var(--color-warning);
-        filter: drop-shadow(0 0 5px var(--color-warning));
-    }
+	.ring-track {
+		fill: none;
+		stroke: var(--color-ink-deep);
+		stroke-width: 6;
+	}
 
-    .urgent .time-text {
-        color: var(--color-on-accent);
-        animation: pulse 1s infinite alternate;
-    }
+	.ring-progress {
+		fill: none;
+		stroke: var(--color-accent-strong);
+		stroke-width: 10;
+		stroke-linecap: round;
+		transition: stroke-dashoffset 0.05s linear;
+	}
 
-    @keyframes pulse {
-        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        to { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
-    }
+	.time-text {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		font-family: var(--font-heading);
+		font-size: 1em;
+		font-weight: 700;
+		color: var(--color-surface);
+		user-select: none;
+	}
+
+	.urgent .ring-progress {
+		stroke: var(--color-warning);
+		filter: drop-shadow(0 0 5px var(--color-warning));
+	}
+
+	.urgent .time-text {
+		color: var(--color-on-accent);
+		animation: pulse 1s infinite alternate;
+	}
+
+	@keyframes pulse {
+		from {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
+		}
+		to {
+			opacity: 0.8;
+			transform: translate(-50%, -50%) scale(1.05);
+		}
+	}
 </style>
