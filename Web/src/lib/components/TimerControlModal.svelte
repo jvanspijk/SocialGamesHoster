@@ -233,7 +233,7 @@
 			inset 0 0 24px rgba(91, 74, 60, 0.15),
 			2px 2px 0 rgba(91, 74, 60, 0.35);
 		width: 90vw;
-		max-width: 380px;
+		max-width: 420px;
 	}
 
 	h2 {

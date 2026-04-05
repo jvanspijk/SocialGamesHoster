@@ -123,7 +123,7 @@
 		font-family: var(--font-heading);
 		font-size: 1.5rem;
 		text-align: center;
-		width: 5.5rem;
+		width: 7rem;
 		padding: 0.5rem 0.75rem;
 		border: 2px solid var(--color-border);
 		border-radius: 3px;
