@@ -18,7 +18,7 @@
 
 		{#if tags.length > 0}
 			<div class="tag-pool">
-				{#each tags as tag}
+				{#each tags as tag (tag)}
 					<span class="tag">{tag}</span>
 				{/each}
 			</div>
