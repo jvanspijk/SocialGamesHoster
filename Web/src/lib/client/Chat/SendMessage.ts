@@ -2,12 +2,13 @@
 import { createEndpoint } from '../api';
 export type SendMessageRequest = {
 	readonly channelId: number;
-	readonly playerId: number;
+	readonly isAdmin: boolean;
+	readonly playerId: number | null;
 	readonly message: string;
 };
 export type SendMessageResponse = {
 	readonly messageId: number;
-	readonly playerId: number;
+	readonly playerId: number | null;
 	readonly channelId: number;
 	readonly message: string;
 };

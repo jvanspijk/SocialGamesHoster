@@ -9,6 +9,7 @@ export type GetMessageResponse = {
 	readonly sentAt: string;
 	readonly senderName: string | null;
 	readonly senderId: number | null;
+	readonly isAdmin: boolean;
 	readonly isDeleted: boolean;
 };
 export const GetMessage = createEndpoint<GetMessageRequest, GetMessageResponse>(

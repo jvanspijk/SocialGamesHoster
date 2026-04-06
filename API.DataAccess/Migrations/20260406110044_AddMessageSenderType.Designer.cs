@@ -4,6 +4,7 @@ using System.Net;
 using API.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.DataAccess.Migrations
 {
     [DbContext(typeof(APIDatabaseContext))]
-    partial class APIDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260406110044_AddMessageSenderType")]
+    partial class AddMessageSenderType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,13 +206,13 @@ namespace API.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsAdmin")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<int?>("SenderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SenderType")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SentAt")

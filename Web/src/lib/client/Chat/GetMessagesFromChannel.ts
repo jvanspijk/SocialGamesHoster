@@ -12,6 +12,8 @@ export type GetMessagesFromChannelResponse = {
 	readonly sentAt: string;
 	readonly senderId: number | null;
 	readonly senderName: string | null;
+	readonly isAdmin: boolean;
+	readonly isDeleted: boolean;
 };
 export const GetMessagesFromChannel = createEndpoint<
 	GetMessagesFromChannelRequest,

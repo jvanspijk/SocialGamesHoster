@@ -20,11 +20,6 @@
 	let initialMessages = $state<Message[]>([]);
 	let isReady = $state(false);
 
-	function formatTime(dateStr?: string) {
-		const date = dateStr ? new Date(dateStr) : new Date();
-		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-	}
-
 	function getAnonymizedSender(senderId: number | null): string {
 		if (senderId === null) return 'Unknown';
 		if (senderId === readerId) return 'You';
@@ -32,7 +27,12 @@
 		return `Player ${senderId}`;
 	}
 
-	function transformSender(senderId: number | null): string {
+	function transformSender(
+		senderId: number | null,
+		_senderName: string | null,
+		isAdmin?: boolean
+	): string {
+		if (isAdmin) return 'Admin';
 		return getAnonymizedSender(senderId);
 	}
 
@@ -61,9 +61,11 @@
 				initialMessages = messagesRes.data.map((m) => ({
 					id: m.id,
 					text: m.content,
-					sender: getAnonymizedSender(m.senderId),
-					isMe: m.senderId === readerId,
-					time: formatTime(m.sentAt)
+					sender: transformSender(m.senderId, m.senderName, m.isAdmin),
+					isMe: readerId === 0 ? Boolean(m.isAdmin) : m.senderId === readerId,
+					sentAt: m.sentAt,
+					isAdmin: m.isAdmin,
+					isDeleted: m.isDeleted
 				}));
 			}
 		}

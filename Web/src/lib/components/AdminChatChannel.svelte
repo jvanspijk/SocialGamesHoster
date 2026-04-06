@@ -26,13 +26,13 @@
 	let initialMessages = $state<Message[]>([]);
 	let isReady = $state(false);
 
-	function formatTime(dateStr?: string) {
-		const date = dateStr ? new Date(dateStr) : new Date();
-		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-	}
-
 	// No transformation - show real sender names
-	function transformSender(_senderId: number | null, senderName: string | null): string {
+	function transformSender(
+		_senderId: number | null,
+		senderName: string | null,
+		isAdmin?: boolean
+	): string {
+		if (isAdmin) return 'Admin';
 		return senderName ?? 'Unknown' + '(' + _senderId + ')';
 	}
 
@@ -60,9 +60,11 @@
 			initialMessages = messagesRes.data.map((m) => ({
 				id: m.id,
 				text: m.content,
-				sender: m.senderName ?? 'Unknown',
-				isMe: m.senderId === readerId,
-				time: formatTime(m.sentAt)
+				sender: transformSender(m.senderId, m.senderName, m.isAdmin),
+				isMe: readerId === 0 ? Boolean(m.isAdmin) : m.senderId === readerId,
+				sentAt: m.sentAt,
+				isAdmin: m.isAdmin,
+				isDeleted: m.isDeleted
 			}));
 		}
 

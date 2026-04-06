@@ -35,7 +35,7 @@ public static class GetMessagesFromChannel
         }
     }
 
-    public record Response(int Id, string Content, DateTime SentAt, int? SenderId, string? SenderName)
+    public record Response(int Id, string Content, DateTime SentAt, int? SenderId, string? SenderName, bool IsAdmin, bool IsDeleted)
         : IProjectable<ChatMessage, Response>
     {
         public static Expression<Func<ChatMessage, Response>> Projection =>
@@ -44,7 +44,9 @@ public static class GetMessagesFromChannel
                 message.Content,
                 message.SentAt,
                 message.SenderId,
-                message.Sender == null ? null : message.Sender.Name);
+                message.Sender == null ? null : message.Sender.Name,
+                message.IsAdmin,
+                message.IsDeleted);
     }
 
     public static async Task<Results<Ok<Response[]>, ProblemHttpResult>> HandleAsync(
