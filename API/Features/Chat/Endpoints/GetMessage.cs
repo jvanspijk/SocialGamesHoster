@@ -9,14 +9,14 @@ namespace API.Features.Chat.Endpoints;
 public static class GetMessage
 {
     private static string CacheKey(int id) => $"{nameof(GetMessage)}_{id}";
-    public record Response(int Id, string Content, DateTime SentAt, string SenderName, int? SenderId, bool IsDeleted) : IProjectable<ChatMessage, Response>
+    public record Response(int Id, string Content, DateTime SentAt, string? SenderName, int? SenderId, bool IsDeleted) : IProjectable<ChatMessage, Response>
     {
         public static Expression<Func<ChatMessage, Response>> Projection =>
             message => new Response(
                 message.Id,
                 message.IsDeleted ? "Deleted" : message.Content,
                 message.SentAt,
-                message.Sender != null ? message.Sender.Name : "Deleted",
+                message.Sender != null ? message.Sender.Name : null,
                 message.SenderId,
                 message.IsDeleted
             );

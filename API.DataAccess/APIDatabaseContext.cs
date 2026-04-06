@@ -159,8 +159,8 @@ public class APIDatabaseContext(DbContextOptions<APIDatabaseContext> options) : 
             .HasOne(cm => cm.Sender)
             .WithMany()
             .HasForeignKey(cm => cm.SenderId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Restrict);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<ChatMessage>()
             .HasIndex(cm => new { cm.ChannelId, cm.SentAt })

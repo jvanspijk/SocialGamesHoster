@@ -6,7 +6,7 @@ export type GetMessageResponse = {
 	readonly id: number;
 	readonly content: string;
 	readonly sentAt: string;
-	readonly senderName: string;
+	readonly senderName: string | null;
 	readonly senderId: number | null;
 	readonly isDeleted: boolean;
 };

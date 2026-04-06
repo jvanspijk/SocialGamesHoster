@@ -47,7 +47,7 @@
 		if (transformSender) {
 			return transformSender(senderId, senderName);
 		}
-		return senderName ?? 'Unknown';
+		return senderName ?? 'Deleted player';
 	}
 
 	onMount(async () => {
