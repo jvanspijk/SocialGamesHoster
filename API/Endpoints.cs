@@ -356,6 +356,11 @@ public static class Endpoints
             .Produces<GetMessage.Response>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        chatGroup.MapPost("/{id:int}", DeleteMessage.HandleAsync)
+            .WithName(nameof(DeleteMessage))
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         var channelGroup = chatGroup.MapGroup("/channels/{channelId:int}");
 
         channelGroup.MapPost("/", CreateChannel.HandleAsync)
