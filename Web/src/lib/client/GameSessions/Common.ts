@@ -1,3 +1,4 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
 export type RoleInfo = {
 	readonly id: number;
 	readonly name: string;

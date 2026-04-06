@@ -158,4 +158,5 @@ def create_sdk_hubs(hubs: List[Hub], output_base_path: Path):
         output_file = output_base_path / hub.feature_name / filename
 
         with open(output_file, "w", encoding="utf-8") as f:
+            f.write("// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION\n")
             f.write(file_content)

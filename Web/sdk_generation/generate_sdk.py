@@ -305,6 +305,7 @@ def create_sdk_common_files(common_files: List[Common], output_base_path: Path, 
             continue
 
         with open(output_path, "w") as f:
+            f.write("// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION\n")
             for ts_struct in ts_structs:
                 f.write(ts_struct.to_string() + ";\n\n")
                 feature_common_types_dict[common.feature_name].add(ts_struct.name)
@@ -315,10 +316,13 @@ def create_sdk_endpoints(endpoints: List[Endpoint], output_base_path: Path, feat
         feature_dir.mkdir(parents=True, exist_ok=True)
         output_path = feature_dir / f"{endpoint.endpoint_name}.ts"
 
+        with(open(output_path, "w")) as f:
+            f.write("// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION\n")
+
         ts_request = GetTypeFromEndpoint(endpoint, "Request")
         ts_response = GetTypeFromEndpoint(endpoint, "Response")
         endpoint_factory_import_header = "import { createEndpoint } from \"../api\";\n"
-        with(open(output_path, "w")) as f:
+        with(open(output_path, "a")) as f:
             f.write(endpoint_factory_import_header)
 
         used_common_types = set()
@@ -356,7 +360,6 @@ def load_endpoints_cs():
     
 
 if __name__ == '__main__':
-    # TODO: make a backup
     curr_path = pathlib.Path.cwd()
     features_path = curr_path.parent / "API" / "Features"     
     output_base_path = curr_path / "src" / "lib" / "client"

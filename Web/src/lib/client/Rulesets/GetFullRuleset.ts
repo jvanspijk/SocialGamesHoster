@@ -1,3 +1,4 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
 import { createEndpoint } from '../api';
 import type { AbilityInfo, RoleInfo } from './Common';
 

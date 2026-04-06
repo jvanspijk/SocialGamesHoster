@@ -1,3 +1,4 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
 import * as signalR from '@microsoft/signalr';
 import { browser } from '$app/environment';
 import { untrack } from 'svelte';

@@ -1,3 +1,5 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
+
 import type { ApiError } from './ApiError';
 
 function getBaseUrl(): string {

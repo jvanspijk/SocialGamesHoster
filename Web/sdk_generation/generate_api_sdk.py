@@ -121,5 +121,6 @@ export function createEndpoint<TReq, TRes>(
 def create_api_sdk(output_base_path: Path):
     output_file = output_base_path / "Api.ts"
     with open(output_file, "w") as f:
+        f.write("// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION\n")
         f.write(api_str)
         f.close()

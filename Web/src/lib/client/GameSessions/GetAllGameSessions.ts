@@ -1,3 +1,4 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
 import { createEndpoint } from '../api';
 export type GetAllGameSessionsRequest = void;
 export type GetAllGameSessionsResponse = {

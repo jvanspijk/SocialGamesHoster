@@ -1,3 +1,5 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
+
 export type ApiError = {
 	status: number;
 	title: string;

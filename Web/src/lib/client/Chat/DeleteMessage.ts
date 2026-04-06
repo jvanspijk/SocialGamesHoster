@@ -1,3 +1,4 @@
+// GENERATED FILE - DO NOT EDIT - SEE SDK GENERATION
 import { createEndpoint } from '../api';
 export type DeleteMessageRequest = {
 	readonly id: number;
