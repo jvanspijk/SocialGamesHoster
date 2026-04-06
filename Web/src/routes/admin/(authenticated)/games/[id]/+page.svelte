@@ -224,7 +224,7 @@
 	</HUDFooter>
 
 	{#if showTimerModal}
-		<TimerControlModal on:close={() => (showTimerModal = false)} />
+		<TimerControlModal onclose={() => (showTimerModal = false)} />
 	{/if}
 
 	<AdminChatChannel gameId={data.gameSession.id} isOpen={isChatOpen} onClose={closeChat} />
