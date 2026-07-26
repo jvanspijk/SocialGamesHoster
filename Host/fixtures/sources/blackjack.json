@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "name": "Blackjack",
+    "description": "A public-role demonstration for manually hosted Blackjack rounds.",
+    "minPlayers": 2,
+    "maxPlayers": 6
+  },
+  "teams": [
+    {
+      "id": "house",
+      "name": "House",
+      "description": "The dealer."
+    },
+    {
+      "id": "players",
+      "name": "Players",
+      "description": "Players competing against the dealer."
+    }
+  ],
+  "categories": [
+    {
+      "id": "dealer_role",
+      "name": "Dealer"
+    },
+    {
+      "id": "player_role",
+      "name": "Player"
+    }
+  ],
+  "abilities": [
+    {
+      "id": "deal",
+      "name": "Deal",
+      "description": "Manage the deck and deal cards."
+    },
+    {
+      "id": "play_hand",
+      "name": "Play Hand",
+      "description": "Choose to hit, stand, double, or split as the host allows."
+    }
+  ],
+  "roles": [
+    {
+      "id": "dealer",
+      "name": "Dealer",
+      "description": "Deal cards and play the house hand.",
+      "teamId": "house",
+      "categoryIds": ["dealer_role"],
+      "tags": ["public_role"],
+      "abilityIds": ["deal"],
+      "winCondition": "Resolve each hand according to the table rules.",
+      "maxCopies": 1
+    },
+    {
+      "id": "player",
+      "name": "Player",
+      "description": "Play a hand against the dealer.",
+      "teamId": "players",
+      "categoryIds": ["player_role"],
+      "tags": ["public_role"],
+      "abilityIds": ["play_hand"],
+      "winCondition": "Finish closer to 21 than the dealer without busting.",
+      "maxCopies": 5
+    }
+  ],
+  "phases": [
+    {
+      "id": "betting",
+      "name": "Betting",
+      "description": "Prepare the next hand.",
+      "order": 1,
+      "startsRound": true,
+      "suggestedDurationSeconds": 60
+    },
+    {
+      "id": "playing",
+      "name": "Playing",
+      "description": "Resolve player and dealer hands.",
+      "order": 2,
+      "startsRound": false,
+      "suggestedDurationSeconds": 300
+    }
+  ],
+  "knowledgeRules": [
+    {
+      "viewer": {},
+      "target": {},
+      "reveal": ["identity", "role", "team", "elimination_state"]
+    }
+  ],
+  "compositionBands": [
+    {
+      "id": "two_players",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "slots": [
+        {
+          "id": "dealer_2",
+          "label": "Dealer",
+          "count": 1,
+          "selector": {
+            "roleIds": ["dealer"]
+          }
+        },
+        {
+          "id": "players_2",
+          "label": "Players",
+          "count": 1,
+          "selector": {
+            "roleIds": ["player"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "three_players",
+      "minPlayers": 3,
+      "maxPlayers": 3,
+      "slots": [
+        {
+          "id": "dealer_3",
+          "label": "Dealer",
+          "count": 1,
+          "selector": {
+            "roleIds": ["dealer"]
+          }
+        },
+        {
+          "id": "players_3",
+          "label": "Players",
+          "count": 2,
+          "selector": {
+            "roleIds": ["player"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "four_players",
+      "minPlayers": 4,
+      "maxPlayers": 4,
+      "slots": [
+        {
+          "id": "dealer_4",
+          "label": "Dealer",
+          "count": 1,
+          "selector": {
+            "roleIds": ["dealer"]
+          }
+        },
+        {
+          "id": "players_4",
+          "label": "Players",
+          "count": 3,
+          "selector": {
+            "roleIds": ["player"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "five_players",
+      "minPlayers": 5,
+      "maxPlayers": 5,
+      "slots": [
+        {
+          "id": "dealer_5",
+          "label": "Dealer",
+          "count": 1,
+          "selector": {
+            "roleIds": ["dealer"]
+          }
+        },
+        {
+          "id": "players_5",
+          "label": "Players",
+          "count": 4,
+          "selector": {
+            "roleIds": ["player"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "six_players",
+      "minPlayers": 6,
+      "maxPlayers": 6,
+      "slots": [
+        {
+          "id": "dealer_6",
+          "label": "Dealer",
+          "count": 1,
+          "selector": {
+            "roleIds": ["dealer"]
+          }
+        },
+        {
+          "id": "players_6",
+          "label": "Players",
+          "count": 5,
+          "selector": {
+            "roleIds": ["player"]
+          }
+        }
+      ]
+    }
+  ],
+  "compositionModifiers": [],
+  "chat": {
+    "defaultPolicy": {
+      "general": {
+        "visible": true,
+        "readable": true,
+        "sendable": true,
+        "gameMasterMaySend": true,
+        "senderDisplay": "profile_name"
+      },
+      "playerDm": {
+        "visible": false,
+        "readable": false,
+        "sendable": false,
+        "gameMasterMaySend": true,
+        "senderDisplay": "profile_name"
+      },
+      "teams": {}
+    },
+    "phaseOverrides": {}
+  },
+  "achievements": [
+    {
+      "id": "blackjack",
+      "name": "Blackjack!",
+      "description": "Awarded manually for a natural blackjack.",
+      "points": 25,
+      "hiddenUntilGameCompleted": true
+    }
+  ],
+  "audioCues": []
+}

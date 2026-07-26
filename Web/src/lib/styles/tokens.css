@@ -1,35 +1,26 @@
 :root {
-	--font-heading: 'Cinzel', serif;
-	--font-body: 'IM Fell English', serif;
-
-	--color-bg-canvas: #3b332d;
-	--color-surface: #f7e7c4;
-	--color-surface-soft: #fff9e6;
-	--color-surface-alt: #f3edd7;
-	--color-text: #3e322b;
-	--color-text-muted: #7a634e;
-	--color-text-disabled: #b3a598;
-	--color-border: #5b4a3c;
-	--color-border-soft: #dcd3b6;
-	--color-border-dark: #3e332a;
-	--color-ink-deep: #311e1c;
-
-	--color-accent: #8c2a3e;
-	--color-accent-strong: #a62a2a;
-	--color-success: #387038;
-	--color-success-soft: #e7fce7;
-	--color-warning: #d48e15;
-	--color-warning-text: #856404;
-
-	--color-link: #2563eb;
-	--color-neutral-100: #f3f4f6;
-	--color-neutral-600: #4b5563;
-	--color-neutral-700: #374151;
-	--color-neutral-900: #111827;
-
-	--color-highlight: #e7c58d;
-
-	--color-focus: #f7e7c4;
-	--color-on-dark: #f7e7c4;
-	--color-on-accent: #fff9e6;
+	--paper: #f7e7c4;
+	--paper-light: #fff9e6;
+	--paper-deep: #dfc897;
+	--ink: #3e322b;
+	--ink-soft: #665347;
+	--ink-faint: #897464;
+	--crimson: #a62a2a;
+	--crimson-dark: #7d2020;
+	--gold: #9b7129;
+	--forest: #365b43;
+	--navy: #354d6d;
+	--plum: #684168;
+	--danger: #8c2a3e;
+	--success: #315b3a;
+	--wood: #211811;
+	--wood-light: #3b2a1e;
+	--shadow: 0 16px 46px rgb(13 8 5 / 44%);
+	--shadow-small: 0 5px 12px rgb(35 20 11 / 28%);
+	--focus: #d59632;
+	--font-display: 'Cinzel', Georgia, serif;
+	--font-body: 'IM Fell English', Georgia, serif;
+	--content-width: 72rem;
+	--speed-fast: 100ms;
+	--speed-page: 180ms;
 }

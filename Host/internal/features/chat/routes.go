@@ -1,0 +1,584 @@
+package chat
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
+
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
+	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
+	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
+)
+
+func Register(event *core.ServeEvent) {
+	group := event.Router.Group("/api/app/v1")
+	group.GET("/games/{id}/rooms", listRooms)
+	group.POST("/games/{id}/rooms/player-dm", createPlayerDM)
+	group.GET("/rooms/{roomId}/messages", listMessages)
+	group.POST("/rooms/{roomId}/messages", createMessage)
+	group.DELETE("/rooms/{roomId}/messages/{messageId}", deleteMessage)
+	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(platformauth.RequireGameMaster)
+}
+
+type access struct {
+	Game        *core.Record
+	Room        *core.Record
+	Participant *core.Record
+	Membership  *core.Record
+	Policy      rulesets.RoomPermission
+	IsGM        bool
+}
+
+func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
+	if event.Auth == nil || !event.Auth.GetBool("active") {
+		return access{}, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized}
+	}
+	room, err := event.App.FindRecordById("chat_rooms", roomID)
+	if err != nil {
+		return access{}, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound}
+	}
+	game, err := event.App.FindRecordById("games", room.GetString("game"))
+	if err != nil {
+		return access{}, err
+	}
+	if event.Auth.Collection().Name == "game_masters" {
+		return access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}, nil
+	}
+	if event.Auth.Collection().Name != "player_profiles" {
+		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
+	}
+	participants, err := event.App.FindRecordsByFilter("participants", "game = {:game} && profile = {:profile}", "", 1, 0,
+		dbx.Params{"game": game.Id, "profile": event.Auth.Id})
+	if err != nil || len(participants) == 0 {
+		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
+	}
+	participant := participants[0]
+	memberships, err := event.App.FindRecordsByFilter("chat_memberships", "room = {:room} && participant = {:participant}", "", 1, 0,
+		dbx.Params{"room": room.Id, "participant": participant.Id})
+	if err != nil || len(memberships) == 0 {
+		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
+	}
+	membership := memberships[0]
+	definition, err := definitionFromGame(game)
+	if err != nil {
+		return access{}, err
+	}
+	base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
+	if room.GetString("kind") == "announcements" || room.GetString("kind") == "gm_dm" {
+		base = rulesets.RoomPermission{
+			Visible: true, Readable: true, Sendable: room.GetString("kind") == "gm_dm",
+			SenderDisplay: rulesets.SenderProfileName,
+		}
+		override = nil
+	}
+	policy := EffectivePolicy(base, override, ParticipantState{
+		IsMember:       membership.GetDateTime("left_at").IsZero(),
+		IsActive:       participant.GetString("status") == "active",
+		HistoricalRead: membership.GetBool("historical_access"),
+	}, RoomState{
+		ManuallyLocked: room.GetBool("manually_locked"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
+	})
+	if game.GetString("status") == "review" || game.GetString("status") == "archived" {
+		policy.Sendable = false
+	}
+	if game.GetString("status") == "paused" && room.GetString("kind") != "gm_dm" {
+		explicitlyAllowed := override != nil && override.Sendable != nil && *override.Sendable
+		if !explicitlyAllowed {
+			policy.Sendable = false
+		}
+	}
+	if !policy.Readable && !policy.Visible {
+		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
+	}
+	return access{Game: game, Room: room, Participant: participant, Membership: membership, Policy: policy}, nil
+}
+
+func listRooms(event *core.RequestEvent) error {
+	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
+	if err != nil {
+		return writeError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
+	}
+	if event.Auth == nil || !event.Auth.GetBool("active") {
+		return writeError(event, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized})
+	}
+	rooms, err := event.App.FindRecordsByFilter("chat_rooms", "game = {:game}", "kind,label", 200, 0, dbx.Params{"game": game.Id})
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	response := make([]map[string]any, 0, len(rooms))
+	for _, room := range rooms {
+		resolved, err := resolveAccess(event, room.Id)
+		if err != nil {
+			continue
+		}
+		response = append(response, projectRoom(resolved))
+	}
+	return event.JSON(http.StatusOK, response)
+}
+
+type playerDMRequest struct {
+	ParticipantID string `json:"participantId"`
+}
+
+func createPlayerDM(event *core.RequestEvent) error {
+	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
+	if err != nil {
+		return writeError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
+	}
+	if event.Auth == nil || event.Auth.Collection().Name != "player_profiles" || !event.Auth.GetBool("active") {
+		return writeError(event, result.AppError{Code: "auth.required", Message: "A player profile is required.", Status: http.StatusUnauthorized})
+	}
+	if game.GetString("status") != "running" && game.GetString("status") != "paused" {
+		return writeError(event, result.Conflict("chat.dm_not_allowed", "Player messages are only available during play."))
+	}
+	definition, err := definitionFromGame(game)
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	if definition.Chat.DefaultPolicy.PlayerDM == nil || !definition.Chat.DefaultPolicy.PlayerDM.Visible {
+		return writeError(event, result.Forbidden("chat.dm_disabled", "Player-to-player messages are disabled for this game."))
+	}
+	var request playerDMRequest
+	if err := event.BindBody(&request); err != nil {
+		return writeError(event, result.Invalid("chat.invalid_dm", "Choose another player.", nil))
+	}
+	selfRecords, err := event.App.FindRecordsByFilter("participants",
+		"game = {:game} && profile = {:profile} && status = 'active'", "", 1, 0,
+		dbx.Params{"game": game.Id, "profile": event.Auth.Id})
+	if err != nil || len(selfRecords) == 0 {
+		return writeError(event, result.Forbidden("chat.forbidden", "Join this game before creating a room."))
+	}
+	self := selfRecords[0]
+	other, err := event.App.FindRecordById("participants", request.ParticipantID)
+	if err != nil || other.GetString("game") != game.Id || other.GetString("status") != "active" || other.Id == self.Id {
+		return writeError(event, result.Invalid("chat.invalid_dm", "Choose another active player.", nil))
+	}
+	ids := []string{self.Id, other.Id}
+	sort.Strings(ids)
+	key := "dm:" + ids[0] + ":" + ids[1]
+	var room *core.Record
+	err = event.App.RunInTransaction(func(tx core.App) error {
+		room, err = findRoomByKey(tx, game.Id, key)
+		if err != nil {
+			collection, collectionErr := tx.FindCollectionByNameOrId("chat_rooms")
+			if collectionErr != nil {
+				return collectionErr
+			}
+			room = core.NewRecord(collection)
+			room.Set("game", game.Id)
+			room.Set("room_key", key)
+			room.Set("kind", "player_dm")
+			room.Set(
+				"label",
+				"Private · "+self.GetString("display_name_snapshot")+" & "+other.GetString("display_name_snapshot"),
+			)
+			room.Set("manual_visibility_override", "default")
+			room.Set("sender_display", definition.Chat.DefaultPolicy.PlayerDM.SenderDisplay)
+			if saveErr := tx.Save(room); saveErr != nil {
+				return saveErr
+			}
+		}
+		if err := ensureChatMembership(tx, room.Id, self.Id); err != nil {
+			return err
+		}
+		return ensureChatMembership(tx, room.Id, other.Id)
+	})
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	resolved, err := resolveAccess(event, room.Id)
+	if err != nil {
+		return writeError(event, err)
+	}
+	return event.JSON(http.StatusCreated, projectRoom(resolved))
+}
+
+type messageRequest struct {
+	Content string `json:"content"`
+}
+
+func createMessage(event *core.RequestEvent) error {
+	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
+	if err != nil {
+		return writeError(event, err)
+	}
+	if resolved.Game.GetString("status") == "review" || resolved.Game.GetString("status") == "archived" {
+		return writeError(event, result.Conflict("chat.read_only", "Chat is read only during review and after archive."))
+	}
+	if resolved.IsGM {
+		if resolved.Room.GetBool("manually_locked") {
+			return writeError(event, result.Forbidden("chat.room_locked", "Unlock this room before sending a message."))
+		}
+		if !resolved.Policy.GameMasterMaySend && resolved.Room.GetString("kind") != "gm_dm" && resolved.Room.GetString("kind") != "announcements" {
+			return writeError(event, result.Forbidden("chat.send_forbidden", "Game masters cannot send to this room."))
+		}
+	} else if !resolved.Policy.Sendable {
+		return writeError(event, result.Forbidden("chat.send_forbidden", "Sending is disabled in this room."))
+	}
+	var request messageRequest
+	if err := event.BindBody(&request); err != nil {
+		return writeError(event, result.Invalid("chat.invalid_message", "The message could not be read.", nil))
+	}
+	request.Content = strings.TrimSpace(request.Content)
+	if len([]rune(request.Content)) < 1 || len([]rune(request.Content)) > 1000 || hasDisallowedControl(request.Content) {
+		return writeError(event, result.Invalid("chat.invalid_message", "Enter a message of at most 1000 characters.", nil))
+	}
+	collection, err := event.App.FindCollectionByNameOrId("chat_messages")
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	message := core.NewRecord(collection)
+	message.Set("room", resolved.Room.Id)
+	message.Set("message_kind", "message")
+	message.Set("sender_id", event.Auth.Id)
+	if resolved.IsGM {
+		message.Set("sender_type", "game_master")
+		message.Set("sender_label_snapshot", event.Auth.GetString("display_name"))
+	} else {
+		label, err := playerSenderLabel(event.App, resolved, event.Auth)
+		if err != nil {
+			return writeError(event, result.Internal(err))
+		}
+		message.Set("sender_type", "player")
+		message.Set("sender_participant", resolved.Participant.Id)
+		message.Set("sender_label_snapshot", label)
+	}
+	message.Set("content", request.Content)
+	if err := event.App.Save(message); err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	projected := projectMessage(message, event.Auth, resolved.IsGM)
+	publishRoom(event.App, resolved, "chat.message_created", projected)
+	return event.JSON(http.StatusCreated, projected)
+}
+
+func hasDisallowedControl(value string) bool {
+	for _, character := range value {
+		if character < 0x20 && character != '\n' && character != '\t' {
+			return true
+		}
+		if character == 0x7f {
+			return true
+		}
+	}
+	return false
+}
+
+func listMessages(event *core.RequestEvent) error {
+	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
+	if err != nil {
+		return writeError(event, err)
+	}
+	if !resolved.IsGM && !resolved.Policy.Readable {
+		return writeError(event, result.Forbidden("chat.read_forbidden", "Reading is disabled in this room."))
+	}
+	filter := "room = {:room}"
+	params := dbx.Params{"room": resolved.Room.Id}
+	if !resolved.IsGM && resolved.Membership != nil &&
+		!resolved.Membership.GetDateTime("left_at").IsZero() {
+		filter += " && created >= {:joined} && created <= {:left}"
+		params["joined"] = resolved.Membership.GetDateTime("joined_at").Time().UTC()
+		params["left"] = resolved.Membership.GetDateTime("left_at").Time().UTC()
+	}
+	if cursor := event.Request.URL.Query().Get("cursor"); cursor != "" {
+		created, id, err := decodeCursor(cursor)
+		if err != nil {
+			return writeError(event, result.Invalid("chat.invalid_cursor", "The message cursor is invalid.", nil))
+		}
+		filter += " && (created < {:created} || (created = {:created} && id < {:id}))"
+		params["created"] = created
+		params["id"] = id
+	}
+	records, err := event.App.FindRecordsByFilter("chat_messages", filter, "-created,-id", 51, 0, params)
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	hasMore := len(records) > 50
+	if hasMore {
+		records = records[:50]
+	}
+	messages := make([]map[string]any, len(records))
+	for index, record := range records {
+		messages[index] = projectMessage(record, event.Auth, resolved.IsGM)
+	}
+	nextCursor := ""
+	if hasMore && len(records) > 0 {
+		last := records[len(records)-1]
+		nextCursor = encodeCursor(last.GetDateTime("created").Time().UTC(), last.Id)
+	}
+	return event.JSON(http.StatusOK, map[string]any{"items": messages, "nextCursor": nextCursor})
+}
+
+func deleteMessage(event *core.RequestEvent) error {
+	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
+	if err != nil {
+		return writeError(event, err)
+	}
+	if resolved.Game.GetString("status") == "archived" {
+		return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	}
+	message, err := event.App.FindRecordById("chat_messages", event.Request.PathValue("messageId"))
+	if err != nil || message.GetString("room") != resolved.Room.Id {
+		return writeError(event, result.AppError{Code: "chat.message_not_found", Message: "Message not found.", Status: http.StatusNotFound})
+	}
+	own := !resolved.IsGM && message.GetString("sender_type") == "player" &&
+		message.GetString("sender_participant") == resolved.Participant.Id
+	if !resolved.IsGM && !own {
+		return writeError(event, result.Forbidden("chat.delete_forbidden", "You cannot delete this message."))
+	}
+	message.Set("content", "")
+	message.Set("deleted_at", time.Now().UTC())
+	if resolved.IsGM {
+		message.Set("deleted_by", event.Auth.Id)
+	}
+	if err := event.App.Save(message); err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	projected := projectMessage(message, event.Auth, resolved.IsGM)
+	publishRoom(event.App, resolved, "chat.message_deleted", projected)
+	_ = platformaudit.Record(event.App, event.Auth, resolved.Game.Id, "chat.message_deleted", "chat_message", message.Id,
+		map[string]any{"roomId": resolved.Room.Id}, event.Get(httpx.TraceIDKey))
+	return event.JSON(http.StatusOK, projected)
+}
+
+func setRoomLock(locked bool) func(*core.RequestEvent) error {
+	return func(event *core.RequestEvent) error {
+		room, err := event.App.FindRecordById("chat_rooms", event.Request.PathValue("roomId"))
+		if err != nil {
+			return writeError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
+		}
+		game, err := event.App.FindRecordById("games", room.GetString("game"))
+		if err != nil {
+			return writeError(event, result.Internal(err))
+		}
+		if game.GetString("status") == "archived" {
+			return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+		}
+		room.Set("manually_locked", locked)
+		if err := event.App.Save(room); err != nil {
+			return writeError(event, result.Internal(err))
+		}
+		resolved := access{Game: game, Room: room, IsGM: true}
+		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "locked": locked})
+		_ = platformaudit.Record(event.App, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
+			map[string]any{"locked": locked}, event.Get(httpx.TraceIDKey))
+		return event.JSON(http.StatusOK, map[string]any{"id": room.Id, "locked": locked})
+	}
+}
+
+func policyForGM(game, room *core.Record) rulesets.RoomPermission {
+	definition, err := definitionFromGame(game)
+	if err != nil {
+		return rulesets.RoomPermission{}
+	}
+	base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
+	if override != nil && override.GameMasterMaySend != nil {
+		base.GameMasterMaySend = *override.GameMasterMaySend
+	}
+	if room.GetString("kind") == "gm_dm" || room.GetString("kind") == "announcements" {
+		base.GameMasterMaySend = true
+	}
+	return base
+}
+
+func resolveRoomPolicy(definition rulesets.DefinitionV1, phaseKey string, room *core.Record) (rulesets.RoomPermission, *rulesets.PartialRoomPermission) {
+	var base rulesets.RoomPermission
+	var override *rulesets.PartialRoomPermission
+	phase := definition.Chat.PhaseOverrides[phaseKey]
+	switch room.GetString("kind") {
+	case "general":
+		if definition.Chat.DefaultPolicy.General != nil {
+			base = *definition.Chat.DefaultPolicy.General
+		}
+		override = phase.General
+	case "player_dm":
+		if definition.Chat.DefaultPolicy.PlayerDM != nil {
+			base = *definition.Chat.DefaultPolicy.PlayerDM
+		}
+		override = phase.PlayerDM
+	case "team":
+		base = definition.Chat.DefaultPolicy.Teams[room.GetString("team_key")]
+		if value, ok := phase.Teams[room.GetString("team_key")]; ok {
+			override = &value
+		}
+	}
+	return base, override
+}
+
+func definitionFromGame(game *core.Record) (rulesets.DefinitionV1, error) {
+	data, err := json.Marshal(game.Get("ruleset_snapshot"))
+	if err != nil {
+		return rulesets.DefinitionV1{}, err
+	}
+	var definition rulesets.DefinitionV1
+	err = json.Unmarshal(data, &definition)
+	return definition, err
+}
+
+func playerSenderLabel(app core.App, resolved access, profile *core.Record) (string, error) {
+	definition, err := definitionFromGame(resolved.Game)
+	if err != nil {
+		return "", err
+	}
+	roleName := ""
+	teamName := ""
+	for _, role := range definition.Roles {
+		if role.ID != resolved.Participant.GetString("role_key") {
+			continue
+		}
+		roleName = role.Name
+		for _, team := range definition.Teams {
+			if team.ID == role.TeamID {
+				teamName = team.Name
+			}
+		}
+	}
+	display := resolved.Policy.SenderDisplay
+	if display == "" {
+		display = rulesets.SenderProfileName
+	}
+	return SenderLabel(Sender{
+		ProfileName: profile.GetString("display_name"), GameAlias: resolved.Participant.GetString("game_alias"),
+		SeatNumber: resolved.Participant.GetInt("seat_number"), RoleLabel: roleName, TeamLabel: teamName,
+	}, display), nil
+}
+
+func projectRoom(resolved access) map[string]any {
+	sendable := resolved.Policy.Sendable
+	if resolved.IsGM {
+		sendable = resolved.Policy.GameMasterMaySend ||
+			resolved.Room.GetString("kind") == "gm_dm" ||
+			resolved.Room.GetString("kind") == "announcements"
+	}
+	if resolved.Room.GetBool("manually_locked") {
+		sendable = false
+	}
+	return map[string]any{
+		"id": resolved.Room.Id, "key": resolved.Room.GetString("room_key"), "kind": resolved.Room.GetString("kind"),
+		"label": resolved.Room.GetString("label"), "locked": resolved.Room.GetBool("manually_locked"),
+		"readable": resolved.IsGM || resolved.Policy.Readable, "sendable": sendable,
+		"gameMasterMaySend": resolved.Policy.GameMasterMaySend,
+	}
+}
+
+func projectMessage(message, viewer *core.Record, isGM bool) map[string]any {
+	content := message.GetString("content")
+	deleted := !message.GetDateTime("deleted_at").IsZero()
+	if deleted {
+		content = ""
+	}
+	projected := map[string]any{
+		"id": message.Id, "roomId": message.GetString("room"), "kind": message.GetString("message_kind"),
+		"senderType": message.GetString("sender_type"), "senderLabel": message.GetString("sender_label_snapshot"),
+		"content": content, "cueKey": message.GetString("cue_key"), "deleted": deleted,
+		"createdAt": message.GetDateTime("created").Time().UTC(),
+	}
+	if isGM {
+		projected["senderParticipantId"] = message.GetString("sender_participant")
+	}
+	if viewer != nil && message.GetString("sender_type") == "player" && message.GetString("sender_id") == viewer.Id {
+		projected["isOwn"] = true
+	}
+	return projected
+}
+
+func publishRoom(app core.App, resolved access, kind string, payload any) {
+	_ = realtime.Publish(app, "room:"+resolved.Room.Id, realtime.Event[any]{
+		EventID: realtime.NewEventID(), GameID: resolved.Game.Id, Revision: resolved.Game.GetInt("revision"),
+		Kind: kind, Payload: payload,
+	}, func(auth *core.Record) bool {
+		if auth == nil || !auth.GetBool("active") {
+			return false
+		}
+		if auth.Collection().Name == "game_masters" {
+			return true
+		}
+		if auth.Collection().Name != "player_profiles" {
+			return false
+		}
+		records, err := app.FindRecordsByFilter("chat_memberships",
+			"room = {:room} && participant.profile = {:profile} && ((left_at = '' && participant.status != 'kicked' && participant.status != 'left') || historical_access = true)",
+			"", 1, 0, dbx.Params{"room": resolved.Room.Id, "profile": auth.Id})
+		return err == nil && len(records) == 1
+	})
+}
+
+func findRoomByKey(app core.App, gameID, key string) (*core.Record, error) {
+	records, err := app.FindRecordsByFilter("chat_rooms", "game = {:game} && room_key = {:key}", "", 1, 0,
+		dbx.Params{"game": gameID, "key": key})
+	if err != nil || len(records) == 0 {
+		return nil, fmt.Errorf("room not found")
+	}
+	return records[0], nil
+}
+
+func ensureChatMembership(app core.App, roomID, participantID string) error {
+	records, err := app.FindRecordsByFilter("chat_memberships", "room = {:room} && participant = {:participant}", "", 1, 0,
+		dbx.Params{"room": roomID, "participant": participantID})
+	if err != nil {
+		return err
+	}
+	if len(records) > 0 {
+		records[0].Set("left_at", nil)
+		return app.Save(records[0])
+	}
+	collection, err := app.FindCollectionByNameOrId("chat_memberships")
+	if err != nil {
+		return err
+	}
+	record := core.NewRecord(collection)
+	record.Set("room", roomID)
+	record.Set("participant", participantID)
+	record.Set("joined_at", time.Now().UTC())
+	return app.Save(record)
+}
+
+type messageCursor struct {
+	Created time.Time `json:"created"`
+	ID      string    `json:"id"`
+}
+
+func encodeCursor(created time.Time, id string) string {
+	data, _ := json.Marshal(messageCursor{Created: created, ID: id})
+	return base64.RawURLEncoding.EncodeToString(data)
+}
+
+func decodeCursor(value string) (time.Time, string, error) {
+	data, err := base64.RawURLEncoding.DecodeString(value)
+	if err != nil {
+		return time.Time{}, "", err
+	}
+	var cursor messageCursor
+	if err := json.Unmarshal(data, &cursor); err != nil || cursor.Created.IsZero() || cursor.ID == "" {
+		return time.Time{}, "", fmt.Errorf("invalid cursor")
+	}
+	return cursor.Created, cursor.ID, nil
+}
+
+func writeError(event *core.RequestEvent, err error) error {
+	if appError, ok := err.(result.AppError); ok {
+		return httpx.WriteError(event, appError)
+	}
+	return httpx.WriteError(event, result.Internal(err))
+}
+
+func queryInt(values url.Values, key string, fallback int) int {
+	value, err := strconv.Atoi(values.Get(key))
+	if err != nil {
+		return fallback
+	}
+	return value
+}

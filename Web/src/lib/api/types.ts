@@ -1,0 +1,325 @@
+export type ActorType = 'game_masters' | 'player_profiles';
+
+export interface Actor {
+	id: string;
+	type: ActorType;
+	displayName: string;
+	isOwner?: boolean;
+}
+
+export interface AuthResponse {
+	token: string;
+	actor?: Actor;
+	profile?: Profile;
+}
+
+export interface Profile {
+	id: string;
+	displayName: string;
+	avatar: string;
+	bio: string;
+	accent: string;
+	active: boolean;
+}
+
+export interface AppErrorBody {
+	code: string;
+	message: string;
+	fieldErrors?: Record<string, string[]>;
+	traceId?: string;
+}
+
+export interface Game {
+	id: string;
+	name: string;
+	status: 'draft' | 'lobby' | 'running' | 'paused' | 'review' | 'archived';
+	rulesetVersion: string;
+	joinCode: string;
+	joiningOpen: boolean;
+	revision: number;
+	roundNumber: number;
+	phaseKey: string;
+	phaseStartedAt?: string;
+	startedAt?: string;
+	endedAt?: string;
+}
+
+export interface Participant {
+	id: string;
+	profileId: string;
+	displayNameSnapshot: string;
+	gameAlias: string;
+	seatNumber: number;
+	status: 'active' | 'eliminated' | 'kicked' | 'left';
+	outcome: 'unset' | 'win' | 'loss' | 'draw';
+	roleKey?: string;
+}
+
+export interface Room {
+	id: string;
+	key: string;
+	kind: string;
+	label: string;
+	locked: boolean;
+	readable: boolean;
+	sendable: boolean;
+	gameMasterMaySend?: boolean;
+}
+
+export interface ChatMessage {
+	id: string;
+	roomId: string;
+	kind: string;
+	senderType: string;
+	senderLabel: string;
+	content: string;
+	cueKey?: string;
+	deleted: boolean;
+	createdAt: string;
+	isOwn?: boolean;
+}
+
+export interface TimerProjection {
+	status: 'running' | 'paused' | 'completed';
+	totalMs: number;
+	remainingMs: number;
+	endsAt?: string;
+	revision: number;
+	serverTime: string;
+}
+
+export interface RoleProjection {
+	id: string;
+	name: string;
+	description: string;
+	winCondition: string;
+	imageAssetKey?: string;
+	team?: { id: string; name: string; description: string };
+	abilities: Array<{ id: string; name: string; description: string }>;
+}
+
+export interface PlayerGameView {
+	game: Game;
+	participant: {
+		id: string;
+		displayName: string;
+		gameAlias: string;
+		seatNumber: number;
+		status: string;
+	};
+	ruleset: { name: string; description: string };
+	role: RoleProjection | null;
+	knowledge: Array<Record<string, unknown>>;
+	rooms: Room[];
+	announcements: ChatMessage[];
+	assets: Array<{
+		id: string;
+		assetKey: string;
+		kind: 'image' | 'audio';
+		checksum: string;
+		preview: string;
+	}>;
+	party: Array<{
+		id: string;
+		profileId: string;
+		displayName: string;
+		gameAlias: string;
+		seatNumber: number;
+		status: string;
+	}>;
+}
+
+export interface AdminGameView {
+	game: Game;
+	ruleset: RulesetDefinition;
+	participants: Participant[];
+	rooms: Room[];
+	awards: Array<{
+		id: string;
+		profileId: string;
+		achievementId: string;
+		title: string;
+		description: string;
+		points: number;
+		hiddenUntilGameCompleted: boolean;
+		awardedAt: string;
+	}>;
+	audit: Array<{
+		id: string;
+		actorLabel: string;
+		action: string;
+		targetType: string;
+		detail?: Record<string, unknown>;
+		createdAt: string;
+	}>;
+}
+
+export interface RulesetSummary {
+	id: string;
+	slug: string;
+	name: string;
+	archived: boolean;
+	latestPublishedVersion: string;
+}
+
+export interface RulesetDefinition {
+	schemaVersion: 1;
+	metadata: {
+		name: string;
+		description: string;
+		minPlayers: number;
+		maxPlayers: number;
+		coverAssetKey?: string;
+	};
+	teams: RulesetTeam[];
+	categories: RulesetCategory[];
+	abilities: RulesetAbility[];
+	roles: RulesetRole[];
+	phases: RulesetPhase[];
+	knowledgeRules: RulesetKnowledgeRule[];
+	compositionBands: RulesetCompositionBand[];
+	compositionModifiers: RulesetCompositionModifier[];
+	chat: RulesetChatPolicy;
+	achievements: RulesetAchievement[];
+	audioCues: RulesetAudioCue[];
+}
+
+export interface RulesetTeam {
+	id: string;
+	name: string;
+	description: string;
+	imageAssetKey?: string;
+}
+
+export interface RulesetCategory {
+	id: string;
+	name: string;
+	description?: string;
+}
+
+export interface RulesetAbility {
+	id: string;
+	name: string;
+	description: string;
+	imageAssetKey?: string;
+}
+
+export interface RulesetRole {
+	id: string;
+	name: string;
+	description: string;
+	teamId: string;
+	categoryIds: string[];
+	tags: string[];
+	abilityIds: string[];
+	winCondition: string;
+	maxCopies: number;
+	imageAssetKey?: string;
+}
+
+export interface RulesetPhase {
+	id: string;
+	name: string;
+	description: string;
+	order: number;
+	startsRound: boolean;
+	suggestedDurationSeconds?: number;
+	audioCueId?: string;
+}
+
+export interface RulesetSelector {
+	roleIds: string[];
+	teamIds: string[];
+	categoryIds: string[];
+	tags: string[];
+}
+
+export interface RulesetKnowledgeRule {
+	viewer: RulesetSelector;
+	target: RulesetSelector;
+	reveal: string[];
+}
+
+export interface RulesetCompositionBand {
+	id: string;
+	minPlayers: number;
+	maxPlayers: number;
+	slots: Array<{
+		id: string;
+		label: string;
+		count: number;
+		selector: RulesetSelector;
+	}>;
+}
+
+export interface RulesetCompositionModifier {
+	id: string;
+	whenRolePresent: string;
+	slotAdjustments: Array<{ slotId: string; delta: number }>;
+	requiresRoleIds: string[];
+	excludesRoleIds: string[];
+}
+
+export type RulesetSenderDisplay =
+	| 'profile_name'
+	| 'game_alias'
+	| 'seat_number'
+	| 'role_label'
+	| 'team_label';
+
+export interface RulesetRoomPermission {
+	visible: boolean;
+	readable: boolean;
+	sendable: boolean;
+	gameMasterMaySend: boolean;
+	senderDisplay: RulesetSenderDisplay;
+}
+
+export interface RulesetPartialRoomPermission {
+	visible?: boolean;
+	readable?: boolean;
+	sendable?: boolean;
+	gameMasterMaySend?: boolean;
+	senderDisplay?: RulesetSenderDisplay;
+}
+
+export interface RulesetChatPolicy {
+	defaultPolicy: {
+		general?: RulesetRoomPermission;
+		playerDm?: RulesetRoomPermission;
+		teams: Record<string, RulesetRoomPermission>;
+	};
+	phaseOverrides: Record<
+		string,
+		{
+			general?: RulesetPartialRoomPermission;
+			playerDm?: RulesetPartialRoomPermission;
+			teams?: Record<string, RulesetPartialRoomPermission>;
+		}
+	>;
+}
+
+export interface RulesetAchievement {
+	id: string;
+	name: string;
+	description: string;
+	imageAssetKey?: string;
+	points: number;
+	hiddenUntilGameCompleted: boolean;
+}
+
+export interface RulesetAudioCue {
+	id: string;
+	name: string;
+	assetKey: string;
+	defaultAudience: 'all' | 'team' | 'player' | 'game_masters';
+}
+
+export interface RealtimeEnvelope<T = unknown> {
+	eventId: string;
+	gameId?: string;
+	revision?: number;
+	kind: string;
+	occurredAt: string;
+	payload: T;
+}

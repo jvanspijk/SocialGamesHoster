@@ -1,128 +1,147 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
+	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import { api } from '$lib/api/client';
+	import { auth } from '$lib/state/auth.svelte';
 
-	let { children } = $props();
+	let { children }: { children: import('svelte').Snippet } = $props();
+
+	async function logout() {
+		try {
+			await api('/auth/logout', { method: 'POST' });
+		} finally {
+			auth.clear();
+			await goto(resolve('/'));
+		}
+	}
 </script>
 
-<div class="page-main">
-	<div class="parchment-container">
-		{@render children?.()}
-	</div>
-</div>
-
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<title>Social Games Hoster</title>
 </svelte:head>
 
+<div class="sheet">
+	<header>
+		<a class="brand" href={resolve('/')} aria-label="Social Games Hoster home">
+			<Swords size={25} strokeWidth={1.7} />
+			<span>Social Games Hoster</span>
+		</a>
+		<nav aria-label="Main navigation">
+			<a class:active={page.url.pathname.startsWith('/play')} href={resolve('/play')}>
+				<UserRound size={17} /> Play
+			</a>
+			<a class:active={page.url.pathname.startsWith('/admin')} href={resolve('/admin')}>
+				<Shield size={17} /> Host
+			</a>
+			{#if auth.authenticated}
+				<button aria-label="Sign out" onclick={logout}><LogOut size={18} /></button>
+			{/if}
+		</nav>
+		<ConnectionBadge />
+	</header>
+	<main class="page">
+		{@render children()}
+	</main>
+	<footer>
+		<span>Local-first software · No warranty</span>
+		<a href="https://github.com/jvanspijk/SocialGamesHoster">Source code (AGPL-3.0)</a>
+	</footer>
+</div>
+
 <style>
-	/* 2. Page & Background Styles */
-	:global(body) {
-		background-color: var(--color-bg-canvas);
-		margin: 0;
-		padding: 0;
-		min-height: 100vh;
+	header {
+		position: relative;
+		z-index: 2;
+		display: grid;
+		grid-template-columns: 1fr auto auto;
+		align-items: center;
+		gap: 1rem;
+		border-bottom: 1px solid #9a7e51;
+		padding: 0.75rem clamp(1rem, 4vw, 2.5rem);
 	}
 
-	.page-main {
-		background-color: var(--color-bg-canvas);
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		color: var(--ink);
+		font-family: var(--font-display);
+		font-size: clamp(0.72rem, 2.8vw, 1rem);
+		font-weight: 700;
+		letter-spacing: 0.07em;
+		text-decoration: none;
+		text-transform: uppercase;
+	}
+
+	nav {
 		display: flex;
+		align-items: center;
+		gap: 0.2rem;
+	}
+
+	nav a,
+	nav button {
+		display: inline-flex;
+		min-width: 44px;
+		min-height: 44px;
+		align-items: center;
 		justify-content: center;
-		padding: 10px 14px;
-		margin-top: 10px;
-		text-align: center;
+		gap: 0.3rem;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: transparent;
+		color: var(--ink-soft);
+		cursor: pointer;
+		font-family: var(--font-display);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-decoration: none;
+		text-transform: uppercase;
 	}
 
-	.parchment-container {
-		background-color: var(--color-surface);
-		color: var(--color-text);
-		font-family: var(--font-body);
-		width: 100%;
-		max-width: 700px;
-		box-shadow:
-			0 4px 10px rgba(0, 0, 0, 0.4),
-			inset 0 0 50px rgba(100, 80, 50, 0.3),
-			inset 0 0 10px rgba(100, 80, 50, 0.5);
-		padding: 20px 40px;
-		border: 8px solid var(--color-border);
-		border-radius: 4px;
-		line-height: 1.6;
-		min-height: 85vh;
+	nav a:hover,
+	nav a.active,
+	nav button:hover {
+		border-color: var(--crimson);
+		color: var(--crimson-dark);
 	}
 
-	/* for mobile */
 	@media (max-width: 650px) {
-		.parchment-container {
-			padding: 15px 10px !important;
-			border-width: 5px;
+		header {
+			grid-template-columns: 1fr auto;
+		}
+
+		header > :global(span:last-child) {
+			grid-column: 1 / -1;
+			justify-self: end;
+		}
+
+		.brand span {
+			display: none;
+		}
+
+		nav a {
+			font-size: 0;
 		}
 	}
 
-	/* 3. Common Typography*/
-
-	:global(h1),
-	:global(h2) {
-		font-family: var(--font-heading);
-		color: var(--color-border);
-		text-transform: uppercase;
-		letter-spacing: 2px;
-		margin-bottom: 10px;
-		text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
-	}
-
-	:global(h1) {
-		font-size: 2.5em;
-		text-align: center;
-		border-bottom: 3px double var(--color-border);
-		padding-bottom: 15px;
-		margin-bottom: 20px;
-	}
-
-	:global(h2) {
-		font-size: 1.75em;
-		border-bottom: 1px solid var(--color-border);
-		padding-bottom: 5px;
-		margin-top: 25px;
-	}
-
-	:global(h3) {
-		font-size: 1.25em;
-		text-align: center;
-		color: var(--color-text-muted);
-		font-style: italic;
-		margin-top: -8px;
-		padding-bottom: 12px;
-	}
-
-	:global(p) {
-		margin-top: -2px;
-		margin-bottom: 4px;
-		font-size: 1.1em;
-	}
-
-	:global(.container) {
+	footer {
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		max-width: 80%;
-		margin: 0 auto;
+		justify-content: space-between;
+		gap: 1rem;
+		border-top: 1px solid #b89b6d;
+		color: var(--ink-faint);
+		font-size: 0.8rem;
+		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
+		padding-block: 1rem;
 	}
 
-	:global(.error-message) {
-		font-family: var(--font-heading);
-		color: var(--color-accent-strong);
-		text-align: center;
-		font-size: 1.5em;
-		padding: 50px;
-	}
-
-	:global(.success-message) {
-		font-family: var(--font-heading);
-		color: var(--color-success);
-		border-color: var(--color-success);
-		background-color: var(--color-success-soft);
-		text-align: center;
-		font-size: 1.5em;
-		padding: 50px;
+	footer a {
+		color: inherit;
 	}
 </style>

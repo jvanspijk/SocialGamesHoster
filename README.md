@@ -1,38 +1,115 @@
-# SocialGamesHoster
-**N.B. This is a work in progress.**
-Project to host social deduction games on your local network.
+# Social Games Hoster
 
-The readme is outdated and will be updated soon. For now, please refer to the code and commit history.
+Social Games Hoster is a local-first party game host for Windows 10 and 11. One
+computer runs the application; players join from phones and laptops on the same
+trusted private network. Internet access, cloud accounts, Docker, PostgreSQL,
+.NET, and Node.js are not required at runtime.
 
-	## User setup
-	1. Install docker engine or docker desktop.
-	2. Run the docker-compose-prod.yaml.
-	3. You might have to change your firewall settings to allow connections to the web app.
+The rebuild is a single Go executable containing:
 
-	(For Windows, go into "Windows Defender with Firewall with Advanced Security" and 
-	add an inbound TCP rule for port 80 on private networks.)
+- PocketBase `v0.39.9`, pinned exactly, with SQLite storage and SSE realtime;
+- compiled migrations and immutable ruleset/game snapshots;
+- a static Svelte 5 application embedded into the executable;
+- a Windows tray, single-instance guard, local QR codes, and automatic backups.
 
-	## Developer setup
-	1. Run the docker-compose.yaml.
+## Install and host
 
-	Both the API and web app use hot reloading, so code changes appear instantly for ease of development.
-	Swagger documentation can be found on http://localhost:8080/swagger/
+1. Download the Windows x64 setup executable from the GitHub Releases page.
+2. Run the installer. Windows may show a SmartScreen reputation warning for an
+   unsigned community build; verify the adjacent SHA-256 checksum and download
+   source before continuing. This differs from an antivirus malware detection.
+3. Keep the Windows network category set to **Private**. The installer never
+   adds a Public-network firewall rule.
+4. Social Games Hoster opens the setup page. Create the first owner account.
+5. Open a lobby from the Host dashboard and let players scan the shown QR code.
 
-	## Docker compose
-	Docker compose was used for the following reasons:
-	- So that users and hosts don't have to fiddle with dependencies.
-	- Hosts just need to install Docker Desktop/Engine and then copy-paste a single line into their terminal to get everything set up.
-	- To keep the development environment identical to the host environment and thus to prevent environment specific bugs.
+The tray menu can open the dashboard or join page, copy the join link, show the
+QR code, start or stop hosting, create a backup, and exit cleanly. Starting the
+application a second time opens the existing dashboard instead of a second
+database process.
 
-	The docker compose consists of four services:
-	- The API (ASP.NET)
-	- The Web app (Sveltekit)
-	- A database (Postgres)
-	- nginx
+Read [the user guide](docs/USER_GUIDE.md) and
+[troubleshooting guide](docs/TROUBLESHOOTING.md) for operational details.
 
-	## Architecture
-	The API and Web app are separate projects because Svelte offers a better and more comprehensive developer experience for creating a good looking UI and reactive user experience.
+## Security model
 
-	The API is designed to be mostly stateless to keep the logic simple 
-	and prevent data loss if the network is down.
-	The API uses Entity Framework to store and retrieve C# objects in a database without having to manually write queries. The database implementation can be swapped easily and an in-memory database is used for testing.
+This is a trusted-LAN application, not an internet-facing service. Bind it only
+to a network you trust. Custom routes enforce account type, active state,
+game/room membership, and private projections. PocketBase collection CRUD and
+its administrative dashboard are locked. The installer firewall rule is scoped
+to Windows Private networks.
+
+Secret roles, anonymous sender identities, private game history, chat bodies,
+authentication material, and diagnostics are never included in public
+projections. Detailed diagnostics exist only when launched with
+`--diagnostics`, and remain owner-only.
+
+## Data and recovery
+
+Mutable data is stored under:
+
+```text
+%LocalAppData%\SocialGamesHoster\data
+```
+
+Uninstall preserves this directory unless the separately worded
+“permanently delete all data” option is selected and confirmed. The application
+creates:
+
+- a safety backup before a version migration;
+- one automatic backup on the first active launch each day;
+- owner-triggered backups from the dashboard or tray;
+- a rollback backup before restore.
+
+Seven automatic daily backups are retained. Restore requires the owner to type
+the full backup-specific confirmation phrase.
+
+## Development
+
+Requirements:
+
+- Go 1.25 or newer;
+- Node.js 24 and npm (build-time only);
+- Inno Setup 6 (installer builds only).
+
+```powershell
+./scripts/Install-DevDependencies.ps1
+./scripts/Test.ps1
+./scripts/Dev.ps1
+./scripts/Build.ps1 -Version 0.2.3
+```
+
+`Dev.ps1` starts the Go host on port 8090 and the Svelte development UI on port
+9091 with a local API proxy. `Build.ps1` verifies the projects, embeds the static
+web output, produces a console-free Windows x64 executable, builds the Inno
+Setup installer, and writes SHA-256 checksums.
+
+Tests assert user-visible and API contracts rather than component internals.
+Clean-VM installation, physical-phone QR joining, and a 30-player party
+rehearsal are optional field-validation guides. They are useful before wider
+distribution but do not block a friends-only release.
+
+For signed releases, provide `SGH_SIGN_CERT_THUMBPRINT` and make
+`signtool.exe` available. The build signs and timestamps both the application
+and installer. Use the same trusted publisher identity for every release;
+self-signed certificates do not improve SmartScreen reputation. Microsoft's
+Artifact Signing service is the preferred non-Store option, but requires a
+separate account and identity-verification setup. Without a trusted certificate,
+builds remain functional but Windows may warn users.
+
+Never ask users to disable Defender. If Defender identifies a clean release as
+malware or potentially unwanted software, submit that exact artifact to the
+[Microsoft malware-analysis portal](https://www.microsoft.com/en-us/wdsi/filesubmission)
+as a software developer and wait for the classification result before publishing
+it broadly. A normal "unrecognized app" SmartScreen prompt is reputation-based
+and is not corrected through the malware appeal process.
+
+See [architecture](docs/ARCHITECTURE.md) and
+[release validation](docs/RELEASE_VALIDATION.md) for implementation and release
+gates.
+
+## License and source
+
+Social Games Hoster is licensed under the
+[GNU Affero General Public License v3](LICENSE). The running interface links
+back to this source repository as required for network use.
