@@ -29,7 +29,6 @@
 - "Begin review" -> What does this even mean? I'm very confused
 - Clicking on "Sound On" makes the Join Code div jump to the move horizontally. I'm pretty sure Join Codes are not even being used in the first place.
 - Selecting a single player in the announcement still leaves the placeholder text as "Announcement to every player…". Instead of giving each action a different placeholder text, just make it something more general like "Announcement message…".
-- I have no idea what the revision number means. Please remove it.
 
 # Player view
 - Same issue with the chats in the player view as the admin view. WTF is this? It's so bad. It's so difficult to see if you have new chats or get an overview of which chat is which.
