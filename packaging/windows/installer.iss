@@ -1,8 +1,8 @@
 #ifndef AppVersion
-  #define AppVersion "0.2.4-dev"
+  #define AppVersion "0.2.5-dev"
 #endif
 #ifndef WindowsVersion
-  #define WindowsVersion "0.2.4.0"
+  #define WindowsVersion "0.2.5.0"
 #endif
 
 #define AppName "Social Games Hoster"

@@ -5,9 +5,13 @@ $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
 
-function Assert-NativeSuccess([string]$Step) {
+function Assert-NativeSuccess([string]$Step, [string]$Remediation = "") {
     if ($LASTEXITCODE -ne 0) {
-        throw "$Step failed with exit code $LASTEXITCODE."
+        $message = "$Step failed with exit code $LASTEXITCODE."
+        if ($Remediation) {
+            $message += "`n$Remediation"
+        }
+        throw $message
     }
 }
 
@@ -30,8 +34,10 @@ try {
     Assert-NativeSuccess "Frontend type checks"
     npm run test:unit
     Assert-NativeSuccess "Frontend contract tests"
-    npm run lint
-    Assert-NativeSuccess "Frontend lint"
+    npm run format:check
+    Assert-NativeSuccess "Frontend formatting check" 'Run `npm run format` from the Web directory, commit the resulting files, then rerun the check.'
+    npm run lint:eslint
+    Assert-NativeSuccess "Frontend ESLint check" 'Run `npm run lint:eslint` from the Web directory and fix the reported lint errors.'
     npm run build
     Assert-NativeSuccess "Frontend build"
     npm audit --omit=dev --audit-level=high

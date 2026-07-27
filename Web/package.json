@@ -1,7 +1,7 @@
 {
 	"name": "web",
 	"private": true,
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --port 9091 --host 0.0.0.0",
@@ -13,7 +13,9 @@
 		"test:unit": "vitest run",
 		"test:e2e": "node e2e/run-playwright.mjs",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"format:check": "prettier --check .",
+		"lint": "npm run format:check && npm run lint:eslint",
+		"lint:eslint": "eslint ."
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -31,7 +33,7 @@
 		"eslint-plugin-svelte": "^3.12.4",
 		"globals": "^16.4.0",
 		"jsdom": "^29.1.1",
-		"prettier": "^3.8.1",
+		"prettier": "3.8.1",
 		"prettier-plugin-svelte": "^3.5.1",
 		"svelte": "5.56.8",
 		"svelte-check": "^4.3.2",

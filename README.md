@@ -76,7 +76,7 @@ Requirements:
 ./scripts/Install-DevDependencies.ps1
 ./scripts/Test.ps1
 ./scripts/Dev.ps1
-./scripts/Build.ps1 -Version 0.2.4
+./scripts/Build.ps1 -Version 0.2.5
 ```
 
 `Dev.ps1` starts the Go host on port 8090 and the Svelte development UI on port
