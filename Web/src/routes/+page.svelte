@@ -221,12 +221,7 @@
 {:else}
 	<section class="hero stack">
 		<div class="hero-copy">
-			<p class="ornament">Your game · Your network</p>
 			<h1>Gather the party.<br />Keep every secret.</h1>
-			<p class="lead">
-				Join the game hosted on this local network. No email, internet account, or cloud service is
-				required.
-			</p>
 		</div>
 
 		<div class="grid">
@@ -266,9 +261,9 @@
 			{:else}
 				<form class="card stack" onsubmit={requestProfile}>
 					<ScrollText size={34} aria-hidden="true" />
-					<h2>Enter by profile</h2>
+					<h2>Enter your profile name</h2>
 					<p class="muted">
-						Use your existing name to recover it on this device, or choose a new one.
+						Sign in to an existing profile or create a new one.
 					</p>
 					<Field
 						label="Profile name"

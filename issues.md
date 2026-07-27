@@ -1,8 +1,5 @@
 # Main page
 - This should be all centered, with the players being the default action, and if you are a game master, you get a clickable link under the player action. This can be simple like "click here if you are a game master" No further description needed.
-- "Use your existing name to recover it on this device, or choose a new one." -> bad, never bore the user with technical details. Should be "Sign in to an existing profile or create a new one."
-- Enter by profile -> should be "Enter your profile name"
-- "Your game · Your network" -> useless fluff, sounds like an ad. Remove it.
 - "Gather the party. Keep every secret." -> cringe AI sounding roleplay. Just make this into the page title.
 - The 'play' and 'host' buttons at the header are too close together horizontally. Fix this while keeping in mind other device sizes.
 

@@ -140,7 +140,7 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	const noGameContext = await browser.newContext({ viewport: viewports[0] });
 	const noGamePlayer = await noGameContext.newPage();
 	await noGamePlayer.goto('/');
-	await expect(noGamePlayer.getByRole('heading', { name: 'Enter by profile' })).toBeVisible();
+	await expect(noGamePlayer.getByRole('heading', { name: 'Enter your profile name' })).toBeVisible();
 	await capture(noGamePlayer, 'join', 'no-game');
 	await noGamePlayer.goto('/?showQr=1');
 	await expect(noGamePlayer.getByRole('heading', { name: 'Scan to join' })).toBeVisible();
@@ -166,7 +166,7 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	const playerOneContext = await browser.newContext({ viewport: viewports[0] });
 	const playerOne = await playerOneContext.newPage();
 	await playerOne.goto('/');
-	await expect(playerOne.getByRole('heading', { name: 'Enter by profile' })).toBeVisible();
+	await expect(playerOne.getByRole('heading', { name: 'Enter your profile name' })).toBeVisible();
 	await capture(playerOne, 'join', 'lobby');
 	await playerOne.getByLabel('Profile name').fill('Mira');
 	await playerOne.getByRole('button', { name: 'Request entry' }).click();
