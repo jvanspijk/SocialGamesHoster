@@ -68,15 +68,15 @@ the full backup-specific confirmation phrase.
 
 Requirements:
 
-- Go 1.25 or newer;
-- Node.js 24 and npm (build-time only);
+- Go 1.26.5 or newer;
+- Node.js 26.5.0 and npm (build-time only);
 - Inno Setup 6 (installer builds only).
 
 ```powershell
 ./scripts/Install-DevDependencies.ps1
 ./scripts/Test.ps1
 ./scripts/Dev.ps1
-./scripts/Build.ps1 -Version 0.2.3
+./scripts/Build.ps1 -Version 0.2.4
 ```
 
 `Dev.ps1` starts the Go host on port 8090 and the Svelte development UI on port
