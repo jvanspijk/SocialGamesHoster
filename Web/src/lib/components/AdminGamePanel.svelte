@@ -54,6 +54,7 @@
 	let soundEnabled = $state(false);
 	let cueNotice = $state('');
 	let audioContext: AudioContext | null = null;
+	let previousCueAudience = 'all';
 
 	onMount(() => {
 		soundEnabled = localStorage.getItem('sgh.sound-enabled') === 'true';
@@ -94,8 +95,17 @@
 
 	$effect(() => {
 		const selected = audioCues.find((cue) => cue.id === announcementCue);
-		if (selected) cueAudience = selected.defaultAudience;
+		if (selected && selected.defaultAudience !== 'game_masters') {
+			cueAudience = selected.defaultAudience;
+		}
 		cueTarget = '';
+	});
+
+	$effect(() => {
+		if (cueAudience !== previousCueAudience) {
+			previousCueAudience = cueAudience;
+			cueTarget = '';
+		}
 	});
 
 	$effect(() => {
@@ -224,8 +234,8 @@
 		await command('announcements', {
 			content,
 			cueKey: announcementCue,
-			audience: announcementCue ? cueAudience : '',
-			targetId: announcementCue ? cueTarget : ''
+			audience: cueAudience,
+			targetId: cueTarget
 		});
 		announcement = '';
 	}
@@ -510,35 +520,45 @@
 				maxlength="1000"
 				placeholder="Announcement to every player…"
 			/>
+			<select aria-label="Announcement audience" bind:value={cueAudience}>
+				<option value="all">All players</option>
+				<option value="team">One team</option>
+				<option value="player">One player</option>
+			</select>
+			{#if cueAudience === 'team'}
+				<select aria-label="Announcement target team" bind:value={cueTarget} required>
+					<option value="">Choose team</option>
+					{#each teams as team (team.id)}<option value={team.id}>{team.name}</option>{/each}
+				</select>
+			{:else if cueAudience === 'player'}
+				<select aria-label="Announcement target player" bind:value={cueTarget} required>
+					<option value="">Choose player</option>
+					{#each view.participants.filter((participant) => !['kicked', 'left'].includes(participant.status)) as participant (participant.id)}
+						<option value={participant.id}>{participant.displayNameSnapshot}</option>
+					{/each}
+				</select>
+			{/if}
 			{#if audioCues.length}
 				<select aria-label="Optional sound cue" bind:value={announcementCue}>
 					<option value="">No sound</option>
 					{#each audioCues as cue (cue.id)}<option value={cue.id}>{cue.name}</option>{/each}
 				</select>
-				{#if announcementCue}
-					<select aria-label="Sound audience" bind:value={cueAudience}>
-						<option value="all">All players</option>
-						<option value="team">One team</option>
-						<option value="player">One player</option>
-						<option value="game_masters">Game masters</option>
-					</select>
-					{#if cueAudience === 'team'}
-						<select aria-label="Sound target team" bind:value={cueTarget} required>
-							<option value="">Choose team</option>
-							{#each teams as team (team.id)}<option value={team.id}>{team.name}</option>{/each}
-						</select>
-					{:else if cueAudience === 'player'}
-						<select aria-label="Sound target player" bind:value={cueTarget} required>
-							<option value="">Choose player</option>
-							{#each view.participants as participant (participant.id)}
-								<option value={participant.id}>{participant.displayNameSnapshot}</option>
-							{/each}
-						</select>
-					{/if}
-				{/if}
 			{/if}
 			<Button type="submit">Announce</Button>
 		</form>
+		{#if view.attentionItems.length}
+			<div class="attention-summaries">
+				{#each view.attentionItems as item (item.id)}
+					<article>
+						<div>
+							<strong>{item.content}</strong>
+							<small>{item.audience === 'all' ? 'All players' : item.audience}</small>
+						</div>
+						<span>{item.acknowledgementCount} of {item.recipientTotal} acknowledged</span>
+					</article>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 
 	<section class="card stack">
@@ -667,6 +687,31 @@
 		display: flex;
 		align-items: center;
 		gap: 0.55rem;
+	}
+
+	.attention-summaries {
+		display: grid;
+		gap: 0.5rem;
+	}
+
+	.attention-summaries article {
+		display: flex;
+		align-items: start;
+		justify-content: space-between;
+		gap: 1rem;
+		border-inline-start: 3px solid var(--crimson);
+		background: rgb(255 249 230 / 45%);
+		padding: 0.65rem 0.8rem;
+	}
+
+	.attention-summaries article div {
+		display: grid;
+	}
+
+	.attention-summaries small,
+	.attention-summaries span {
+		color: var(--ink-soft);
+		font-size: 0.78rem;
 	}
 
 	.game-title {
@@ -901,9 +946,62 @@
 		color: var(--ink-faint);
 	}
 
-	@media (max-width: 620px) {
+	@media (max-width: 960px) {
+		section.stack,
+		.grid,
+		.grid > *,
+		.moderation-layout,
+		.moderation-layout > * {
+			min-width: 0;
+			max-width: 100%;
+		}
+
+		.game-title {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.game-title > div:first-child,
+		.join-code {
+			min-width: 0;
+			width: 100%;
+		}
+
 		.participant {
 			grid-template-columns: 1fr;
+		}
+
+		.command-bar,
+		.button-row {
+			display: grid;
+			grid-template-columns: 1fr;
+		}
+
+		.alias-editor {
+			flex-wrap: wrap;
+		}
+
+		.alias-editor input {
+			flex: 1 1 10rem;
+			min-width: 0;
+		}
+
+		.duration,
+		.outcome,
+		.award-row,
+		.attention-summaries article {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.phase-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		select,
+		input {
+			min-width: 0;
+			max-width: 100%;
 		}
 
 		.announcement {

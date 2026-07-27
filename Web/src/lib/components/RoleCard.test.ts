@@ -18,12 +18,16 @@ describe('RoleCard', () => {
 			}
 		});
 
-		expect(screen.getByRole('heading', { name: 'Seer' })).toBeInTheDocument();
-		await fireEvent.click(screen.getByRole('button', { name: /conceal/i }));
+		expect(screen.getByRole('heading', { name: 'Concealed' })).toBeInTheDocument();
+		expect(screen.queryByRole('heading', { name: 'Abilities' })).not.toBeInTheDocument();
 		expect(screen.getByText('Role concealed')).toBeInTheDocument();
 		expect(screen.getByText('Safe to pass the phone')).toBeInTheDocument();
 
 		await fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+		expect(screen.getByRole('heading', { name: 'Seer' })).toBeInTheDocument();
+		expect(screen.getByRole('heading', { name: 'Abilities' })).toBeInTheDocument();
 		expect(screen.queryByText('Role concealed')).not.toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: /conceal/i }));
+		expect(screen.getByText('Role concealed')).toBeInTheDocument();
 	});
 });

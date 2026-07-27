@@ -20,7 +20,7 @@
 		void pb.realtime
 			.subscribe(`room:${room.id}`, (raw) => {
 				const event = raw as unknown as RealtimeEnvelope<ChatMessage>;
-				if (event.kind === 'chat.message_created' || event.kind === 'chat.announcement') {
+				if (event.kind === 'chat.message_created') {
 					if (!messages.some((item) => item.id === event.payload.id))
 						messages = [...messages, event.payload];
 				}
@@ -91,7 +91,7 @@
 	}
 </script>
 
-<section class="chat card">
+<section class="chat">
 	<header>
 		<div>
 			<p class="kind">{room.kind.replace('_', ' ')}</p>
@@ -151,7 +151,8 @@
 <style>
 	.chat {
 		display: grid;
-		min-height: 28rem;
+		height: 100%;
+		min-height: 20rem;
 		grid-template-rows: auto minmax(12rem, 1fr) auto auto;
 	}
 
@@ -234,9 +235,13 @@
 	}
 
 	form {
+		position: sticky;
+		inset-block-end: 0;
 		display: grid;
 		grid-template-columns: 1fr auto;
 		gap: 0.5rem;
+		background: var(--paper);
+		padding-block-end: max(0.25rem, env(safe-area-inset-bottom));
 	}
 
 	input {

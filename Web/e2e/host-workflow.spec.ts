@@ -1,8 +1,25 @@
 import { expect, test } from '@playwright/test';
 
+async function expectNoHorizontalOverflow(page: import('@playwright/test').Page) {
+	const overflow = await page.evaluate(() => ({
+		page: document.body.scrollWidth - window.innerWidth,
+		controls: Array.from(document.querySelectorAll('button, a, input, select, textarea'))
+			.filter((element) => {
+				const rect = element.getBoundingClientRect();
+				const visible = rect.width > 0 && rect.height > 0;
+				return visible && (rect.left < -1 || rect.right > window.innerWidth + 1);
+			})
+			.map((element) => element.getAttribute('aria-label') || element.textContent?.trim())
+	}));
+	expect(overflow).toEqual({ page: 0, controls: [] });
+}
+
 test('owner setup opens the visual ruleset creator', async ({ page }) => {
+	await page.setViewportSize({ width: 320, height: 568 });
 	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Prepare the game table' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Set up the host' })).toBeVisible();
+	await expectNoHorizontalOverflow(page);
+	await page.setViewportSize({ width: 1440, height: 900 });
 
 	await page.getByLabel('Username').fill('partyhost');
 	await page.getByLabel('Display name').fill('Party Host');
@@ -14,7 +31,8 @@ test('owner setup opens the visual ruleset creator', async ({ page }) => {
 	await page.getByRole('button', { name: 'Create owner' }).click();
 	expect((await liveSubscription).status()).toBe(204);
 
-	await expect(page.getByRole('button', { name: /rulesets/i })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'More' })).toBeVisible();
+	await page.getByRole('button', { name: 'More' }).click();
 	await page.getByRole('button', { name: /rulesets/i }).click();
 	await page.getByRole('link', { name: /new ruleset/i }).click();
 
@@ -37,6 +55,14 @@ test('owner setup opens the visual ruleset creator', async ({ page }) => {
 	await expect(page.getByLabel('Achievement points')).toHaveValue('75');
 	await expect(page.getByLabel('Hide from players until the game ends')).toBeChecked();
 
+	for (const viewport of [
+		{ width: 320, height: 568 },
+		{ width: 390, height: 844 },
+		{ width: 1440, height: 900 }
+	]) {
+		await page.setViewportSize(viewport);
+		await expectNoHorizontalOverflow(page);
+	}
 	await page.setViewportSize({ width: 412, height: 915 });
-	await expect(page.getByRole('button', { name: 'Achievements' })).toBeVisible();
+	await expect(page.getByRole('button', { name: /sections.*achievements/i })).toBeVisible();
 });

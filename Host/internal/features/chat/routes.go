@@ -47,7 +47,7 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 		return access{}, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized}
 	}
 	room, err := event.App.FindRecordById("chat_rooms", roomID)
-	if err != nil {
+	if err != nil || room.GetString("kind") == "announcements" {
 		return access{}, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound}
 	}
 	game, err := event.App.FindRecordById("games", room.GetString("game"))
@@ -114,7 +114,7 @@ func listRooms(event *core.RequestEvent) error {
 	if event.Auth == nil || !event.Auth.GetBool("active") {
 		return writeError(event, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized})
 	}
-	rooms, err := event.App.FindRecordsByFilter("chat_rooms", "game = {:game}", "kind,label", 200, 0, dbx.Params{"game": game.Id})
+	rooms, err := event.App.FindRecordsByFilter("chat_rooms", "game = {:game} && kind != 'announcements'", "kind,label", 200, 0, dbx.Params{"game": game.Id})
 	if err != nil {
 		return writeError(event, result.Internal(err))
 	}
@@ -124,7 +124,7 @@ func listRooms(event *core.RequestEvent) error {
 		if err != nil {
 			continue
 		}
-		response = append(response, projectRoom(resolved))
+		response = append(response, projectRoom(event.App, resolved))
 	}
 	return event.JSON(http.StatusOK, response)
 }
@@ -203,7 +203,7 @@ func createPlayerDM(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, err)
 	}
-	return event.JSON(http.StatusCreated, projectRoom(resolved))
+	return event.JSON(http.StatusCreated, projectRoom(event.App, resolved))
 }
 
 type messageRequest struct {
@@ -456,7 +456,7 @@ func playerSenderLabel(app core.App, resolved access, profile *core.Record) (str
 	}, display), nil
 }
 
-func projectRoom(resolved access) map[string]any {
+func projectRoom(app core.App, resolved access) map[string]any {
 	sendable := resolved.Policy.Sendable
 	if resolved.IsGM {
 		sendable = resolved.Policy.GameMasterMaySend ||
@@ -471,6 +471,25 @@ func projectRoom(resolved access) map[string]any {
 		"label": resolved.Room.GetString("label"), "locked": resolved.Room.GetBool("manually_locked"),
 		"readable": resolved.IsGM || resolved.Policy.Readable, "sendable": sendable,
 		"gameMasterMaySend": resolved.Policy.GameMasterMaySend,
+		"latestMessage":     latestMessageCursor(app, resolved.Room.Id),
+	}
+}
+
+func latestMessageCursor(app core.App, roomID string) any {
+	messages, err := app.FindRecordsByFilter(
+		"chat_messages",
+		"room = {:room} && message_kind != 'announcement'",
+		"-created,-id",
+		1,
+		0,
+		dbx.Params{"room": roomID},
+	)
+	if err != nil || len(messages) == 0 {
+		return nil
+	}
+	return map[string]any{
+		"createdAt": messages[0].GetDateTime("created").Time().UTC(),
+		"id":        messages[0].Id,
 	}
 }
 

@@ -3,12 +3,16 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
+	import { displayPreferences } from '$lib/state/display.svelte';
 
 	let { children }: { children: import('svelte').Snippet } = $props();
+
+	onMount(() => displayPreferences.init());
 
 	async function logout() {
 		try {
@@ -24,48 +28,57 @@
 	<title>Social Games Hoster</title>
 </svelte:head>
 
-<div class="sheet">
-	<header>
-		<a class="brand" href={resolve('/')} aria-label="Social Games Hoster home">
-			<Swords size={25} strokeWidth={1.7} />
-			<span>Social Games Hoster</span>
-		</a>
-		<nav aria-label="Main navigation">
-			<a class:active={page.url.pathname.startsWith('/play')} href={resolve('/play')}>
-				<UserRound size={17} /> Play
+{#if page.url.pathname.startsWith('/play') && auth.isPlayer}
+	<div class="immersive-shell">
+		<main class="immersive-page">
+			{@render children()}
+		</main>
+	</div>
+{:else}
+	<div class="sheet">
+		<header>
+			<a class="brand" href={resolve('/')} aria-label="Social Games Hoster home">
+				<Swords size={25} strokeWidth={1.7} />
+				<span>Social Games Hoster</span>
 			</a>
-			<a class:active={page.url.pathname.startsWith('/admin')} href={resolve('/admin')}>
-				<Shield size={17} /> Host
-			</a>
-			{#if auth.authenticated}
-				<button aria-label="Sign out" onclick={logout}><LogOut size={18} /></button>
-			{/if}
-		</nav>
-		<ConnectionBadge />
-	</header>
-	<main class="page">
-		{@render children()}
-	</main>
-	<footer>
-		<span>Local-first software · No warranty</span>
-		<a href="https://github.com/jvanspijk/SocialGamesHoster">Source code (AGPL-3.0)</a>
-	</footer>
-</div>
+			<nav aria-label="Main navigation">
+				<a class:active={page.url.pathname.startsWith('/play')} href={resolve('/play')}>
+					<UserRound size={17} /> Play
+				</a>
+				<a class:active={page.url.pathname.startsWith('/admin')} href={resolve('/admin')}>
+					<Shield size={17} /> Host
+				</a>
+				{#if auth.authenticated}
+					<button aria-label="Sign out" onclick={logout}><LogOut size={18} /></button>
+				{/if}
+			</nav>
+			<ConnectionBadge />
+		</header>
+		<main class="page">
+			{@render children()}
+		</main>
+		<footer>
+			<span>Local-first software · No warranty</span>
+			<a href="https://github.com/jvanspijk/SocialGamesHoster">Source code (AGPL-3.0)</a>
+		</footer>
+	</div>
+{/if}
 
 <style>
 	header {
 		position: relative;
-		z-index: 2;
+		z-index: var(--layer-navigation);
 		display: grid;
 		grid-template-columns: 1fr auto auto;
 		align-items: center;
 		gap: 1rem;
-		border-bottom: 1px solid #9a7e51;
+		border-bottom: var(--border-subtle);
 		padding: 0.75rem clamp(1rem, 4vw, 2.5rem);
 	}
 
 	.brand {
 		display: inline-flex;
+		min-height: var(--target-size);
 		align-items: center;
 		gap: 0.6rem;
 		color: var(--ink);
@@ -86,8 +99,8 @@
 	nav a,
 	nav button {
 		display: inline-flex;
-		min-width: 44px;
-		min-height: 44px;
+		min-width: var(--target-size);
+		min-height: var(--target-size);
 		align-items: center;
 		justify-content: center;
 		gap: 0.3rem;
@@ -111,6 +124,24 @@
 		color: var(--crimson-dark);
 	}
 
+	footer {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		border-top: var(--border-subtle);
+		color: var(--ink-faint);
+		font-size: 0.8rem;
+		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
+		padding-block: 1rem;
+	}
+
+	footer a {
+		display: inline-flex;
+		min-height: var(--target-size);
+		align-items: center;
+		color: inherit;
+	}
+
 	@media (max-width: 650px) {
 		header {
 			grid-template-columns: 1fr auto;
@@ -128,20 +159,9 @@
 		nav a {
 			font-size: 0;
 		}
-	}
 
-	footer {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		border-top: 1px solid #b89b6d;
-		color: var(--ink-faint);
-		font-size: 0.8rem;
-		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
-		padding-block: 1rem;
-	}
-
-	footer a {
-		color: inherit;
+		footer {
+			display: grid;
+		}
 	}
 </style>

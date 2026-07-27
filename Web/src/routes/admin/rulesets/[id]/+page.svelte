@@ -8,6 +8,7 @@
 		CheckCircle2,
 		Copy,
 		FileImage,
+		Menu,
 		Archive,
 		Save,
 		Send,
@@ -17,6 +18,7 @@
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/components/rulesets/VisualDefinitionEditor.svelte';
 	import { api, AppApiError, download, jsonBody } from '$lib/api/client';
 	import type { AppErrorBody, RulesetDefinition, RulesetSummary } from '$lib/api/types';
@@ -87,6 +89,7 @@
 	let savedDefinition = $state('');
 	let trackingChanges = $state(false);
 	let advancedOpen = $state(false);
+	let sectionMenuOpen = $state(false);
 	let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const sections: Array<{ id: Section; label: string }> = [
@@ -167,6 +170,7 @@
 
 	function selectSection(next: Section) {
 		section = next;
+		sectionMenuOpen = false;
 		advancedOpen = false;
 		syncText();
 	}
@@ -436,6 +440,10 @@
 	{/if}
 
 	<div class="workspace">
+		<button class="section-menu" type="button" onclick={() => (sectionMenuOpen = true)}>
+			<Menu size={18} /> Sections · {sections.find((item) => item.id === section)?.label}
+			{#if dirty}<span>Unsaved</span>{/if}
+		</button>
 		<nav aria-label="Ruleset sections">
 			{#each sections as item (item.id)}
 				<button class:active={section === item.id} onclick={() => selectSection(item.id)}
@@ -568,6 +576,21 @@
 	</div>
 </div>
 
+<Sheet open={sectionMenuOpen} title="Ruleset sections" close={() => (sectionMenuOpen = false)}>
+	<div class="section-list">
+		{#each sections as item (item.id)}
+			<button
+				type="button"
+				class:active={section === item.id}
+				onclick={() => selectSection(item.id)}
+			>
+				<span>{item.label}</span>
+				{#if dirty && section === item.id}<small>Unsaved</small>{/if}
+			</button>
+		{/each}
+	</div>
+</Sheet>
+
 <style>
 	.editor {
 		max-width: 70rem;
@@ -604,6 +627,33 @@
 		display: grid;
 		grid-template-columns: 13rem minmax(0, 1fr);
 		gap: 1rem;
+	}
+
+	.section-menu {
+		display: none;
+	}
+
+	.section-list {
+		display: grid;
+	}
+
+	.section-list button {
+		display: flex;
+		min-height: var(--target-size);
+		align-items: center;
+		justify-content: space-between;
+		border: 0;
+		border-block-end: var(--border-subtle);
+		background: transparent;
+		color: var(--ink);
+		cursor: pointer;
+		padding: var(--space-3);
+		text-align: start;
+	}
+
+	.section-list button.active {
+		border-inline-start: 3px solid var(--crimson);
+		color: var(--crimson-dark);
 	}
 
 	.workspace > nav {
@@ -790,12 +840,29 @@
 		}
 
 		.workspace > nav {
-			display: flex;
-			overflow-x: auto;
+			display: none;
 		}
 
-		.workspace > nav button {
-			min-width: 9rem;
+		.section-menu {
+			display: flex;
+			width: 100%;
+			min-height: var(--target-size);
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--space-2);
+			border: var(--border-strong);
+			background: var(--paper-light);
+			color: var(--ink);
+			padding: var(--space-2) var(--space-3);
+		}
+
+		.actions {
+			position: sticky;
+			z-index: var(--layer-sticky);
+			inset-block-end: 0;
+			flex-wrap: wrap;
+			background: var(--paper);
+			padding-block: var(--space-2);
 		}
 	}
 </style>

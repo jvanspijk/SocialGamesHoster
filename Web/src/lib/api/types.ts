@@ -64,6 +64,12 @@ export interface Room {
 	readable: boolean;
 	sendable: boolean;
 	gameMasterMaySend?: boolean;
+	latestMessage: MessageCursor | null;
+}
+
+export interface MessageCursor {
+	createdAt: string;
+	id: string;
 }
 
 export interface ChatMessage {
@@ -77,6 +83,30 @@ export interface ChatMessage {
 	deleted: boolean;
 	createdAt: string;
 	isOwn?: boolean;
+}
+
+export interface AnnouncementAttentionItem {
+	id: string;
+	kind: 'announcement';
+	senderLabel: string;
+	content: string;
+	cueKey?: string;
+	createdAt: string;
+}
+
+export interface FutureEventAttentionItem {
+	id: string;
+	kind: 'event';
+	createdAt: string;
+}
+
+export type AttentionItem = AnnouncementAttentionItem | FutureEventAttentionItem;
+
+export interface AdminAttentionSummary extends AnnouncementAttentionItem {
+	audience: 'all' | 'team' | 'player';
+	targetId?: string;
+	recipientTotal: number;
+	acknowledgementCount: number;
 }
 
 export interface TimerProjection {
@@ -111,7 +141,7 @@ export interface PlayerGameView {
 	role: RoleProjection | null;
 	knowledge: Array<Record<string, unknown>>;
 	rooms: Room[];
-	announcements: ChatMessage[];
+	attentionItems: AttentionItem[];
 	assets: Array<{
 		id: string;
 		assetKey: string;
@@ -134,6 +164,7 @@ export interface AdminGameView {
 	ruleset: RulesetDefinition;
 	participants: Participant[];
 	rooms: Room[];
+	attentionItems: AdminAttentionSummary[];
 	awards: Array<{
 		id: string;
 		profileId: string;

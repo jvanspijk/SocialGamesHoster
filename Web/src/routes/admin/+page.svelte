@@ -8,6 +8,7 @@
 		Crown,
 		DatabaseBackup,
 		Gamepad2,
+		MoreHorizontal,
 		Settings,
 		ShieldCheck,
 		UserPlus,
@@ -17,12 +18,14 @@
 	import Button from '$lib/components/Button.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { api, AppApiError, download, jsonBody, pb } from '$lib/api/client';
 	import type { AppErrorBody, AuthResponse, Game, RulesetSummary } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 
-	type AdminTab = 'live' | 'games' | 'approvals' | 'rulesets' | 'owner';
+	type AdminTab = 'live' | 'games' | 'approvals' | 'more' | 'rulesets' | 'owner';
+	type OwnerTask = 'network' | 'join' | 'accounts' | 'backups' | 'diagnostics';
 	type ProfileRequest = {
 		id: string;
 		requestType: string;
@@ -70,6 +73,10 @@
 	};
 
 	let tab = $state<AdminTab>('live');
+	let ownerTask = $state<OwnerTask>('network');
+	let gameSheetOpen = $state(false);
+	let rejectionRequestId = $state('');
+	let rejectionReason = $state('');
 	let credentials = $state({ username: '', password: '' });
 	let gameForm = $state({ name: '', rulesetVersionId: '' });
 	let accountForm = $state({ username: '', displayName: '', password: '' });
@@ -190,7 +197,7 @@
 	async function restoreBackup(backup: Backup) {
 		const expected = `RESTORE ${backup.id}`;
 		const confirmation = window.prompt(
-			`Restoring replaces the current ledger and restarts the host. A rollback backup will be created first.\n\nType ${expected} to continue.`
+			`Restoring replaces the current data and restarts the host. A rollback backup will be created first.\n\nType ${expected} to continue.`
 		);
 		if (confirmation !== expected) return;
 		busy = true;
@@ -224,6 +231,7 @@
 				...jsonBody(gameForm)
 			});
 			gameForm.name = '';
+			gameSheetOpen = false;
 			games = await api<Game[]>('/games');
 			await selectGame(created.id);
 		} catch (caught) {
@@ -283,13 +291,17 @@
 		}
 	}
 
-	async function decide(requestId: string, decision: 'approve' | 'reject') {
+	async function decide(requestId: string, decision: 'approve' | 'reject', reason = '') {
 		try {
 			await api(`/admin/profile-requests/${requestId}/${decision}`, {
 				method: 'POST',
-				...jsonBody(decision === 'reject' ? { reason: 'Declined by a game master.' } : {})
+				...jsonBody(decision === 'reject' ? { reason } : {})
 			});
 			requests = await api<ProfileRequest[]>('/admin/profile-requests');
+			if (decision === 'reject') {
+				rejectionRequestId = '';
+				rejectionReason = '';
+			}
 		} catch (caught) {
 			setError(caught);
 		}
@@ -389,8 +401,8 @@
 {#if !auth.isGameMaster}
 	<section class="login stack">
 		<div>
-			<p class="ornament">Game-master entrance</p>
-			<h1>Take the host’s chair</h1>
+			<p class="ornament">Host login</p>
+			<h1>Sign in as game master</h1>
 			<p class="muted">Sign in with the named account created on the host computer.</p>
 		</div>
 		<form class="card stack" onsubmit={login}>
@@ -427,7 +439,7 @@
 			</div>
 			<nav aria-label="Game-master dashboard">
 				<button class:active={tab === 'live'} onclick={() => (tab = 'live')}
-					><Gamepad2 size={19} /> Live table</button
+					><Gamepad2 size={19} /> Live</button
 				>
 				<button class:active={tab === 'games'} onclick={() => (tab = 'games')}
 					><Archive size={19} /> Games</button
@@ -435,12 +447,10 @@
 				<button class:active={tab === 'approvals'} onclick={() => (tab = 'approvals')}
 					><UserPlus size={19} /> Approvals <em>{requests.length}</em></button
 				>
-				<button class:active={tab === 'rulesets'} onclick={() => (tab = 'rulesets')}
-					><BookOpen size={19} /> Rulesets</button
+				<button
+					class:active={['more', 'rulesets', 'owner'].includes(tab)}
+					onclick={() => (tab = 'more')}><MoreHorizontal size={19} /> More</button
 				>
-				{#if auth.isOwner}<button class:active={tab === 'owner'} onclick={() => (tab = 'owner')}
-						><Settings size={19} /> Installation</button
-					>{/if}
 			</nav>
 		</aside>
 
@@ -459,28 +469,17 @@
 					<div class="card empty">
 						<Gamepad2 size={42} />
 						<h2>No game selected</h2>
-						<p>Create a draft or select one from the games ledger.</p>
+						<p>Create a draft or select one from Games.</p>
 						<Button onclick={() => (tab = 'games')}>Open games</Button>
 					</div>
 				{/if}
 			{:else if tab === 'games'}
 				<section class="stack">
 					<div>
-						<p class="ornament">Game ledger</p>
+						<p class="ornament">Games</p>
 						<h1>Drafts and history</h1>
 					</div>
-					<form class="card new-game" onsubmit={createGame}>
-						<Field label="Game name" name="gameName" bind:value={gameForm.name} required />
-						<label>
-							<span>Ruleset</span>
-							<select bind:value={gameForm.rulesetVersionId} required>
-								{#each rulesets.filter((item) => item.latestPublishedVersion) as ruleset (ruleset.id)}
-									<option value={ruleset.latestPublishedVersion}>{ruleset.name}</option>
-								{/each}
-							</select>
-						</label>
-						<Button type="submit" loading={busy}>Create draft</Button>
-					</form>
+					<Button onclick={() => (gameSheetOpen = true)}>New game</Button>
 					<label class="check">
 						<input type="checkbox" bind:checked={showArchivedGames} />
 						<span>Show archived games</span>
@@ -525,8 +524,12 @@
 								</p>
 							</div>
 							<div>
-								<Button variant="secondary" onclick={() => decide(request.id, 'reject')}
-									>Reject</Button
+								<Button
+									variant="secondary"
+									onclick={() => {
+										rejectionRequestId = request.id;
+										rejectionReason = '';
+									}}>Reject</Button
 								>
 								<Button onclick={() => decide(request.id, 'approve')}>Approve</Button>
 							</div>
@@ -559,6 +562,29 @@
 						{:else}
 							<p class="card">No approved player profiles yet.</p>
 						{/each}
+					</div>
+				</section>
+			{:else if tab === 'more'}
+				<section class="stack">
+					<div>
+						<p class="ornament">Host settings</p>
+						<h1>More</h1>
+					</div>
+					<div class="grid">
+						<button class="card more-task" type="button" onclick={() => (tab = 'rulesets')}>
+							<BookOpen size={24} /><span
+								><strong>Rulesets</strong><small>Create, import, and publish rulesets.</small></span
+							>
+						</button>
+						{#if auth.isOwner}
+							<button class="card more-task" type="button" onclick={() => (tab = 'owner')}>
+								<Settings size={24} /><span
+									><strong>Installation</strong><small
+										>Network, accounts, backups, and diagnostics.</small
+									></span
+								>
+							</button>
+						{/if}
 					</div>
 				</section>
 			{:else if tab === 'rulesets'}
@@ -610,8 +636,17 @@
 						<p class="ornament">Owner controls</p>
 						<h1>Installation and accounts</h1>
 					</div>
+					<nav class="owner-tasks" aria-label="Installation tasks">
+						{#each [['network', 'Network'], ['join', 'Phone join'], ['accounts', 'Game masters'], ['backups', 'Backups'], ['diagnostics', 'Diagnostics']] as [id, label] (id)}
+							<button
+								type="button"
+								class:active={ownerTask === id}
+								onclick={() => (ownerTask = id as OwnerTask)}>{label}</button
+							>
+						{/each}
+					</nav>
 					<div class="grid">
-						{#if hostSettings}
+						{#if hostSettings && ownerTask === 'network'}
 							<form class="card stack" onsubmit={saveHostSettings}>
 								<h2>Network hosting</h2>
 								<label>
@@ -649,6 +684,8 @@
 								</p>
 								<Button type="submit" loading={busy}>Save hosting settings</Button>
 							</form>
+						{/if}
+						{#if hostSettings && ownerTask === 'join'}
 							<section class="card stack join-card">
 								<h2>Phone join</h2>
 								<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
@@ -661,130 +698,177 @@
 							</section>
 						{/if}
 					</div>
-					<div class="grid">
-						<section class="card stack">
-							<div class="section-title">
-								<Users size={24} />
-								<h2>Game masters</h2>
-							</div>
-							{#each gameMasters as master (master.id)}
-								<div class="master">
-									<div><strong>{master.displayName}</strong><small>@{master.username}</small></div>
-									<span>{master.isOwner ? 'Owner' : master.active ? 'Active' : 'Disabled'}</span>
-									{#if !master.isOwner}
-										<div class="master-actions">
-											<Button
-												variant="secondary"
-												onclick={() => updateMaster(master, { active: !master.active })}
-												>{master.active ? 'Disable' : 'Enable'}</Button
-											>
-											<Button variant="ghost" onclick={() => resetMasterPassword(master)}
-												>Reset password</Button
-											>
-											<Button variant="ghost" onclick={() => transferOwner(master)}
-												>Make owner</Button
-											>
-											<Button variant="danger" onclick={() => deleteMaster(master)}>Remove</Button>
-										</div>
-									{/if}
+					{#if ownerTask === 'accounts'}<div class="grid">
+							<section class="card stack">
+								<div class="section-title">
+									<Users size={24} />
+									<h2>Game masters</h2>
 								</div>
-							{/each}
-						</section>
-						<form class="card stack" onsubmit={addGameMaster}>
-							<h2>Add game master</h2>
-							<Field
-								label="Username"
-								name="newUsername"
-								bind:value={accountForm.username}
-								required
-							/>
-							<Field
-								label="Display name"
-								name="newDisplayName"
-								bind:value={accountForm.displayName}
-								required
-							/>
-							<Field
-								label="Temporary password"
-								name="newPassword"
-								type="password"
-								bind:value={accountForm.password}
-								required
-							/>
-							<Button type="submit" loading={busy}>Create account</Button>
-						</form>
-					</div>
-					<div class="grid">
-						<section class="card stack">
-							<div class="section-title">
-								<DatabaseBackup size={24} />
-								<h2>Backups</h2>
-							</div>
-							<p>Automatic daily and pre-upgrade backups protect the local game ledger.</p>
-							{#if hostSettings?.lastRestore}
-								<p
-									class:restore-failed={hostSettings.lastRestore.status === 'failed'}
-									class="restore-report"
-								>
-									<strong
-										>Last restore: {hostSettings.lastRestore.status === 'success'
-											? 'completed'
-											: 'failed'}</strong
-									>
-									<span>{hostSettings.lastRestore.message}</span>
-									<small>{new Date(hostSettings.lastRestore.finishedAt).toLocaleString()}</small>
-								</p>
-							{/if}
-							<Button variant="secondary" loading={busy} onclick={createBackup}
-								>Create backup now</Button
-							>
-							<div class="backup-list">
-								{#each backups as backup (backup.id)}
-									<div>
-										<span
-											><strong>{backup.automatic ? 'Automatic' : 'Manual'}</strong><small
-												>{new Date(backup.modifiedAt).toLocaleString()}</small
-											></span
-										>
-										<Button variant="danger" onclick={() => restoreBackup(backup)}>Restore</Button>
-									</div>
-								{:else}
-									<p class="muted">No backups have been created yet.</p>
-								{/each}
-							</div>
-						</section>
-						<section class="card stack">
-							<h2>Diagnostics</h2>
-							{#if diagnostics}
-								<dl>
-									{#each Object.entries(diagnostics) as [key, value] (key)}
+								{#each gameMasters as master (master.id)}
+									<div class="master">
 										<div>
-											<dt>{key}</dt>
-											<dd>{String(value)}</dd>
+											<strong>{master.displayName}</strong><small>@{master.username}</small>
 										</div>
-									{/each}
-								</dl>
-							{:else}
-								<p>Diagnostic mode is not enabled for this launch.</p>
-							{/if}
-							{#if diagnostics}
-								<Button
-									variant="secondary"
-									onclick={() =>
-										download(
-											'/diagnostics/support-bundle',
-											'social-games-hoster-support.zip',
-											'POST'
-										)}>Download support bundle</Button
+										<span>{master.isOwner ? 'Owner' : master.active ? 'Active' : 'Disabled'}</span>
+										{#if !master.isOwner}
+											<div class="master-actions">
+												<Button
+													variant="secondary"
+													onclick={() => updateMaster(master, { active: !master.active })}
+													>{master.active ? 'Disable' : 'Enable'}</Button
+												>
+												<Button variant="ghost" onclick={() => resetMasterPassword(master)}
+													>Reset password</Button
+												>
+												<Button variant="ghost" onclick={() => transferOwner(master)}
+													>Make owner</Button
+												>
+												<Button variant="danger" onclick={() => deleteMaster(master)}>Remove</Button
+												>
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</section>
+							<form class="card stack" onsubmit={addGameMaster}>
+								<h2>Add game master</h2>
+								<Field
+									label="Username"
+									name="newUsername"
+									bind:value={accountForm.username}
+									required
+								/>
+								<Field
+									label="Display name"
+									name="newDisplayName"
+									bind:value={accountForm.displayName}
+									required
+								/>
+								<Field
+									label="Temporary password"
+									name="newPassword"
+									type="password"
+									bind:value={accountForm.password}
+									required
+								/>
+								<Button type="submit" loading={busy}>Create account</Button>
+							</form>
+						</div>{/if}
+					<div class="grid">
+						{#if ownerTask === 'backups'}
+							<section class="card stack">
+								<div class="section-title">
+									<DatabaseBackup size={24} />
+									<h2>Backups</h2>
+								</div>
+								<p>Automatic daily and pre-upgrade backups protect local game data.</p>
+								{#if hostSettings?.lastRestore}
+									<p
+										class:restore-failed={hostSettings.lastRestore.status === 'failed'}
+										class="restore-report"
+									>
+										<strong
+											>Last restore: {hostSettings.lastRestore.status === 'success'
+												? 'completed'
+												: 'failed'}</strong
+										>
+										<span>{hostSettings.lastRestore.message}</span>
+										<small>{new Date(hostSettings.lastRestore.finishedAt).toLocaleString()}</small>
+									</p>
+								{/if}
+								<Button variant="secondary" loading={busy} onclick={createBackup}
+									>Create backup now</Button
 								>
-							{/if}
-						</section>
+								<div class="backup-list">
+									{#each backups as backup (backup.id)}
+										<div>
+											<span
+												><strong>{backup.automatic ? 'Automatic' : 'Manual'}</strong><small
+													>{new Date(backup.modifiedAt).toLocaleString()}</small
+												></span
+											>
+											<Button variant="danger" onclick={() => restoreBackup(backup)}>Restore</Button
+											>
+										</div>
+									{:else}
+										<p class="muted">No backups have been created yet.</p>
+									{/each}
+								</div>
+							</section>
+						{/if}
+						{#if ownerTask === 'diagnostics'}
+							<section class="card stack">
+								<h2>Diagnostics</h2>
+								{#if diagnostics}
+									<dl>
+										{#each Object.entries(diagnostics) as [key, value] (key)}
+											<div>
+												<dt>{key}</dt>
+												<dd>{String(value)}</dd>
+											</div>
+										{/each}
+									</dl>
+								{:else}
+									<p>Diagnostic mode is not enabled for this launch.</p>
+								{/if}
+								{#if diagnostics}
+									<Button
+										variant="secondary"
+										onclick={() =>
+											download(
+												'/diagnostics/support-bundle',
+												'social-games-hoster-support.zip',
+												'POST'
+											)}>Download support bundle</Button
+									>
+								{/if}
+							</section>
+						{/if}
 					</div>
 				</section>
 			{/if}
 		</main>
 	</div>
 {/if}
+
+<Sheet open={gameSheetOpen} title="New game" close={() => (gameSheetOpen = false)}>
+	<form class="new-game stack" onsubmit={createGame}>
+		<Field label="Game name" name="gameName" bind:value={gameForm.name} required />
+		<label>
+			<span>Ruleset</span>
+			<select bind:value={gameForm.rulesetVersionId} required>
+				{#each rulesets.filter((item) => item.latestPublishedVersion) as ruleset (ruleset.id)}
+					<option value={ruleset.latestPublishedVersion}>{ruleset.name}</option>
+				{/each}
+			</select>
+		</label>
+		<Button type="submit" loading={busy}>Create draft</Button>
+	</form>
+</Sheet>
+
+<Sheet
+	open={Boolean(rejectionRequestId)}
+	title="Reject profile request"
+	close={() => (rejectionRequestId = '')}
+>
+	<form
+		class="stack"
+		onsubmit={(event) => {
+			event.preventDefault();
+			void decide(rejectionRequestId, 'reject', rejectionReason.trim());
+		}}
+	>
+		<Field
+			label="Reason"
+			name="rejectionReason"
+			bind:value={rejectionReason}
+			multiline
+			help="The player will see this reason."
+			required
+		/>
+		<Button type="submit" disabled={!rejectionReason.trim()}>Reject request</Button>
+	</form>
+</Sheet>
 
 <style>
 	.login {
@@ -961,6 +1045,47 @@
 		min-width: 0;
 	}
 
+	.more-task {
+		display: flex;
+		min-height: 5rem;
+		align-items: center;
+		gap: var(--space-3);
+		color: var(--ink);
+		cursor: pointer;
+		text-align: start;
+	}
+
+	.more-task span {
+		display: grid;
+	}
+
+	.more-task small {
+		color: var(--ink-soft);
+	}
+
+	.owner-tasks {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		border-block: var(--border-subtle);
+	}
+
+	.owner-tasks button {
+		min-height: var(--target-size);
+		border: 0;
+		border-block-end: 3px solid transparent;
+		background: transparent;
+		color: var(--ink-soft);
+		cursor: pointer;
+		font-family: var(--font-display);
+		font-size: 0.65rem;
+		font-weight: 700;
+	}
+
+	.owner-tasks button.active {
+		border-color: var(--crimson);
+		color: var(--crimson-dark);
+	}
+
 	.empty {
 		display: grid;
 		place-items: center;
@@ -971,7 +1096,7 @@
 
 	.new-game {
 		display: grid;
-		grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 1fr) auto;
+		grid-template-columns: 1fr;
 		align-items: end;
 	}
 
@@ -1086,26 +1211,116 @@
 		margin: 0;
 	}
 
-	@media (max-width: 800px) {
+	@media (max-width: 960px) {
 		.admin-shell {
 			grid-template-columns: 1fr;
 		}
 
 		.admin-nav {
-			position: static;
+			position: fixed;
+			z-index: var(--layer-navigation);
+			inset-inline: 0;
+			inset-block: auto 0;
+			border: 0;
+			border-block-start: var(--border-strong);
+			background: var(--paper-light);
+			padding: 0 0 env(safe-area-inset-bottom);
 		}
 
 		.admin-nav nav {
-			display: flex;
-			overflow-x: auto;
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			margin: 0;
 		}
 
 		.admin-nav button {
-			min-width: 9rem;
+			min-width: 0;
+			grid-template-columns: 1fr;
+			justify-items: center;
+			border-inline-start: 0;
+			border-block-start: 3px solid transparent;
+			font-size: 0.58rem;
+			text-align: center;
+		}
+
+		.host-name {
+			display: none;
+		}
+
+		.admin-content {
+			min-width: 0;
+			max-width: 100%;
+			padding-block-end: calc(4.5rem + env(safe-area-inset-bottom));
+		}
+
+		.admin-content > section,
+		.admin-content .grid,
+		.admin-content .grid > * {
+			min-width: 0;
+			max-width: 100%;
+		}
+
+		.admin-content select,
+		.admin-content input:not([type='checkbox']):not([type='radio']) {
+			min-width: 0;
+			max-width: 100%;
+			width: 100%;
+		}
+
+		.owner-tasks {
+			grid-template-columns: 1fr;
+		}
+
+		.owner-tasks button {
+			border-block-end: var(--border-subtle);
+			border-inline-start: 3px solid transparent;
+			text-align: start;
+			padding-inline: var(--space-3);
+		}
+
+		.owner-tasks button.active {
+			border-inline-start-color: var(--crimson);
 		}
 
 		.new-game {
 			grid-template-columns: 1fr;
+		}
+
+		.request,
+		.profile-row {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.request > div:last-child {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.import-row {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.import-row label,
+		.import-row input {
+			min-width: 0;
+			max-width: 100%;
+			width: 100%;
+		}
+
+		.game-list article {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.game-open {
+			min-width: 0;
+		}
+
+		.game-actions {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			padding: 0 0.5rem 0.5rem;
 		}
 	}
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Eye, EyeOff, ShieldCheck } from '@lucide/svelte';
 	import type { RoleProjection } from '$lib/api/types';
 	import Button from './Button.svelte';
@@ -7,13 +8,31 @@
 	let {
 		role,
 		knowledge,
-		imageUrl = ''
+		imageUrl = '',
+		privacyKey = ''
 	}: {
 		role: RoleProjection | null;
 		knowledge: Array<Record<string, unknown>>;
 		imageUrl?: string;
+		privacyKey?: string;
 	} = $props();
-	let concealed = $state(false);
+	let concealed = $state(true);
+	let previousPrivacyKey = '';
+
+	onMount(() => {
+		const concealWhenHidden = () => {
+			if (document.hidden) concealed = true;
+		};
+		document.addEventListener('visibilitychange', concealWhenHidden);
+		return () => document.removeEventListener('visibilitychange', concealWhenHidden);
+	});
+
+	$effect(() => {
+		if (privacyKey !== previousPrivacyKey) {
+			previousPrivacyKey = privacyKey;
+			concealed = true;
+		}
+	});
 
 	function describeFact(fact: Record<string, unknown>) {
 		const revealedRole = fact.role as { name?: string } | undefined;
@@ -25,13 +44,13 @@
 	<div class="role-head">
 		<div>
 			<p class="eyebrow">Your role</p>
-			<h2>{role?.name ?? 'Awaiting assignment'}</h2>
+			<h2>{concealed ? 'Concealed' : (role?.name ?? 'Waiting for role')}</h2>
 		</div>
 		<Button variant="ghost" onclick={() => (concealed = !concealed)}>
 			{#if concealed}<Eye size={18} /> Reveal{:else}<EyeOff size={18} /> Conceal{/if}
 		</Button>
 	</div>
-	<div class="secret">
+	<div class="secret" aria-hidden={concealed} inert={concealed}>
 		{#if role}
 			{#if imageUrl}<div class="role-image">
 					<ProtectedMedia src={imageUrl} kind="image" alt="" />
@@ -59,7 +78,7 @@
 				</ul>
 			{/if}
 		{:else}
-			<p>Your game master has not revealed a role yet.</p>
+			<p>Your game master has not assigned a role yet.</p>
 		{/if}
 	</div>
 	{#if concealed}
@@ -90,7 +109,7 @@
 
 	.role-head {
 		position: relative;
-		z-index: 2;
+		z-index: 4;
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
@@ -166,5 +185,16 @@
 
 	.cover span {
 		color: var(--paper-deep);
+	}
+
+	@media (max-width: 400px) {
+		.role-head {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.role-head :global(button) {
+			width: 100%;
+		}
 	}
 </style>

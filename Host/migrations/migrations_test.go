@@ -47,6 +47,8 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 		"chat_rooms",
 		"chat_memberships",
 		"chat_messages",
+		"attention_items",
+		"attention_receipts",
 		"achievement_awards",
 		"game_audit",
 	}
@@ -75,7 +77,7 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 	}
 
 	runner := core.NewMigrationsRunner(app, core.AppMigrations)
-	if _, err := runner.Down(3); err != nil {
+	if _, err := runner.Down(4); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := app.FindCollectionByNameOrId("games"); err == nil || !errors.Is(err, os.ErrNotExist) {

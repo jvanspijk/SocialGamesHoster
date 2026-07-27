@@ -172,13 +172,13 @@
 {#if needsOwner === null}
 	<div class="card loading-card">
 		<Hourglass aria-hidden="true" />
-		<p>Opening the host ledger…</p>
+		<p>Loading host settings…</p>
 	</div>
 {:else if needsOwner}
 	<section class="setup stack">
 		<div>
 			<p class="ornament">First launch</p>
-			<h1>Prepare the game table</h1>
+			<h1>Set up the host</h1>
 			<p class="lead">
 				Create the owner account on this computer. The included demonstration rulesets will be added
 				automatically.
@@ -221,7 +221,7 @@
 {:else}
 	<section class="hero stack">
 		<div class="hero-copy">
-			<p class="ornament">Your table · Your network</p>
+			<p class="ornament">Your game · Your network</p>
 			<h1>Gather the party.<br />Keep every secret.</h1>
 			<p class="lead">
 				Join the game hosted on this local network. No email, internet account, or cloud service is

@@ -172,6 +172,24 @@ func closeJoining(event *core.RequestEvent) error {
 }
 
 func clearGameSession(app core.App, gameID string, includeAudit bool) error {
+	items, err := app.FindRecordsByFilter("attention_items", "game = {:game}", "", 10000, 0, dbx.Params{"game": gameID})
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		receipts, err := app.FindRecordsByFilter("attention_receipts", "attention_item = {:item}", "", 10000, 0, dbx.Params{"item": item.Id})
+		if err != nil {
+			return err
+		}
+		for _, receipt := range receipts {
+			if err := app.Delete(receipt); err != nil {
+				return err
+			}
+		}
+		if err := app.Delete(item); err != nil {
+			return err
+		}
+	}
 	rooms, err := app.FindRecordsByFilter("chat_rooms", "game = {:game}", "", 500, 0, dbx.Params{"game": gameID})
 	if err != nil {
 		return err
@@ -233,9 +251,6 @@ func openLobby(event *core.RequestEvent) error {
 		game.Set("join_code", joinCode)
 		game.Set("joining_open", true)
 		if err := tx.Save(game); err != nil {
-			return err
-		}
-		if _, err := ensureRoom(tx, game.Id, "announcements", "announcements", "Announcements", ""); err != nil {
 			return err
 		}
 		definition, err := snapshot(game)
@@ -308,10 +323,6 @@ func joinGame(event *core.RequestEvent) error {
 		if err := tx.Save(participant); err != nil {
 			return err
 		}
-		announcement, err := ensureRoom(tx, game.Id, "announcements", "announcements", "Announcements", "")
-		if err != nil {
-			return err
-		}
 		dm, err := ensureRoom(
 			tx,
 			game.Id,
@@ -321,9 +332,6 @@ func joinGame(event *core.RequestEvent) error {
 			"",
 		)
 		if err != nil {
-			return err
-		}
-		if err := ensureMembership(tx, announcement.Id, participant.Id); err != nil {
 			return err
 		}
 		if err := ensureMembership(tx, dm.Id, participant.Id); err != nil {
@@ -359,7 +367,14 @@ func adminView(event *core.RequestEvent) error {
 	for index, participant := range participants {
 		projected[index] = projectParticipant(participant, true)
 	}
-	rooms, _ := event.App.FindRecordsByFilter("chat_rooms", "game = {:game}", "kind,label", 200, 0, dbx.Params{"game": game.Id})
+	rooms, _ := event.App.FindRecordsByFilter("chat_rooms", "game = {:game} && kind != 'announcements'", "kind,label", 200, 0, dbx.Params{"game": game.Id})
+	attentionItems, _ := event.App.FindRecordsByFilter("attention_items", "game = {:game}", "-created,-id", 50, 0, dbx.Params{"game": game.Id})
+	attentionSummaries := make([]map[string]any, 0, len(attentionItems))
+	for _, item := range attentionItems {
+		if summary, summaryErr := projectAdminAttentionSummary(event.App, item); summaryErr == nil {
+			attentionSummaries = append(attentionSummaries, summary)
+		}
+	}
 	awards, _ := event.App.FindRecordsByFilter("achievement_awards", "game = {:game}", "-created", 500, 0, dbx.Params{"game": game.Id})
 	projectedAwards := make([]map[string]any, len(awards))
 	for index, award := range awards {
@@ -381,12 +396,13 @@ func adminView(event *core.RequestEvent) error {
 		}
 	}
 	return event.JSON(http.StatusOK, map[string]any{
-		"game":         projectGame(game),
-		"ruleset":      game.Get("ruleset_snapshot"),
-		"participants": projected,
-		"rooms":        projectRooms(rooms),
-		"awards":       projectedAwards,
-		"audit":        projectedAudit,
+		"game":           projectGame(game),
+		"ruleset":        game.Get("ruleset_snapshot"),
+		"participants":   projected,
+		"rooms":          projectRooms(event.App, rooms),
+		"attentionItems": attentionSummaries,
+		"awards":         projectedAwards,
+		"audit":          projectedAudit,
 	})
 }
 
@@ -430,31 +446,9 @@ func playerView(event *core.RequestEvent) error {
 			"seatNumber": member.GetInt("seat_number"), "status": member.GetString("status"),
 		})
 	}
-	announcements := make([]map[string]any, 0)
-	if announcementRoom, err := findRoom(event.App, game.Id, "announcements"); err == nil {
-		records, findErr := event.App.FindRecordsByFilter(
-			"chat_messages",
-			"room = {:room} && message_kind = 'announcement'",
-			"-created",
-			10,
-			0,
-			dbx.Params{"room": announcementRoom.Id},
-		)
-		if findErr == nil {
-			for _, message := range records {
-				deleted := !message.GetDateTime("deleted_at").IsZero()
-				content := message.GetString("content")
-				if deleted {
-					content = ""
-				}
-				announcements = append(announcements, map[string]any{
-					"id": message.Id, "roomId": announcementRoom.Id, "kind": "announcement",
-					"senderType": "game_master", "senderLabel": message.GetString("sender_label_snapshot"),
-					"content": content, "cueKey": message.GetString("cue_key"), "deleted": deleted,
-					"createdAt": dateValue(message, "created"),
-				})
-			}
-		}
+	attentionItems, err := unacknowledgedAttentionForParticipant(event.App, game.Id, participant.Id)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	assetRecords, _ := event.App.FindRecordsByFilter(
 		"ruleset_assets",
@@ -478,13 +472,13 @@ func playerView(event *core.RequestEvent) error {
 			"gameAlias": participant.GetString("game_alias"), "seatNumber": participant.GetInt("seat_number"),
 			"status": participant.GetString("status"),
 		},
-		"ruleset":       map[string]any{"name": definition.Metadata.Name, "description": definition.Metadata.Description},
-		"role":          role,
-		"knowledge":     knowledge,
-		"rooms":         rooms,
-		"party":         party,
-		"announcements": announcements,
-		"assets":        assets,
+		"ruleset":        map[string]any{"name": definition.Metadata.Name, "description": definition.Metadata.Description},
+		"role":           role,
+		"knowledge":      knowledge,
+		"rooms":          rooms,
+		"party":          party,
+		"attentionItems": attentionItems,
+		"assets":         assets,
 	})
 }
 
@@ -699,14 +693,19 @@ func selectorMatches(role rulesets.Role, selector rulesets.Selector) bool {
 	return len(selector.Tags) == 0
 }
 
-func projectRooms(rooms []*core.Record) []map[string]any {
-	result := make([]map[string]any, len(rooms))
-	for index, room := range rooms {
-		result[index] = map[string]any{
+func projectRooms(app core.App, rooms []*core.Record) []map[string]any {
+	result := make([]map[string]any, 0, len(rooms))
+	for _, room := range rooms {
+		if room.GetString("kind") == "announcements" {
+			continue
+		}
+		projected := map[string]any{
 			"id": room.Id, "key": room.GetString("room_key"), "kind": room.GetString("kind"),
 			"label": room.GetString("label"), "teamKey": room.GetString("team_key"),
 			"locked": room.GetBool("manually_locked"),
 		}
+		projected["latestMessage"] = latestMessageCursor(app, room.Id)
+		result = append(result, projected)
 	}
 	return result
 }
