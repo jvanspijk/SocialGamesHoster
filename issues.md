@@ -32,10 +32,9 @@
 - I have no idea what the revision number means. Please remove it.
 
 # Player view
-- Same issue with the chats. WTF is this? It's so bad. It's so difficult to see if you have new chats or get an overview of which chat is which.
+- Same issue with the chats in the player view as the admin view. WTF is this? It's so bad. It's so difficult to see if you have new chats or get an overview of which chat is which.
 - Role view is also bad. There was a good one previously. This screen should be revised entirely and is a different topic. Leave this out of the task and remind the user at the end that this still needs to be done.
 
 # Other
-- Footer is useless fluff (Local-first software · No warranty, with a link to the source code), just remove it. If this removal takes more than a single file edit, this means that there's a violation of the DRY principle and this should be fixed as well.
 - Errors should pop up over the screen and fade out after a while or if you tap. During admin login if you create an invalid password the error doesn't even tell you what's wrong! That's awfully bad!
-- The background is no longer parchment, it's more like a notebook now. It's lost the medieval fantasy charm.
+- The background is no longer parchment, it's more like a notebook now. It's lost the medieval fantasy charm. Bring back something that looks medieval!

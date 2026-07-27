@@ -57,10 +57,6 @@
 		<main class="page">
 			{@render children()}
 		</main>
-		<footer>
-			<span>Local-first software · No warranty</span>
-			<a href="https://github.com/jvanspijk/SocialGamesHoster">Source code (AGPL-3.0)</a>
-		</footer>
 	</div>
 {/if}
 
@@ -124,24 +120,6 @@
 		color: var(--crimson-dark);
 	}
 
-	footer {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		border-top: var(--border-subtle);
-		color: var(--ink-faint);
-		font-size: 0.8rem;
-		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
-		padding-block: 1rem;
-	}
-
-	footer a {
-		display: inline-flex;
-		min-height: var(--target-size);
-		align-items: center;
-		color: inherit;
-	}
-
 	@media (max-width: 650px) {
 		header {
 			grid-template-columns: 1fr auto;
@@ -160,8 +138,5 @@
 			font-size: 0;
 		}
 
-		footer {
-			display: grid;
-		}
 	}
 </style>
