@@ -1,5 +1,11 @@
 # Feature: Game-master dashboard in a real LAN session
 
+## Required visual and usability checklist
+
+- Inspect the initial layout, then resize the viewport and optionally rotate a phone if applicable; it was and remains visually polished and usable.
+- Confirm no unintended visual issues: elements do not obscure, overlap, clip, or cut off text or controls.
+- Confirm clear visual hierarchy, discoverable actions, and an efficient task path without unnecessary steps.
+
 ## Background
 
 Given a game master is signed in on the Windows host computer

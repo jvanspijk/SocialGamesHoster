@@ -4,6 +4,16 @@ These are short, human-run checks for behavior that cannot be meaningfully
 verified through unit tests, contract tests, or automated Playwright browser
 tests. They complement, rather than duplicate, the automated suite.
 
+## Required visual and usability checklist
+
+Complete this checklist while performing every scenario in this suite:
+
+- Confirm no unintended visual issues: elements do not obscure, overlap, clip, or cut off text or controls.
+- Confirm clear visual hierarchy, discoverable actions, and an efficient task path without unnecessary steps.
+
+Complete this checklist once per page while performing a scenario in the suite:
+- Inspect the initial layout, then resize the viewport and optionally rotate a phone where applicable; it remains visually polished and usable.
+
 Run a scenario only when its environment is affected or when preparing a
 release. Use a private LAN, disposable test profiles, and a non-production
 backup. Record the application version, Windows version, browser/device, and

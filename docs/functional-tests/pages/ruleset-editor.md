@@ -1,5 +1,11 @@
 # Feature: Ruleset editor media preview on a physical phone
 
+## Required visual and usability checklist
+
+- Inspect the initial layout, then resize the viewport and optionally rotate a phone if applicable; it was and remains visually polished and usable.
+- Confirm no unintended visual issues: elements do not obscure, overlap, clip, or cut off text or controls.
+- Confirm clear visual hierarchy, discoverable actions, and an efficient task path without unnecessary steps.
+
 ## Background
 
 Given a game master has a draft ruleset open in the ruleset editor
