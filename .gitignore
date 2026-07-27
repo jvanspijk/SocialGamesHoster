@@ -1,6 +1,7 @@
 # Project-local toolchains and release output
 /.tools/
 /dist/
+/scripts/Build.log
 
 # Go/PocketBase runtime and test data
 /pb_data/

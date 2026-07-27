@@ -5,6 +5,11 @@ param(
     [switch]$SkipInstaller
 )
 
+$buildLogPath = Join-Path $PSScriptRoot "Build.log"
+Start-Transcript -Path $buildLogPath -Force | Out-Null
+
+try {
+& {
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $versionFile = Join-Path $projectRoot "VERSION"
@@ -135,3 +140,15 @@ Get-ChildItem -LiteralPath $distRoot -File |
     Get-FileHash -Algorithm SHA256 |
     ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
     Set-Content -LiteralPath (Join-Path $distRoot "SHA256SUMS.txt") -Encoding ascii
+}
+}
+catch {
+    Write-Host "Build failed: $($_.Exception.Message)"
+    if ($_.ScriptStackTrace) {
+        Write-Host $_.ScriptStackTrace
+    }
+    throw
+}
+finally {
+    Stop-Transcript | Out-Null
+}
