@@ -33,6 +33,15 @@ Run `./scripts/Test.ps1` after product changes. It runs:
 
 Run `./scripts/Build.ps1 -Version <version>` for Windows release packaging.
 
+## Browser debugging
+
+This project provides a project-local Playwright MCP server for exploratory UI
+debugging and feature checks. It can drive the locally running app, inspect the
+accessible UI, capture screenshots, and surface browser warnings. Use it to
+reproduce a reported UI issue before changing code; preserve the fix with the
+existing Playwright test suite. It is development tooling only: it is not
+embedded in the Go host, static frontend, or Windows installer.
+
 ## Engineering style
 
 - Keep backend changes in the relevant vertical feature slice.

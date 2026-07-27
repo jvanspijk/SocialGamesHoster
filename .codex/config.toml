@@ -1,0 +1,19 @@
+# Project-local browser automation for exploratory UI debugging and feature checks.
+# The package and Chromium binary are pinned in Web/package-lock.json.
+[mcp_servers.playwright]
+command = "node"
+args = [
+  "Web/node_modules/@playwright/mcp/cli.js",
+  "--isolated",
+  "--output-dir",
+  ".codex/playwright",
+  "--output-mode",
+  "file",
+  "--console-level",
+  "warning",
+  "--caps",
+  "vision,devtools",
+  "--allowed-hosts",
+  "127.0.0.1,localhost"
+]
+env = { PLAYWRIGHT_BROWSERS_PATH = "Web/.playwright-browsers" }

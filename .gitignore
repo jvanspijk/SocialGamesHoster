@@ -22,6 +22,9 @@
 /Web/test-results/
 /coverage/
 
+# Local evidence saved by the project Playwright MCP server
+/.codex/playwright/
+
 # Local editor and operating-system files
 /.vs/
 *.user
