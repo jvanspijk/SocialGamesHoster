@@ -353,7 +353,7 @@
 		<div>
 			<p class="ornament">{view.ruleset.metadata.name}</p>
 			<h2>{view.game.name}</h2>
-			<p class="muted">{view.game.status} · Revision {view.game.revision}</p>
+			<p class="muted">{view.game.status}</p>
 		</div>
 		{#if view.game.joinCode}
 			<div class="join-code">
