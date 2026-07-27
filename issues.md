@@ -1,8 +1,3 @@
-# Main page
-- This should be all centered, with the players being the default action, and if you are a game master, you get a clickable link under the player action. This can be simple like "click here if you are a game master" No further description needed.
-- "Gather the party. Keep every secret." -> cringe AI sounding roleplay. Just make this into the page title.
-- The 'play' and 'host' buttons at the header are too close together horizontally. Fix this while keeping in mind other device sizes.
-
 # Admin dashboard
 - Give the game owner a dedicated live game view that is more immersive. All the footer options should have to do with the live game and help the game owner/DM navigate to different pages like a general overview, chats and players screen.
 

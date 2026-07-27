@@ -221,10 +221,10 @@
 {:else}
 	<section class="hero stack">
 		<div class="hero-copy">
-			<h1>Gather the party.<br />Keep every secret.</h1>
+			<h1>Social Games Hoster</h1>
 		</div>
 
-		<div class="grid">
+		<div class="player-action">
 			{#if showQr}
 				<section class="card stack qr-card">
 					<QrCode size={34} aria-hidden="true" />
@@ -262,9 +262,7 @@
 				<form class="card stack" onsubmit={requestProfile}>
 					<ScrollText size={34} aria-hidden="true" />
 					<h2>Enter your profile name</h2>
-					<p class="muted">
-						Sign in to an existing profile or create a new one.
-					</p>
+					<p class="muted">Sign in to an existing profile or create a new one.</p>
 					<Field
 						label="Profile name"
 						name="displayName"
@@ -280,12 +278,7 @@
 				</form>
 			{/if}
 
-			<a class="host-card card" href={resolve('/admin')}>
-				<Crown size={34} aria-hidden="true" />
-				<h2>Game master</h2>
-				<p>Open the host dashboard, approve players, and guide the game.</p>
-				<span class="display">Enter host view →</span>
-			</a>
+			<a class="game-master-link" href={resolve('/admin')}>Click here if you are a game master</a>
 		</div>
 	</section>
 {/if}
@@ -300,6 +293,11 @@
 	.hero-copy {
 		max-width: 42rem;
 		padding-block: 1rem;
+	}
+
+	.hero {
+		justify-items: center;
+		text-align: center;
 	}
 
 	.lead {
@@ -338,21 +336,19 @@
 		margin: 12vh auto;
 	}
 
-	.host-card {
+	.player-action {
 		display: grid;
-		align-content: start;
-		color: var(--ink);
-		text-decoration: none;
-		transition: transform var(--speed-fast) ease-out;
+		width: min(100%, 31rem);
+		gap: 1rem;
 	}
 
-	.host-card:hover {
-		transform: translateY(-2px);
+	.player-action :global(.card) {
+		text-align: left;
 	}
 
-	.host-card .display {
-		color: var(--crimson-dark);
-		font-size: 0.72rem;
+	.game-master-link {
+		justify-self: center;
+		font-size: 0.9rem;
 	}
 
 	.game-line {

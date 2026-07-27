@@ -105,7 +105,7 @@
 	nav {
 		display: flex;
 		align-items: center;
-		gap: 0.2rem;
+		gap: clamp(0.45rem, 1.5vw, 1rem);
 	}
 
 	nav a,
@@ -162,6 +162,5 @@
 		nav a {
 			font-size: 0;
 		}
-
 	}
 </style>
