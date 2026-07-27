@@ -11,8 +11,21 @@
 	import { displayPreferences } from '$lib/state/display.svelte';
 
 	let { children }: { children: import('svelte').Snippet } = $props();
+	let applicationVersion = $state('');
 
-	onMount(() => displayPreferences.init());
+	onMount(() => {
+		displayPreferences.init();
+		void loadApplicationVersion();
+	});
+
+	async function loadApplicationVersion() {
+		try {
+			const status = await api<{ version: string }>('/setup/status');
+			applicationVersion = status.version;
+		} catch {
+			applicationVersion = '';
+		}
+	}
 
 	async function logout() {
 		try {
@@ -57,6 +70,9 @@
 		<main class="page">
 			{@render children()}
 		</main>
+		{#if applicationVersion}
+			<footer>Version {applicationVersion}</footer>
+		{/if}
 	</div>
 {/if}
 
@@ -118,6 +134,15 @@
 	nav button:hover {
 		border-color: var(--crimson);
 		color: var(--crimson-dark);
+	}
+
+	footer {
+		border-top: var(--border-subtle);
+		color: var(--ink-faint);
+		font-size: 0.8rem;
+		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
+		padding-block: 1rem;
+		text-align: center;
 	}
 
 	@media (max-width: 650px) {

@@ -25,22 +25,25 @@ type OwnerRequest struct {
 	TrustedLANAcknowledged bool   `json:"trustedLanAcknowledged"`
 }
 
-func Register(router *core.ServeEvent) {
+func Register(router *core.ServeEvent, applicationVersion string) {
 	group := router.Router.Group("/api/app/v1/setup")
-	group.GET("/status", status)
+	group.GET("/status", status(applicationVersion))
 	group.GET("/join-qr", joinQRCode)
 	group.POST("/owner", createOwner)
 }
 
-func status(event *core.RequestEvent) error {
-	count, err := event.App.CountRecords(collectionName)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+func status(applicationVersion string) func(*core.RequestEvent) error {
+	return func(event *core.RequestEvent) error {
+		count, err := event.App.CountRecords(collectionName)
+		if err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
+		return event.JSON(http.StatusOK, map[string]any{
+			"needsOwner": count == 0,
+			"joinUrl":    owner.JoinURL(event.App),
+			"version":    applicationVersion,
+		})
 	}
-	return event.JSON(http.StatusOK, map[string]any{
-		"needsOwner": count == 0,
-		"joinUrl":    owner.JoinURL(event.App),
-	})
 }
 
 func joinQRCode(event *core.RequestEvent) error {

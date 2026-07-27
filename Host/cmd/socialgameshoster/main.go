@@ -112,7 +112,7 @@ func main() {
 	app.OnServe().BindFunc(func(event *core.ServeEvent) error {
 		event.InstallerFunc = nil
 		event.Router.BindFunc(httpx.SecurityMiddleware)
-		setup.Register(event)
+		setup.Register(event, version)
 		authfeature.Register(event)
 		profiles.Register(event)
 		rulesets.RegisterRoutes(event, version)
