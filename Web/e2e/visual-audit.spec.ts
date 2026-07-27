@@ -140,7 +140,9 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	const noGameContext = await browser.newContext({ viewport: viewports[0] });
 	const noGamePlayer = await noGameContext.newPage();
 	await noGamePlayer.goto('/');
-	await expect(noGamePlayer.getByRole('heading', { name: 'Enter your profile name' })).toBeVisible();
+	await expect(
+		noGamePlayer.getByRole('heading', { name: 'Enter your profile name' })
+	).toBeVisible();
 	await capture(noGamePlayer, 'join', 'no-game');
 	await noGamePlayer.goto('/?showQr=1');
 	await expect(noGamePlayer.getByRole('heading', { name: 'Scan to join' })).toBeVisible();
