@@ -23,6 +23,9 @@ func init() {
 		gameMasters.PasswordAuth.IdentityFields = []string{"username"}
 		gameMasters.AuthAlert.Enabled = false
 		gameMasters.AuthToken.Duration = 12 * 60 * 60
+		if password, ok := gameMasters.Fields.GetByName(core.FieldNamePassword).(*core.PasswordField); ok {
+			password.Min = 6
+		}
 		gameMasters.Fields.Add(
 			text("username", true, 3, 32),
 			text("display_name", true, 2, 64),

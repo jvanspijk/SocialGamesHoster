@@ -75,7 +75,7 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 	}
 
 	runner := core.NewMigrationsRunner(app, core.AppMigrations)
-	if _, err := runner.Down(2); err != nil {
+	if _, err := runner.Down(3); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := app.FindCollectionByNameOrId("games"); err == nil || !errors.Is(err, os.ErrNotExist) {

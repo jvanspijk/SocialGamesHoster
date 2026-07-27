@@ -52,6 +52,10 @@ reproduce a reported UI issue before changing code; preserve the fix with the
 existing Playwright test suite. It is development tooling only: it is not
 embedded in the Go host, static frontend, or Windows installer.
 
+For isolated local Playwright functional tests, use the disposable owner account
+`playwrightadmin` with password `secret`. Never use these credentials outside a
+disposable local test data directory.
+
 ## Engineering style
 
 - Keep backend changes in the relevant vertical feature slice.

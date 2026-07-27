@@ -4,6 +4,7 @@
 
 # Go/PocketBase runtime and test data
 /pb_data/
+/.functional-test-data/
 /**/*.test
 **/.testdata/
 
