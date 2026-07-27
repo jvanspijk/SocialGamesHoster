@@ -200,7 +200,7 @@
 				type="password"
 				bind:value={owner.password}
 				autocomplete="new-password"
-				help="At least 10 characters."
+				help="At least 6 characters."
 				required
 			/>
 			<div class="trust-notice">

@@ -77,8 +77,8 @@ func createOwner(event *core.RequestEvent) error {
 	if nameErr != nil {
 		fields["displayName"] = []string{nameErr.Error()}
 	}
-	if len(request.Password) < 10 {
-		fields["password"] = []string{"Use at least 10 characters."}
+	if len(request.Password) < 6 {
+		fields["password"] = []string{"Use at least 6 characters."}
 	}
 	if !request.TrustedLANAcknowledged {
 		fields["trustedLanAcknowledged"] = []string{"Confirm that this host will be used only on a network you trust."}

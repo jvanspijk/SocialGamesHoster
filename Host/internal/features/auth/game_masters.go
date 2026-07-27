@@ -65,8 +65,8 @@ func createGameMaster(event *core.RequestEvent) error {
 	if nameErr != nil {
 		fields["displayName"] = []string{nameErr.Error()}
 	}
-	if len(request.Password) < 10 {
-		fields["password"] = []string{"Use at least 10 characters."}
+	if len(request.Password) < 6 {
+		fields["password"] = []string{"Use at least 6 characters."}
 	}
 	if len(fields) > 0 {
 		return httpx.WriteError(event, result.Invalid("game_master.invalid", "Correct the highlighted account details.", fields))
@@ -164,8 +164,8 @@ func resetGameMasterPassword(event *core.RequestEvent) error {
 		return gameMasterNotFound(event)
 	}
 	var request resetPasswordRequest
-	if err := event.BindBody(&request); err != nil || len(request.Password) < 10 {
-		return httpx.WriteError(event, result.Invalid("game_master.invalid_password", "Use a password of at least 10 characters.", nil))
+	if err := event.BindBody(&request); err != nil || len(request.Password) < 6 {
+		return httpx.WriteError(event, result.Invalid("game_master.invalid_password", "Use a password of at least 6 characters.", nil))
 	}
 	target.SetPassword(request.Password)
 	if err := event.App.Save(target); err != nil {

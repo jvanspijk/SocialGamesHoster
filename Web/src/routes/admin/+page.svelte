@@ -335,7 +335,7 @@
 
 	async function resetMasterPassword(master: GameMaster) {
 		const password = window.prompt(
-			`Enter a new password of at least 10 characters for ${master.displayName}.`
+			`Enter a new password of at least 6 characters for ${master.displayName}.`
 		);
 		if (!password) return;
 		try {
