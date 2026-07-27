@@ -1,0 +1,41 @@
+# Main page
+- This should be all centered, with the players being the default action, and if you are a game master, you get a clickable link under the player action. This can be simple like "click here if you are a game master" No further description needed.
+- "Use your existing name to recover it on this device, or choose a new one." -> bad, never bore the user with technical details. Should be "Sign in to an existing profile or create a new one."
+- Enter by profile -> should be "Enter your profile name"
+- "Your game · Your network" -> useless fluff, sounds like an ad. Remove it.
+- "Gather the party. Keep every secret." -> cringe AI sounding roleplay. Just make this into the page title.
+- The 'play' and 'host' buttons at the header are too close together horizontally. Fix this while keeping in mind other device sizes.
+
+# Admin dashboard
+- Give the game owner a dedicated live game view that is more immersive. All the footer options should have to do with the live game and help the game owner/DM navigate to different pages like a general overview, chats and players screen.
+
+## Ruleset creator
+- Ruleset creation is hidden under More. This will be super confusing and not intuitive for new people! Just remove the "more" option in the sidebar and add the ruleset and settings as explicit sidebar navigation.
+- It's very unclear what "Validate" does? This should automatically happen when you save instead of a dedicated button. Allow for invalid rulesets (as a patch could potentially make a ruleset that was previously valid invalid)
+- What's the difference between "save" and "publish" are they not the same thing in this context? they should be.
+- Rethink the navigation of how a ruleset is made/edited. Current workflow: Ruleset library -> New Ruleset -> (automatically) Overview -> (after filling in) Sections -> individual section -> (after filling in) navigate back to sections. Honestly this is so clunky.
+
+## Live page
+- Roster and roles has overlapping dropdowns and text that is cutoff
+- Phase and timer has a confusing UI
+	- I don't know if it started or not
+	- Stop should be renamed to "Clear"
+	- Play timer -> then pause -> Pause doesn't do anything -> Pressing again: Only a running timer can be paused (but time's still ticking down)
+		- The same goes for the other buttons
+- The roster and roles view should be revised entirely, it would be much better to have an overview of the players in your game with clickable names so that you can chat with them.
+- Chat should be a sidebar option, leading to a dedicated chat page. the sidebar option should show if there's new unread chat messages.
+- Chat channels should be separated more clearly, currently there's no separator which makes it confusing
+- Locking a chat makes it read-only, but this makes it so that the game owner can also not post messages anymore. Game owners should always be able to post messages, also "locking" is a confusing term/icon for this action.
+- "Begin review" -> What does this even mean? I'm very confused
+- Clicking on "Sound On" makes the Join Code div jump to the move horizontally. I'm pretty sure Join Codes are not even being used in the first place.
+- Selecting a single player in the announcement still leaves the placeholder text as "Announcement to every player…". Instead of giving each action a different placeholder text, just make it something more general like "Announcement message…".
+- I have no idea what the revision number means. Please remove it.
+
+# Player view
+- Same issue with the chats. WTF is this? It's so bad. It's so difficult to see if you have new chats or get an overview of which chat is which.
+- Role view is also bad. There was a good one previously. This screen should be revised entirely and is a different topic. Leave this out of the task and remind the user at the end that this still needs to be done.
+
+# Other
+- Footer is useless fluff (Local-first software · No warranty, with a link to the source code), just remove it. If this removal takes more than a single file edit, this means that there's a violation of the DRY principle and this should be fixed as well.
+- Errors should pop up over the screen and fade out after a while or if you tap. During admin login if you create an invalid password the error doesn't even tell you what's wrong! That's awfully bad!
+- The background is no longer parchment, it's more like a notebook now. It's lost the medieval fantasy charm.
