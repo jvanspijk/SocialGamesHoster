@@ -1,12 +1,19 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "0.2.6-dev",
+    [string]$Version = "",
     [switch]$SkipTests,
     [switch]$SkipInstaller
 )
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$versionFile = Join-Path $projectRoot "VERSION"
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    if (-not (Test-Path -LiteralPath $versionFile -PathType Leaf)) {
+        throw "Version file was not found: $versionFile"
+    }
+    $Version = (Get-Content -LiteralPath $versionFile -Raw).Trim()
+}
 $webRoot = Join-Path $projectRoot "Web"
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
 $distRoot = Join-Path $projectRoot "dist"
