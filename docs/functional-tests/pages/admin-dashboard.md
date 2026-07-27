@@ -1,0 +1,31 @@
+# Feature: Game-master dashboard in a real LAN session
+
+## Background
+
+Given a game master is signed in on the Windows host computer
+And at least two physical phones are approved and joined to an open lobby
+And a published ruleset with a phase and an optional sound cue is available
+
+## Scenario: Coordinate a live game across real devices
+
+When the game master starts the game
+And the game master selects a phase and starts its timer
+Then each phone shows its own current game state without a manual refresh
+And the timer remains visually in step with the game-master dashboard
+And each player sees only their own private role and knowledge
+
+## Scenario: Deliver a targeted sound announcement after phone interaction
+
+Given one player has selected Enable sound in their phone browser
+And another player has not enabled sound
+When the game master sends an announcement with a sound cue targeted to the enabled player
+Then the enabled player's phone plays the cue after the user gesture that enabled sound
+And the other player sees the announcement but does not hear the cue
+
+## Scenario: Restore a backup from the owner page
+
+Given the owner has created a manual backup before making a recognizable game change
+When the owner restores that backup and enters the required confirmation text
+Then the host restarts as indicated by the UI
+And the dashboard shows the recorded restore outcome after it becomes available
+And the recognizable change made after the backup is absent

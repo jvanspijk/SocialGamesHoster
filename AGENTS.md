@@ -19,10 +19,20 @@ Guidance for coding assistants working in this repository.
 - `packaging/windows/`: Inno Setup installer.
 - `scripts/`: dependency, development, test, and release-build scripts.
 - `docs/`: architecture, user, troubleshooting, parity, and release guidance.
+- `docs/functional-tests/`: manual, real-world UI checks that cannot be covered
+  meaningfully by programmatic or Playwright tests.
 
 ## Required checks
 
-Run `./scripts/Test.ps1` after product changes. It runs:
+Run `./scripts/Test.ps1` after product changes when the change warrants the full
+automated gate. For a feature or fix, select the smallest relevant automated
+checks instead; do not run the full suite by default. Functional tests in
+`docs/functional-tests/` are time-consuming manual checks: run only the
+specific scenario that is relevant, and only when real-device, Windows, LAN, or
+multi-person validation is useful. Do not run any functional test merely
+because a feature or fix changed.
+
+`./scripts/Test.ps1` runs:
 
 - `go test ./Host/...` and `go vet ./Host/...`;
 - Svelte/TypeScript checks;
