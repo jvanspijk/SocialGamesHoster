@@ -18,7 +18,7 @@ explicitly excluded by the rebuild plan.
 | Ruleset list/detail | Replaced, including draft creation, autosave, validation, immutable publishing, successor versions, archive, duplicate, and guarded delete | `Host/internal/features/rulesets/routes.go`, `Web/src/routes/admin/rulesets/[id]/+page.svelte` |
 | Persist ruleset creation | Completed; drafts are durable SQLite records and unfinished new definitions are retained locally until first save | `Host/internal/features/rulesets/routes.go`, `Web/src/routes/admin/rulesets/[id]/+page.svelte` |
 | Portable rulesets | Added versioned `.sghrules` ZIP import/export with manifest, checksums, limits, images, and audio | `Host/internal/features/rulesets/bundle.go` |
-| Town of Salem and Blackjack seeds | Preserved as validated, importable demonstration bundles | `Host/fixtures/` |
+| Demonstration seed | A validated, importable Blackjack demonstration bundle is included | `Host/fixtures/` |
 | Game create/list/detail | Replaced with draft ledger, GM view, player-safe projection, and exactly-one-live invariant | `Host/internal/features/games/handlers.go`, `Host/migrations/1710000000_initial.go` |
 | Duplicate/delete games | Completed with immutable snapshot duplication and typed, state-limited deletion of application-owned dependents | `Host/internal/features/games/handlers.go` |
 | Ruleset selection | Ruleset version is selected at draft creation and snapshotted before play | `Host/internal/features/games/handlers.go` |

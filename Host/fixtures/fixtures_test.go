@@ -7,7 +7,7 @@ import (
 )
 
 func TestEmbeddedBundlesValidate(t *testing.T) {
-	for _, name := range []string{"town-of-salem.sghrules", "blackjack.sghrules"} {
+	for _, name := range []string{"blackjack.sghrules"} {
 		data, err := Bundles.ReadFile(name)
 		if err != nil {
 			t.Fatal(err)

@@ -9,8 +9,7 @@ automatically. On a new installation:
    characters.
 2. Review the trusted-LAN notice. The host is visible to devices on the selected
    Windows Private network.
-3. Two demonstration rulesets—Town of Salem and Blackjack—are installed
-   automatically.
+3. The Blackjack demonstration ruleset is installed automatically.
 4. Open **Host → Installation** to confirm the selected adapter and port.
 
 Use named game-master accounts for every host. Actions are attributed in the

@@ -312,7 +312,7 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	await page.getByRole('button', { name: /^Rulesets/ }).click();
 	await expect(page.getByRole('heading', { name: 'Ruleset library' })).toBeVisible();
 	await capture(page, 'rulesets', 'populated');
-	await page.getByRole('link', { name: /^Town of Salem/ }).click();
+	await page.getByRole('link', { name: /^Blackjack/ }).click();
 	await expect(page.getByRole('heading', { name: 'Overview and limits' })).toBeVisible();
 	await capture(page, 'ruleset-editor', 'overview');
 	await captureCritical(page, 'ruleset-editor', 'overview-critical');

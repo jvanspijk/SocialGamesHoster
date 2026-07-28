@@ -17,7 +17,6 @@ type fixture struct {
 
 func main() {
 	fixtures := []fixture{
-		{source: "Host/fixtures/sources/town-of-salem.json", output: "Host/fixtures/town-of-salem.sghrules", slug: "town-of-salem"},
 		{source: "Host/fixtures/sources/blackjack.json", output: "Host/fixtures/blackjack.sghrules", slug: "blackjack"},
 	}
 	for _, item := range fixtures {

@@ -20,7 +20,6 @@ func Seed(app core.App, gameMasterID string) error {
 		name string
 		slug string
 	}{
-		{name: "town-of-salem.sghrules", slug: "town-of-salem"},
 		{name: "blackjack.sghrules", slug: "blackjack"},
 	}
 	return app.RunInTransaction(func(txApp core.App) error {
