@@ -6,7 +6,7 @@
 	} from '$lib/api/types';
 
 	let {
-		policy,
+		policy = $bindable(),
 		partial = false
 	}: {
 		policy: RulesetRoomPermission | RulesetPartialRoomPermission;

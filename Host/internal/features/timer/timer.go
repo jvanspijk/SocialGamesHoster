@@ -141,9 +141,6 @@ func Reconcile(state State, now time.Time) State {
 
 func Project(state State, now time.Time) *Projection {
 	state = Reconcile(state, now)
-	if state.Status == Inactive {
-		return nil
-	}
 	projection := &Projection{
 		Status:      state.Status,
 		TotalMS:     state.Total.Milliseconds(),

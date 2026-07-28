@@ -48,20 +48,21 @@ func snapshot(record *core.Record) (rulesets.DefinitionV1, error) {
 
 func projectGame(record *core.Record) map[string]any {
 	return map[string]any{
-		"id":             record.Id,
-		"name":           record.GetString("name"),
-		"status":         record.GetString("status"),
-		"rulesetVersion": record.GetString("ruleset_version"),
-		"joinCode":       record.GetString("join_code"),
-		"joiningOpen":    record.GetBool("joining_open"),
-		"revision":       record.GetInt("revision"),
-		"roundNumber":    record.GetInt("round_number"),
-		"phaseKey":       record.GetString("phase_key"),
-		"phaseStartedAt": dateValue(record, "phase_started_at"),
-		"startedAt":      dateValue(record, "started_at"),
-		"endedAt":        dateValue(record, "ended_at"),
-		"createdAt":      dateValue(record, "created"),
-		"updatedAt":      dateValue(record, "updated"),
+		"id":                     record.Id,
+		"name":                   record.GetString("name"),
+		"status":                 record.GetString("status"),
+		"rulesetVersion":         record.GetString("ruleset_version"),
+		"joiningOpen":            record.GetBool("joining_open"),
+		"rolesVisible":           record.GetBool("roles_visible"),
+		"roleVisibilityRevision": record.GetInt("role_visibility_revision"),
+		"revision":               record.GetInt("revision"),
+		"roundNumber":            record.GetInt("round_number"),
+		"phaseKey":               record.GetString("phase_key"),
+		"phaseStartedAt":         dateValue(record, "phase_started_at"),
+		"startedAt":              dateValue(record, "started_at"),
+		"endedAt":                dateValue(record, "ended_at"),
+		"createdAt":              dateValue(record, "created"),
+		"updatedAt":              dateValue(record, "updated"),
 	}
 }
 
@@ -78,6 +79,7 @@ func projectParticipant(record *core.Record, includeRole bool) map[string]any {
 	}
 	if includeRole {
 		projected["roleKey"] = record.GetString("role_key")
+		projected["roleRevision"] = record.GetInt("role_revision")
 		projected["outcome"] = record.GetString("outcome")
 	}
 	return projected

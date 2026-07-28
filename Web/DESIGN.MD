@@ -10,9 +10,19 @@ sharp frames, seals, and small illuminated details over a dark wood surround.
 Decoration concentrates on focal content and important transitions. Routine
 forms and dense host tools use quiet surfaces with minimal nesting.
 
-Copy is concise and literal. Prefer “Live game”, “Loading game”, “Waiting for
-role”, and “Rulesets”. Do not use metaphors such as ledgers, tables speaking, or
-ceremonial instructions. Product terms—game master, role, phase, ruleset—remain.
+System-owned interface text must be concise, literal, action-oriented, and
+necessary. The medieval identity is visual, not verbal.
+
+- Do not use fantasy metaphors, roleplay narration, ceremonial wording, or
+  invented fantasy terms for ordinary actions.
+- Prefer `Start game`, `Show roles`, `Pause timer`, `Players can post`, and
+  `Save ruleset`.
+- Status text explains the current state and, when useful, the next action.
+- Remove decorative copy that communicates nothing.
+- Product terms such as game master, role, phase, ruleset, achievement, and
+  game remain valid.
+- Ruleset-authored role names, descriptions, abilities, and instructions are
+  displayed as authored.
 
 Cinzel is limited to short headings, navigation labels, and important actions.
 IM Fell English is the readable body face for forms, instructions, statuses, and
@@ -59,6 +69,44 @@ OS contrast or text preferences.
 Every interactive control has at least a 44×44 CSS px target on phones and a
 visible focus indicator.
 
+### Composition and reuse
+
+Build the interface from generic, composable primitives and small
+subcomponents. Prefer one well-defined component with configurable props and
+slot/snippet regions over multiple feature-named components that repeat the
+same markup, behavior, or styles.
+
+- Put recurring control structure in form primitives. For example, one text
+  input primitive owns the label, input, help text, error state, required and
+  disabled treatment, while callers provide the id, label, type, value, and
+  messages.
+- Put recurring layout and surface structure in slot-based primitives. For
+  example, a card or panel exposes semantic header, body, and action regions;
+  callers supply feature-specific content rather than recreate the frame.
+- Extract meaningful subcomponents for repeated parts of a larger pattern, such
+  as a dialog header, sheet footer, field error, card actions, or empty-state
+  action.
+- Keep domain components focused on composition and domain behavior. They
+  should assemble primitives instead of copying their HTML and CSS.
+- Use Svelte 5 snippets/render props for new slot-like APIs. Existing
+  `<slot>`-based components may remain until they are otherwise changed.
+- Keep primitive APIs semantic and deliberately small. Use props for stable
+  variants and state; use snippets for caller-owned structure. Do not add a
+  generic escape-hatch prop merely to avoid defining a clear variant.
+- Keep accessibility behavior inside the primitive that owns the interaction,
+  including label association, descriptions, error announcements, keyboard
+  behavior, focus management, and ARIA state.
+- Centralize shared styling in primitives and semantic tokens. Feature
+  components may add layout specific to the feature, but must not duplicate a
+  primitive's borders, spacing, typography, or interaction-state CSS.
+
+Before adding a component, search the existing primitives and subcomponents.
+Extend an existing primitive when the difference is a reusable variant. Create
+a new primitive when the structure or behavior is meaningfully different.
+Avoid speculative abstractions used only once, but consolidate the second
+instance of materially repeated markup or CSS unless doing so would make the API
+less clear.
+
 - Loading: short literal status, optional progress indicator, no fake content.
 - Empty: explain the state and offer one relevant primary action.
 - Error: state what failed and provide an actionable recovery when possible.
@@ -80,16 +128,6 @@ desktop. Sheets/dialogs:
 4. restore focus to their trigger;
 5. keep the focused element unobscured;
 6. do not move focus when background attention arrives.
-
-## Navigation patterns
-
-The running player has a compact status bar, global chat action, and bottom tasks:
-Game, Role, Party, More. Role and Party are sheets. More owns profile, history,
-sound, Display, connection details, and sign-out.
-
-The host uses Live, Games, Approvals, More. Desktop turns the same hierarchy into
-a side rail. The ruleset editor replaces host navigation with Back, Sections,
-Validate, Save, and Publish.
 
 ## Motion and layer order
 

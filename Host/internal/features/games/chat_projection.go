@@ -39,7 +39,7 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 			HistoricalRead: membership.GetBool("historical_access"),
 		}
 		policy := chatfeature.EffectivePolicy(base, override, state, chatfeature.RoomState{
-			ManuallyLocked: room.GetBool("manually_locked"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
+			ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 		})
 		if game.GetString("status") == string(StatusReview) || game.GetString("status") == string(StatusArchived) {
 			policy.Sendable = false
@@ -57,7 +57,8 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 			"id": room.Id, "key": room.GetString("room_key"), "kind": room.GetString("kind"),
 			"label": room.GetString("label"), "visible": policy.Visible, "readable": policy.Readable,
 			"sendable": policy.Sendable, "senderDisplay": policy.SenderDisplay,
-			"latestMessage": latestMessageCursor(app, room.Id),
+			"playersCanPost": room.GetBool("players_can_post"),
+			"latestMessage":  latestMessageSummary(app, room.Id),
 		})
 	}
 	return result, nil

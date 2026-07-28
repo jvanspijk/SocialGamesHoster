@@ -48,8 +48,9 @@ func TestAdjustmentCannotGoBelowZero(t *testing.T) {
 	}
 }
 
-func TestInactiveTimerIsHidden(t *testing.T) {
-	if Project(State{Status: Inactive}, time.Now()) != nil {
-		t.Fatal("inactive timer must not be projected")
+func TestInactiveTimerIsProjected(t *testing.T) {
+	projected := Project(State{Status: Inactive}, time.Now())
+	if projected == nil || projected.Status != Inactive || projected.RemainingMS != 0 {
+		t.Fatal("inactive timer must be projected explicitly")
 	}
 }

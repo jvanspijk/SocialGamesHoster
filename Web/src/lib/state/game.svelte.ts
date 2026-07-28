@@ -21,6 +21,19 @@ async function subscribe(topic: string, refresh: () => Promise<unknown>) {
 		const envelope = message as unknown as RealtimeEnvelope;
 		if (!envelope.eventId || envelope.eventId === lastEventId) return;
 		lastEventId = envelope.eventId;
+		if (
+			envelope.kind === 'game.role_visibility_changed' &&
+			playerView &&
+			(envelope.payload as { rolesVisible?: boolean })?.rolesVisible === false
+		) {
+			playerView = {
+				...playerView,
+				roleAvailable: false,
+				role: null,
+				knowledge: [],
+				assets: []
+			};
+		}
 		const currentRevision = playerView?.game.revision ?? adminView?.game.revision ?? 0;
 		if (envelope.revision && envelope.revision > currentRevision + 1) {
 			connection.set('reconnecting');

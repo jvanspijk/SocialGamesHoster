@@ -29,6 +29,12 @@ func Register(event *core.ServeEvent) {
 	group.POST("/games/{id}/phase", setPhase).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/announcements", createAnnouncement).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/announcements/{announcementId}/acknowledge", acknowledgeAnnouncement).BindFunc(platformauth.RequirePlayer)
+	group.PATCH("/games/{id}/role-visibility", setRoleVisibility).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/completion/start", startCompletion).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/completion/cancel", cancelCompletion).BindFunc(platformauth.RequireGameMaster)
+	group.GET("/games/{id}/summary", gameSummary).BindFunc(platformauth.RequireGameMaster)
+	group.GET("/games/{id}/activity", listActivity).BindFunc(platformauth.RequireGameMaster)
+	group.GET("/games/{id}/announcements", listAnnouncements).BindFunc(platformauth.RequireGameMaster)
 
 	group.PATCH("/games/{id}/participants/{participantId}", updateParticipant).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/participants/{participantId}/kick", setParticipantStatus("kicked")).BindFunc(platformauth.RequireGameMaster)

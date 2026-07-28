@@ -186,7 +186,7 @@ func previewAsset(event *core.RequestEvent) error {
 	switch event.Auth.Collection().Name {
 	case platformauth.GameMastersCollection:
 	case platformauth.PlayerProfilesCollection:
-		if !playerMayReadVersionAsset(event.App, event.Auth.Id, asset.GetString("ruleset_version")) {
+		if !playerMayReadVersionAsset(event.App, event.Auth.Id, asset.GetString("ruleset_version"), asset.GetString("asset_key")) {
 			return httpx.WriteError(event, result.Forbidden("asset.forbidden", "This asset is not part of your current game."))
 		}
 	default:
@@ -263,7 +263,7 @@ func containsString(value any, expected string) bool {
 	return false
 }
 
-func playerMayReadVersionAsset(app core.App, profileID, versionID string) bool {
+func playerMayReadVersionAsset(app core.App, profileID, versionID, assetKey string) bool {
 	games, err := app.FindRecordsByFilter(
 		"games",
 		"ruleset_version = {:version} && status != 'draft'",
@@ -285,6 +285,33 @@ func playerMayReadVersionAsset(app core.App, profileID, versionID string) bool {
 			dbx.Params{"game": game.Id, "profile": profileID},
 		)
 		if findErr == nil && len(participants) == 1 {
+			if !game.GetBool("roles_visible") && isPrivateRoleAsset(game, assetKey) {
+				continue
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func isPrivateRoleAsset(game *core.Record, assetKey string) bool {
+	var definition DefinitionV1
+	data, err := json.Marshal(game.Get("ruleset_snapshot"))
+	if err != nil || json.Unmarshal(data, &definition) != nil {
+		return true
+	}
+	for _, role := range definition.Roles {
+		if role.ImageAssetKey == assetKey {
+			return true
+		}
+	}
+	for _, team := range definition.Teams {
+		if team.ImageAssetKey == assetKey {
+			return true
+		}
+	}
+	for _, ability := range definition.Abilities {
+		if ability.ImageAssetKey == assetKey {
 			return true
 		}
 	}

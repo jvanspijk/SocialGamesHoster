@@ -70,6 +70,29 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 			t.Fatalf("achievement award contract field %q is missing", field)
 		}
 	}
+	games, err := app.FindCollectionByNameOrId("games")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"roles_visible", "role_visibility_revision", "completion_previous_status"} {
+		if games.Fields.GetByName(field) == nil {
+			t.Fatalf("game contract field %q is missing", field)
+		}
+	}
+	participants, err := app.FindCollectionByNameOrId("participants")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if participants.Fields.GetByName("role_revision") == nil {
+		t.Fatal("participant role revision is missing")
+	}
+	rooms, err := app.FindCollectionByNameOrId("chat_rooms")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rooms.Fields.GetByName("players_can_post") == nil {
+		t.Fatal("room posting contract is missing")
+	}
 
 	var indexName string
 	if err := app.DB().NewQuery("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_games_single_live'").Row(&indexName); err != nil {
@@ -77,7 +100,7 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 	}
 
 	runner := core.NewMigrationsRunner(app, core.AppMigrations)
-	if _, err := runner.Down(4); err != nil {
+	if _, err := runner.Down(5); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := app.FindCollectionByNameOrId("games"); err == nil || !errors.Is(err, os.ErrNotExist) {

@@ -46,7 +46,7 @@
 {:else if !objectUrl}
 	<span class="loading">Loading media…</span>
 {:else if kind === 'image'}
-	<img src={objectUrl} {alt} />
+	<img src={objectUrl} {alt} decoding="async" />
 {:else}
 	<audio src={objectUrl} {controls} preload="none">
 		<track kind="captions" />

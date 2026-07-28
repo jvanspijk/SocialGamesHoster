@@ -44,7 +44,11 @@ func createGame(event *core.RequestEvent) error {
 	}
 	version, err := event.App.FindRecordById("ruleset_versions", request.RulesetVersionID)
 	if err != nil || version.GetString("state") != "published" {
-		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose a published ruleset version.", nil))
+		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose a ready ruleset.", nil))
+	}
+	logical, err := event.App.FindRecordById("rulesets", version.GetString("ruleset"))
+	if err != nil || logical.GetString("latest_published_version") != version.Id {
+		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose the current ready version of a ruleset.", nil))
 	}
 	collection, err := event.App.FindCollectionByNameOrId("games")
 	if err != nil {
@@ -59,6 +63,8 @@ func createGame(event *core.RequestEvent) error {
 	record.Set("revision", 0)
 	record.Set("round_number", 0)
 	record.Set("timer_state", "inactive")
+	record.Set("roles_visible", false)
+	record.Set("role_visibility_revision", 0)
 	record.Set("created_by", event.Auth.Id)
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -85,6 +91,8 @@ func duplicateGame(event *core.RequestEvent) error {
 	record.Set("revision", 0)
 	record.Set("round_number", 0)
 	record.Set("timer_state", "inactive")
+	record.Set("roles_visible", false)
+	record.Set("role_visibility_revision", 0)
 	record.Set("created_by", event.Auth.Id)
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -158,6 +166,9 @@ func closeJoining(event *core.RequestEvent) error {
 		current.Set("timer_remaining_ms", 0)
 		current.Set("timer_ends_at", nil)
 		current.Set("timer_revision", current.GetInt("timer_revision")+1)
+		current.Set("roles_visible", false)
+		current.Set("role_visibility_revision", current.GetInt("role_visibility_revision")+1)
+		current.Set("completion_previous_status", "")
 		return tx.Save(current)
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -238,18 +249,15 @@ func openLobby(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Conflict("game.transition_not_allowed", err.Error()))
 	}
-	joinCode, err := uniqueJoinCode(event.App)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
 	err = event.App.RunInTransaction(func(tx core.App) error {
 		game, err = tx.FindRecordById("games", game.Id)
 		if err != nil {
 			return err
 		}
 		applyState(game, next)
-		game.Set("join_code", joinCode)
+		game.Set("join_code", "")
 		game.Set("joining_open", true)
+		game.Set("roles_visible", false)
 		if err := tx.Save(game); err != nil {
 			return err
 		}
@@ -397,6 +405,7 @@ func adminView(event *core.RequestEvent) error {
 	}
 	return event.JSON(http.StatusOK, map[string]any{
 		"game":           projectGame(game),
+		"timer":          projectTimer(game),
 		"ruleset":        game.Get("ruleset_snapshot"),
 		"participants":   projected,
 		"rooms":          projectRooms(event.App, rooms),
@@ -404,6 +413,20 @@ func adminView(event *core.RequestEvent) error {
 		"awards":         projectedAwards,
 		"audit":          projectedAudit,
 	})
+}
+
+func projectTimer(game *core.Record) map[string]any {
+	projected := map[string]any{
+		"status":      game.GetString("timer_state"),
+		"totalMs":     game.GetInt("timer_total_ms"),
+		"remainingMs": game.GetInt("timer_remaining_ms"),
+		"revision":    game.GetInt("timer_revision"),
+		"serverTime":  time.Now().UTC(),
+	}
+	if endsAt := dateValue(game, "timer_ends_at"); endsAt != nil {
+		projected["endsAt"] = endsAt
+	}
+	return projected
 }
 
 func playerView(event *core.RequestEvent) error {
@@ -422,10 +445,15 @@ func playerView(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	role := roleByID(definition, participant.GetString("role_key"))
-	knowledge, err := projectKnowledge(event.App, game.Id, participant, definition)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+	roleAvailable := game.GetBool("roles_visible") && participant.GetString("role_key") != ""
+	var role any
+	knowledge := []map[string]any{}
+	if roleAvailable {
+		role = roleByID(definition, participant.GetString("role_key"))
+		knowledge, err = projectKnowledge(event.App, game.Id, participant, definition)
+		if err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
 	}
 	rooms, err := visibleRoomsForPlayer(event.App, game, participant, definition)
 	if err != nil {
@@ -451,19 +479,24 @@ func playerView(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	assetRecords, _ := event.App.FindRecordsByFilter(
-		"ruleset_assets",
-		"ruleset_version = {:version}",
-		"asset_key",
-		100,
-		0,
+		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
 		dbx.Params{"version": game.GetString("ruleset_version")},
 	)
-	assets := make([]map[string]any, len(assetRecords))
-	for index, asset := range assetRecords {
-		assets[index] = map[string]any{
+	privateKeys := map[string]bool{}
+	if !roleAvailable {
+		for _, key := range privateRoleAssetKeys(definition) {
+			privateKeys[key] = true
+		}
+	}
+	assets := make([]map[string]any, 0, len(assetRecords))
+	for _, asset := range assetRecords {
+		if privateKeys[asset.GetString("asset_key")] {
+			continue
+		}
+		assets = append(assets, map[string]any{
 			"id": asset.Id, "assetKey": asset.GetString("asset_key"), "kind": asset.GetString("kind"),
 			"checksum": asset.GetString("checksum"), "preview": "/api/app/v1/ruleset-assets/" + asset.Id,
-		}
+		})
 	}
 	return event.JSON(http.StatusOK, map[string]any{
 		"game": projectPlayerGame(game),
@@ -473,6 +506,8 @@ func playerView(event *core.RequestEvent) error {
 			"status": participant.GetString("status"),
 		},
 		"ruleset":        map[string]any{"name": definition.Metadata.Name, "description": definition.Metadata.Description},
+		"roleAvailable":  roleAvailable,
+		"roleRevision":   participant.GetInt("role_revision"),
 		"role":           role,
 		"knowledge":      knowledge,
 		"rooms":          rooms,
@@ -528,6 +563,7 @@ func ensureRoom(app core.App, gameID, key, kind, label, teamKey string) (*core.R
 	room.Set("kind", kind)
 	room.Set("label", label)
 	room.Set("team_key", teamKey)
+	room.Set("players_can_post", true)
 	room.Set("manual_visibility_override", "default")
 	room.Set("sender_display", "profile_name")
 	if err := app.Save(room); err != nil {
@@ -600,6 +636,27 @@ func projectPlayerGame(game *core.Record) map[string]any {
 		"revision": game.GetInt("revision"), "roundNumber": game.GetInt("round_number"),
 		"phaseKey": game.GetString("phase_key"), "phaseStartedAt": dateValue(game, "phase_started_at"),
 	}
+}
+
+func privateRoleAssetKeys(definition rulesets.DefinitionV1) []string {
+	seen := map[string]bool{}
+	keys := make([]string, 0)
+	add := func(key string) {
+		if key != "" && !seen[key] {
+			seen[key] = true
+			keys = append(keys, key)
+		}
+	}
+	for _, role := range definition.Roles {
+		add(role.ImageAssetKey)
+	}
+	for _, team := range definition.Teams {
+		add(team.ImageAssetKey)
+	}
+	for _, ability := range definition.Abilities {
+		add(ability.ImageAssetKey)
+	}
+	return keys
 }
 
 func projectKnowledge(app core.App, gameID string, viewer *core.Record, definition rulesets.DefinitionV1) ([]map[string]any, error) {
@@ -702,12 +759,39 @@ func projectRooms(app core.App, rooms []*core.Record) []map[string]any {
 		projected := map[string]any{
 			"id": room.Id, "key": room.GetString("room_key"), "kind": room.GetString("kind"),
 			"label": room.GetString("label"), "teamKey": room.GetString("team_key"),
-			"locked": room.GetBool("manually_locked"),
+			"playersCanPost": room.GetBool("players_can_post"),
 		}
-		projected["latestMessage"] = latestMessageCursor(app, room.Id)
+		projected["latestMessage"] = latestMessageSummary(app, room.Id)
 		result = append(result, projected)
 	}
 	return result
+}
+
+func latestMessageSummary(app core.App, roomID string) any {
+	messages, err := app.FindRecordsByFilter(
+		"chat_messages",
+		"room = {:room} && message_kind != 'announcement'",
+		"-created,-id",
+		1,
+		0,
+		dbx.Params{"room": roomID},
+	)
+	if err != nil || len(messages) == 0 {
+		return nil
+	}
+	message := messages[0]
+	preview := message.GetString("content")
+	if !message.GetDateTime("deleted_at").IsZero() {
+		preview = "Message removed"
+	}
+	runes := []rune(strings.TrimSpace(preview))
+	if len(runes) > 120 {
+		preview = string(runes[:120]) + "…"
+	}
+	return map[string]any{
+		"id": message.Id, "createdAt": dateValue(message, "created"),
+		"senderLabel": message.GetString("sender_label_snapshot"), "preview": preview,
+	}
 }
 
 func decodeSnapshot(record *core.Record, target any) error {

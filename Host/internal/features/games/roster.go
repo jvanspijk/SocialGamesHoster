@@ -126,7 +126,7 @@ func participantChanged(event *core.RequestEvent, game, participant *core.Record
 	publishGameMasters(event.App, game, kind, private)
 	_ = realtime.Publish(event.App, "participant:"+participant.Id+":private", realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: game.Id, Revision: game.GetInt("revision"),
-		Kind: kind, Payload: private,
+		Kind: kind, Payload: projectParticipantForPlayer(game, participant),
 	}, func(auth *core.Record) bool {
 		return auth != nil && auth.GetBool("active") &&
 			(auth.Collection().Name == "game_masters" ||
@@ -239,6 +239,7 @@ func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Ass
 				return result.AppError{Code: "participant.not_found", Message: "Participant not found.", Status: http.StatusNotFound}
 			}
 			participant.Set("role_key", assignment.RoleID)
+			participant.Set("role_revision", participant.GetInt("role_revision")+1)
 			participant.Set("assigned_by", gameMasterID)
 			if err := tx.Save(participant); err != nil {
 				return err
@@ -259,7 +260,7 @@ func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
 		admin[index] = projectParticipant(participant, true)
 		_ = realtime.Publish(event.App, "participant:"+participant.Id+":private", realtime.Event[any]{
 			EventID: realtime.NewEventID(), GameID: game.Id, Revision: game.GetInt("revision"),
-			Kind: "assignments.changed", Payload: projectParticipant(participant, true),
+			Kind: "assignments.changed", Payload: projectParticipantForPlayer(game, participant),
 		}, func(auth *core.Record) bool {
 			return auth != nil && auth.GetBool("active") &&
 				(auth.Collection().Name == "game_masters" ||
@@ -270,6 +271,13 @@ func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
 	publishGameMasters(event.App, game, "assignments.changed", admin)
 	publishGame(event.App, game, "game.revision_changed", map[string]any{"revision": game.GetInt("revision")})
 	return event.JSON(http.StatusOK, map[string]any{"revision": game.GetInt("revision"), "assignments": admin})
+}
+
+func projectParticipantForPlayer(game, participant *core.Record) map[string]any {
+	projected := projectParticipant(participant, false)
+	projected["roleAvailable"] = game.GetBool("roles_visible") && participant.GetString("role_key") != ""
+	projected["roleRevision"] = participant.GetInt("role_revision")
+	return projected
 }
 
 type outcomeItem struct {

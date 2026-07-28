@@ -34,8 +34,11 @@ export interface Game {
 	name: string;
 	status: 'draft' | 'lobby' | 'running' | 'paused' | 'review' | 'archived';
 	rulesetVersion: string;
-	joinCode: string;
+	/** @deprecated Join codes are no longer part of reader projections. */
+	joinCode?: string;
 	joiningOpen: boolean;
+	rolesVisible: boolean;
+	roleVisibilityRevision: number;
 	revision: number;
 	roundNumber: number;
 	phaseKey: string;
@@ -53,6 +56,7 @@ export interface Participant {
 	status: 'active' | 'eliminated' | 'kicked' | 'left';
 	outcome: 'unset' | 'win' | 'loss' | 'draw';
 	roleKey?: string;
+	roleRevision?: number;
 }
 
 export interface Room {
@@ -60,16 +64,20 @@ export interface Room {
 	key: string;
 	kind: string;
 	label: string;
-	locked: boolean;
+	playersCanPost: boolean;
+	/** @deprecated Use playersCanPost. */
+	locked?: boolean;
 	readable: boolean;
 	sendable: boolean;
 	gameMasterMaySend?: boolean;
-	latestMessage: MessageCursor | null;
+	latestMessage: MessageSummary | null;
 }
 
-export interface MessageCursor {
+export interface MessageSummary {
 	createdAt: string;
 	id: string;
+	senderLabel: string;
+	preview: string;
 }
 
 export interface ChatMessage {
@@ -110,7 +118,7 @@ export interface AdminAttentionSummary extends AnnouncementAttentionItem {
 }
 
 export interface TimerProjection {
-	status: 'running' | 'paused' | 'completed';
+	status: 'inactive' | 'running' | 'paused' | 'completed';
 	totalMs: number;
 	remainingMs: number;
 	endsAt?: string;
@@ -138,6 +146,8 @@ export interface PlayerGameView {
 		status: string;
 	};
 	ruleset: { name: string; description: string };
+	roleAvailable: boolean;
+	roleRevision: number;
 	role: RoleProjection | null;
 	knowledge: Array<Record<string, unknown>>;
 	rooms: Room[];
@@ -161,6 +171,7 @@ export interface PlayerGameView {
 
 export interface AdminGameView {
 	game: Game;
+	timer: TimerProjection;
 	ruleset: RulesetDefinition;
 	participants: Participant[];
 	rooms: Room[];
@@ -183,6 +194,24 @@ export interface AdminGameView {
 		detail?: Record<string, unknown>;
 		createdAt: string;
 	}>;
+}
+
+export interface ActivityItem {
+	id: string;
+	text: string;
+	createdAt: string;
+}
+
+export interface GameSummary {
+	game: Game;
+	ruleset: { name: string; coverAssetKey?: string };
+	durationMs: number;
+	participants: Array<
+		Participant & {
+			achievements: Array<{ id: string; title: string; description: string; points: number }>;
+		}
+	>;
+	immutable: boolean;
 }
 
 export interface RulesetSummary {

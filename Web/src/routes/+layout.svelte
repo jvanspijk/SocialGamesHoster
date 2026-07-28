@@ -6,6 +6,7 @@
 	import { onMount } from 'svelte';
 	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import ToastViewport from '$lib/components/ToastViewport.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
 	import { displayPreferences } from '$lib/state/display.svelte';
@@ -41,7 +42,7 @@
 	<title>Social Games Hoster</title>
 </svelte:head>
 
-{#if page.url.pathname.startsWith('/play') && auth.isPlayer}
+{#if page.url.pathname.startsWith('/play') || page.url.pathname.startsWith('/admin')}
 	<div class="immersive-shell">
 		<main class="immersive-page">
 			{@render children()}
@@ -75,6 +76,8 @@
 		{/if}
 	</div>
 {/if}
+
+<ToastViewport />
 
 <style>
 	header {

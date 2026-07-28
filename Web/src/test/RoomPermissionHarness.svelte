@@ -5,7 +5,7 @@
 	let policy = $state<RulesetPartialRoomPermission>({});
 </script>
 
-<RoomPermissionEditor {policy} partial />
+<RoomPermissionEditor bind:policy partial />
 <output aria-label="Visibility result">
 	{policy.visible === undefined ? 'inherit' : policy.visible ? 'yes' : 'no'}
 </output>

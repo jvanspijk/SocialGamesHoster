@@ -5,16 +5,16 @@
 	import { page } from '$app/state';
 	import {
 		ArrowLeft,
-		CheckCircle2,
 		Copy,
 		FileImage,
 		Menu,
+		MoreHorizontal,
 		Archive,
 		Save,
-		Send,
 		Trash2
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
@@ -23,6 +23,7 @@
 	import { api, AppApiError, download, jsonBody } from '$lib/api/client';
 	import type { AppErrorBody, RulesetDefinition, RulesetSummary } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
+	import { toasts } from '$lib/state/toasts.svelte';
 
 	type Version = {
 		id: string;
@@ -35,15 +36,14 @@
 	type Detail = { ruleset: RulesetSummary; versions: Version[] };
 	type Section =
 		| 'metadata'
-		| 'teams'
 		| 'roles'
 		| 'phases'
 		| 'composition'
 		| 'knowledge'
 		| 'chat'
 		| 'achievements'
-		| 'audio'
-		| 'assets';
+		| 'assets'
+		| 'advanced';
 	type Asset = {
 		id: string;
 		assetKey: string;
@@ -90,24 +90,33 @@
 	let trackingChanges = $state(false);
 	let advancedOpen = $state(false);
 	let sectionMenuOpen = $state(false);
-	let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
+	let actionsOpen = $state(false);
 
 	const sections: Array<{ id: Section; label: string }> = [
-		{ id: 'metadata', label: 'Overview' },
-		{ id: 'teams', label: 'Teams & categories' },
-		{ id: 'roles', label: 'Roles & abilities' },
-		{ id: 'phases', label: 'Phases' },
-		{ id: 'composition', label: 'Composition' },
-		{ id: 'knowledge', label: 'Knowledge' },
-		{ id: 'chat', label: 'Chat policy' },
-		{ id: 'achievements', label: 'Achievements' },
-		{ id: 'audio', label: 'Audio cues' },
-		{ id: 'assets', label: 'Images & audio' }
+		{ id: 'metadata', label: 'Basics' },
+		{ id: 'roles', label: 'Roles and teams' },
+		{ id: 'phases', label: 'Game flow' },
+		{ id: 'composition', label: 'Role setup' },
+		{ id: 'knowledge', label: 'Information rules' },
+		{ id: 'chat', label: 'Chat rules' },
+		{ id: 'achievements', label: 'Rewards' },
+		{ id: 'assets', label: 'Media' },
+		{ id: 'advanced', label: 'Advanced JSON' }
 	];
 
 	onMount(() => {
 		if (!auth.isGameMaster) {
 			void goto(resolve('/admin'));
+			return;
+		}
+		const requestedSection = page.params.section as Section | undefined;
+		if (requestedSection && sections.some((item) => item.id === requestedSection)) {
+			section = requestedSection;
+		}
+		if (page.params.id !== 'new' && !page.params.section) {
+			void goto(resolve(`/admin/rulesets/${page.params.id}/edit/metadata`), {
+				replaceState: true
+			});
 			return;
 		}
 		if (page.params.id !== 'new') void load();
@@ -126,6 +135,12 @@
 			savedDefinition = JSON.stringify(definition);
 			trackingChanges = true;
 		}
+		const protectUnsavedChanges = (event: BeforeUnloadEvent) => {
+			if (!dirty) return;
+			event.preventDefault();
+		};
+		window.addEventListener('beforeunload', protectUnsavedChanges);
+		return () => window.removeEventListener('beforeunload', protectUnsavedChanges);
 	});
 
 	$effect(() => {
@@ -139,11 +154,12 @@
 			);
 			return;
 		}
-		if (!version || version.state !== 'draft' || snapshot === savedDefinition) return;
+		if (snapshot === savedDefinition) return;
 		dirty = true;
-		clearTimeout(autosaveTimer);
-		autosaveTimer = setTimeout(() => void save(), 1200);
-		return () => clearTimeout(autosaveTimer);
+		localStorage.setItem(
+			`sgh.ruleset-recovery:${logical.id}`,
+			JSON.stringify({ definition: JSON.parse(snapshot), savedAt: new Date().toISOString() })
+		);
 	});
 
 	async function load() {
@@ -160,8 +176,18 @@
 			version = selectedVersion;
 			definition = loadedDefinition;
 			if (version) assets = await api<Asset[]>(`/ruleset-versions/${version.id}/assets`);
+			savedDefinition = JSON.stringify(loadedDefinition);
+			const recovery = localStorage.getItem(`sgh.ruleset-recovery:${detail.ruleset.id}`);
+			if (recovery) {
+				try {
+					definition = (JSON.parse(recovery) as { definition: RulesetDefinition }).definition;
+					dirty = JSON.stringify(definition) !== savedDefinition;
+					if (dirty) toasts.info('Recovered unsaved ruleset changes from this browser.');
+				} catch {
+					localStorage.removeItem(`sgh.ruleset-recovery:${detail.ruleset.id}`);
+				}
+			}
 			syncText();
-			savedDefinition = JSON.stringify(definition);
 			trackingChanges = true;
 		} catch (caught) {
 			setError(caught);
@@ -173,14 +199,19 @@
 		sectionMenuOpen = false;
 		advancedOpen = false;
 		syncText();
+		if (logical) {
+			void goto(resolve(`/admin/rulesets/${logical.id}/edit/${next}`), {
+				replaceState: true,
+				keepFocus: true,
+				noScroll: true
+			});
+		}
 	}
 
 	function keysForSection(): Array<keyof RulesetDefinition> {
 		switch (section) {
-			case 'teams':
-				return ['teams', 'categories'];
 			case 'roles':
-				return ['roles', 'abilities'];
+				return ['teams', 'categories', 'roles', 'abilities'];
 			case 'composition':
 				return ['compositionBands', 'compositionModifiers'];
 			case 'knowledge':
@@ -189,7 +220,7 @@
 				return ['chat'];
 			case 'achievements':
 				return ['achievements'];
-			case 'audio':
+			case 'assets':
 				return ['audioCues'];
 			case 'phases':
 				return ['phases'];
@@ -199,6 +230,10 @@
 	}
 
 	function syncText() {
+		if (section === 'advanced') {
+			text = JSON.stringify(definition, null, 2);
+			return;
+		}
 		const keys = keysForSection();
 		const value: Record<string, unknown> = {};
 		for (const key of keys) value[key] = definition[key];
@@ -206,9 +241,15 @@
 	}
 
 	function applyText() {
-		if (section === 'metadata' || section === 'assets') return true;
+		if (section === 'metadata') return true;
 		try {
 			const parsed = JSON.parse(text) as Record<string, unknown>;
+			if (section === 'advanced') {
+				definition = parsed as unknown as RulesetDefinition;
+				error = null;
+				dirty = true;
+				return true;
+			}
 			for (const key of keysForSection()) {
 				if (!(key in parsed)) throw new Error(`Missing "${key}"`);
 				(definition as unknown as Record<string, unknown>)[key] = parsed[key];
@@ -232,6 +273,13 @@
 			await save();
 		}
 		if (!version) return;
+		if (version.state === 'published' && logical) {
+			version = await api<Version>(`/rulesets/${logical.id}/draft`, {
+				method: 'POST',
+				...jsonBody({})
+			});
+			assets = await api<Asset[]>(`/ruleset-versions/${version.id}/assets`);
+		}
 		const form = new FormData();
 		form.append('assetKey', assetKey);
 		form.append('kind', assetKind);
@@ -270,24 +318,40 @@
 				});
 				logical = created.ruleset;
 				version = created.draft;
-				await goto(resolve('/admin/rulesets/[id]', { id: created.ruleset.id }), {
+				const saved = await api<{
+					version: Version;
+					validation: NonNullable<typeof report>;
+					availability: 'ready' | 'invalid';
+				}>(`/rulesets/${created.ruleset.id}/save`, {
+					method: 'POST',
+					...jsonBody({ definition })
+				});
+				version = saved.version;
+				report = saved.validation;
+				logical.latestPublishedVersion = saved.availability === 'ready' ? saved.version.id : '';
+				await goto(resolve(`/admin/rulesets/${created.ruleset.id}/edit/metadata`), {
 					replaceState: true
 				});
 				localStorage.removeItem('sgh.new-ruleset');
 			} else {
-				if (!version || version.state !== 'draft') {
-					version = await api<Version>(`/rulesets/${logical.id}/draft`, {
-						method: 'POST',
-						...jsonBody({})
-					});
-				}
-				version = await api<Version>(`/ruleset-versions/${version.id}`, {
-					method: 'PATCH',
+				const saved = await api<{
+					version: Version;
+					validation: NonNullable<typeof report>;
+					availability: 'ready' | 'invalid';
+				}>(`/rulesets/${logical.id}/save`, {
+					method: 'POST',
 					...jsonBody({ definition })
 				});
+				version = saved.version;
+				report = saved.validation;
+				logical.latestPublishedVersion = saved.availability === 'ready' ? saved.version.id : '';
 			}
 			dirty = false;
 			savedDefinition = JSON.stringify(definition);
+			if (logical) localStorage.removeItem(`sgh.ruleset-recovery:${logical.id}`);
+			toasts.success(
+				report?.errors.length ? 'Ruleset saved with validation issues.' : 'Ruleset saved and ready.'
+			);
 		} catch (caught) {
 			setError(caught);
 		} finally {
@@ -303,39 +367,6 @@
 		);
 	}
 
-	async function validate() {
-		await save();
-		if (!version) return;
-		busy = 'validate';
-		try {
-			report = await api(`/ruleset-versions/${version.id}/validate`, {
-				method: 'POST',
-				...jsonBody({})
-			});
-		} catch (caught) {
-			setError(caught);
-		} finally {
-			busy = '';
-		}
-	}
-
-	async function publish() {
-		await validate();
-		if (!version || report?.errors.length) return;
-		busy = 'publish';
-		try {
-			version = await api<Version>(`/ruleset-versions/${version.id}/publish`, {
-				method: 'POST',
-				...jsonBody({})
-			});
-			dirty = false;
-		} catch (caught) {
-			setError(caught);
-		} finally {
-			busy = '';
-		}
-	}
-
 	async function duplicate() {
 		if (!version) return;
 		busy = 'duplicate';
@@ -347,7 +378,7 @@
 					...jsonBody({})
 				}
 			);
-			await goto(resolve('/admin/rulesets/[id]', { id: created.ruleset.id }));
+			await goto(resolve(`/admin/rulesets/${created.ruleset.id}/edit/metadata`));
 		} catch (caught) {
 			setError(caught);
 		} finally {
@@ -363,7 +394,7 @@
 				method: 'POST',
 				...jsonBody({})
 			});
-			await goto(resolve('/admin'));
+			await goto(resolve('/admin/rulesets'));
 		} catch (caught) {
 			setError(caught);
 		}
@@ -379,7 +410,7 @@
 			return;
 		try {
 			await api(`/rulesets/${logical.id}`, { method: 'DELETE' });
-			await goto(resolve('/admin'));
+			await goto(resolve('/admin/rulesets'));
 		} catch (caught) {
 			setError(caught);
 		}
@@ -390,35 +421,32 @@
 			caught instanceof AppApiError
 				? caught.body
 				: { code: 'ruleset.failed', message: 'The ruleset could not be updated.' };
+		toasts.error(error.message);
 	}
 </script>
 
 <div class="editor stack">
 	<header>
-		<a href={resolve('/admin')}><ArrowLeft size={18} /> Dashboard</a>
+		<a href={resolve('/admin/rulesets')}><ArrowLeft size={18} /> Rulesets</a>
 		<div>
-			<p class="ornament">{logical ? `Version ${version?.versionNumber ?? '—'}` : 'New ruleset'}</p>
+			<p class="ornament">
+				{dirty
+					? 'Unsaved changes'
+					: report?.errors.length
+						? 'Saved · Invalid'
+						: logical?.latestPublishedVersion
+							? 'Saved · Ready'
+							: logical
+								? 'Saved · Invalid'
+								: 'New ruleset'}
+			</p>
 			<h1>{definition.metadata.name}</h1>
 		</div>
 		<div class="actions">
-			{#if logical && !logical.archived}
-				<Button variant="ghost" onclick={archiveRuleset}><Archive size={17} /> Archive</Button>
-			{/if}
-			{#if logical}
-				<Button variant="danger" onclick={deleteRuleset}><Trash2 size={17} /> Delete</Button>
-			{/if}
-			{#if version}<Button variant="ghost" onclick={duplicate}><Copy size={17} /> Duplicate</Button
-				>{/if}
-			{#if version}<Button variant="ghost" onclick={exportVersion}>Export</Button>{/if}
-			<Button variant="secondary" loading={busy === 'validate'} onclick={validate}
-				><CheckCircle2 size={17} /> Validate</Button
-			>
 			<Button loading={busy === 'save'} onclick={save}><Save size={17} /> Save</Button>
-			<Button
-				disabled={!version || version.state === 'published'}
-				loading={busy === 'publish'}
-				onclick={publish}><Send size={17} /> Publish</Button
-			>
+			<Button variant="ghost" onclick={() => (actionsOpen = true)}>
+				<MoreHorizontal size={20} /> Actions
+			</Button>
 		</div>
 	</header>
 
@@ -498,6 +526,11 @@
 					Images may be JPEG, PNG, or WebP up to 2 MB. Audio may be MP3, M4A, Ogg, or WAV up to 5 MB
 					and 60 seconds.
 				</p>
+				<VisualDefinitionEditor
+					{definition}
+					section="audio"
+					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
+				/>
 				<form class="asset-form" onsubmit={uploadAsset}>
 					<Field
 						label="Asset key"
@@ -549,6 +582,37 @@
 						<p>No files in this draft.</p>
 					{/each}
 				</div>
+			{:else if section === 'advanced'}
+				<h2>Advanced JSON</h2>
+				<p class="muted">
+					For advanced authors and imported definitions. Invalid changes can still be saved, but the
+					ruleset will not be available for new games.
+				</p>
+				<textarea bind:value={text} spellcheck="false" aria-label="Complete ruleset JSON"
+				></textarea>
+				<Button variant="secondary" onclick={applyText}>Apply JSON</Button>
+			{:else if section === 'roles'}
+				<VisualDefinitionEditor
+					{definition}
+					section="teams"
+					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
+				/>
+				<VisualDefinitionEditor
+					{definition}
+					section="roles"
+					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
+				/>
+				<details
+					class="advanced"
+					bind:open={advancedOpen}
+					ontoggle={() => {
+						if (advancedOpen) syncText();
+					}}
+				>
+					<summary>Section JSON</summary>
+					<textarea bind:value={text} spellcheck="false" aria-label={`${section} JSON`}></textarea>
+					<Button variant="secondary" onclick={applyText}>Apply JSON to this section</Button>
+				</details>
 			{:else}
 				<VisualDefinitionEditor
 					{definition}
@@ -562,7 +626,7 @@
 						if (advancedOpen) syncText();
 					}}
 				>
-					<summary>Advanced JSON</summary>
+					<summary>Section JSON</summary>
 					<p class="muted">
 						For advanced authors and imported definitions. Changes apply only when you press the
 						button.
@@ -590,6 +654,23 @@
 		{/each}
 	</div>
 </Sheet>
+
+<Dialog open={actionsOpen} title="Ruleset actions" close={() => (actionsOpen = false)}>
+	<div class="overflow-actions">
+		{#if version}<Button variant="secondary" onclick={duplicate}
+				><Copy size={17} /> Duplicate ruleset</Button
+			>{/if}
+		{#if version}<Button variant="secondary" onclick={exportVersion}>Export ruleset</Button>{/if}
+		{#if logical && !logical.archived}
+			<Button variant="secondary" onclick={archiveRuleset}
+				><Archive size={17} /> Archive ruleset</Button
+			>
+		{/if}
+		{#if logical}<Button variant="danger" onclick={deleteRuleset}
+				><Trash2 size={17} /> Delete ruleset</Button
+			>{/if}
+	</div>
+</Dialog>
 
 <style>
 	.editor {
@@ -621,6 +702,16 @@
 		flex-wrap: wrap;
 		justify-content: flex-end;
 		gap: 0.4rem;
+	}
+
+	.overflow-actions {
+		display: grid;
+		gap: var(--space-2);
+	}
+
+	.overflow-actions :global(button) {
+		justify-content: flex-start;
+		width: 100%;
 	}
 
 	.workspace {

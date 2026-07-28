@@ -1,12 +1,12 @@
-import type { MessageCursor } from '$lib/api/types';
+import type { MessageSummary } from '$lib/api/types';
 
 export function readMarkerStorageKey(actorId: string, gameId: string) {
 	return `sgh.read.v1:${actorId}:${gameId}`;
 }
 
 export function cursorIsAfter(
-	candidate: MessageCursor | null | undefined,
-	marker: MessageCursor | undefined
+	candidate: Pick<MessageSummary, 'id' | 'createdAt'> | null | undefined,
+	marker: Pick<MessageSummary, 'id' | 'createdAt'> | undefined
 ) {
 	if (!candidate) return false;
 	if (!marker) return true;

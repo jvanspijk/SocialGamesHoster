@@ -8,7 +8,9 @@
 		required = false,
 		autocomplete,
 		multiline = false,
-		help = ''
+		help = '',
+		error = '',
+		disabled = false
 	}: {
 		label: string;
 		name: string;
@@ -19,17 +21,49 @@
 		autocomplete?: 'username' | 'new-password' | 'current-password' | 'nickname' | 'off';
 		multiline?: boolean;
 		help?: string;
+		error?: string;
+		disabled?: boolean;
 	} = $props();
+
+	const inputId = $derived(`field-${name}`);
+	const descriptionId = $derived(`${inputId}-description`);
 </script>
 
 <label>
-	<span>{label}</span>
+	<span
+		>{label}{#if required}<i aria-hidden="true"> *</i>{/if}</span
+	>
 	{#if multiline}
-		<textarea {name} bind:value {placeholder} {required} rows="4"></textarea>
+		<textarea
+			id={inputId}
+			{name}
+			bind:value
+			{placeholder}
+			{required}
+			{disabled}
+			aria-invalid={error ? 'true' : undefined}
+			aria-describedby={help || error ? descriptionId : undefined}
+			rows="4"
+		></textarea>
 	{:else}
-		<input {name} bind:value {type} {placeholder} {required} {autocomplete} />
+		<input
+			id={inputId}
+			{name}
+			bind:value
+			{type}
+			{placeholder}
+			{required}
+			{disabled}
+			{autocomplete}
+			aria-invalid={error ? 'true' : undefined}
+			aria-describedby={help || error ? descriptionId : undefined}
+		/>
 	{/if}
-	{#if help}<small>{help}</small>{/if}
+	{#if error}
+		<small id={descriptionId} class="error">{error}</small>
+	{:else if help}
+		<small id={descriptionId}>{help}</small>
+	{/if}
 </label>
 
 <style>
@@ -44,6 +78,11 @@
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
+	}
+
+	i {
+		color: var(--danger);
+		font-style: normal;
 	}
 
 	input,
@@ -65,7 +104,24 @@
 		border-color: var(--crimson);
 	}
 
+	input[aria-invalid='true'],
+	textarea[aria-invalid='true'] {
+		border-color: var(--danger);
+		box-shadow: 0 0 0 1px var(--danger);
+	}
+
+	input:disabled,
+	textarea:disabled {
+		background: var(--paper-deep);
+		cursor: not-allowed;
+		opacity: 0.72;
+	}
+
 	small {
 		color: var(--ink-soft);
+	}
+
+	small.error {
+		color: var(--danger);
 	}
 </style>

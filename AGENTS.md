@@ -58,6 +58,8 @@ disposable local test data directory.
 
 ## Engineering style
 
+- For changes under `Web/`, follow the normative UI guidance in
+  `Web/DESIGN.MD`, including its primitive-component composition rules.
 - Keep backend changes in the relevant vertical feature slice.
 - Keep PocketBase collection APIs locked; expose domain behavior through custom
   routes and reader-safe projections.

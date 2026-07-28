@@ -29,6 +29,7 @@ func Register(event *core.ServeEvent) {
 	group.GET("/rooms/{roomId}/messages", listMessages)
 	group.POST("/rooms/{roomId}/messages", createMessage)
 	group.DELETE("/rooms/{roomId}/messages/{messageId}", deleteMessage)
+	group.PATCH("/rooms/{roomId}", updateRoom).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(platformauth.RequireGameMaster)
 }
@@ -89,7 +90,7 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 		IsActive:       participant.GetString("status") == "active",
 		HistoricalRead: membership.GetBool("historical_access"),
 	}, RoomState{
-		ManuallyLocked: room.GetBool("manually_locked"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
+		ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 	})
 	if game.GetString("status") == "review" || game.GetString("status") == "archived" {
 		policy.Sendable = false
@@ -215,13 +216,10 @@ func createMessage(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, err)
 	}
-	if resolved.Game.GetString("status") == "review" || resolved.Game.GetString("status") == "archived" {
-		return writeError(event, result.Conflict("chat.read_only", "Chat is read only during review and after archive."))
+	if resolved.Game.GetString("status") == "archived" {
+		return writeError(event, result.Conflict("chat.read_only", "Archived chat is read-only."))
 	}
 	if resolved.IsGM {
-		if resolved.Room.GetBool("manually_locked") {
-			return writeError(event, result.Forbidden("chat.room_locked", "Unlock this room before sending a message."))
-		}
 		if !resolved.Policy.GameMasterMaySend && resolved.Room.GetString("kind") != "gm_dm" && resolved.Room.GetString("kind") != "announcements" {
 			return writeError(event, result.Forbidden("chat.send_forbidden", "Game masters cannot send to this room."))
 		}
@@ -263,6 +261,39 @@ func createMessage(event *core.RequestEvent) error {
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
 	publishRoom(event.App, resolved, "chat.message_created", projected)
 	return event.JSON(http.StatusCreated, projected)
+}
+
+type updateRoomRequest struct {
+	PlayersCanPost *bool `json:"playersCanPost"`
+}
+
+func updateRoom(event *core.RequestEvent) error {
+	room, err := event.App.FindRecordById("chat_rooms", event.Request.PathValue("roomId"))
+	if err != nil {
+		return writeError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
+	}
+	game, err := event.App.FindRecordById("games", room.GetString("game"))
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	if game.GetString("status") == "archived" {
+		return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	}
+	var request updateRoomRequest
+	if err := event.BindBody(&request); err != nil || request.PlayersCanPost == nil {
+		return writeError(event, result.Invalid("chat.room_invalid", "Choose whether players can post.", nil))
+	}
+	room.Set("players_can_post", *request.PlayersCanPost)
+	room.Set("manually_locked", !*request.PlayersCanPost)
+	if err := event.App.Save(room); err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	resolved := access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}
+	projected := projectRoom(event.App, resolved)
+	publishRoom(event.App, resolved, "chat.room_updated", projected)
+	_ = platformaudit.Record(event.App, event.Auth, game.Id, "chat.players_can_post_changed", "chat_room", room.Id,
+		map[string]any{"playersCanPost": *request.PlayersCanPost}, event.Get(httpx.TraceIDKey))
+	return event.JSON(http.StatusOK, projected)
 }
 
 func hasDisallowedControl(value string) bool {
@@ -368,14 +399,15 @@ func setRoomLock(locked bool) func(*core.RequestEvent) error {
 			return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
 		}
 		room.Set("manually_locked", locked)
+		room.Set("players_can_post", !locked)
 		if err := event.App.Save(room); err != nil {
 			return writeError(event, result.Internal(err))
 		}
 		resolved := access{Game: game, Room: room, IsGM: true}
-		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "locked": locked})
+		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "playersCanPost": !locked})
 		_ = platformaudit.Record(event.App, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
 			map[string]any{"locked": locked}, event.Get(httpx.TraceIDKey))
-		return event.JSON(http.StatusOK, map[string]any{"id": room.Id, "locked": locked})
+		return event.JSON(http.StatusOK, map[string]any{"id": room.Id, "playersCanPost": !locked})
 	}
 }
 
@@ -463,19 +495,16 @@ func projectRoom(app core.App, resolved access) map[string]any {
 			resolved.Room.GetString("kind") == "gm_dm" ||
 			resolved.Room.GetString("kind") == "announcements"
 	}
-	if resolved.Room.GetBool("manually_locked") {
-		sendable = false
-	}
 	return map[string]any{
 		"id": resolved.Room.Id, "key": resolved.Room.GetString("room_key"), "kind": resolved.Room.GetString("kind"),
-		"label": resolved.Room.GetString("label"), "locked": resolved.Room.GetBool("manually_locked"),
+		"label": resolved.Room.GetString("label"), "playersCanPost": resolved.Room.GetBool("players_can_post"),
 		"readable": resolved.IsGM || resolved.Policy.Readable, "sendable": sendable,
 		"gameMasterMaySend": resolved.Policy.GameMasterMaySend,
-		"latestMessage":     latestMessageCursor(app, resolved.Room.Id),
+		"latestMessage":     latestMessageSummary(app, resolved.Room.Id),
 	}
 }
 
-func latestMessageCursor(app core.App, roomID string) any {
+func latestMessageSummary(app core.App, roomID string) any {
 	messages, err := app.FindRecordsByFilter(
 		"chat_messages",
 		"room = {:room} && message_kind != 'announcement'",
@@ -487,9 +516,18 @@ func latestMessageCursor(app core.App, roomID string) any {
 	if err != nil || len(messages) == 0 {
 		return nil
 	}
+	message := messages[0]
+	preview := message.GetString("content")
+	if !message.GetDateTime("deleted_at").IsZero() {
+		preview = "Message removed"
+	}
+	runes := []rune(strings.TrimSpace(preview))
+	if len(runes) > 120 {
+		preview = string(runes[:120]) + "…"
+	}
 	return map[string]any{
-		"createdAt": messages[0].GetDateTime("created").Time().UTC(),
-		"id":        messages[0].Id,
+		"createdAt": message.GetDateTime("created").Time().UTC(), "id": message.Id,
+		"senderLabel": message.GetString("sender_label_snapshot"), "preview": preview,
 	}
 }
 
