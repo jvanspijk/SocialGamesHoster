@@ -10,14 +10,26 @@
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
 	import { displayPreferences } from '$lib/state/display.svelte';
+	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 
 	let { children }: { children: import('svelte').Snippet } = $props();
 	let applicationVersion = $state('');
 
 	onMount(() => {
 		displayPreferences.init();
+		void loadPlayerProfile();
 		void loadApplicationVersion();
 	});
+
+	async function loadPlayerProfile() {
+		if (!auth.isPlayer) return;
+		try {
+			const profile = await api<{ accent: string }>('/profiles/me');
+			profilePreferences.applyProfile(profile);
+		} catch {
+			// The profile page will show the load error if profile details are unavailable.
+		}
+	}
 
 	async function loadApplicationVersion() {
 		try {

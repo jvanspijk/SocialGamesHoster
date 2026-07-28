@@ -602,7 +602,7 @@
 
 	.choice-grid button.active {
 		border: 2px solid var(--crimson-dark);
-		background: rgb(166 42 42 / 10%);
+		background: color-mix(in srgb, var(--crimson) 10%, transparent);
 		font-weight: 700;
 	}
 

@@ -50,6 +50,30 @@
 	--speed-page: 180ms;
 }
 
+:root[data-accent='forest'] {
+	--crimson: var(--forest);
+	--crimson-dark: #284634;
+	--crimson-light: #5c8a69;
+}
+
+:root[data-accent='navy'] {
+	--crimson: var(--navy);
+	--crimson-dark: #263b58;
+	--crimson-light: #60799d;
+}
+
+:root[data-accent='gold'] {
+	--crimson: var(--gold);
+	--crimson-dark: var(--gold-dark);
+	--crimson-light: var(--gold-light);
+}
+
+:root[data-accent='plum'] {
+	--crimson: var(--plum);
+	--crimson-dark: #4c2d4c;
+	--crimson-light: #8c638c;
+}
+
 :root[data-text-size='large'] {
 	font-size: 118.75%;
 }

@@ -80,7 +80,7 @@
 
 	a.active {
 		border-color: var(--crimson-light);
-		background: rgb(145 36 38 / 18%);
+		background: color-mix(in srgb, var(--crimson) 18%, transparent);
 		color: var(--gold-light);
 	}
 

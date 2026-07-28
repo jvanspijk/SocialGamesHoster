@@ -39,7 +39,7 @@
 		border: 1px solid var(--crimson-dark);
 		border-radius: 1px;
 		background: var(--crimson);
-		box-shadow: 0 3px 0 #6e1c1c;
+		box-shadow: 0 3px 0 var(--crimson-dark);
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
@@ -61,7 +61,7 @@
 	}
 
 	button:active:not(:disabled) {
-		box-shadow: 0 1px 0 #6e1c1c;
+		box-shadow: 0 1px 0 var(--crimson-dark);
 		transform: translateY(2px);
 	}
 

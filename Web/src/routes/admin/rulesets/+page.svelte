@@ -186,7 +186,11 @@
 		border-inline-end: 1px solid var(--gold-dark);
 		background:
 			radial-gradient(circle, transparent 36%, rgb(0 0 0 / 32%) 100%),
-			linear-gradient(145deg, var(--crimson-dark), #3a1717);
+			linear-gradient(
+				145deg,
+				var(--crimson-dark),
+				color-mix(in srgb, var(--crimson-dark) 45%, var(--wood))
+			);
 		color: var(--gold-light);
 	}
 

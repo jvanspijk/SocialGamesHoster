@@ -9,6 +9,7 @@
 	import { api, jsonBody } from '$lib/api/client';
 	import type { Profile } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
+	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	type HistoryView = {
@@ -43,6 +44,7 @@
 				bio: profile.bio,
 				accent: profile.accent || 'crimson'
 			};
+			profilePreferences.applyProfile(profile);
 		} catch (caught) {
 			toasts.error(
 				caught instanceof Error ? caught.message : 'Profile details could not be loaded.',
@@ -60,6 +62,7 @@
 		busy = true;
 		try {
 			profile = await api<Profile>('/profiles/me', { method: 'PATCH', ...jsonBody(form) });
+			profilePreferences.applyProfile(profile);
 			toasts.success('Profile saved.');
 		} catch (caught) {
 			toasts.error(caught instanceof Error ? caught.message : 'The profile could not be saved.');

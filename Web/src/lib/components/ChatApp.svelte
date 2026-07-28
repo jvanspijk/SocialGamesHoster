@@ -610,7 +610,7 @@
 
 	.conversation-list > button:hover,
 	.conversation-list > button.selected {
-		background: rgb(207 85 85 / 13%);
+		background: color-mix(in srgb, var(--crimson-light) 13%, transparent);
 	}
 
 	.conversation-list > button.selected {

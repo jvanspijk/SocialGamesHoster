@@ -805,7 +805,7 @@
 
 	.workspace > nav button.active {
 		border-color: var(--crimson);
-		background: rgb(166 42 42 / 8%);
+		background: color-mix(in srgb, var(--crimson) 8%, transparent);
 		color: var(--crimson-dark);
 	}
 
