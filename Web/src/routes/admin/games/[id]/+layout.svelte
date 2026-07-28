@@ -14,6 +14,8 @@
 	import AppNav from '$lib/components/AppNav.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
 	import { gameState } from '$lib/state/game.svelte';
+	import { auth } from '$lib/state/auth.svelte';
+	import { hasUnreadMessages, readMarkers } from '$lib/state/chatReadMarkers';
 	import { sound } from '$lib/state/sound.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -31,6 +33,11 @@
 		if (path.includes('/chat')) return 'chat';
 		if (path.includes('/activity')) return 'activity';
 		return 'overview';
+	});
+	const hasUnreadChat = $derived.by(() => {
+		void page.url.pathname;
+		if (!view || typeof localStorage === 'undefined') return false;
+		return hasUnreadMessages(view.rooms, readMarkers(auth.actor?.id ?? '', view.game.id));
 	});
 	const navigation = $derived([
 		{
@@ -50,7 +57,8 @@
 			label: 'Chat',
 			href: resolve(`/admin/games/${page.params.id}/chat`),
 			icon: MessageCircle,
-			attention: false
+			attention: hasUnreadChat,
+			attentionLabel: 'new messages'
 		},
 		{
 			id: 'activity',

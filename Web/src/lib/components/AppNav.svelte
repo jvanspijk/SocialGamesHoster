@@ -12,6 +12,7 @@
 			href: string;
 			icon: Component<{ size?: number; strokeWidth?: number }>;
 			attention?: boolean;
+			attentionLabel?: string;
 			disabled?: boolean;
 			disabledDescription?: string;
 		}>;
@@ -30,13 +31,16 @@
 			class:active={current === item.id}
 			class:disabled={item.disabled}
 			aria-current={current === item.id ? 'page' : undefined}
+			aria-label={item.attention
+				? `${item.label}, ${item.attentionLabel ?? 'new activity'}`
+				: undefined}
 			aria-disabled={item.disabled || undefined}
 			aria-describedby={item.disabled ? `nav-description-${item.id}` : undefined}
 			tabindex={item.disabled ? -1 : undefined}
 		>
 			<span class="icon"><Icon size={21} strokeWidth={1.8} /></span>
 			<span>{item.label}</span>
-			{#if item.attention}<i aria-label="New activity"></i>{/if}
+			{#if item.attention}<i aria-hidden="true"></i>{/if}
 			{#if item.disabled && item.disabledDescription}
 				<em class="sr-only" id={`nav-description-${item.id}`}>{item.disabledDescription}</em>
 			{/if}
