@@ -3,9 +3,11 @@ package fixtures
 import (
 	"embed"
 	"encoding/json"
+	"path"
 	"time"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 )
@@ -21,6 +23,7 @@ func Seed(app core.App, gameMasterID string) error {
 		slug string
 	}{
 		{name: "blackjack.sghrules", slug: "blackjack"},
+		{name: "echo-location.sghrules", slug: "echo-location"},
 	}
 	return app.RunInTransaction(func(txApp core.App) error {
 		rulesetsCollection, err := txApp.FindCollectionByNameOrId("rulesets")
@@ -28,6 +31,10 @@ func Seed(app core.App, gameMasterID string) error {
 			return err
 		}
 		versionsCollection, err := txApp.FindCollectionByNameOrId("ruleset_versions")
+		if err != nil {
+			return err
+		}
+		assetsCollection, err := txApp.FindCollectionByNameOrId("ruleset_assets")
 		if err != nil {
 			return err
 		}
@@ -67,6 +74,24 @@ func Seed(app core.App, gameMasterID string) error {
 			version.Set("source_metadata", map[string]any{"embeddedFixture": item.name})
 			if err := txApp.Save(version); err != nil {
 				return err
+			}
+			for _, manifestAsset := range imported.Manifest.Assets {
+				content := imported.Assets[manifestAsset.AssetKey]
+				file, err := filesystem.NewFileFromBytes(content, path.Base(manifestAsset.Path))
+				if err != nil {
+					return err
+				}
+				asset := core.NewRecord(assetsCollection)
+				asset.Set("ruleset_version", version.Id)
+				asset.Set("asset_key", manifestAsset.AssetKey)
+				asset.Set("kind", manifestAsset.Kind)
+				asset.Set("file", file)
+				asset.Set("mime_type", manifestAsset.MIMEType)
+				asset.Set("checksum", manifestAsset.Checksum)
+				asset.Set("metadata", map[string]any{})
+				if err := txApp.Save(asset); err != nil {
+					return err
+				}
 			}
 			logical.Set("latest_published_version", version.Id)
 			if err := txApp.Save(logical); err != nil {

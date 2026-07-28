@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "name": "Echo Location",
+    "description": "A three-player cooperative submarine game about interpreting private visual and audio reports before the Captain commits to a maneuver.",
+    "minPlayers": 3,
+    "maxPlayers": 3,
+    "coverAssetKey": "echo-location-cover"
+  },
+  "teams": [
+    {
+      "id": "crew",
+      "name": "Submarine Crew",
+      "description": "Work together to navigate three hazards before the submarine runs out of oxygen."
+    }
+  ],
+  "categories": [
+    {
+      "id": "observer",
+      "name": "Observer",
+      "description": "Receives private hazard information and reports what they perceive."
+    },
+    {
+      "id": "commander",
+      "name": "Commander",
+      "description": "Combines the crew's reports and commits to a maneuver."
+    }
+  ],
+  "abilities": [
+    {
+      "id": "ascend",
+      "name": "Ascend",
+      "description": "Commit the submarine to an upward maneuver for the current hazard.",
+      "activationPhaseIds": ["command"],
+      "canCombineWithOtherAbilities": false
+    },
+    {
+      "id": "dive",
+      "name": "Dive",
+      "description": "Commit the submarine to a downward maneuver for the current hazard.",
+      "activationPhaseIds": ["command"],
+      "canCombineWithOtherAbilities": false
+    },
+    {
+      "id": "port",
+      "name": "Port",
+      "description": "Commit the submarine to a port-side maneuver for the current hazard.",
+      "activationPhaseIds": ["command"],
+      "canCombineWithOtherAbilities": false
+    },
+    {
+      "id": "starboard",
+      "name": "Starboard",
+      "description": "Commit the submarine to a starboard-side maneuver for the current hazard.",
+      "activationPhaseIds": ["command"],
+      "canCombineWithOtherAbilities": false
+    }
+  ],
+  "roles": [
+    {
+      "id": "lookout",
+      "name": "Lookout",
+      "description": "Onboarding: study the chart sent privately by the game master. Identify its hazard family, bearing, marker shape, and grouping, then use concise emoji gestures in Lookout Report during the Report Window. Use ordinary visual ideas such as left, right, above, below, round, pointed, single, pair, or cluster; there is no fixed emoji code. You may edit a message or send a correction.",
+      "teamId": "crew",
+      "categoryIds": ["observer"],
+      "tags": ["visual_clue", "emoji_report"],
+      "abilityIds": [],
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
+      "maxCopies": 1
+    },
+    {
+      "id": "sonar_operator",
+      "name": "Sonar Operator",
+      "description": "Onboarding: listen to the signal sent privately by the game master, or use its accessible transcript. During the Report Window, describe only the raw sequence of low/high and short/long notes in Sonar Report; do not infer or name a maneuver.",
+      "teamId": "crew",
+      "categoryIds": ["observer"],
+      "tags": ["audio_clue", "text_report"],
+      "abilityIds": [],
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
+      "maxCopies": 1
+    },
+    {
+      "id": "captain",
+      "name": "Captain",
+      "description": "Onboarding and Submarine Manual: read both report channels but do not post. Infer the chart's family, bearing, shape, and grouping from the Lookout. Start with the family course: Minefield—port to Ascend, starboard to Starboard, above to Dive, below to Port; Reef Maze—port to Ascend, starboard to Starboard, above to Port, below to Dive; Thermal Vent—port to Ascend, starboard to Starboard, above to Dive, below to Port; Wreck Field—port to Starboard, starboard to Port, above to Dive, below to Ascend; Canyon Current—port to Starboard, starboard to Dive, above to Ascend, below to Port. Apply the visual condition: for Minefield, Reef Maze, or Thermal Vent, rotate once when there are three or four markers; for Wreck Field, rotate twice when there are three or four markers; for Canyon Current, rotate once when the marker is round. Rotate through Ascend, Starboard, Dive, Port. For port or above use Sonar Alphabet A: low = green, short = circle, high = red, long = square. For starboard or below use Alphabet B: low = triangle, short = green, high = cross, long = red. Translate the final sonar note, then rotate once for each translated property that is red, square, or cross. During Command, activate the resulting maneuver; you may undo and choose again until the phase timer ends.",
+      "teamId": "crew",
+      "categoryIds": ["commander"],
+      "tags": ["decision_maker"],
+      "abilityIds": ["ascend", "dive", "port", "starboard"],
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
+      "maxCopies": 1
+    }
+  ],
+  "phases": [
+    {
+      "id": "dive_briefing",
+      "name": "Dive Briefing",
+      "description": "Prepare the crew, display the current voyage status, and begin the next hazard round.",
+      "order": 1,
+      "startsRound": true,
+      "suggestedDurationSeconds": 30,
+      "audioCueId": "dive_ambience"
+    },
+    {
+      "id": "observation",
+      "name": "Observation",
+      "description": "The game master privately announces the chart to the Lookout and the signal with its accessible alternative to the Sonar Operator.",
+      "order": 2,
+      "startsRound": false,
+      "suggestedDurationSeconds": 60
+    },
+    {
+      "id": "report_window",
+      "name": "Report Window",
+      "description": "The Lookout and Sonar Operator each send their report while the Captain listens.",
+      "order": 3,
+      "startsRound": false,
+      "suggestedDurationSeconds": 45
+    },
+    {
+      "id": "command",
+      "name": "Command",
+      "description": "The Captain consults the manual and activates Ascend, Dive, Port, or Starboard.",
+      "order": 4,
+      "startsRound": false,
+      "suggestedDurationSeconds": 45
+    },
+    {
+      "id": "resolution",
+      "name": "Resolution",
+      "description": "The game master reveals the hazard, resolves the maneuver, updates the voyage status, and sends the appropriate sound.",
+      "order": 5,
+      "startsRound": false
+    }
+  ],
+  "knowledgeRules": [
+    {
+      "viewer": {},
+      "target": {},
+      "reveal": ["identity", "role", "team", "elimination_state"]
+    }
+  ],
+  "compositionBands": [
+    {
+      "id": "three_crew",
+      "minPlayers": 3,
+      "maxPlayers": 3,
+      "slots": [
+        {
+          "id": "lookout_slot",
+          "label": "Lookout",
+          "count": 1,
+          "selector": {
+            "roleIds": ["lookout"]
+          }
+        },
+        {
+          "id": "sonar_slot",
+          "label": "Sonar Operator",
+          "count": 1,
+          "selector": {
+            "roleIds": ["sonar_operator"]
+          }
+        },
+        {
+          "id": "captain_slot",
+          "label": "Captain",
+          "count": 1,
+          "selector": {
+            "roleIds": ["captain"]
+          }
+        }
+      ]
+    }
+  ],
+  "compositionModifiers": [],
+  "chat": {
+    "defaultPolicy": {
+      "general": {
+        "visible": false,
+        "readable": false,
+        "sendable": false,
+        "gameMasterMaySend": false,
+        "senderDisplay": "profile_name"
+      },
+      "playerDm": {
+        "visible": false,
+        "readable": false,
+        "sendable": false,
+        "gameMasterMaySend": true,
+        "senderDisplay": "profile_name"
+      },
+      "teams": {
+        "crew": {
+          "visible": false,
+          "readable": false,
+          "sendable": false,
+          "gameMasterMaySend": false,
+          "senderDisplay": "role_label"
+        }
+      }
+    },
+    "phaseOverrides": {},
+    "channels": [
+      {
+        "id": "lookout_report",
+        "name": "Lookout Report",
+        "readerRoleIds": ["lookout", "captain"],
+        "readerTeamIds": [],
+        "senderRoleIds": ["lookout"],
+        "senderTeamIds": [],
+        "messageRestriction": "emoji_only",
+        "visible": false,
+        "sendable": false,
+        "gameMasterMaySend": false,
+        "senderDisplay": "role_label",
+        "phaseOverrides": {
+          "report_window": {
+            "visible": true,
+            "sendable": true
+          },
+          "command": {
+            "visible": true,
+            "sendable": false
+          },
+          "resolution": {
+            "visible": true,
+            "sendable": false
+          }
+        }
+      },
+      {
+        "id": "sonar_report",
+        "name": "Sonar Report",
+        "readerRoleIds": ["sonar_operator", "captain"],
+        "readerTeamIds": [],
+        "senderRoleIds": ["sonar_operator"],
+        "senderTeamIds": [],
+        "messageRestriction": "normal_text",
+        "visible": false,
+        "sendable": false,
+        "gameMasterMaySend": false,
+        "senderDisplay": "role_label",
+        "phaseOverrides": {
+          "report_window": {
+            "visible": true,
+            "sendable": true
+          },
+          "command": {
+            "visible": true,
+            "sendable": false
+          },
+          "resolution": {
+            "visible": true,
+            "sendable": false
+          }
+        }
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "safe_passage",
+      "name": "Safe Passage",
+      "description": "Awarded manually to crew members who complete a three-hazard voyage.",
+      "imageAssetKey": "safe-passage-badge",
+      "points": 50,
+      "hiddenUntilGameCompleted": true
+    }
+  ],
+  "audioCues": [
+    {
+      "id": "dive_ambience",
+      "name": "Dive Ambience",
+      "assetKey": "dive-ambience",
+      "defaultAudience": "all"
+    },
+    {
+      "id": "course_clear",
+      "name": "Course Clear",
+      "assetKey": "course-clear",
+      "defaultAudience": "all"
+    },
+    {
+      "id": "hull_warning",
+      "name": "Hull Warning",
+      "assetKey": "hull-warning",
+      "defaultAudience": "all"
+    }
+  ],
+  "assetAccessibility": {
+    "echo-location-cover": {
+      "description": "A stylized submarine travels through dark blue water while sonar rings reveal rocks and distant hazards."
+    },
+    "lookout-practice": {
+      "description": "Practice minefield chart: two pointed markers on the port side."
+    },
+    "sonar-practice": {
+      "description": "Practice sonar signal: low short, high short, low short, high short, high short."
+    },
+    "lookout-minefield-alpha": {
+      "description": "Minefield chart: one round marker on the port side."
+    },
+    "lookout-minefield-bravo": {
+      "description": "Minefield chart: a pair of pointed markers on the starboard side."
+    },
+    "lookout-minefield-charlie": {
+      "description": "Minefield chart: a cluster of three diamond markers above the vessel."
+    },
+    "lookout-minefield-delta": {
+      "description": "Minefield chart: a group of four cross markers below the vessel."
+    },
+    "lookout-reef-maze-alpha": {
+      "description": "Reef maze chart: three pointed markers on the port side."
+    },
+    "lookout-reef-maze-bravo": {
+      "description": "Reef maze chart: one diamond marker on the starboard side."
+    },
+    "lookout-reef-maze-charlie": {
+      "description": "Reef maze chart: four cross markers above the vessel."
+    },
+    "lookout-reef-maze-delta": {
+      "description": "Reef maze chart: a pair of round markers below the vessel."
+    },
+    "lookout-thermal-vent-alpha": {
+      "description": "Thermal vent chart: two diamond markers on the port side."
+    },
+    "lookout-thermal-vent-bravo": {
+      "description": "Thermal vent chart: three cross markers on the starboard side."
+    },
+    "lookout-thermal-vent-charlie": {
+      "description": "Thermal vent chart: one round marker above the vessel."
+    },
+    "lookout-thermal-vent-delta": {
+      "description": "Thermal vent chart: four pointed markers below the vessel."
+    },
+    "lookout-wreck-field-alpha": {
+      "description": "Wreck field chart: four cross markers on the port side."
+    },
+    "lookout-wreck-field-bravo": {
+      "description": "Wreck field chart: two round markers on the starboard side."
+    },
+    "lookout-wreck-field-charlie": {
+      "description": "Wreck field chart: three pointed markers above the vessel."
+    },
+    "lookout-wreck-field-delta": {
+      "description": "Wreck field chart: one diamond marker below the vessel."
+    },
+    "lookout-canyon-current-alpha": {
+      "description": "Canyon current chart: three round markers on the port side."
+    },
+    "lookout-canyon-current-bravo": {
+      "description": "Canyon current chart: four pointed markers on the starboard side."
+    },
+    "lookout-canyon-current-charlie": {
+      "description": "Canyon current chart: two diamond markers above the vessel."
+    },
+    "lookout-canyon-current-delta": {
+      "description": "Canyon current chart: one cross marker below the vessel."
+    },
+    "sonar-minefield-alpha": {
+      "description": "Sonar signal: low short, high long, low short, high long, high long."
+    },
+    "sonar-minefield-bravo": {
+      "description": "Sonar signal: high short, low long, high short, low long, high short, low long, high short, low long."
+    },
+    "sonar-minefield-charlie": {
+      "description": "Sonar signal: low long, high short, low short, low long, high short; 1-second pause; low short, low long, high short, low short, low short."
+    },
+    "sonar-minefield-delta": {
+      "description": "Sonar signal: high long, low short, high short, high long, low short, high short; 1-second pause; high long, low short, high short, high long, low short, high short."
+    },
+    "sonar-reef-maze-alpha": {
+      "description": "Sonar signal: low short, low long, high short, low short, high short."
+    },
+    "sonar-reef-maze-bravo": {
+      "description": "Sonar signal: high short, high long, high short, high long, high short, high long, high short, high long."
+    },
+    "sonar-reef-maze-charlie": {
+      "description": "Sonar signal: low long, low short, high long, low long, low short; 1-second pause; high long, low long, low short, high long, high long."
+    },
+    "sonar-reef-maze-delta": {
+      "description": "Sonar signal: high long, high short, low long, high long, high short, low long; 1-second pause; high long, high short, low long, high long, high short, low long."
+    },
+    "sonar-thermal-vent-alpha": {
+      "description": "Sonar signal: low short, high short, high long, low short, high long."
+    },
+    "sonar-thermal-vent-bravo": {
+      "description": "Sonar signal: high short, low short, low long, high short, low short, low long, high short, low long."
+    },
+    "sonar-thermal-vent-charlie": {
+      "description": "Sonar signal: low long, high long, low long, high long, low long; 1-second pause; high long, low long, high long, low long, high long."
+    },
+    "sonar-thermal-vent-delta": {
+      "description": "Sonar signal: high long, low long, low short, high long, low long, low short; 1-second pause; high long, low long, low short, high long, low long, low short."
+    },
+    "sonar-wreck-field-alpha": {
+      "description": "Sonar signal: low short, low short, high long, low short, high long."
+    },
+    "sonar-wreck-field-bravo": {
+      "description": "Sonar signal: high short, high short, low long, high short, high short, low long, high short, low long."
+    },
+    "sonar-wreck-field-charlie": {
+      "description": "Sonar signal: low long, low long, high short, low long, low long; 1-second pause; high short, low long, low long, high short, high short."
+    },
+    "sonar-wreck-field-delta": {
+      "description": "Sonar signal: high long, high long, high long, high long, high long, high long; 1-second pause; high long, high long, high long, high long, high long, high long."
+    },
+    "sonar-canyon-current-alpha": {
+      "description": "Sonar signal: low short, high long, low long, low short, low long."
+    },
+    "sonar-canyon-current-bravo": {
+      "description": "Sonar signal: high short, low long, high long, high short, low long, high long, high short, high long."
+    },
+    "sonar-canyon-current-charlie": {
+      "description": "Sonar signal: low long, high short, high short, low long, high short; 1-second pause; high short, low long, high short, high short, high short."
+    },
+    "sonar-canyon-current-delta": {
+      "description": "Sonar signal: high long, low short, low short, high long, low short, low short; 1-second pause; high long, low short, low short, high long, low short, low short."
+    },
+    "dive-ambience": {
+      "description": "Low submarine-engine ambience with a soft sonar pulse; it contains no gameplay clue."
+    },
+    "course-clear": {
+      "description": "A brief bright confirmation chime indicating that the selected maneuver cleared the hazard."
+    },
+    "hull-warning": {
+      "description": "A brief low warning alarm indicating that the selected maneuver did not clear the hazard."
+    },
+    "safe-passage-badge": {
+      "description": "A gold submarine silhouette inside a circular blue badge with three clear route markers."
+    }
+  }
+}

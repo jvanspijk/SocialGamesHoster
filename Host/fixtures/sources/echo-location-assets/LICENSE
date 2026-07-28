@@ -1,0 +1,22 @@
+Echo Location Asset License
+
+Copyright (C) 2026 SocialGamesHoster contributors
+
+The `lookout-*.webp`, `sonar-*.ogg`, `dive-ambience.ogg`, `course-clear.ogg`,
+and `hull-warning.ogg` files in the generated subdirectory, along with
+generate.go, are original works created procedurally for this repository. They
+contain no third-party media, fonts, recordings, samples, trademarks, or
+model-generated material.
+
+Those procedural files are part of SocialGamesHoster and are distributed under the GNU
+Affero General Public License version 3, as published in the repository root
+LICENSE file.
+
+`echo-location-cover.webp` and `safe-passage-badge.webp`, when present, are
+separately created AI-generated illustrations. They are not outputs of
+generate.go and are not covered by the procedural-source statement above. They
+were generated from original text prompts without third-party source media.
+As between the user and OpenAI, OpenAI's Terms of Use assign OpenAI's rights in
+the output to the user to the extent permitted by applicable law. Distributed
+copies are offered with this repository under its GNU Affero General Public
+License version 3 terms to the extent copyright or related rights apply.
