@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { Activity, CheckCheck, Megaphone } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { api } from '$lib/api/client';
+	import { api, pb } from '$lib/api/client';
 	import type { ActivityItem, AdminAttentionSummary } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -14,10 +15,23 @@
 	let activityCursor = $state('');
 	let announcementCursor = $state('');
 	let loading = $state(true);
+	let unsubscribeRealtime = () => {};
 
 	const view = $derived(gameState.admin);
 
-	onMount(load);
+	onMount(() => {
+		void initialize();
+		return () => unsubscribeRealtime();
+	});
+
+	async function initialize() {
+		await load();
+		const gameId = page.params.id;
+		if (!gameId) return;
+		unsubscribeRealtime = await pb.realtime.subscribe(`game:${gameId}:game-masters`, () => {
+			void load();
+		});
+	}
 
 	async function load() {
 		if (!view) return;

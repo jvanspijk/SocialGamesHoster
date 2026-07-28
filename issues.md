@@ -1,7 +1,6 @@
 - Audio is embedded in the announcement instead of auto playing without visible player
 - announcements should always be visible as a popup no matter which screen the player is on OR it should show an icon indicating a pending announcement on the game tab
 	- They also don't always update without refreshing automatically
-- Activity page: acknowledgements require a refresh before updating
 - Admin overview /players/activity pages: Chat sidebar should show a notification icon (like a chat app) if a message is unread
 - Admin chat: the channel list cuts off it there's more than 5 channels and doesn't allow for scrolling. Instead, scrolling annoyingly moves the outer div
 - Admin chat: I don't know if it's the issue above causing this but I can't reply to DM messages if I'm the game owner
