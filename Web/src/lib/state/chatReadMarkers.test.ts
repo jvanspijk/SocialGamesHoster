@@ -23,8 +23,24 @@ describe('chat read markers', () => {
 
 	it('reports unread messages across any conversation', () => {
 		const rooms = [
-			{ id: 'general', latestMessage: { id: 'message-a', createdAt: '2026-07-27T12:00:00Z' } },
-			{ id: 'dm', latestMessage: { id: 'message-b', createdAt: '2026-07-27T12:00:01Z' } }
+			{
+				id: 'general',
+				latestMessage: {
+					id: 'message-a',
+					createdAt: '2026-07-27T12:00:00Z',
+					senderLabel: 'Alex',
+					preview: 'Hello'
+				}
+			},
+			{
+				id: 'dm',
+				latestMessage: {
+					id: 'message-b',
+					createdAt: '2026-07-27T12:00:01Z',
+					senderLabel: 'Blake',
+					preview: 'Hi'
+				}
+			}
 		];
 		expect(hasUnreadMessages(rooms, { general: rooms[0].latestMessage })).toBe(true);
 		expect(
