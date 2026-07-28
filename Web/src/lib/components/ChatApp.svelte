@@ -16,7 +16,11 @@
 	import { api, jsonBody, pb } from '$lib/api/client';
 	import type { ChatMessage, MessageSummary, RealtimeEnvelope, Room } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
-	import { cursorIsAfter, readMarkerStorageKey } from '$lib/state/chatReadMarkers';
+	import {
+		chatReadMarkersChanged,
+		cursorIsAfter,
+		readMarkerStorageKey
+	} from '$lib/state/chatReadMarkers';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let {
@@ -108,6 +112,7 @@
 			readMarkerStorageKey(auth.actor?.id ?? '', gameId),
 			JSON.stringify(markers)
 		);
+		window.dispatchEvent(new Event(chatReadMarkersChanged));
 	}
 
 	async function loadRooms() {

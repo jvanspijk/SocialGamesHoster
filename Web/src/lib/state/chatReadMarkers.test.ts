@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { cursorIsAfter, hasUnreadMessages, readMarkerStorageKey } from './chatReadMarkers';
+import { describe, expect, it, vi } from 'vitest';
+import {
+	countUnreadMessages,
+	cursorIsAfter,
+	hasUnreadMessages,
+	readMarkerStorageKey
+} from './chatReadMarkers';
 
 describe('chat read markers', () => {
 	it('namespaces device-local state by actor and game', () => {
@@ -49,5 +54,39 @@ describe('chat read markers', () => {
 				dm: rooms[1].latestMessage
 			})
 		).toBe(false);
+	});
+
+	it('counts every unread message up to the display limit', async () => {
+		const rooms = [
+			{
+				id: 'general',
+				latestMessage: {
+					id: 'message-c',
+					createdAt: '2026-07-27T12:00:02Z',
+					senderLabel: 'Casey',
+					preview: 'Later'
+				}
+			}
+		];
+		const loadPage = vi.fn(async (_roomId: string, cursor: string) =>
+			cursor
+				? { items: [{ id: 'message-a', createdAt: '2026-07-27T12:00:00Z' }], nextCursor: '' }
+				: {
+						items: [
+							{ id: 'message-c', createdAt: '2026-07-27T12:00:02Z' },
+							{ id: 'message-b', createdAt: '2026-07-27T12:00:01Z' }
+						],
+						nextCursor: 'older'
+					}
+		);
+
+		await expect(
+			countUnreadMessages(
+				rooms,
+				{ general: { id: 'message-a', createdAt: '2026-07-27T12:00:00Z' } },
+				loadPage
+			)
+		).resolves.toBe(2);
+		expect(loadPage).toHaveBeenCalledTimes(2);
 	});
 });

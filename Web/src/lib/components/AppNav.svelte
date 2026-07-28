@@ -13,6 +13,7 @@
 			icon: Component<{ size?: number; strokeWidth?: number }>;
 			attention?: boolean;
 			attentionLabel?: string;
+			attentionCount?: number;
 			disabled?: boolean;
 			disabledDescription?: string;
 		}>;
@@ -32,7 +33,7 @@
 			class:disabled={item.disabled}
 			aria-current={current === item.id ? 'page' : undefined}
 			aria-label={item.attention
-				? `${item.label}, ${item.attentionLabel ?? 'new activity'}`
+				? `${item.label}, ${item.attentionCount ?? ''} ${item.attentionLabel ?? 'new activity'}`.trim()
 				: undefined}
 			aria-disabled={item.disabled || undefined}
 			aria-describedby={item.disabled ? `nav-description-${item.id}` : undefined}
@@ -40,7 +41,11 @@
 		>
 			<span class="icon"><Icon size={21} strokeWidth={1.8} /></span>
 			<span>{item.label}</span>
-			{#if item.attention}<i aria-hidden="true"></i>{/if}
+			{#if item.attention}
+				<span class:count={item.attentionCount} class="attention-badge" aria-hidden="true"
+					>{item.attentionCount === 99 ? '99+' : (item.attentionCount ?? 'New')}</span
+				>
+			{/if}
 			{#if item.disabled && item.disabledDescription}
 				<em class="sr-only" id={`nav-description-${item.id}`}>{item.disabledDescription}</em>
 			{/if}
@@ -98,15 +103,29 @@
 		place-items: center;
 	}
 
-	i {
+	.attention-badge {
 		position: absolute;
 		inset-block-start: 0.45rem;
 		inset-inline-end: calc(50% - 1.7rem);
-		width: 0.55rem;
-		height: 0.55rem;
+		display: grid;
+		min-width: 1rem;
+		height: 1rem;
+		place-items: center;
 		border: 2px solid #1c120c;
 		border-radius: 50%;
 		background: var(--crimson-light);
+		color: var(--wood);
+		font-family: var(--font-display);
+		font-size: 0.56rem;
+		font-style: normal;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.attention-badge.count {
+		min-width: 1.3rem;
+		border-radius: 999px;
+		padding-inline: 0.15rem;
 	}
 
 	@media (min-width: 64rem) {
@@ -134,7 +153,7 @@
 			padding-inline: var(--space-3);
 		}
 
-		i {
+		.attention-badge {
 			inset-inline: auto var(--space-3);
 			inset-block-start: 50%;
 			transform: translateY(-50%);

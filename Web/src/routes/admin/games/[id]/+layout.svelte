@@ -13,15 +13,23 @@
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import { api, pb } from '$lib/api/client';
+	import type { ChatMessage, RealtimeEnvelope } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { auth } from '$lib/state/auth.svelte';
-	import { hasUnreadMessages, readMarkers } from '$lib/state/chatReadMarkers';
+	import {
+		chatReadMarkersChanged,
+		countUnreadMessages,
+		readMarkers
+	} from '$lib/state/chatReadMarkers';
 	import { sound } from '$lib/state/sound.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let { children }: { children: import('svelte').Snippet } = $props();
 	let loading = $state(true);
 	let unsubscribers: Array<() => void> = [];
+	let unreadChatCount = $state(0);
+	let unreadRequest = 0;
 
 	const view = $derived(gameState.admin);
 	const standalone = $derived(
@@ -33,11 +41,6 @@
 		if (path.includes('/chat')) return 'chat';
 		if (path.includes('/activity')) return 'activity';
 		return 'overview';
-	});
-	const hasUnreadChat = $derived.by(() => {
-		void page.url.pathname;
-		if (!view || typeof localStorage === 'undefined') return false;
-		return hasUnreadMessages(view.rooms, readMarkers(auth.actor?.id ?? '', view.game.id));
 	});
 	const navigation = $derived([
 		{
@@ -57,8 +60,9 @@
 			label: 'Chat',
 			href: resolve(`/admin/games/${page.params.id}/chat`),
 			icon: MessageCircle,
-			attention: hasUnreadChat,
-			attentionLabel: 'new messages'
+			attention: unreadChatCount > 0,
+			attentionCount: unreadChatCount,
+			attentionLabel: unreadChatCount === 1 ? 'unread message' : 'unread messages'
 		},
 		{
 			id: 'activity',
@@ -70,8 +74,10 @@
 
 	onMount(() => {
 		void initialize();
+		window.addEventListener(chatReadMarkersChanged, refreshUnreadChatCount);
 		return () => {
 			for (const unsubscribe of unsubscribers) unsubscribe();
+			window.removeEventListener(chatReadMarkersChanged, refreshUnreadChatCount);
 		};
 	});
 
@@ -85,8 +91,17 @@
 				),
 				gameState.subscribe(`game:${loaded.game.id}:game-masters`, () =>
 					gameState.refreshAdmin(loaded.game.id)
+				),
+				...loaded.rooms.map((room) =>
+					pb.realtime.subscribe(`room:${room.id}`, (raw) => {
+						const event = raw as unknown as RealtimeEnvelope<ChatMessage>;
+						if (event.kind === 'chat.message_created' || event.kind === 'chat.message_deleted') {
+							void refreshUnreadChatCount();
+						}
+					})
 				)
 			]);
+			await refreshUnreadChatCount();
 		} catch (caught) {
 			toasts.error(caught instanceof Error ? caught.message : 'The game could not be loaded.', {
 				actionLabel: 'Retry',
@@ -95,6 +110,25 @@
 			});
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function refreshUnreadChatCount() {
+		const currentView = view;
+		if (!currentView || typeof localStorage === 'undefined') return;
+		const request = ++unreadRequest;
+		try {
+			const total = await countUnreadMessages(
+				currentView.rooms,
+				readMarkers(auth.actor?.id ?? '', currentView.game.id),
+				(roomId, cursor) =>
+					api<{ items: ChatMessage[]; nextCursor: string }>(
+						`/rooms/${roomId}/messages${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`
+					)
+			);
+			if (request === unreadRequest) unreadChatCount = total;
+		} catch {
+			// The existing chat view will surface a read failure when the host becomes available again.
 		}
 	}
 
