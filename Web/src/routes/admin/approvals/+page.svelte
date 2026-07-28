@@ -161,13 +161,18 @@
 	description={rejectionTarget ? `Explain why ${rejectionTarget.requestedName} cannot enter.` : ''}
 	close={() => (rejectionTarget = null)}
 >
-	<Field label="Reason" name="rejection-reason" bind:value={rejectionReason} multiline required />
+	<Field
+		label="Reason (optional)"
+		name="rejection-reason"
+		bind:value={rejectionReason}
+		multiline
+		help="Add a rejection reason for the player."
+	/>
 	{#snippet actions()}
 		<Button variant="ghost" onclick={() => (rejectionTarget = null)}>Cancel</Button>
 		<Button
 			variant="danger"
 			loading={busy}
-			disabled={!rejectionReason.trim()}
 			onclick={() => rejectionTarget && decide(rejectionTarget, 'reject')}
 		>
 			Reject request
