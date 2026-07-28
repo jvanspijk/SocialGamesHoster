@@ -19,7 +19,6 @@
 
 - approvals require leaving the lobby, this is not a bug but there should be a direct workflow for the game owner to accept/deny approvals easily from the live game screen.
 - Logging out, creating a new account and then logging in with the old name creates a new profile instead of logging in with the old profile (unsure if this is true, might have to do with case sensitivity. Given that the displayed names are capitalized, this should not be case sensitive.)
-- Going to "Profile" without an active game does not have a path back.
 - Players can't join a game after it's already started
 
 ---
@@ -28,4 +27,4 @@
 	- Validation errors should also not create a trace log. 
 	- DO NOT solve this by appending Validation error: <error message>. This would look highly unprofessional and the user does not need to know the type of error.
 - Rejecting pending requests require a message. This should be optional instead so that you can more quickly reject invalid profile requests.
-- 
+-

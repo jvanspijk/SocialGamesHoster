@@ -77,8 +77,11 @@
 			<p>Your identity and game history stay outside the current game.</p>
 		</div>
 		<nav aria-label="Account pages">
-			{#if gameState.player}<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a
-				>{/if}
+			{#if gameState.player}
+				<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a>
+			{:else}
+				<a href={resolve('/')}><ArrowLeft size={18} /> Return to join page</a>
+			{/if}
 			<a href={resolve('/play/settings')}><Settings size={18} /> Settings</a>
 		</nav>
 	</header>
