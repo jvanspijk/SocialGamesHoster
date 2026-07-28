@@ -17,3 +17,6 @@
 - There's no distinction between application errors and validation errors when displaying errors. This is confusing for users as they are reporting errors when for something simple as a wrong password input or invalid profile name.
 	- Validation errors should also not create a trace log. 
 	- DO NOT solve this by appending Validation error: <error message>. This would look highly unprofessional and the user does not need to know the type of error.
+
+- After spamming a lot of messages in a chat channel (mind the DDOS protection!) I noticed I can't scroll down to see the last messages (after like 32 or so and after getting a warning for spamming too fast).
+	- refreshing did not solve this issue
