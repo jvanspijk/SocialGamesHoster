@@ -156,6 +156,23 @@ func publishGame(app core.App, record *core.Record, kind string, payload any) {
 	})
 }
 
+// publishLobbyOpened lets signed-in profiles that have not yet joined the new
+// lobby refresh their waiting screen. Game events remain participant-scoped.
+func publishLobbyOpened(app core.App, record *core.Record) {
+	profiles, err := app.FindRecordsByFilter("player_profiles", "active = true", "", 10000, 0)
+	if err != nil {
+		return
+	}
+	for _, profile := range profiles {
+		_ = realtime.Publish(app, "profile:"+profile.Id, realtime.Event[any]{
+			EventID: realtime.NewEventID(), GameID: record.Id, Revision: record.GetInt("revision"),
+			Kind: "game.lobby_opened", Payload: projectGame(record),
+		}, func(auth *core.Record) bool {
+			return auth != nil && auth.Collection().Name == "player_profiles" && auth.GetBool("active") && auth.Id == profile.Id
+		})
+	}
+}
+
 func publishGameMasters(app core.App, record *core.Record, kind string, payload any) {
 	_ = realtime.Publish(app, "game:"+record.Id+":game-masters", realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: record.Id, Revision: record.GetInt("revision"),

@@ -12,7 +12,10 @@
 		VolumeX
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
+	import type { Game, PlayerGameView } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { cursorIsAfter, readMarkerStorageKey } from '$lib/state/chatReadMarkers';
 	import { gameState } from '$lib/state/game.svelte';
@@ -21,7 +24,10 @@
 
 	let { children }: { children: import('svelte').Snippet } = $props();
 	let loading = $state(true);
+	let availableLobby = $state<Game | null>(null);
+	let joiningLobby = $state(false);
 	let unsubscribers: Array<() => void> = [];
+	let unsubscribeLobbyOpened: (() => void) | null = null;
 
 	const view = $derived(gameState.player);
 	const accountRoute = $derived(
@@ -63,6 +69,7 @@
 		void initialize();
 		return () => {
 			for (const unsubscribe of unsubscribers) unsubscribe();
+			unsubscribeLobbyOpened?.();
 		};
 	});
 
@@ -72,8 +79,29 @@
 			return;
 		}
 		loading = true;
+		availableLobby = null;
 		try {
-			const loaded = await gameState.refreshPlayer();
+			let loaded: PlayerGameView;
+			try {
+				loaded = await gameState.refreshPlayer();
+			} catch (caught) {
+				if (
+					!(caught instanceof AppApiError) ||
+					!['game.no_live_game', 'game.not_joined'].includes(caught.body.code)
+				) {
+					throw caught;
+				}
+				if (caught.body.code === 'game.not_joined') {
+					const liveGame = await api<Game>('/games/live');
+					if (liveGame.status === 'lobby' && liveGame.joiningOpen) {
+						availableLobby = liveGame;
+					}
+				}
+				await subscribeToLobbyOpening();
+				return;
+			}
+			unsubscribeLobbyOpened?.();
+			unsubscribeLobbyOpened = null;
 			unsubscribers = await Promise.all([
 				gameState.subscribe(`game:${loaded.game.id}:public`, () => gameState.refreshPlayer()),
 				gameState.subscribe(`participant:${loaded.participant.id}:private`, () =>
@@ -90,6 +118,30 @@
 			}
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function subscribeToLobbyOpening() {
+		if (!auth.actor || unsubscribeLobbyOpened) return;
+		unsubscribeLobbyOpened = await pb.realtime.subscribe(
+			`profile:${auth.actor.id}`,
+			async (raw) => {
+				const event = raw as unknown as { kind?: string };
+				if (event.kind === 'game.lobby_opened') await initialize();
+			}
+		);
+	}
+
+	async function joinAvailableLobby() {
+		if (!availableLobby) return;
+		joiningLobby = true;
+		try {
+			await api(`/games/${availableLobby.id}/join`, { method: 'POST', ...jsonBody({}) });
+			await initialize();
+		} catch (caught) {
+			toasts.error(caught instanceof Error ? caught.message : 'The lobby could not be joined.');
+		} finally {
+			joiningLobby = false;
 		}
 	}
 </script>
@@ -154,6 +206,12 @@
 				<p role="status">Loading game…</p>
 			{:else if view}
 				{@render children()}
+			{:else if availableLobby}
+				<section class="unavailable">
+					<h1>Lobby open</h1>
+					<p>{availableLobby.name} is ready for players.</p>
+					<Button loading={joiningLobby} onclick={joinAvailableLobby}>Join lobby</Button>
+				</section>
 			{:else}
 				<section class="unavailable">
 					<h1>No game available</h1>

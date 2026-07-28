@@ -288,6 +288,7 @@ func openLobby(event *core.RequestEvent) error {
 	}
 	_ = audit(event.App, event.Auth, game.Id, "game.lobby_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.lobby_opened", projectGame(game))
+	publishLobbyOpened(event.App, game)
 	return event.JSON(http.StatusOK, projectGame(game))
 }
 

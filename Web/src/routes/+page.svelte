@@ -33,12 +33,16 @@
 	let showQr = $state(false);
 	let error = $state<AppErrorBody | null>(null);
 	let busy = $state(false);
+	let unsubscribeLiveGame = $state<(() => void) | null>(null);
 
 	onMount(() => {
 		showQr = new URL(window.location.href).searchParams.get('showQr') === '1';
 		void initialize();
 		const timer = window.setInterval(() => void pollPending(), 1800);
-		return () => window.clearInterval(timer);
+		return () => {
+			window.clearInterval(timer);
+			unsubscribeLiveGame?.();
+		};
 	});
 
 	async function initialize() {
@@ -47,11 +51,8 @@
 			needsOwner = status.needsOwner;
 			joinUrl = status.joinUrl;
 			if (!needsOwner) {
-				try {
-					liveGame = await api<Game>('/games/live');
-				} catch {
-					liveGame = null;
-				}
+				await refreshLiveGame();
+				await subscribeLiveGameUpdates();
 			}
 			const stored = sessionStorage.getItem('sgh.profile-request');
 			if (stored) {
@@ -61,6 +62,22 @@
 		} catch (caught) {
 			setError(caught);
 		}
+	}
+
+	async function refreshLiveGame() {
+		try {
+			liveGame = await api<Game>('/games/live');
+		} catch {
+			liveGame = null;
+		}
+	}
+
+	async function subscribeLiveGameUpdates() {
+		if (!auth.isPlayer || !auth.actor || unsubscribeLiveGame) return;
+		unsubscribeLiveGame = await pb.realtime.subscribe(`profile:${auth.actor.id}`, async (raw) => {
+			const event = raw as unknown as { kind?: string };
+			if (event.kind === 'game.lobby_opened') await refreshLiveGame();
+		});
 	}
 
 	async function createOwner(event: SubmitEvent) {
