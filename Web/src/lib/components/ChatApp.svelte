@@ -521,6 +521,7 @@
 	.conversation-rail {
 		display: grid;
 		min-width: 0;
+		min-height: 0;
 		grid-template-rows: auto auto minmax(0, 1fr);
 		border-inline-end: 1px solid var(--gold-dark);
 		background: linear-gradient(rgb(27 18 12 / 96%), rgb(18 11 8 / 98%)), var(--wood);
@@ -588,7 +589,9 @@
 	}
 
 	.conversation-list {
+		min-height: 0;
 		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 
 	.conversation-list > button {

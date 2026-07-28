@@ -2,7 +2,6 @@
 - announcements should always be visible as a popup no matter which screen the player is on OR it should show an icon indicating a pending announcement on the game tab
 	- They also don't always update without refreshing automatically
 - Admin overview /players/activity pages: Chat sidebar should show a notification icon (like a chat app) if a message is unread
-- Admin chat: the channel list cuts off it there's more than 5 channels and doesn't allow for scrolling. Instead, scrolling annoyingly moves the outer div
 - Admin chat: I don't know if it's the issue above causing this but I can't reply to DM messages if I'm the game owner
 - In-game player view (game page) horizontal space is wrong
 - After playing a round and going to the players screen (the players have also refreshed their phones) all the role assignments are gone.
