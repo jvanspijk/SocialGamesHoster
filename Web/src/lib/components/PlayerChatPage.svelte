@@ -69,7 +69,8 @@
 
 	.player-list button {
 		display: grid;
-		min-height: 4rem;
+		width: 100%;
+		min-height: var(--target-size);
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: var(--space-3);
@@ -78,6 +79,7 @@
 		background: transparent;
 		color: var(--ink);
 		cursor: pointer;
+		padding: var(--space-2) 0;
 		text-align: start;
 	}
 

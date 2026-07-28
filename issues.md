@@ -4,8 +4,6 @@
 - In-game player view (game page) horizontal space is wrong
 - After playing a round and going to the players screen (the players have also refreshed their phones) all the role assignments are gone.
 	- This seems to be a visual bug since the players still can see their roles themselves
-- chat new conversation opens a dialogue/modal but the individual players are not tappable.
-
 - During playing the Echo Location game: the lookout was unable to use the lookout chat. This same issue might also occur for the other roles.
 
 ---
