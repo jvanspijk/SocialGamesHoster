@@ -31,7 +31,7 @@
 		{/if}
 		{#if item.audio}
 			<div class="audio-attachment">
-				<ProtectedMedia src={item.audio.url} kind="audio" controls />
+				<ProtectedMedia src={item.audio.url} kind="audio" autoplay />
 				<p><strong>Audio alternative:</strong> {item.audio.alternative}</p>
 			</div>
 		{/if}

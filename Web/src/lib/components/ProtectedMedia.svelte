@@ -5,12 +5,14 @@
 		src,
 		kind,
 		alt = '',
-		controls = false
+		controls = false,
+		autoplay = false
 	}: {
 		src: string;
 		kind: 'image' | 'audio';
 		alt?: string;
 		controls?: boolean;
+		autoplay?: boolean;
 	} = $props();
 
 	let objectUrl = $state('');
@@ -48,7 +50,7 @@
 {:else if kind === 'image'}
 	<img src={objectUrl} {alt} decoding="async" />
 {:else}
-	<audio src={objectUrl} {controls} preload="none">
+	<audio src={objectUrl} {controls} {autoplay} preload={autoplay ? 'auto' : 'none'}>
 		<track kind="captions" />
 	</audio>
 {/if}

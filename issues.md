@@ -1,4 +1,3 @@
-- Audio is embedded in the announcement instead of auto playing without visible player
 - announcements should always be visible as a popup no matter which screen the player is on OR it should show an icon indicating a pending announcement on the game tab
 	- They also don't always update without refreshing automatically
 - Admin overview /players/activity pages: Chat sidebar should show a notification icon (like a chat app) if a message is unread
