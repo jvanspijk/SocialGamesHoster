@@ -8,8 +8,6 @@
 	- This seems to be a visual bug since the players still can see their roles themselves
 - chat new conversation opens a dialogue/modal but the individual players are not tappable.
 
-- Changing profile display name does not change it in game.
-
 - During playing the Echo Location game: the lookout was unable to use the lookout chat. This same issue might also occur for the other roles.
 
 ---

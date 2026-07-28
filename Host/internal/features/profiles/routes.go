@@ -384,8 +384,62 @@ func updateMe(event *core.RequestEvent) error {
 	if err := event.App.Save(event.Auth); err != nil {
 		return httpx.WriteError(event, result.Invalid("profile.save_failed", "The profile could not be saved.", nil))
 	}
+	if request.DisplayName != nil {
+		if err := syncLiveParticipantNames(event.App, event.Auth); err != nil {
+			event.App.Logger().Error("failed to update live participant display names", "profileId", event.Auth.Id, "error", err)
+		}
+	}
 	publishProfile(event.App, event.Auth, "profile.updated")
 	return event.JSON(http.StatusOK, projectPrivateProfile(event.Auth))
+}
+
+func syncLiveParticipantNames(app core.App, profile *core.Record) error {
+	participants, err := app.FindRecordsByFilter("participants",
+		"profile = {:profile} && status != 'kicked' && status != 'left'", "", 1000, 0,
+		dbx.Params{"profile": profile.Id})
+	if err != nil {
+		return err
+	}
+
+	for _, participant := range participants {
+		game, err := app.FindRecordById("games", participant.GetString("game"))
+		if err != nil || !isLiveGame(game.GetString("status")) {
+			continue
+		}
+		participant.Set("display_name_snapshot", profile.GetString("display_name"))
+		if err := app.Save(participant); err != nil {
+			return err
+		}
+		publishLiveParticipantNameChange(app, game, participant)
+	}
+	return nil
+}
+
+func isLiveGame(status string) bool {
+	return status == "lobby" || status == "running" || status == "paused"
+}
+
+func publishLiveParticipantNameChange(app core.App, game, participant *core.Record) {
+	event := platformrealtime.Event[map[string]any]{
+		EventID: platformrealtime.NewEventID(), GameID: game.Id,
+		Kind: "participant.updated", Payload: map[string]any{
+			"id": participant.Id, "profileId": participant.GetString("profile"),
+			"displayNameSnapshot": participant.GetString("display_name_snapshot"),
+			"gameAlias":           participant.GetString("game_alias"),
+			"seatNumber":          participant.GetInt("seat_number"), "status": participant.GetString("status"),
+		},
+	}
+	for _, topic := range []string{"game:" + game.Id + ":public", "game:" + game.Id + ":game-masters"} {
+		_ = platformrealtime.Publish(app, topic, event, func(auth *core.Record) bool {
+			if auth == nil || !auth.GetBool("active") {
+				return false
+			}
+			if auth.Collection().Name == platformauth.GameMastersCollection {
+				return true
+			}
+			return auth.Collection().Name == platformauth.PlayerProfilesCollection && auth.Id == participant.GetString("profile")
+		})
+	}
 }
 
 func updateAvatar(event *core.RequestEvent) error {
