@@ -30,12 +30,13 @@ jobs:
         run: choco install innosetup --no-progress -y
       - name: Install frontend and browser test dependencies
         shell: pwsh
-        working-directory: Web
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/Web/.playwright-browsers
         run: |
-          npm ci
-          npx playwright install chromium
+          ./scripts/Install-FrontendDependencies.ps1 -Run
+          Push-Location Web
+          npx --no-install playwright install chromium
+          Pop-Location
       - name: Run correctness, browser, and security gates
         shell: pwsh
         run: ./scripts/Test.ps1

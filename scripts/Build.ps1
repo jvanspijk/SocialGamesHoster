@@ -22,6 +22,8 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 $webRoot = Join-Path $projectRoot "Web"
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
 $distRoot = Join-Path $projectRoot "dist"
+$frontendDependencyInstaller = Join-Path $PSScriptRoot "Install-FrontendDependencies.ps1"
+. $frontendDependencyInstaller
 $versionMatch = [regex]::Match($Version, "^\d+(?:\.\d+){0,3}")
 if (-not $versionMatch.Success) {
     throw "Version must begin with one to four numeric components, for example 1.2.3 or 1.2.3-beta.1."
@@ -48,8 +50,7 @@ Get-ChildItem -LiteralPath $distRoot -Filter "SocialGamesHoster-*-windows-x64-se
 
 Push-Location $webRoot
 try {
-    npm ci
-    Assert-NativeSuccess "Frontend dependency installation"
+    Install-FrontendDependencies -WebRoot $webRoot
     if (-not $SkipTests) {
         npm run check
         Assert-NativeSuccess "Frontend type checks"

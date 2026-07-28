@@ -4,6 +4,8 @@ param()
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
+$frontendDependencyInstaller = Join-Path $PSScriptRoot "Install-FrontendDependencies.ps1"
+. $frontendDependencyInstaller
 
 function Assert-NativeSuccess([string]$Step, [string]$Remediation = "") {
     if ($LASTEXITCODE -ne 0) {
@@ -28,8 +30,7 @@ finally {
 
 Push-Location (Join-Path $projectRoot "Web")
 try {
-    npm ci
-    Assert-NativeSuccess "Frontend dependency installation"
+    Install-FrontendDependencies -WebRoot (Get-Location).Path
     npm run check
     Assert-NativeSuccess "Frontend type checks"
     npm run test:unit
