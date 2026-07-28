@@ -38,6 +38,18 @@ test('owner setup opens the replacement ruleset workspace', async ({ page }) => 
 	await expect(page.getByRole('heading', { name: 'Overview and limits' })).toBeVisible();
 	await page.getByLabel('Stable slug').fill('party-test');
 	await page.getByLabel('Name').fill('Party Test');
+	await page.getByRole('button', { name: 'Game flow', exact: true }).click();
+	await page.getByRole('button', { name: 'Add phase' }).click();
+	await page.getByRole('button', { name: 'Chat rules', exact: true }).click();
+	await page.getByRole('button', { name: 'Add channel' }).click();
+	await page.getByLabel('Channel name').fill('Night signals');
+	await page.getByLabel('Allowed messages').selectOption('emoji_only');
+	await page.getByLabel('Night signals visibility during New phase').selectOption('no');
+	await expect(page.getByLabel('Allowed messages')).toHaveValue('emoji_only');
+	await expect(page.getByLabel('Night signals visibility during New phase')).toHaveValue('no');
+	await page.setViewportSize({ width: 320, height: 568 });
+	await expectNoHorizontalOverflow(page);
+	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.getByRole('button', { name: 'Rewards', exact: true }).click();
 	await page.getByRole('button', { name: 'Add achievement' }).click();
 	await page.getByLabel('Achievement points').fill('75');

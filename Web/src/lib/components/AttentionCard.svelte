@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { AttentionItem } from '$lib/api/types';
 	import Button from './Button.svelte';
+	import ProtectedMedia from './ProtectedMedia.svelte';
 
 	let {
 		item,
@@ -22,6 +23,18 @@
 	{#if item.kind === 'announcement'}
 		<p class="sender">Announcement from {item.senderLabel}</p>
 		<p class="content">{item.content}</p>
+		{#if item.image}
+			<figure>
+				<ProtectedMedia src={item.image.url} kind="image" alt={item.image.description} />
+				<figcaption>{item.image.description}</figcaption>
+			</figure>
+		{/if}
+		{#if item.audio}
+			<div class="audio-attachment">
+				<ProtectedMedia src={item.audio.url} kind="audio" controls />
+				<p><strong>Audio alternative:</strong> {item.audio.alternative}</p>
+			</div>
+		{/if}
 		<Button disabled={busy} onclick={acknowledge}>{busy ? 'Acknowledging…' : 'Acknowledge'}</Button>
 	{:else}
 		<p class="content">This event type is not available in this version.</p>
@@ -56,6 +69,27 @@
 		font-size: clamp(1.15rem, 4vw, 1.55rem);
 		line-height: 1.4;
 		white-space: pre-wrap;
+	}
+
+	figure {
+		margin: 0 0 var(--space-4);
+	}
+
+	figure :global(img) {
+		max-height: 18rem;
+		object-fit: contain;
+	}
+
+	figcaption,
+	.audio-attachment p {
+		color: var(--ink-soft);
+		font-size: 0.85rem;
+	}
+
+	.audio-attachment {
+		display: grid;
+		gap: var(--space-2);
+		margin-block-end: var(--space-4);
 	}
 
 	:global(button) {

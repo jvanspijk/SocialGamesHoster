@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -41,6 +42,11 @@ func getTimer(event *core.RequestEvent) error {
 	if reconciled.Status != state.Status || reconciled.Remaining != state.Remaining {
 		saveState(game, reconciled)
 		if err := event.App.Save(game); err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
+	}
+	if reconciled.Status == Completed {
+		if _, err := abilities.FinalizePhase(event.App, game.Id, now); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
 	}
@@ -103,6 +109,14 @@ func timerCommand(service *Service, command string) func(*core.RequestEvent) err
 		saveState(game, next)
 		if err := event.App.Save(game); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
+		}
+		if next.Status == Completed {
+			if _, err := abilities.FinalizePhase(event.App, game.Id, now); err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			if current, findErr := event.App.FindRecordById("games", game.Id); findErr == nil {
+				game = current
+			}
 		}
 		service.Schedule(game.Id, next)
 		projection := Project(next, now)

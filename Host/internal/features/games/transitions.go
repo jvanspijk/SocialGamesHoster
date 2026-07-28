@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -51,6 +52,16 @@ func transition(command Transition) func(*core.RequestEvent) error {
 		if err != nil {
 			return httpx.WriteError(event, result.Conflict("game.transition_not_allowed", err.Error()))
 		}
+		if command == BeginReview {
+			if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			game, err = event.App.FindRecordById("games", game.Id)
+			if err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			next, _ = ApplyTransition(stateFromRecord(game), command, time.Now().UTC())
+		}
 		applyState(game, next)
 		if command == Start {
 			game.Set("joining_open", false)
@@ -81,6 +92,14 @@ func transition(command Transition) func(*core.RequestEvent) error {
 		}
 		if err := event.App.Save(game); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
+		}
+		if command == Pause && game.GetString("timer_state") == "completed" {
+			if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			if current, findErr := event.App.FindRecordById("games", game.Id); findErr == nil {
+				game = current
+			}
 		}
 		action := "game." + string(command)
 		_ = audit(event.App, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
@@ -128,9 +147,11 @@ func prepareRoleRooms(app core.App, game *core.Record) error {
 		return err
 	}
 	roleTeam := map[string]string{}
+	roles := map[string]rulesets.Role{}
 	teamName := map[string]string{}
 	for _, role := range definition.Roles {
 		roleTeam[role.ID] = role.TeamID
+		roles[role.ID] = role
 	}
 	for _, team := range definition.Teams {
 		teamName[team.ID] = team.Name
@@ -142,6 +163,27 @@ func prepareRoleRooms(app core.App, game *core.Record) error {
 		}
 		for _, participant := range participants {
 			if roleTeam[participant.GetString("role_key")] == teamID {
+				if err := ensureMembership(app, room.Id, participant.Id); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	for _, channel := range definition.Chat.Channels {
+		room, err := ensureRoom(
+			app,
+			game.Id,
+			rulesets.CustomChatRoomPrefix+channel.ID,
+			"custom",
+			channel.Name,
+			"",
+		)
+		if err != nil {
+			return err
+		}
+		for _, participant := range participants {
+			role, ok := roles[participant.GetString("role_key")]
+			if ok && rulesets.ChatChannelAudienceMatches(channel, role, false) {
 				if err := ensureMembership(app, room.Id, participant.Id); err != nil {
 					return err
 				}
@@ -235,11 +277,20 @@ func setPhase(event *core.RequestEvent) error {
 	if phase == nil {
 		return httpx.WriteError(event, result.Invalid("game.invalid_phase", "That phase is not part of this ruleset.", nil))
 	}
+	if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	game, err = event.App.FindRecordById("games", game.Id)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	if phase.StartsRound {
 		game.Set("round_number", game.GetInt("round_number")+1)
 	}
 	game.Set("phase_key", phase.ID)
 	game.Set("phase_started_at", time.Now().UTC())
+	game.Set("ability_phase_instance", game.GetInt("ability_phase_instance")+1)
+	abilities.ResetPhaseLock(game)
 	incrementRevision(game)
 	if err := event.App.Save(game); err != nil {
 		return httpx.WriteError(event, result.Internal(err))

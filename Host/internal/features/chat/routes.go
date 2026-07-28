@@ -92,6 +92,9 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	}, RoomState{
 		ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 	})
+	if room.GetString("kind") == "custom" && !customChannelSenderAllowed(definition, room, participant) {
+		policy.Sendable = false
+	}
 	if game.GetString("status") == "review" || game.GetString("status") == "archived" {
 		policy.Sendable = false
 	}
@@ -233,6 +236,13 @@ func createMessage(event *core.RequestEvent) error {
 	request.Content = strings.TrimSpace(request.Content)
 	if len([]rune(request.Content)) < 1 || len([]rune(request.Content)) > 1000 || hasDisallowedControl(request.Content) {
 		return writeError(event, result.Invalid("chat.invalid_message", "Enter a message of at most 1000 characters.", nil))
+	}
+	definition, err := definitionFromGame(resolved.Game)
+	if err != nil {
+		return writeError(event, result.Internal(err))
+	}
+	if roomMessageRestriction(definition, resolved.Room) == rulesets.ChatEmojiOnly && !isEmojiOnly(request.Content) {
+		return writeError(event, result.Invalid("chat.emoji_only", "This channel accepts emoji only.", nil))
 	}
 	collection, err := event.App.FindCollectionByNameOrId("chat_messages")
 	if err != nil {
@@ -446,8 +456,37 @@ func resolveRoomPolicy(definition rulesets.DefinitionV1, phaseKey string, room *
 		if value, ok := phase.Teams[room.GetString("team_key")]; ok {
 			override = &value
 		}
+	case "custom":
+		channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+		if channel != nil {
+			base, override = rulesets.ChatChannelPolicy(*channel, phaseKey)
+		}
 	}
 	return base, override
+}
+
+func customChannelSenderAllowed(definition rulesets.DefinitionV1, room, participant *core.Record) bool {
+	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+	if channel == nil {
+		return false
+	}
+	for _, role := range definition.Roles {
+		if role.ID == participant.GetString("role_key") {
+			return rulesets.ChatChannelAudienceMatches(*channel, role, true)
+		}
+	}
+	return false
+}
+
+func roomMessageRestriction(definition rulesets.DefinitionV1, room *core.Record) rulesets.ChatMessageRestriction {
+	if room.GetString("kind") != "custom" {
+		return rulesets.ChatNormalText
+	}
+	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+	if channel == nil {
+		return rulesets.ChatNormalText
+	}
+	return channel.MessageRestriction
 }
 
 func definitionFromGame(game *core.Record) (rulesets.DefinitionV1, error) {
@@ -499,9 +538,18 @@ func projectRoom(app core.App, resolved access) map[string]any {
 		"id": resolved.Room.Id, "key": resolved.Room.GetString("room_key"), "kind": resolved.Room.GetString("kind"),
 		"label": resolved.Room.GetString("label"), "playersCanPost": resolved.Room.GetBool("players_can_post"),
 		"readable": resolved.IsGM || resolved.Policy.Readable, "sendable": sendable,
-		"gameMasterMaySend": resolved.Policy.GameMasterMaySend,
-		"latestMessage":     latestMessageSummary(app, resolved.Room.Id),
+		"gameMasterMaySend":  resolved.Policy.GameMasterMaySend,
+		"messageRestriction": roomMessageRestrictionFromGame(resolved.Game, resolved.Room),
+		"latestMessage":      latestMessageSummary(app, resolved.Room.Id),
 	}
+}
+
+func roomMessageRestrictionFromGame(game, room *core.Record) rulesets.ChatMessageRestriction {
+	definition, err := definitionFromGame(game)
+	if err != nil {
+		return rulesets.ChatNormalText
+	}
+	return roomMessageRestriction(definition, room)
 }
 
 func latestMessageSummary(app core.App, roomID string) any {
@@ -566,11 +614,41 @@ func publishRoom(app core.App, resolved access, kind string, payload any) {
 		if auth.Collection().Name != "player_profiles" {
 			return false
 		}
-		records, err := app.FindRecordsByFilter("chat_memberships",
-			"room = {:room} && participant.profile = {:profile} && ((left_at = '' && participant.status != 'kicked' && participant.status != 'left') || historical_access = true)",
-			"", 1, 0, dbx.Params{"room": resolved.Room.Id, "profile": auth.Id})
-		return err == nil && len(records) == 1
+		return playerMayReceiveRoomEvent(app, resolved, auth.Id)
 	})
+}
+
+func playerMayReceiveRoomEvent(app core.App, resolved access, profileID string) bool {
+	memberships, err := app.FindRecordsByFilter("chat_memberships",
+		"room = {:room} && participant.profile = {:profile} && ((left_at = '' && participant.status != 'kicked' && participant.status != 'left') || historical_access = true)",
+		"", 1, 0, dbx.Params{"room": resolved.Room.Id, "profile": profileID})
+	if err != nil || len(memberships) != 1 {
+		return false
+	}
+	participant, err := app.FindRecordById("participants", memberships[0].GetString("participant"))
+	if err != nil {
+		return false
+	}
+	definition, err := definitionFromGame(resolved.Game)
+	if err != nil {
+		return false
+	}
+	base, override := resolveRoomPolicy(definition, resolved.Game.GetString("phase_key"), resolved.Room)
+	if resolved.Room.GetString("kind") == "gm_dm" {
+		base = rulesets.RoomPermission{
+			Visible: true, Readable: true, Sendable: true, SenderDisplay: rulesets.SenderProfileName,
+		}
+		override = nil
+	}
+	policy := EffectivePolicy(base, override, ParticipantState{
+		IsMember:       memberships[0].GetDateTime("left_at").IsZero(),
+		IsActive:       participant.GetString("status") == "active",
+		HistoricalRead: memberships[0].GetBool("historical_access"),
+	}, RoomState{
+		ManuallyLocked:           !resolved.Room.GetBool("players_can_post"),
+		ManualVisibilityOverride: resolved.Room.GetString("manual_visibility_override"),
+	})
+	return policy.Visible || policy.Readable
 }
 
 func findRoomByKey(app core.App, gameID, key string) (*core.Record, error) {

@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 )
 
@@ -24,7 +25,7 @@ func NewService(app core.App) *Service {
 
 func (service *Service) Reconcile() {
 	records, err := service.app.FindRecordsByFilter("games",
-		"(status = 'running' || status = 'paused') && timer_state = 'running'", "", 1, 0)
+		"(status = 'running' || status = 'paused') && (timer_state = 'running' || (timer_state = 'completed' && ability_phase_locked_at = ''))", "", 1, 0)
 	if err != nil || len(records) == 0 {
 		return
 	}
@@ -33,6 +34,10 @@ func (service *Service) Reconcile() {
 	if state.Status == Completed {
 		saveState(game, state)
 		if service.app.Save(game) == nil {
+			_, _ = abilities.FinalizePhase(service.app, game.Id, time.Now().UTC())
+			if current, findErr := service.app.FindRecordById("games", game.Id); findErr == nil {
+				game = current
+			}
 			service.Publish(game, "timer.completed", Project(state, time.Now().UTC()))
 		}
 		return
@@ -88,6 +93,10 @@ func (service *Service) complete(gameID string, revision int) {
 	saveState(game, state)
 	if service.app.Save(game) != nil {
 		return
+	}
+	_, _ = abilities.FinalizePhase(service.app, game.Id, now)
+	if current, findErr := service.app.FindRecordById("games", game.Id); findErr == nil {
+		game = current
 	}
 	service.Publish(game, "timer.completed", Project(state, now))
 }

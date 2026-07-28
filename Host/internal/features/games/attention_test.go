@@ -69,6 +69,10 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 	item.Set("content", "Secret for the red team")
 	item.Set("audience", "team")
 	item.Set("target_id", "red")
+	item.Set("image_asset_key", "secret_map")
+	item.Set("image_description", "A map marking the red team's meeting point.")
+	item.Set("audio_asset_key", "secret_signal")
+	item.Set("audio_alternative", "Three short bells.")
 	if err := fixture.app.Save(item); err != nil {
 		t.Fatal(err)
 	}
@@ -134,6 +138,23 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 	if _, exposesIdentities := summary["recipients"]; exposesIdentities {
 		t.Fatal("admin aggregate exposed receipt identities")
 	}
+	playerImage := projectedAnnouncementMedia(t, projectPlayerAttention(item), "image")
+	if playerImage["description"] != "A map marking the red team's meeting point." {
+		t.Fatalf("player media description missing: %#v", playerImage)
+	}
+	adminAudio := projectedAnnouncementMedia(t, summary, "audio")
+	if adminAudio["alternative"] != "Three short bells." {
+		t.Fatalf("admin audio alternative missing: %#v", adminAudio)
+	}
+}
+
+func projectedAnnouncementMedia(t *testing.T, projection map[string]any, key string) map[string]any {
+	t.Helper()
+	media, ok := projection[key].(map[string]any)
+	if !ok {
+		t.Fatalf("%s media missing from projection: %#v", key, projection)
+	}
+	return media
 }
 
 func newAttentionFixture(t *testing.T) attentionFixture {

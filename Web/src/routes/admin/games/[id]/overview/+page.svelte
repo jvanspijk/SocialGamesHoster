@@ -29,6 +29,12 @@
 	let selectedPhase = $state('');
 	let startSuggestedTimer = $state(true);
 	let announcementMessage = $state('');
+	let announcementAudience = $state<'all' | 'team' | 'player'>('all');
+	let announcementTarget = $state('');
+	let announcementImage = $state('');
+	let announcementImageDescription = $state('');
+	let announcementAudio = $state('');
+	let announcementAudioAlternative = $state('');
 	let timer = $state<TimerProjection>({
 		status: 'inactive',
 		totalMs: 0,
@@ -52,6 +58,8 @@
 	const selectedPhaseDefinition = $derived(
 		view?.ruleset.phases.find((phase) => phase.id === selectedPhase)
 	);
+	const imageAssets = $derived(view?.assets.filter((asset) => asset.kind === 'image') ?? []);
+	const audioAssets = $derived(view?.assets.filter((asset) => asset.kind === 'audio') ?? []);
 
 	$effect(() => {
 		if (view?.timer && view.timer.revision >= timer.revision) timer = view.timer;
@@ -129,9 +137,23 @@
 		try {
 			await api(`/games/${view.game.id}/announcements`, {
 				method: 'POST',
-				...jsonBody({ content: announcementMessage, audience: 'all', targetId: '' })
+				...jsonBody({
+					content: announcementMessage,
+					audience: announcementAudience,
+					targetId: announcementAudience === 'all' ? '' : announcementTarget,
+					imageAssetKey: announcementImage,
+					imageDescription: announcementImageDescription,
+					audioAssetKey: announcementAudio,
+					audioAlternative: announcementAudioAlternative
+				})
 			});
 			announcementMessage = '';
+			announcementAudience = 'all';
+			announcementTarget = '';
+			announcementImage = '';
+			announcementImageDescription = '';
+			announcementAudio = '';
+			announcementAudioAlternative = '';
 			announcementOpen = false;
 			toasts.success('Announcement sent.');
 		} catch (caught) {
@@ -311,6 +333,45 @@
 					<Megaphone size={18} /> New announcement
 				</Button>
 			</Panel>
+
+			{#if view.abilityProgress.eligiblePlayerCount > 0 || view.abilityResults.length > 0}
+				<Panel title="Ability choices">
+					{#if view.abilityProgress.eligiblePlayerCount > 0}
+						{#if view.abilityProgress.locked}
+							<p>
+								Choices finalized for {view.abilityProgress.finalizedPlayerCount} of
+								{view.abilityProgress.eligiblePlayerCount} eligible players.
+							</p>
+						{:else}
+							<p>
+								{view.abilityProgress.activatedPlayerCount} of
+								{view.abilityProgress.eligiblePlayerCount} eligible players have activated an ability.
+								Individual choices stay hidden until the phase locks.
+							</p>
+							<progress
+								value={view.abilityProgress.activatedPlayerCount}
+								max={Math.max(view.abilityProgress.eligiblePlayerCount, 1)}
+								aria-label={`${view.abilityProgress.activatedPlayerCount} of ${view.abilityProgress.eligiblePlayerCount} eligible players activated`}
+							></progress>
+						{/if}
+					{/if}
+					{#if view.abilityResults.length > 0}
+						<ul class="ability-results">
+							{#each view.abilityResults as result (`${result.participantId}-${result.roundNumber}-${result.phaseKey}`)}
+								<li>
+									<strong>Seat {result.seatNumber} · {result.displayName}</strong>
+									<span>
+										Round {result.roundNumber || 1}, {view.ruleset.phases.find(
+											(phase) => phase.id === result.phaseKey
+										)?.name ?? result.phaseKey}:
+										{result.abilities.map((ability) => ability.name).join(', ')}
+									</span>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				</Panel>
+			{/if}
 		</aside>
 	</div>
 {/if}
@@ -354,6 +415,83 @@
 			multiline
 			required
 		/>
+		<label>
+			<span>Recipients</span>
+			<select bind:value={announcementAudience} onchange={() => (announcementTarget = '')}>
+				<option value="all">All players</option>
+				<option value="team">Selected team</option>
+				<option value="player">Selected player</option>
+			</select>
+		</label>
+		{#if announcementAudience === 'team'}
+			<label>
+				<span>Team</span>
+				<select bind:value={announcementTarget} required>
+					<option value="">Choose a team</option>
+					{#each view?.ruleset.teams ?? [] as team (team.id)}
+						<option value={team.id}>{team.name}</option>
+					{/each}
+				</select>
+			</label>
+		{:else if announcementAudience === 'player'}
+			<label>
+				<span>Player</span>
+				<select bind:value={announcementTarget} required>
+					<option value="">Choose a player</option>
+					{#each activePlayers as player (player.id)}
+						<option value={player.id}
+							>Seat {player.seatNumber} · {player.displayNameSnapshot}</option
+						>
+					{/each}
+				</select>
+			</label>
+		{/if}
+		<label>
+			<span>Image (optional)</span>
+			<select
+				bind:value={announcementImage}
+				onchange={() =>
+					(announcementImageDescription =
+						view?.ruleset.assetAccessibility?.[announcementImage]?.description ?? '')}
+			>
+				<option value="">No image</option>
+				{#each imageAssets as asset (asset.id)}
+					<option value={asset.assetKey}>{asset.assetKey}</option>
+				{/each}
+			</select>
+		</label>
+		{#if announcementImage}
+			<Field
+				label="Image description"
+				name="announcement-image-description"
+				bind:value={announcementImageDescription}
+				multiline
+				required
+			/>
+		{/if}
+		<label>
+			<span>Audio (optional)</span>
+			<select
+				bind:value={announcementAudio}
+				onchange={() =>
+					(announcementAudioAlternative =
+						view?.ruleset.assetAccessibility?.[announcementAudio]?.description ?? '')}
+			>
+				<option value="">No audio</option>
+				{#each audioAssets as asset (asset.id)}
+					<option value={asset.assetKey}>{asset.assetKey}</option>
+				{/each}
+			</select>
+		</label>
+		{#if announcementAudio}
+			<Field
+				label="Audio alternative"
+				name="announcement-audio-alternative"
+				bind:value={announcementAudioAlternative}
+				multiline
+				required
+			/>
+		{/if}
 	</form>
 	{#snippet actions()}
 		<Button variant="ghost" onclick={() => (announcementOpen = false)}>Cancel</Button>
@@ -536,6 +674,39 @@
 	form {
 		display: grid;
 		gap: var(--space-3);
+	}
+
+	form > label {
+		display: grid;
+		gap: var(--space-1);
+	}
+
+	form > label > span {
+		font-family: var(--font-display);
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.ability-results {
+		display: grid;
+		gap: var(--space-2);
+		list-style: none;
+		padding: 0;
+	}
+
+	.ability-results li,
+	.ability-results span {
+		display: grid;
+	}
+
+	.ability-results span {
+		color: var(--ink-soft);
+		font-size: 0.82rem;
+	}
+
+	progress {
+		width: 100%;
 	}
 
 	.dialog-stack > label:not(.check) {

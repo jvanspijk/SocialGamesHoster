@@ -71,6 +71,24 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 	}
 	for i, ability := range def.Abilities {
 		checkAsset(fmt.Sprintf("abilities[%d].imageAssetKey", i), ability.ImageAssetKey)
+		for phaseIndex, phaseID := range ability.ActivationPhaseIDs {
+			if _, ok := phaseIDs[phaseID]; !ok {
+				addError(
+					fmt.Sprintf("abilities[%d].activationPhaseIds[%d]", i, phaseIndex),
+					"reference.unknown",
+					fmt.Sprintf("Unknown phase %q.", phaseID),
+				)
+			}
+		}
+	}
+	for assetKey, accessibility := range def.AssetAccessibility {
+		if _, ok := assetKeys[assetKey]; !ok {
+			addError("assetAccessibility."+assetKey, "reference.unknown", fmt.Sprintf("Unknown asset %q.", assetKey))
+		}
+		description := strings.TrimSpace(accessibility.Description)
+		if description == "" || len([]rune(description)) > 1000 {
+			addError("assetAccessibility."+assetKey+".description", "asset.invalid_accessibility_description", "Enter an accessibility description of at most 1000 characters.")
+		}
 	}
 	for i, role := range def.Roles {
 		path := fmt.Sprintf("roles[%d]", i)
@@ -192,6 +210,34 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 			}
 		}
 	}
+	validateIDs("chat.channels", chatChannelIDValues(def.Chat.Channels), addError)
+	for index, channel := range def.Chat.Channels {
+		path := fmt.Sprintf("chat.channels[%d]", index)
+		if strings.TrimSpace(channel.Name) == "" {
+			addError(path+".name", "chat.channel_name_required", "Chat channel name is required.")
+		}
+		if channel.MessageRestriction != ChatNormalText && channel.MessageRestriction != ChatEmojiOnly {
+			addError(path+".messageRestriction", "chat.invalid_message_restriction", "Choose normal text or emoji-only messages.")
+		}
+		if !slices.Contains([]SenderDisplay{
+			SenderProfileName, SenderGameAlias, SenderSeatNumber, SenderRoleLabel, SenderTeamLabel,
+		}, channel.SenderDisplay) {
+			addError(path+".senderDisplay", "chat.invalid_sender_display", "Choose how player senders are shown.")
+		}
+		validateChatAudienceReferences(path+".readers", channel.ReaderRoleIDs, channel.ReaderTeamIDs, roleIDs, teamIDs, addError)
+		validateChatAudienceReferences(path+".senders", channel.SenderRoleIDs, channel.SenderTeamIDs, roleIDs, teamIDs, addError)
+		for phaseID := range channel.PhaseOverrides {
+			if _, ok := phaseIDs[phaseID]; !ok {
+				addError(path+".phaseOverrides", "reference.unknown", fmt.Sprintf("Chat channel references unknown phase %q.", phaseID))
+			}
+		}
+		for _, role := range def.Roles {
+			if ChatChannelAudienceMatches(channel, role, true) && !ChatChannelAudienceMatches(channel, role, false) {
+				addError(path+".senders", "chat.sender_cannot_read", fmt.Sprintf("Role %q can send but cannot read this channel.", role.ID))
+				break
+			}
+		}
+	}
 	for i, cue := range def.AudioCues {
 		checkAsset(fmt.Sprintf("audioCues[%d].assetKey", i), cue.AssetKey)
 		if !slices.Contains([]string{"all", "team", "player", "game_masters"}, cue.DefaultAudience) {
@@ -206,6 +252,24 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 	}
 
 	return report
+}
+
+func validateChatAudienceReferences(
+	path string,
+	roleValues, teamValues []string,
+	roleIDs, teamIDs map[string]struct{},
+	addError func(string, string, string),
+) {
+	for _, id := range roleValues {
+		if _, ok := roleIDs[id]; !ok {
+			addError(path+".roleIds", "reference.unknown", fmt.Sprintf("Unknown role %q.", id))
+		}
+	}
+	for _, id := range teamValues {
+		if _, ok := teamIDs[id]; !ok {
+			addError(path+".teamIds", "reference.unknown", fmt.Sprintf("Unknown team %q.", id))
+		}
+	}
 }
 
 func validateIDs(path string, values []string, addError func(string, string, string)) map[string]struct{} {
@@ -309,6 +373,14 @@ func roleIDValues(values []Role) []string {
 }
 func phaseIDValues(values []Phase) []string {
 	return mapIDs(values, func(value Phase) string { return value.ID })
+}
+
+func chatChannelIDValues(values []ChatChannel) []string {
+	result := make([]string, len(values))
+	for index := range values {
+		result[index] = values[index].ID
+	}
+	return result
 }
 func achievementIDValues(values []Achievement) []string {
 	return mapIDs(values, func(value Achievement) string { return value.ID })

@@ -64,9 +64,10 @@
 		knowledgeRules: [],
 		compositionBands: [],
 		compositionModifiers: [],
-		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {} },
+		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 		achievements: [],
-		audioCues: []
+		audioCues: [],
+		assetAccessibility: {}
 	};
 
 	let section = $state<Section>('metadata');
@@ -91,6 +92,23 @@
 	let advancedOpen = $state(false);
 	let sectionMenuOpen = $state(false);
 	let actionsOpen = $state(false);
+
+	function normalizeDefinition(value: RulesetDefinition) {
+		value.assetAccessibility ??= {};
+		value.abilities ??= [];
+		for (const ability of value.abilities) {
+			ability.activationPhaseIds ??= [];
+			ability.canCombineWithOtherAbilities ??= false;
+		}
+		return value;
+	}
+
+	function ensureAssetDescriptions() {
+		definition.assetAccessibility ??= {};
+		for (const asset of assets) {
+			definition.assetAccessibility[asset.assetKey] ??= { description: '' };
+		}
+	}
 
 	const sections: Array<{ id: Section; label: string }> = [
 		{ id: 'metadata', label: 'Basics' },
@@ -126,7 +144,7 @@
 				try {
 					const parsed = JSON.parse(stored) as { slug: string; definition: RulesetDefinition };
 					slug = parsed.slug;
-					definition = parsed.definition;
+					definition = normalizeDefinition(parsed.definition);
 				} catch {
 					localStorage.removeItem('sgh.new-ruleset');
 				}
@@ -170,17 +188,21 @@
 				detail.versions.find((candidate) => candidate.state === 'draft') ??
 				detail.versions[0] ??
 				null;
-			const loadedDefinition = selectedVersion
-				? structuredClone(selectedVersion.definition)
-				: structuredClone(blank);
+			const loadedDefinition = normalizeDefinition(
+				selectedVersion ? structuredClone(selectedVersion.definition) : structuredClone(blank)
+			);
 			version = selectedVersion;
 			definition = loadedDefinition;
 			if (version) assets = await api<Asset[]>(`/ruleset-versions/${version.id}/assets`);
+			ensureAssetDescriptions();
 			savedDefinition = JSON.stringify(loadedDefinition);
 			const recovery = localStorage.getItem(`sgh.ruleset-recovery:${detail.ruleset.id}`);
 			if (recovery) {
 				try {
-					definition = (JSON.parse(recovery) as { definition: RulesetDefinition }).definition;
+					definition = normalizeDefinition(
+						(JSON.parse(recovery) as { definition: RulesetDefinition }).definition
+					);
+					ensureAssetDescriptions();
 					dirty = JSON.stringify(definition) !== savedDefinition;
 					if (dirty) toasts.info('Recovered unsaved ruleset changes from this browser.');
 				} catch {
@@ -279,6 +301,7 @@
 				...jsonBody({})
 			});
 			assets = await api<Asset[]>(`/ruleset-versions/${version.id}/assets`);
+			ensureAssetDescriptions();
 		}
 		const form = new FormData();
 		form.append('assetKey', assetKey);
@@ -288,6 +311,7 @@
 		try {
 			await api(`/ruleset-versions/${version.id}/assets`, { method: 'POST', body: form });
 			assets = await api<Asset[]>(`/ruleset-versions/${version.id}/assets`);
+			ensureAssetDescriptions();
 			assetKey = '';
 			assetFile = null;
 		} catch (caught) {
@@ -300,6 +324,8 @@
 	async function removeAsset(asset: Asset) {
 		if (!version || !window.confirm(`Delete the draft asset “${asset.assetKey}”?`)) return;
 		try {
+			delete definition.assetAccessibility![asset.assetKey];
+			await save();
 			await api(`/ruleset-versions/${version.id}/assets/${asset.id}`, { method: 'DELETE' });
 			assets = assets.filter((candidate) => candidate.id !== asset.id);
 		} catch (caught) {
@@ -527,7 +553,7 @@
 					and 60 seconds.
 				</p>
 				<VisualDefinitionEditor
-					{definition}
+					bind:definition
 					section="audio"
 					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
 				/>
@@ -573,6 +599,12 @@
 							<div>
 								<strong>{asset.assetKey}</strong>
 								<small>{asset.mimeType} · {JSON.stringify(asset.metadata)}</small>
+								<Field
+									label={asset.kind === 'image' ? 'Image description' : 'Audio alternative'}
+									name={`asset-accessibility-${asset.id}`}
+									bind:value={definition.assetAccessibility![asset.assetKey].description}
+									help="Used when this asset is attached to an announcement."
+								/>
 							</div>
 							<Button variant="danger" onclick={() => removeAsset(asset)}
 								><Trash2 size={16} /> Delete</Button
@@ -593,12 +625,12 @@
 				<Button variant="secondary" onclick={applyText}>Apply JSON</Button>
 			{:else if section === 'roles'}
 				<VisualDefinitionEditor
-					{definition}
+					bind:definition
 					section="teams"
 					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
 				/>
 				<VisualDefinitionEditor
-					{definition}
+					bind:definition
 					section="roles"
 					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
 				/>
@@ -615,7 +647,7 @@
 				</details>
 			{:else}
 				<VisualDefinitionEditor
-					{definition}
+					bind:definition
 					{section}
 					assets={assets.map(({ assetKey: key, kind }) => ({ assetKey: key, kind }))}
 				/>

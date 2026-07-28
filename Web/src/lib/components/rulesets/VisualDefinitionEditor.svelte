@@ -4,6 +4,7 @@
 	import RoomPermissionEditor from './RoomPermissionEditor.svelte';
 	import SelectorEditor from './SelectorEditor.svelte';
 	import type {
+		RulesetChatChannel,
 		RulesetDefinition,
 		RulesetPartialRoomPermission,
 		RulesetRoomPermission,
@@ -22,7 +23,7 @@
 	type AssetOption = { assetKey: string; kind: 'image' | 'audio' };
 
 	let {
-		definition,
+		definition = $bindable(),
 		section,
 		assets
 	}: { definition: RulesetDefinition; section: Section; assets: AssetOption[] } = $props();
@@ -85,7 +86,9 @@
 				definition.abilities.map((item) => item.id)
 			),
 			name: 'New ability',
-			description: ''
+			description: '',
+			activationPhaseIds: [],
+			canCombineWithOtherAbilities: false
 		});
 	}
 
@@ -207,6 +210,51 @@
 
 	function addDefaultRoom(kind: 'general' | 'playerDm') {
 		definition.chat.defaultPolicy[kind] = roomPolicy();
+	}
+
+	function addCustomChannel() {
+		definition.chat.channels ??= [];
+		definition.chat.channels.push({
+			id: nextID(
+				'channel',
+				definition.chat.channels.map((item) => item.id)
+			),
+			name: 'New channel',
+			readerRoleIds: [],
+			readerTeamIds: [],
+			senderRoleIds: [],
+			senderTeamIds: [],
+			messageRestriction: 'normal_text',
+			visible: true,
+			sendable: true,
+			gameMasterMaySend: true,
+			senderDisplay: 'game_alias',
+			phaseOverrides: {}
+		});
+	}
+
+	function phaseChannelState(
+		channel: RulesetChatChannel,
+		phaseID: string,
+		key: 'visible' | 'sendable'
+	) {
+		const value = channel.phaseOverrides[phaseID]?.[key];
+		return value === undefined ? 'inherit' : value ? 'yes' : 'no';
+	}
+
+	function setPhaseChannelState(
+		channel: RulesetChatChannel,
+		phaseID: string,
+		key: 'visible' | 'sendable',
+		value: string
+	) {
+		channel.phaseOverrides[phaseID] ??= {};
+		if (value === 'inherit') delete channel.phaseOverrides[phaseID][key];
+		else channel.phaseOverrides[phaseID][key] = value === 'yes';
+		const override = channel.phaseOverrides[phaseID];
+		if (override.visible === undefined && override.sendable === undefined) {
+			delete channel.phaseOverrides[phaseID];
+		}
 	}
 
 	function addDefaultTeam(teamID: string) {
@@ -352,6 +400,24 @@
 						{/each}
 					</select>
 				</label>
+				<label class="check">
+					<input type="checkbox" bind:checked={ability.canCombineWithOtherAbilities} />
+					May combine with other combinable abilities
+				</label>
+				<div class="choice-block">
+					<strong>Playable during phases</strong>
+					<div class="choices">
+						{#each definition.phases as phase (phase.id)}
+							<label>
+								<input type="checkbox" value={phase.id} bind:group={ability.activationPhaseIds} />
+								{phase.name}
+							</label>
+						{/each}
+					</div>
+					{#if definition.phases.length === 0}
+						<p class="hint compact">Add phases before making this ability playable.</p>
+					{/if}
+				</div>
 			</article>
 		{/each}
 	</div>
@@ -775,6 +841,172 @@
 
 	<div class="section-title subsection">
 		<div>
+			<h2>Custom channels</h2>
+			<p class="muted">
+				Create role- or team-specific conversations, including emoji-only channels.
+			</p>
+		</div>
+		<Button variant="secondary" onclick={addCustomChannel}>Add channel</Button>
+	</div>
+	<div class="cards">
+		{#each definition.chat.channels ?? [] as channel, channelIndex (channel.id)}
+			<article class="item-card">
+				<div class="card-heading">
+					<h3>{channel.name || 'Unnamed channel'}</h3>
+					<button class="remove" onclick={() => removeAt(definition.chat.channels, channelIndex)}
+						>Remove channel</button
+					>
+				</div>
+				<div class="form-grid">
+					<Field
+						label="Channel name"
+						name={`channel-name-${channelIndex}`}
+						bind:value={channel.name}
+						required
+					/>
+					<Field
+						label="Stable ID"
+						name={`channel-id-${channelIndex}`}
+						bind:value={channel.id}
+						help="Used to preserve this channel in saved games."
+						required
+					/>
+					<label>
+						<span>Allowed messages</span>
+						<select bind:value={channel.messageRestriction}>
+							<option value="normal_text">Normal text and emoji</option>
+							<option value="emoji_only">Emoji only</option>
+						</select>
+					</label>
+					<label>
+						<span>Show senders as</span>
+						<select bind:value={channel.senderDisplay}>
+							<option value="profile_name">Profile name</option>
+							<option value="game_alias">Game alias</option>
+							<option value="seat_number">Seat number</option>
+							<option value="role_label">Role name</option>
+							<option value="team_label">Team name</option>
+						</select>
+					</label>
+				</div>
+				<div class="form-grid thirds">
+					<label class="check">
+						<input type="checkbox" bind:checked={channel.visible} />
+						Players can normally see this channel
+					</label>
+					<label class="check">
+						<input type="checkbox" bind:checked={channel.sendable} />
+						Allowed senders can normally post
+					</label>
+					<label class="check">
+						<input type="checkbox" bind:checked={channel.gameMasterMaySend} />
+						Game masters can post
+					</label>
+				</div>
+				<div class="audience-grid">
+					<div class="choice-block">
+						<strong>Readers by team</strong>
+						<p class="hint compact">No reader selections means every player.</p>
+						<div class="choices">
+							{#each definition.teams as team (team.id)}
+								<label>
+									<input type="checkbox" value={team.id} bind:group={channel.readerTeamIds} />
+									{team.name}
+								</label>
+							{/each}
+						</div>
+					</div>
+					<div class="choice-block">
+						<strong>Readers by role</strong>
+						<div class="choices">
+							{#each definition.roles as role (role.id)}
+								<label>
+									<input type="checkbox" value={role.id} bind:group={channel.readerRoleIds} />
+									{role.name}
+								</label>
+							{/each}
+						</div>
+					</div>
+					<div class="choice-block">
+						<strong>Senders by team</strong>
+						<p class="hint compact">No sender selections means every reader.</p>
+						<div class="choices">
+							{#each definition.teams as team (team.id)}
+								<label>
+									<input type="checkbox" value={team.id} bind:group={channel.senderTeamIds} />
+									{team.name}
+								</label>
+							{/each}
+						</div>
+					</div>
+					<div class="choice-block">
+						<strong>Senders by role</strong>
+						<div class="choices">
+							{#each definition.roles as role (role.id)}
+								<label>
+									<input type="checkbox" value={role.id} bind:group={channel.senderRoleIds} />
+									{role.name}
+								</label>
+							{/each}
+						</div>
+					</div>
+				</div>
+				{#if definition.phases.length > 0}
+					<div class="override-room">
+						<strong>Phase permissions</strong>
+						<div class="phase-permissions">
+							{#each definition.phases as phase (phase.id)}
+								<div>
+									<b>{phase.name}</b>
+									<label>
+										<span>Visibility</span>
+										<select
+											aria-label={`${channel.name} visibility during ${phase.name}`}
+											value={phaseChannelState(channel, phase.id, 'visible')}
+											onchange={(event) =>
+												setPhaseChannelState(
+													channel,
+													phase.id,
+													'visible',
+													event.currentTarget.value
+												)}
+										>
+											<option value="inherit">Use normal setting</option>
+											<option value="yes">Visible</option>
+											<option value="no">Hidden</option>
+										</select>
+									</label>
+									<label>
+										<span>Posting</span>
+										<select
+											aria-label={`${channel.name} posting during ${phase.name}`}
+											value={phaseChannelState(channel, phase.id, 'sendable')}
+											onchange={(event) =>
+												setPhaseChannelState(
+													channel,
+													phase.id,
+													'sendable',
+													event.currentTarget.value
+												)}
+										>
+											<option value="inherit">Use normal setting</option>
+											<option value="yes">Allowed</option>
+											<option value="no">Read-only</option>
+										</select>
+									</label>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</article>
+		{:else}
+			<p class="empty">No custom chat channels in this ruleset.</p>
+		{/each}
+	</div>
+
+	<div class="section-title subsection">
+		<div>
 			<h2>Phase changes</h2>
 			<p class="muted">Temporarily override only the settings that need to change.</p>
 		</div>
@@ -1097,6 +1329,31 @@
 		gap: 0.75rem;
 	}
 
+	.audience-grid,
+	.phase-permissions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
+
+	.phase-permissions > div {
+		display: grid;
+		gap: 0.55rem;
+		border: 1px solid #c5ad82;
+		padding: 0.65rem;
+	}
+
+	.phase-permissions b {
+		font-family: var(--font-display);
+		font-size: 0.78rem;
+	}
+
+	.hint.compact {
+		border: 0;
+		background: transparent;
+		padding: 0.2rem 0 0;
+	}
+
 	.override-room {
 		display: grid;
 		gap: 0.55rem;
@@ -1121,6 +1378,11 @@
 		.form-grid,
 		.form-grid.thirds,
 		.selector-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.audience-grid,
+		.phase-permissions {
 			grid-template-columns: 1fr;
 		}
 

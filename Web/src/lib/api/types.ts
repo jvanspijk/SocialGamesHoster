@@ -43,6 +43,7 @@ export interface Game {
 	roundNumber: number;
 	phaseKey: string;
 	phaseStartedAt?: string;
+	abilityPhaseLockedAt?: string;
 	startedAt?: string;
 	endedAt?: string;
 }
@@ -70,6 +71,7 @@ export interface Room {
 	readable: boolean;
 	sendable: boolean;
 	gameMasterMaySend?: boolean;
+	messageRestriction?: 'normal_text' | 'emoji_only';
 	latestMessage: MessageSummary | null;
 }
 
@@ -100,6 +102,8 @@ export interface AnnouncementAttentionItem {
 	content: string;
 	cueKey?: string;
 	createdAt: string;
+	image?: { url: string; description: string };
+	audio?: { url: string; alternative: string };
 }
 
 export interface FutureEventAttentionItem {
@@ -133,7 +137,16 @@ export interface RoleProjection {
 	winCondition: string;
 	imageAssetKey?: string;
 	team?: { id: string; name: string; description: string };
-	abilities: Array<{ id: string; name: string; description: string }>;
+	abilities: RulesetAbility[];
+}
+
+export interface AbilityChoice {
+	id: string;
+	abilityId: string;
+	abilityName: string;
+	status: 'Activated' | 'Finalized';
+	activatedAt: string;
+	finalizedAt?: string;
 }
 
 export interface PlayerGameView {
@@ -167,6 +180,7 @@ export interface PlayerGameView {
 		seatNumber: number;
 		status: string;
 	}>;
+	abilityChoices?: AbilityChoice[];
 }
 
 export interface AdminGameView {
@@ -193,6 +207,24 @@ export interface AdminGameView {
 		targetType: string;
 		detail?: Record<string, unknown>;
 		createdAt: string;
+	}>;
+	assets: Array<{ id: string; assetKey: string; kind: 'image' | 'audio' }>;
+	abilityProgress: {
+		phaseKey: string;
+		roundNumber: number;
+		locked: boolean;
+		lockedAt?: string;
+		eligiblePlayerCount: number;
+		activatedPlayerCount: number;
+		finalizedPlayerCount: number;
+	};
+	abilityResults: Array<{
+		participantId: string;
+		displayName: string;
+		seatNumber: number;
+		phaseKey: string;
+		roundNumber: number;
+		abilities: Array<{ id: string; name: string }>;
 	}>;
 }
 
@@ -242,6 +274,7 @@ export interface RulesetDefinition {
 	chat: RulesetChatPolicy;
 	achievements: RulesetAchievement[];
 	audioCues: RulesetAudioCue[];
+	assetAccessibility?: Record<string, { description: string }>;
 }
 
 export interface RulesetTeam {
@@ -262,6 +295,8 @@ export interface RulesetAbility {
 	name: string;
 	description: string;
 	imageAssetKey?: string;
+	activationPhaseIds?: string[];
+	canCombineWithOtherAbilities?: boolean;
 }
 
 export interface RulesetRole {
@@ -355,6 +390,28 @@ export interface RulesetChatPolicy {
 			general?: RulesetPartialRoomPermission;
 			playerDm?: RulesetPartialRoomPermission;
 			teams?: Record<string, RulesetPartialRoomPermission>;
+		}
+	>;
+	channels: RulesetChatChannel[];
+}
+
+export interface RulesetChatChannel {
+	id: string;
+	name: string;
+	readerRoleIds: string[];
+	readerTeamIds: string[];
+	senderRoleIds: string[];
+	senderTeamIds: string[];
+	messageRestriction: 'normal_text' | 'emoji_only';
+	visible: boolean;
+	sendable: boolean;
+	gameMasterMaySend: boolean;
+	senderDisplay: RulesetSenderDisplay;
+	phaseOverrides: Record<
+		string,
+		{
+			visible?: boolean;
+			sendable?: boolean;
 		}
 	>;
 }

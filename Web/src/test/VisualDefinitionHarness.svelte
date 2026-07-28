@@ -13,13 +13,13 @@
 		knowledgeRules: [],
 		compositionBands: [],
 		compositionModifiers: [],
-		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {} },
+		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 		achievements: [],
 		audioCues: []
 	});
 </script>
 
-<VisualDefinitionEditor {definition} section="achievements" assets={[]} />
+<VisualDefinitionEditor bind:definition section="achievements" assets={[]} />
 <output aria-label="Achievement count">{definition.achievements.length}</output>
 <output aria-label="Saved achievement points">{definition.achievements[0]?.points ?? 'none'}</output
 >

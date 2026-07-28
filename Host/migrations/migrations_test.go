@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -49,6 +50,7 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 		"chat_messages",
 		"attention_items",
 		"attention_receipts",
+		"ability_choices",
 		"achievement_awards",
 		"game_audit",
 	}
@@ -79,6 +81,12 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 			t.Fatalf("game contract field %q is missing", field)
 		}
 	}
+	if games.Fields.GetByName("ability_phase_locked_at") == nil {
+		t.Fatal("ability phase lock field is missing")
+	}
+	if games.Fields.GetByName("ability_phase_instance") == nil {
+		t.Fatal("ability phase instance field is missing")
+	}
 	participants, err := app.FindCollectionByNameOrId("participants")
 	if err != nil {
 		t.Fatal(err)
@@ -93,6 +101,10 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 	if rooms.Fields.GetByName("players_can_post") == nil {
 		t.Fatal("room posting contract is missing")
 	}
+	kind, ok := rooms.Fields.GetByName("kind").(*core.SelectField)
+	if !ok || !slices.Contains(kind.Values, "custom") {
+		t.Fatal("custom ruleset chat room kind is missing")
+	}
 
 	var indexName string
 	if err := app.DB().NewQuery("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_games_single_live'").Row(&indexName); err != nil {
@@ -100,7 +112,7 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 	}
 
 	runner := core.NewMigrationsRunner(app, core.AppMigrations)
-	if _, err := runner.Down(5); err != nil {
+	if _, err := runner.Down(7); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := app.FindCollectionByNameOrId("games"); err == nil || !errors.Is(err, os.ErrNotExist) {

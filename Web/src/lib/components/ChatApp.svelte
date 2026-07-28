@@ -24,6 +24,7 @@
 		selectedRoomId = '',
 		canModerate = false,
 		archived = false,
+		policyRevision = '',
 		selectRoom,
 		newMessage
 	}: {
@@ -31,6 +32,7 @@
 		selectedRoomId?: string;
 		canModerate?: boolean;
 		archived?: boolean;
+		policyRevision?: string;
 		selectRoom: (roomId: string) => void;
 		newMessage?: () => void;
 	} = $props();
@@ -49,6 +51,7 @@
 	let messagesElement = $state<HTMLDivElement>();
 	let subscriptions: Array<() => void> = [];
 	let markers = $state<Record<string, Marker>>({});
+	let loadedPolicyRevision = '';
 	const scrollPositions = new SvelteMap<string, number>();
 
 	const selectedRoom = $derived(rooms.find((room) => room.id === selectedRoomId) ?? null);
@@ -79,6 +82,17 @@
 		}
 	});
 
+	$effect(() => {
+		if (!policyRevision || !loadedPolicyRevision) {
+			loadedPolicyRevision = policyRevision;
+			return;
+		}
+		if (policyRevision !== loadedPolicyRevision) {
+			loadedPolicyRevision = policyRevision;
+			void loadRooms();
+		}
+	});
+
 	function loadMarkers() {
 		try {
 			markers = JSON.parse(
@@ -100,6 +114,9 @@
 		loadingRooms = true;
 		try {
 			rooms = await api<Room[]>(`/games/${gameId}/rooms`);
+			if (selectedRoomId && !rooms.some((room) => room.id === selectedRoomId)) {
+				selectRoom('');
+			}
 			await subscribeRooms();
 			if (selectedRoomId) await openConversation(selectedRoomId);
 		} catch (caught) {
@@ -276,6 +293,7 @@
 	function roomType(room: Room) {
 		if (room.kind === 'gm_dm' || room.kind === 'player_dm') return 'Direct';
 		if (room.kind === 'team') return 'Team';
+		if (room.kind === 'custom') return 'Ruleset channel';
 		return 'Game';
 	}
 
@@ -447,12 +465,20 @@
 			{#if !archived && selectedRoom.sendable}
 				<form onsubmit={send}>
 					<label class="sr-only" for="chat-message">Message</label>
+					{#if selectedRoom.messageRestriction === 'emoji_only'}
+						<p class="message-restriction" id="message-restriction">Emoji only</p>
+					{/if}
 					<textarea
 						id="chat-message"
 						bind:value={content}
+						aria-describedby={selectedRoom.messageRestriction === 'emoji_only'
+							? 'message-restriction'
+							: undefined}
 						maxlength="1000"
 						rows="1"
-						placeholder="Write a message"
+						placeholder={selectedRoom.messageRestriction === 'emoji_only'
+							? 'Add emoji'
+							: 'Write a message'}
 						onkeydown={(event) => {
 							if (event.key === 'Enter' && !event.shiftKey) {
 								event.preventDefault();
@@ -870,6 +896,17 @@
 		border-block-start: var(--border-subtle);
 		background: var(--paper-deep);
 		color: var(--ink-soft);
+	}
+
+	.message-restriction {
+		align-self: center;
+		margin: 0;
+		color: var(--ink-soft);
+		font-family: var(--font-display);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 	}
 
 	.conversation-placeholder,

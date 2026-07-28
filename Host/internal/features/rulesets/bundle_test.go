@@ -9,6 +9,17 @@ import (
 
 func TestBundleRoundTrip(t *testing.T) {
 	definition := testDefinition()
+	definition.Phases = []Phase{{ID: "night", Name: "Night", Order: 1}}
+	definition.Abilities = []Ability{{
+		ID: "inspect", Name: "Inspect", Description: "Inspect one player.",
+		ActivationPhaseIDs: []string{"night"}, CanCombineWithOtherAbilities: true,
+	}}
+	definition.Chat.Channels = []ChatChannel{{
+		ID: "town_square", Name: "Town square",
+		ReaderTeamIDs: []string{"town"}, MessageRestriction: ChatEmojiOnly,
+		Visible: true, Sendable: true, GameMasterMaySend: true,
+		SenderDisplay: SenderGameAlias, PhaseOverrides: map[string]ChatChannelPhaseOverride{},
+	}}
 	manifest := BundleManifest{
 		SourceApplicationVersion:  "test",
 		MinimumApplicationVersion: "1.0.0",
@@ -26,6 +37,15 @@ func TestBundleRoundTrip(t *testing.T) {
 	}
 	if imported.Definition.Metadata.Name != definition.Metadata.Name {
 		t.Fatalf("unexpected definition: %#v", imported.Definition.Metadata)
+	}
+	if len(imported.Definition.Chat.Channels) != 1 ||
+		imported.Definition.Chat.Channels[0].MessageRestriction != ChatEmojiOnly {
+		t.Fatalf("custom chat channel was not preserved: %#v", imported.Definition.Chat.Channels)
+	}
+	if len(imported.Definition.Abilities) != 1 ||
+		!imported.Definition.Abilities[0].CanCombineWithOtherAbilities ||
+		len(imported.Definition.Abilities[0].ActivationPhaseIDs) != 1 {
+		t.Fatalf("playable ability was not preserved: %#v", imported.Definition.Abilities)
 	}
 }
 

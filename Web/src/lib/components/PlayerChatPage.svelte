@@ -39,6 +39,7 @@
 		gameId={view.game.id}
 		selectedRoomId={roomId}
 		archived={view.game.status === 'archived'}
+		policyRevision={`${view.game.status}:${view.game.phaseKey}`}
 		{selectRoom}
 		newMessage={() => (newMessageOpen = true)}
 	/>

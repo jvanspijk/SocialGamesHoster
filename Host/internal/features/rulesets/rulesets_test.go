@@ -85,6 +85,34 @@ func TestAchievementContractPreservesPointsAndSpoilerVisibility(t *testing.T) {
 	}
 }
 
+func TestAbilityActivationAndAssetAccessibilityRoundTrip(t *testing.T) {
+	definition := testDefinition()
+	definition.Phases = []Phase{{ID: "night", Name: "Night", Order: 1}}
+	definition.Abilities = []Ability{{ID: "inspect", Name: "Inspect", Description: "Inspect one player."}}
+	definition.Abilities[0].ActivationPhaseIDs = []string{"night"}
+	definition.Abilities[0].CanCombineWithOtherAbilities = true
+	definition.AssetAccessibility = map[string]AssetAccessibility{
+		"ability_art": {Description: "A silver eye against a dark sky."},
+	}
+	definition.Abilities[0].ImageAssetKey = "ability_art"
+	encoded, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded DefinitionV1
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	if !decoded.Abilities[0].CanCombineWithOtherAbilities ||
+		!reflect.DeepEqual(decoded.Abilities[0].ActivationPhaseIDs, []string{"night"}) ||
+		decoded.AssetAccessibility["ability_art"].Description == "" {
+		t.Fatalf("activation/accessibility contract did not round-trip: %#v", decoded)
+	}
+	if report := Validate(decoded, map[string]struct{}{"ability_art": {}}); !report.Valid() {
+		t.Fatalf("valid activation/accessibility rejected: %+v", report.Errors)
+	}
+}
+
 func TestAchievementPointsAndAutomaticAudioAudienceValidation(t *testing.T) {
 	definition := testDefinition()
 	definition.Achievements = []Achievement{{
@@ -106,6 +134,62 @@ func TestAchievementPointsAndAutomaticAudioAudienceValidation(t *testing.T) {
 	}
 	if !slices.Contains(codes, "audio.target_required") {
 		t.Fatalf("missing automatic audio audience validation: %+v", report.Errors)
+	}
+}
+
+func TestCustomChatChannelValidatesAndRoundTrips(t *testing.T) {
+	definition := testDefinition()
+	hidden := false
+	definition.Phases = []Phase{{ID: "night", Name: "Night", Order: 1}}
+	definition.Chat.Channels = []ChatChannel{{
+		ID: "mafia_signals", Name: "Mafia signals",
+		ReaderTeamIDs: []string{"mafia"}, SenderRoleIDs: []string{"mafioso"},
+		MessageRestriction: ChatEmojiOnly, Visible: true, Sendable: true,
+		GameMasterMaySend: true, SenderDisplay: SenderRoleLabel,
+		PhaseOverrides: map[string]ChatChannelPhaseOverride{"night": {Visible: &hidden}},
+	}}
+	if report := Validate(definition, map[string]struct{}{}); !report.Valid() {
+		t.Fatalf("valid custom channel rejected: %+v", report.Errors)
+	}
+	encoded, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded DefinitionV1
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	channel := decoded.Chat.Channels[0]
+	if channel.MessageRestriction != ChatEmojiOnly || channel.PhaseOverrides["night"].Visible == nil {
+		t.Fatalf("custom channel did not round-trip: %+v", channel)
+	}
+}
+
+func TestCustomChatChannelRejectsUnknownAndWriteOnlyAudiences(t *testing.T) {
+	definition := testDefinition()
+	definition.Chat.Channels = []ChatChannel{{
+		ID: "town_only", Name: "Town only",
+		ReaderTeamIDs: []string{"town"}, SenderTeamIDs: []string{"mafia", "unknown"},
+		MessageRestriction: ChatNormalText, Visible: true, Sendable: true,
+		SenderDisplay: SenderGameAlias, PhaseOverrides: map[string]ChatChannelPhaseOverride{},
+	}}
+	report := Validate(definition, map[string]struct{}{})
+	codes := make([]string, len(report.Errors))
+	for index, issue := range report.Errors {
+		codes[index] = issue.Code
+	}
+	if !slices.Contains(codes, "reference.unknown") || !slices.Contains(codes, "chat.sender_cannot_read") {
+		t.Fatalf("missing custom channel validation errors: %+v", report.Errors)
+	}
+}
+
+func TestCustomChatChannelEmptySenderAudienceMeansEveryReader(t *testing.T) {
+	channel := ChatChannel{ReaderTeamIDs: []string{"town"}}
+	if !ChatChannelAudienceMatches(channel, Role{ID: "doctor", TeamID: "town"}, true) {
+		t.Fatal("reader was not allowed to send with the default sender audience")
+	}
+	if ChatChannelAudienceMatches(channel, Role{ID: "mafioso", TeamID: "mafia"}, true) {
+		t.Fatal("non-reader was allowed to send with the default sender audience")
 	}
 }
 

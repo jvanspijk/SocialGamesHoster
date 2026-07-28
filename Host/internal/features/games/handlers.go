@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -161,6 +162,8 @@ func closeJoining(event *core.RequestEvent) error {
 		current.Set("round_number", 0)
 		current.Set("phase_key", "")
 		current.Set("phase_started_at", nil)
+		current.Set("ability_phase_locked_at", nil)
+		current.Set("ability_phase_instance", 0)
 		current.Set("timer_state", "inactive")
 		current.Set("timer_total_ms", 0)
 		current.Set("timer_remaining_ms", 0)
@@ -183,6 +186,15 @@ func closeJoining(event *core.RequestEvent) error {
 }
 
 func clearGameSession(app core.App, gameID string, includeAudit bool) error {
+	abilityChoices, err := app.FindRecordsByFilter("ability_choices", "game = {:game}", "", 10000, 0, dbx.Params{"game": gameID})
+	if err != nil {
+		return err
+	}
+	for _, choice := range abilityChoices {
+		if err := app.Delete(choice); err != nil {
+			return err
+		}
+	}
 	items, err := app.FindRecordsByFilter("attention_items", "game = {:game}", "", 10000, 0, dbx.Params{"game": gameID})
 	if err != nil {
 		return err
@@ -367,6 +379,10 @@ func adminView(event *core.RequestEvent) error {
 	if err != nil {
 		return writeGameError(event, err)
 	}
+	definition, err := snapshot(game)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	participants, err := gameParticipants(event.App, game.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -382,6 +398,16 @@ func adminView(event *core.RequestEvent) error {
 		if summary, summaryErr := projectAdminAttentionSummary(event.App, item); summaryErr == nil {
 			attentionSummaries = append(attentionSummaries, summary)
 		}
+	}
+	assetRecords, _ := event.App.FindRecordsByFilter(
+		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
+		dbx.Params{"version": game.GetString("ruleset_version")},
+	)
+	projectedAssets := make([]map[string]any, 0, len(assetRecords))
+	for _, asset := range assetRecords {
+		projectedAssets = append(projectedAssets, map[string]any{
+			"id": asset.Id, "assetKey": asset.GetString("asset_key"), "kind": asset.GetString("kind"),
+		})
 	}
 	awards, _ := event.App.FindRecordsByFilter("achievement_awards", "game = {:game}", "-created", 500, 0, dbx.Params{"game": game.Id})
 	projectedAwards := make([]map[string]any, len(awards))
@@ -403,15 +429,22 @@ func adminView(event *core.RequestEvent) error {
 			"createdAt": dateValue(entry, "created"),
 		}
 	}
+	abilityProgress, abilityResults, abilityErr := abilities.ProjectAdmin(event.App, game, definition, participants)
+	if abilityErr != nil {
+		return httpx.WriteError(event, result.Internal(abilityErr))
+	}
 	return event.JSON(http.StatusOK, map[string]any{
-		"game":           projectGame(game),
-		"timer":          projectTimer(game),
-		"ruleset":        game.Get("ruleset_snapshot"),
-		"participants":   projected,
-		"rooms":          projectRooms(event.App, rooms),
-		"attentionItems": attentionSummaries,
-		"awards":         projectedAwards,
-		"audit":          projectedAudit,
+		"game":            projectGame(game),
+		"timer":           projectTimer(game),
+		"ruleset":         game.Get("ruleset_snapshot"),
+		"participants":    projected,
+		"rooms":           projectRooms(event.App, rooms),
+		"attentionItems":  attentionSummaries,
+		"assets":          projectedAssets,
+		"awards":          projectedAwards,
+		"audit":           projectedAudit,
+		"abilityProgress": abilityProgress,
+		"abilityResults":  abilityResults,
 	})
 }
 
@@ -478,6 +511,10 @@ func playerView(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
+	abilityChoices, err := abilities.ProjectPlayer(event.App, game, participant, definition)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	assetRecords, _ := event.App.FindRecordsByFilter(
 		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
 		dbx.Params{"version": game.GetString("ruleset_version")},
@@ -514,6 +551,7 @@ func playerView(event *core.RequestEvent) error {
 		"party":          party,
 		"attentionItems": attentionItems,
 		"assets":         assets,
+		"abilityChoices": abilityChoices,
 	})
 }
 
@@ -635,6 +673,7 @@ func projectPlayerGame(game *core.Record) map[string]any {
 		"id": game.Id, "name": game.GetString("name"), "status": game.GetString("status"),
 		"revision": game.GetInt("revision"), "roundNumber": game.GetInt("round_number"),
 		"phaseKey": game.GetString("phase_key"), "phaseStartedAt": dateValue(game, "phase_started_at"),
+		"abilityPhaseLockedAt": dateValue(game, "ability_phase_locked_at"),
 	}
 }
 

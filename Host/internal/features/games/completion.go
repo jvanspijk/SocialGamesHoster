@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -19,6 +20,13 @@ func startCompletion(event *core.RequestEvent) error {
 	status := game.GetString("status")
 	if status != string(StatusRunning) && status != string(StatusPaused) {
 		return httpx.WriteError(event, result.Conflict("game.completion_not_allowed", "Only a running or paused game can be finished."))
+	}
+	if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	game, err = event.App.FindRecordById("games", game.Id)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	game.Set("completion_previous_status", status)
 	if status == string(StatusRunning) && game.GetString("timer_state") == "running" {

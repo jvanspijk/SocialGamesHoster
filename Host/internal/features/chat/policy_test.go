@@ -24,3 +24,18 @@ func TestAnonymousSenderProjection(t *testing.T) {
 		t.Fatalf("unexpected label: %s", label)
 	}
 }
+
+func TestEmojiOnlyValidation(t *testing.T) {
+	valid := []string{"😀", "🕵️‍♀️ 🌙", "👍🏽", "🇳🇱", "1️⃣"}
+	for _, value := range valid {
+		if !isEmojiOnly(value) {
+			t.Errorf("expected %q to be accepted", value)
+		}
+	}
+	invalid := []string{"", "hello 😀", "123", "© text"}
+	for _, value := range invalid {
+		if isEmojiOnly(value) {
+			t.Errorf("expected %q to be rejected", value)
+		}
+	}
+}

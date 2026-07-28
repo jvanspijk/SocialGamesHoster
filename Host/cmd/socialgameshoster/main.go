@@ -22,6 +22,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/embedded"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/achievements"
 	authfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
@@ -117,6 +118,7 @@ func main() {
 		profiles.Register(event)
 		rulesets.RegisterRoutes(event, version)
 		games.Register(event)
+		abilities.Register(event)
 		owner.Register(event)
 		timerfeature.Register(event, timerService)
 		chat.Register(event)

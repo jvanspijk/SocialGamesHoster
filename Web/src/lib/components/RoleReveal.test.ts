@@ -64,4 +64,37 @@ describe('RoleReveal', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Hide role' }));
 		expect(hide).toHaveBeenCalledOnce();
 	});
+
+	it('shows the private activated state and undo control before phase lock', () => {
+		const activated = {
+			...view,
+			role: {
+				...view.role,
+				abilities: [
+					{
+						...view.role.abilities[0],
+						activationPhaseIds: ['night'],
+						canCombineWithOtherAbilities: false
+					}
+				]
+			},
+			abilityChoices: [
+				{
+					id: 'choice',
+					abilityId: 'read',
+					abilityName: 'Read',
+					status: 'Activated' as const,
+					activatedAt: new Date().toISOString()
+				}
+			]
+		} satisfies PlayerGameView;
+
+		render(RoleReveal, {
+			props: { view: activated, revealed: true, reveal: vi.fn(), hide: vi.fn(), back: vi.fn() }
+		});
+
+		expect(screen.getByText('Activated')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Undo activation' })).toBeInTheDocument();
+		expect(screen.queryByText('Pending')).not.toBeInTheDocument();
+	});
 });

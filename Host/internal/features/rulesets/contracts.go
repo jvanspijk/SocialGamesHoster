@@ -1,19 +1,20 @@
 package rulesets
 
 type DefinitionV1 struct {
-	SchemaVersion        int                   `json:"schemaVersion"`
-	Metadata             Metadata              `json:"metadata"`
-	Teams                []Team                `json:"teams"`
-	Categories           []Category            `json:"categories"`
-	Abilities            []Ability             `json:"abilities"`
-	Roles                []Role                `json:"roles"`
-	Phases               []Phase               `json:"phases"`
-	KnowledgeRules       []KnowledgeRule       `json:"knowledgeRules"`
-	CompositionBands     []CompositionBand     `json:"compositionBands"`
-	CompositionModifiers []CompositionModifier `json:"compositionModifiers"`
-	Chat                 ChatPolicy            `json:"chat"`
-	Achievements         []Achievement         `json:"achievements"`
-	AudioCues            []AudioCue            `json:"audioCues"`
+	SchemaVersion        int                           `json:"schemaVersion"`
+	Metadata             Metadata                      `json:"metadata"`
+	Teams                []Team                        `json:"teams"`
+	Categories           []Category                    `json:"categories"`
+	Abilities            []Ability                     `json:"abilities"`
+	Roles                []Role                        `json:"roles"`
+	Phases               []Phase                       `json:"phases"`
+	KnowledgeRules       []KnowledgeRule               `json:"knowledgeRules"`
+	CompositionBands     []CompositionBand             `json:"compositionBands"`
+	CompositionModifiers []CompositionModifier         `json:"compositionModifiers"`
+	Chat                 ChatPolicy                    `json:"chat"`
+	Achievements         []Achievement                 `json:"achievements"`
+	AudioCues            []AudioCue                    `json:"audioCues"`
+	AssetAccessibility   map[string]AssetAccessibility `json:"assetAccessibility,omitempty"`
 }
 
 type Metadata struct {
@@ -38,10 +39,12 @@ type Category struct {
 }
 
 type Ability struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	ImageAssetKey string `json:"imageAssetKey,omitempty"`
+	ID                           string   `json:"id"`
+	Name                         string   `json:"name"`
+	Description                  string   `json:"description"`
+	ImageAssetKey                string   `json:"imageAssetKey,omitempty"`
+	ActivationPhaseIDs           []string `json:"activationPhaseIds,omitempty"`
+	CanCombineWithOtherAbilities bool     `json:"canCombineWithOtherAbilities"`
 }
 
 type Role struct {
@@ -136,6 +139,7 @@ type PartialRoomPermission struct {
 type ChatPolicy struct {
 	DefaultPolicy  ChatPolicyDefaults            `json:"defaultPolicy"`
 	PhaseOverrides map[string]ChatPolicyOverride `json:"phaseOverrides"`
+	Channels       []ChatChannel                 `json:"channels,omitempty"`
 }
 
 type ChatPolicyDefaults struct {
@@ -148,6 +152,36 @@ type ChatPolicyOverride struct {
 	General  *PartialRoomPermission           `json:"general,omitempty"`
 	PlayerDM *PartialRoomPermission           `json:"playerDm,omitempty"`
 	Teams    map[string]PartialRoomPermission `json:"teams,omitempty"`
+}
+
+type ChatMessageRestriction string
+
+const (
+	ChatNormalText ChatMessageRestriction = "normal_text"
+	ChatEmojiOnly  ChatMessageRestriction = "emoji_only"
+)
+
+// ChatChannel is an additional ruleset-defined room. An empty reader selector
+// means every assigned role and an empty sender selector means every reader;
+// otherwise matching any listed role or team grants the permission.
+type ChatChannel struct {
+	ID                 string                              `json:"id"`
+	Name               string                              `json:"name"`
+	ReaderRoleIDs      []string                            `json:"readerRoleIds"`
+	ReaderTeamIDs      []string                            `json:"readerTeamIds"`
+	SenderRoleIDs      []string                            `json:"senderRoleIds"`
+	SenderTeamIDs      []string                            `json:"senderTeamIds"`
+	MessageRestriction ChatMessageRestriction              `json:"messageRestriction"`
+	Visible            bool                                `json:"visible"`
+	Sendable           bool                                `json:"sendable"`
+	GameMasterMaySend  bool                                `json:"gameMasterMaySend"`
+	SenderDisplay      SenderDisplay                       `json:"senderDisplay"`
+	PhaseOverrides     map[string]ChatChannelPhaseOverride `json:"phaseOverrides"`
+}
+
+type ChatChannelPhaseOverride struct {
+	Visible  *bool `json:"visible,omitempty"`
+	Sendable *bool `json:"sendable,omitempty"`
 }
 
 type Achievement struct {
@@ -164,4 +198,8 @@ type AudioCue struct {
 	Name            string `json:"name"`
 	AssetKey        string `json:"assetKey"`
 	DefaultAudience string `json:"defaultAudience"`
+}
+
+type AssetAccessibility struct {
+	Description string `json:"description"`
 }

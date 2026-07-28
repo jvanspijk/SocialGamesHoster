@@ -59,6 +59,7 @@ func projectGame(record *core.Record) map[string]any {
 		"roundNumber":            record.GetInt("round_number"),
 		"phaseKey":               record.GetString("phase_key"),
 		"phaseStartedAt":         dateValue(record, "phase_started_at"),
+		"abilityPhaseLockedAt":   dateValue(record, "ability_phase_locked_at"),
 		"startedAt":              dateValue(record, "started_at"),
 		"endedAt":                dateValue(record, "ended_at"),
 		"createdAt":              dateValue(record, "created"),

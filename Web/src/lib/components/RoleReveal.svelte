@@ -2,7 +2,10 @@
 	import { ArrowLeft, Eye, EyeOff, Shield } from '@lucide/svelte';
 	import Button from './Button.svelte';
 	import ProtectedMedia from './ProtectedMedia.svelte';
+	import { api, jsonBody } from '$lib/api/client';
 	import type { PlayerGameView } from '$lib/api/types';
+	import { gameState } from '$lib/state/game.svelte';
+	import { toasts } from '$lib/state/toasts.svelte';
 
 	let {
 		view,
@@ -24,6 +27,44 @@
 			? view.assets.find((asset) => asset.kind === 'image' && asset.assetKey === role.imageAssetKey)
 			: undefined
 	);
+	let abilityBusy = $state('');
+
+	function choiceFor(abilityID: string) {
+		return (view.abilityChoices ?? []).find((choice) => choice.abilityId === abilityID);
+	}
+
+	async function activateAbility(abilityID: string) {
+		abilityBusy = abilityID;
+		try {
+			await api(`/games/${view.game.id}/abilities/${abilityID}/activate`, {
+				method: 'POST',
+				...jsonBody({})
+			});
+			await gameState.refreshPlayer();
+			toasts.success('Ability activated.');
+		} catch (caught) {
+			toasts.error(
+				caught instanceof Error ? caught.message : 'The ability could not be activated.'
+			);
+		} finally {
+			abilityBusy = '';
+		}
+	}
+
+	async function undoAbility(abilityID: string) {
+		abilityBusy = abilityID;
+		try {
+			await api(`/games/${view.game.id}/abilities/${abilityID}/activate`, { method: 'DELETE' });
+			await gameState.refreshPlayer();
+			toasts.success('Ability activation undone.');
+		} catch (caught) {
+			toasts.error(
+				caught instanceof Error ? caught.message : 'The activation could not be undone.'
+			);
+		} finally {
+			abilityBusy = '';
+		}
+	}
 
 	function knowledgeText(item: Record<string, unknown>) {
 		const name = String(item.displayName ?? `Seat ${item.seatNumber ?? ''}`).trim();
@@ -86,9 +127,31 @@
 				{:else}
 					<div class="ability-list">
 						{#each role.abilities as ability (ability.id)}
+							{@const choice = choiceFor(ability.id)}
 							<article>
 								<h3>{ability.name}</h3>
 								<p>{ability.description}</p>
+								{#if choice}
+									<p class:finalized={choice.status === 'Finalized'} class="ability-state">
+										{choice.status}
+									</p>
+									{#if choice.status === 'Activated'}
+										<Button
+											variant="secondary"
+											loading={abilityBusy === ability.id}
+											onclick={() => undoAbility(ability.id)}>Undo activation</Button
+										>
+									{/if}
+								{:else if (ability.activationPhaseIds ?? []).includes(view.game.phaseKey) && !view.game.abilityPhaseLockedAt && view.participant.status === 'active'}
+									<Button
+										loading={abilityBusy === ability.id}
+										onclick={() => activateAbility(ability.id)}>Activate</Button
+									>
+								{:else if view.game.abilityPhaseLockedAt && (ability.activationPhaseIds ?? []).includes(view.game.phaseKey)}
+									<p class="ability-state finalized">Choices finalized</p>
+								{:else}
+									<p class="ability-unavailable">Not playable in this phase</p>
+								{/if}
 							</article>
 						{/each}
 					</div>
@@ -298,6 +361,24 @@
 	.ability-list article {
 		border-inline-start: 3px solid var(--crimson);
 		padding-inline-start: var(--space-3);
+	}
+
+	.ability-state {
+		color: var(--crimson-dark);
+		font-family: var(--font-display);
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.ability-state.finalized {
+		color: var(--success);
+	}
+
+	.ability-unavailable {
+		color: var(--ink-faint);
+		font-size: 0.82rem;
 	}
 
 	.role-content li {

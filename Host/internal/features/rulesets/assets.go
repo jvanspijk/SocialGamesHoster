@@ -285,6 +285,37 @@ func playerMayReadVersionAsset(app core.App, profileID, versionID, assetKey stri
 			dbx.Params{"game": game.Id, "profile": profileID},
 		)
 		if findErr == nil && len(participants) == 1 {
+			attachments, attachmentErr := app.FindRecordsByFilter(
+				"attention_items",
+				"game = {:game} && (image_asset_key = {:key} || audio_asset_key = {:key})",
+				"",
+				100,
+				0,
+				dbx.Params{"game": game.Id, "key": assetKey},
+			)
+			if attachmentErr != nil {
+				continue
+			}
+			if len(attachments) > 0 {
+				mayReadAttachment := false
+				for _, attachment := range attachments {
+					receipts, receiptErr := app.FindRecordsByFilter(
+						"attention_receipts",
+						"attention_item = {:item} && participant = {:participant}",
+						"",
+						1,
+						0,
+						dbx.Params{"item": attachment.Id, "participant": participants[0].Id},
+					)
+					if receiptErr == nil && len(receipts) == 1 {
+						mayReadAttachment = true
+						break
+					}
+				}
+				if !mayReadAttachment {
+					continue
+				}
+			}
 			if !game.GetBool("roles_visible") && isPrivateRoleAsset(game, assetKey) {
 				continue
 			}

@@ -1,7 +1,10 @@
 package games
 
 import (
+	"errors"
+	"io"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -41,6 +44,9 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 		policy := chatfeature.EffectivePolicy(base, override, state, chatfeature.RoomState{
 			ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 		})
+		if room.GetString("kind") == "custom" && !customChannelSenderAllowed(definition, room, participant) {
+			policy.Sendable = false
+		}
 		if game.GetString("status") == string(StatusReview) || game.GetString("status") == string(StatusArchived) {
 			policy.Sendable = false
 		}
@@ -57,8 +63,9 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 			"id": room.Id, "key": room.GetString("room_key"), "kind": room.GetString("kind"),
 			"label": room.GetString("label"), "visible": policy.Visible, "readable": policy.Readable,
 			"sendable": policy.Sendable, "senderDisplay": policy.SenderDisplay,
-			"playersCanPost": room.GetBool("players_can_post"),
-			"latestMessage":  latestMessageSummary(app, room.Id),
+			"messageRestriction": roomMessageRestriction(definition, room),
+			"playersCanPost":     room.GetBool("players_can_post"),
+			"latestMessage":      latestMessageSummary(app, room.Id),
 		})
 	}
 	return result, nil
@@ -90,15 +97,48 @@ func roomPolicy(definition rulesets.DefinitionV1, phaseKey string, room *core.Re
 				override = &value
 			}
 		}
+	case "custom":
+		channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+		if channel != nil {
+			base, override = rulesets.ChatChannelPolicy(*channel, phaseKey)
+		}
 	}
 	return base, override
 }
 
+func customChannelSenderAllowed(definition rulesets.DefinitionV1, room, participant *core.Record) bool {
+	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+	if channel == nil {
+		return false
+	}
+	for _, role := range definition.Roles {
+		if role.ID == participant.GetString("role_key") {
+			return rulesets.ChatChannelAudienceMatches(*channel, role, true)
+		}
+	}
+	return false
+}
+
+func roomMessageRestriction(definition rulesets.DefinitionV1, room *core.Record) rulesets.ChatMessageRestriction {
+	if room.GetString("kind") != "custom" {
+		return rulesets.ChatNormalText
+	}
+	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
+	if channel == nil {
+		return rulesets.ChatNormalText
+	}
+	return channel.MessageRestriction
+}
+
 type announcementRequest struct {
-	Content  string `json:"content"`
-	CueKey   string `json:"cueKey"`
-	Audience string `json:"audience"`
-	TargetID string `json:"targetId"`
+	Content          string `json:"content"`
+	CueKey           string `json:"cueKey"`
+	Audience         string `json:"audience"`
+	TargetID         string `json:"targetId"`
+	ImageAssetKey    string `json:"imageAssetKey"`
+	ImageDescription string `json:"imageDescription"`
+	AudioAssetKey    string `json:"audioAssetKey"`
+	AudioAlternative string `json:"audioAlternative"`
 }
 
 func createAnnouncement(event *core.RequestEvent) error {
@@ -120,6 +160,18 @@ func createAnnouncement(event *core.RequestEvent) error {
 	definition, err := snapshot(game)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
+	}
+	request.ImageDescription, err = validateAnnouncementAsset(
+		event.App, game, definition, request.ImageAssetKey, "image", request.ImageDescription,
+	)
+	if err != nil {
+		return writeGameError(event, err)
+	}
+	request.AudioAlternative, err = validateAnnouncementAsset(
+		event.App, game, definition, request.AudioAssetKey, "audio", request.AudioAlternative,
+	)
+	if err != nil {
+		return writeGameError(event, err)
 	}
 	var cue *rulesets.AudioCue
 	if request.CueKey != "" {
@@ -155,6 +207,10 @@ func createAnnouncement(event *core.RequestEvent) error {
 		item.Set("audience", request.Audience)
 		item.Set("target_id", request.TargetID)
 		item.Set("cue_key", request.CueKey)
+		item.Set("image_asset_key", request.ImageAssetKey)
+		item.Set("image_description", request.ImageDescription)
+		item.Set("audio_asset_key", request.AudioAssetKey)
+		item.Set("audio_alternative", request.AudioAlternative)
 		if saveErr := tx.Save(item); saveErr != nil {
 			return saveErr
 		}
@@ -338,12 +394,14 @@ func unacknowledgedAttentionForParticipant(app core.App, gameID, participantID s
 }
 
 func projectPlayerAttention(item *core.Record) map[string]any {
-	return map[string]any{
+	projected := map[string]any{
 		"id": item.Id, "kind": "announcement",
 		"senderLabel": item.GetString("sender_label_snapshot"),
 		"content":     item.GetString("content"), "cueKey": item.GetString("cue_key"),
 		"createdAt": dateValue(item, "created"),
 	}
+	projectAnnouncementMedia(item, projected)
+	return projected
 }
 
 func projectAdminAttentionSummary(app core.App, item *core.Record) (map[string]any, error) {
@@ -364,14 +422,122 @@ func projectAdminAttentionSummary(app core.App, item *core.Record) (map[string]a
 			acknowledged++
 		}
 	}
-	return map[string]any{
+	projected := map[string]any{
 		"id": item.Id, "kind": "announcement",
 		"senderLabel": item.GetString("sender_label_snapshot"),
 		"content":     item.GetString("content"), "audience": item.GetString("audience"),
 		"targetId": item.GetString("target_id"), "cueKey": item.GetString("cue_key"),
 		"createdAt": dateValue(item, "created"), "recipientTotal": len(receipts),
 		"acknowledgementCount": acknowledged,
-	}, nil
+	}
+	projectAnnouncementMedia(item, projected)
+	return projected, nil
+}
+
+func projectAnnouncementMedia(item *core.Record, projected map[string]any) {
+	base := "/api/app/v1/games/" + item.GetString("game") + "/announcements/" + item.Id + "/media/"
+	if item.GetString("image_asset_key") != "" {
+		projected["image"] = map[string]any{"url": base + "image", "description": item.GetString("image_description")}
+	}
+	if item.GetString("audio_asset_key") != "" {
+		projected["audio"] = map[string]any{"url": base + "audio", "alternative": item.GetString("audio_alternative")}
+	}
+}
+
+func validateAnnouncementAsset(app core.App, game *core.Record, definition rulesets.DefinitionV1, assetKey, kind, suppliedDescription string) (string, error) {
+	if assetKey == "" {
+		if strings.TrimSpace(suppliedDescription) != "" {
+			return "", result.Invalid("attention.invalid_media", "An accessibility description requires an attached asset.", nil)
+		}
+		return "", nil
+	}
+	assets, err := app.FindRecordsByFilter(
+		"ruleset_assets",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind}",
+		"",
+		1,
+		0,
+		dbx.Params{"version": game.GetString("ruleset_version"), "key": assetKey, "kind": kind},
+	)
+	if err != nil {
+		return "", err
+	}
+	if len(assets) != 1 {
+		return "", result.Invalid("attention.invalid_media", "Choose a "+kind+" from this game's ruleset.", nil)
+	}
+	description := strings.TrimSpace(suppliedDescription)
+	if description == "" {
+		description = strings.TrimSpace(definition.AssetAccessibility[assetKey].Description)
+	}
+	limit := 500
+	label := "image description"
+	if kind == "audio" {
+		limit = 1000
+		label = "audio alternative"
+	}
+	if description == "" || len([]rune(description)) > limit || containsControlCharacter(description) {
+		return "", result.Invalid("attention.accessibility_required", "Provide an accessible "+label+" for the attachment.", nil)
+	}
+	return description, nil
+}
+
+func announcementMedia(event *core.RequestEvent) error {
+	if event.Auth == nil || !event.Auth.GetBool("active") {
+		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to view this announcement.", Status: http.StatusUnauthorized})
+	}
+	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
+	if err != nil {
+		return httpx.WriteError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
+	}
+	item, err := event.App.FindRecordById("attention_items", event.Request.PathValue("announcementId"))
+	if err != nil || item.GetString("game") != game.Id {
+		return httpx.WriteError(event, result.AppError{Code: "attention.not_found", Message: "Announcement not found.", Status: http.StatusNotFound})
+	}
+	if event.Auth.Collection().Name != "game_masters" && !actorHasAttentionReceipt(event.App, item.Id, event.Auth) {
+		return httpx.WriteError(event, result.Forbidden("attention.forbidden", "This announcement attachment is not available."))
+	}
+	kind := event.Request.PathValue("kind")
+	field := ""
+	if kind == "image" {
+		field = "image_asset_key"
+	} else if kind == "audio" {
+		field = "audio_asset_key"
+	} else {
+		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+	}
+	assetKey := item.GetString(field)
+	if assetKey == "" {
+		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+	}
+	assets, err := event.App.FindRecordsByFilter(
+		"ruleset_assets",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind}",
+		"",
+		1,
+		0,
+		dbx.Params{"version": game.GetString("ruleset_version"), "key": assetKey, "kind": kind},
+	)
+	if err != nil || len(assets) != 1 {
+		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+	}
+	asset := assets[0]
+	fsys, err := event.App.NewFilesystem()
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	defer fsys.Close()
+	reader, err := fsys.GetReader(asset.BaseFilesPath() + "/" + asset.GetString("file"))
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	defer reader.Close()
+	content, err := io.ReadAll(io.LimitReader(reader, (5<<20)+1))
+	if err != nil || len(content) > 5<<20 {
+		return httpx.WriteError(event, result.Internal(errors.New("announcement media exceeds limit")))
+	}
+	event.Response.Header().Set("Cache-Control", "private, no-store")
+	event.Response.Header().Set("Content-Disposition", `inline; filename="`+filepath.Base(asset.GetString("file"))+`"`)
+	return event.Blob(http.StatusOK, asset.GetString("mime_type"), content)
 }
 
 func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bool {
