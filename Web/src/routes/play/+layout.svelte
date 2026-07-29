@@ -12,6 +12,7 @@
 		VolumeX
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
+	import AttentionCard from '$lib/components/AttentionCard.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
@@ -26,6 +27,7 @@
 	let loading = $state(true);
 	let availableLobby = $state<Game | null>(null);
 	let joiningLobby = $state(false);
+	let acknowledging = $state(false);
 	let unsubscribers: Array<() => void> = [];
 	let unsubscribeLobbyOpened: (() => void) | null = null;
 
@@ -144,6 +146,23 @@
 			joiningLobby = false;
 		}
 	}
+
+	async function acknowledgeAnnouncement() {
+		if (!view || view.attentionItems.length === 0) return;
+		acknowledging = true;
+		try {
+			await api(`/games/${view.game.id}/announcements/${view.attentionItems[0].id}/acknowledge`, {
+				method: 'POST'
+			});
+			await gameState.refreshPlayer();
+		} catch (caught) {
+			toasts.error(
+				caught instanceof Error ? caught.message : 'The announcement could not be acknowledged.'
+			);
+		} finally {
+			acknowledging = false;
+		}
+	}
 </script>
 
 {#if !auth.isPlayer}
@@ -220,6 +239,17 @@
 				</section>
 			{/if}
 		</main>
+		{#if view && view.attentionItems.length > 0 && page.url.pathname !== resolve('/play')}
+			<section class="attention-popup" aria-live="assertive" aria-label="New announcement">
+				<AttentionCard
+					item={view.attentionItems[0]}
+					position={1}
+					total={view.attentionItems.length}
+					acknowledge={acknowledgeAnnouncement}
+					busy={acknowledging}
+				/>
+			</section>
+		{/if}
 	</div>
 {/if}
 
@@ -312,6 +342,19 @@
 	.player-content.account {
 		min-height: calc(100dvh - 3.75rem);
 		background: var(--paper);
+	}
+
+	.attention-popup {
+		position: fixed;
+		z-index: var(--layer-dialog);
+		inset: 0;
+		display: grid;
+		place-items: center;
+		background: rgb(17 10 6 / 72%);
+		padding: max(var(--space-4), env(safe-area-inset-top))
+			max(var(--space-4), env(safe-area-inset-right))
+			max(var(--space-4), env(safe-area-inset-bottom))
+			max(var(--space-4), env(safe-area-inset-left));
 	}
 
 	.unavailable {
