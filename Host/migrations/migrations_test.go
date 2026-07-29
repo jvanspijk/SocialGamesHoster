@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -10,7 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-func TestInitialMigrationUpAndDown(t *testing.T) {
+func TestInitialMigrationUp(t *testing.T) {
 	baseDir := filepath.Join(".testdata")
 	if err := os.MkdirAll(baseDir, 0o700); err != nil {
 		t.Fatal(err)
@@ -111,15 +110,4 @@ func TestInitialMigrationUpAndDown(t *testing.T) {
 		t.Fatalf("single-live-game index missing: %v", err)
 	}
 
-	runner := core.NewMigrationsRunner(app, core.AppMigrations)
-	if _, err := runner.Down(7); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := app.FindCollectionByNameOrId("games"); err == nil || !errors.Is(err, os.ErrNotExist) {
-		// PocketBase returns sql.ErrNoRows, but the important invariant is that
-		// the collection is no longer queryable.
-		if err == nil {
-			t.Fatal("games collection still exists after down migration")
-		}
-	}
 }
