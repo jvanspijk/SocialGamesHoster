@@ -19,6 +19,7 @@
 	import { api, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, RealtimeEnvelope } from '$lib/api/types';
+	import { gameStatusLabel } from '$lib/gamePresentation';
 	import { gameState } from '$lib/state/game.svelte';
 	import { auth } from '$lib/state/auth.svelte';
 	import {
@@ -137,21 +138,6 @@
 			// The existing chat view will surface a read failure when the host becomes available again.
 		}
 	}
-
-	function statusLabel(status: string) {
-		return (
-			(
-				{
-					draft: 'Draft',
-					lobby: 'Lobby open',
-					running: 'Running',
-					paused: 'Paused',
-					review: 'Finishing',
-					archived: 'Archived'
-				} as Record<string, string>
-			)[status] ?? status
-		);
-	}
 </script>
 
 <div class:standalone class="live-shell">
@@ -165,7 +151,7 @@
 		{#if view}
 			<div class="game-identity">
 				<strong>{view.game.name}</strong>
-				<span>{statusLabel(view.game.status)}</span>
+				<span>{gameStatusLabel(view.game.status)}</span>
 			</div>
 		{/if}
 		<div class="live-tools">

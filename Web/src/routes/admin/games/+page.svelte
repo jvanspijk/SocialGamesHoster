@@ -11,6 +11,7 @@
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
+	import { gameStatusLabel } from '$lib/gamePresentation';
 	import type { Game, RulesetSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -110,19 +111,6 @@
 			? resolve(`/admin/games/${game.id}/summary`)
 			: resolve(`/admin/games/${game.id}/overview`);
 	}
-
-	function statusLabel(status: Game['status']) {
-		return (
-			{
-				draft: 'Draft',
-				lobby: 'Lobby open',
-				running: 'Running',
-				paused: 'Paused',
-				review: 'Finishing',
-				archived: 'Archived'
-			} as const
-		)[status];
-	}
 </script>
 
 <header class="page-heading">
@@ -161,7 +149,7 @@
 					<div class="title-line">
 						<h2>{game.name}</h2>
 						<span class:live={['lobby', 'running', 'paused'].includes(game.status)}
-							>{statusLabel(game.status)}</span
+							>{gameStatusLabel(game.status)}</span
 						>
 					</div>
 					<p>
