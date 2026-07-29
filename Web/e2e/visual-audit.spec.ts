@@ -219,6 +219,11 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	await page.getByRole('button', { name: 'Save roles' }).click();
 	await page.getByRole('button', { name: 'Start game' }).click();
 	await expect(page.getByRole('button', { name: 'Pause game' })).toBeVisible();
+	await page.reload();
+	await page.getByRole('link', { name: 'Players', exact: true }).click();
+	await expect(page.getByRole('combobox', { name: 'Role for Mira' })).not.toHaveValue('');
+	await expect(page.getByRole('combobox', { name: 'Role for Rowan' })).not.toHaveValue('');
+	await page.getByRole('link', { name: 'Overview', exact: true }).click();
 	await page.getByRole('button', { name: 'Start', exact: true }).click();
 	await capture(page, 'host-live', 'running');
 	await captureCritical(page, 'host-live', 'running-critical');

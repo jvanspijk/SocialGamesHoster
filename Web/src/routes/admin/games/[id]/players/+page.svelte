@@ -276,15 +276,21 @@
 				</button>
 				<label class="role-select">
 					<span class="sr-only">Role for {playerName(player)}</span>
-					<select
-						bind:value={assignments[player.id]}
-						disabled={view.game.status !== 'lobby' || ['kicked', 'left'].includes(player.status)}
-					>
-						<option value="">Unassigned</option>
-						{#each view.ruleset.roles as role (role.id)}
-							<option value={role.id}>{role.name}</option>
-						{/each}
-					</select>
+					{#if view.game.status === 'lobby'}
+						<select bind:value={assignments[player.id]} disabled={['kicked', 'left'].includes(player.status)}>
+							<option value="">Unassigned</option>
+							{#each view.ruleset.roles as role (role.id)}
+								<option value={role.id}>{role.name}</option>
+							{/each}
+						</select>
+					{:else}
+						<select value={player.roleKey ?? ''} disabled>
+							<option value="">Unassigned</option>
+							{#each view.ruleset.roles as role (role.id)}
+								<option value={role.id}>{role.name}</option>
+							{/each}
+						</select>
+					{/if}
 				</label>
 				<div class="player-facts">
 					<span class:unset={player.outcome === 'unset'}
