@@ -281,6 +281,14 @@
 					>
 						Close joining
 					</Button>
+				{:else if ['running', 'paused'].includes(view.game.status)}
+					<Button
+						variant="secondary"
+						disabled={busy}
+						onclick={() => gameCommand('open-joining', 'Joining reopened.')}
+					>
+						Open joining
+					</Button>
 				{/if}
 			</div>
 

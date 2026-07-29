@@ -40,3 +40,18 @@ func TestLifecycleCanCancelLobbyToDraft(t *testing.T) {
 		t.Fatalf("unexpected cancelled lobby state: %#v", state)
 	}
 }
+
+func TestCanOpenJoiningOnlyDuringAnActiveGame(t *testing.T) {
+	for status, want := range map[Status]bool{
+		StatusDraft:    false,
+		StatusLobby:    false,
+		StatusRunning:  true,
+		StatusPaused:   true,
+		StatusReview:   false,
+		StatusArchived: false,
+	} {
+		if got := canOpenJoining(status); got != want {
+			t.Errorf("canOpenJoining(%q) = %t, want %t", status, got, want)
+		}
+	}
+}

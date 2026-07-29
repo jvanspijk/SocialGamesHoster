@@ -18,6 +18,7 @@ func Register(event *core.ServeEvent) {
 	group.POST("/games/{id}/duplicate", duplicateGame).BindFunc(platformauth.RequireGameMaster)
 	group.DELETE("/games/{id}", deleteGame).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/open-lobby", openLobby).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/open-joining", openJoining).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/close-joining", closeJoining).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/join", joinGame).BindFunc(platformauth.RequirePlayer)
 	group.POST("/games/{id}/start", transition(Start)).BindFunc(platformauth.RequireGameMaster)

@@ -86,6 +86,7 @@ func activityLabel(actor, action string) string {
 		"game.resume":                   "resumed the game",
 		"game.start":                    "started the game",
 		"game.open_lobby":               "opened the lobby",
+		"game.joining_opened":           "reopened joining",
 		"game.joining_closed":           "closed joining",
 		"game.roles_available":          "made roles available",
 		"game.roles_hidden":             "hid player roles",

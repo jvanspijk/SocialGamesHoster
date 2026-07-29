@@ -236,6 +236,10 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 		await playerOne.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
 	).toBe(true);
 	await captureCritical(playerOne, 'player-stage', 'running-critical');
+	await page.getByRole('button', { name: 'Close joining' }).click();
+	await expect(page.getByRole('button', { name: 'Open joining' })).toBeVisible();
+	await page.getByRole('button', { name: 'Open joining' }).click();
+	await expect(page.getByRole('button', { name: 'Close joining' })).toBeVisible();
 
 	const latePlayerContext = await browser.newContext({ viewport: viewports[0] });
 	const latePlayer = await latePlayerContext.newPage();

@@ -26,6 +26,7 @@
 	let { children }: { children: import('svelte').Snippet } = $props();
 	let loading = $state(true);
 	let availableLobby = $state<Game | null>(null);
+	let liveGame = $state<Game | null>(null);
 	let joiningLobby = $state(false);
 	let acknowledging = $state(false);
 	let unsubscribers: Array<() => void> = [];
@@ -82,6 +83,7 @@
 		}
 		loading = true;
 		availableLobby = null;
+		liveGame = null;
 		try {
 			let loaded: PlayerGameView;
 			try {
@@ -94,9 +96,11 @@
 					throw caught;
 				}
 				if (caught.body.code === 'game.not_joined') {
-					const liveGame = await api<Game>('/games/live');
-					if (liveGame.joiningOpen) {
-						availableLobby = liveGame;
+					const currentLiveGame = await api<Game>('/games/live');
+					if (currentLiveGame.joiningOpen) {
+						availableLobby = currentLiveGame;
+					} else {
+						liveGame = currentLiveGame;
 					}
 				}
 				await subscribeToLobbyOpening();
@@ -230,6 +234,12 @@
 					<h1>Game accepting players</h1>
 					<p>{availableLobby.name} is ready for you to join.</p>
 					<Button loading={joiningLobby} onclick={joinAvailableLobby}>Join game</Button>
+				</section>
+			{:else if liveGame}
+				<section class="unavailable">
+					<h1>{liveGame.name} has started</h1>
+					<p>The game master is not accepting new players right now.</p>
+					<a href={resolve('/')}>Return to join page</a>
 				</section>
 			{:else}
 				<section class="unavailable">

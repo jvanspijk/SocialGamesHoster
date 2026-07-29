@@ -302,6 +302,32 @@ func openLobby(event *core.RequestEvent) error {
 	return event.JSON(http.StatusOK, projectGame(game))
 }
 
+// openJoining reopens entry for a game already in progress. A lobby always
+// opens with joining enabled, so this only applies after play has started.
+func openJoining(event *core.RequestEvent) error {
+	game, err := findGame(event)
+	if err != nil {
+		return writeGameError(event, err)
+	}
+	if !canOpenJoining(Status(game.GetString("status"))) {
+		return httpx.WriteError(event, result.Conflict(
+			"game.joining_not_available",
+			"Joining can only be reopened while a game is running or paused.",
+		))
+	}
+	if game.GetBool("joining_open") {
+		return event.JSON(http.StatusOK, projectGame(game))
+	}
+	game.Set("joining_open", true)
+	if err := event.App.Save(game); err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	_ = audit(event.App, event.Auth, game.Id, "game.joining_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	publishGame(event.App, game, "game.joining_opened", projectGame(game))
+	publishLobbyOpened(event.App, game)
+	return event.JSON(http.StatusOK, projectGame(game))
+}
+
 func joinGame(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
