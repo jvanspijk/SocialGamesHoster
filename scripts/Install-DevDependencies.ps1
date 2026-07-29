@@ -4,6 +4,7 @@ param()
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $frontendDependencyInstaller = Join-Path $PSScriptRoot "Install-FrontendDependencies.ps1"
+$gitHooksInstaller = Join-Path $PSScriptRoot "Install-GitHooks.ps1"
 . $frontendDependencyInstaller
 
 function Assert-NativeSuccess([string]$Step) {
@@ -37,6 +38,8 @@ try {
 finally {
     Pop-Location
 }
+
+& $gitHooksInstaller
 
 Write-Host "Developer dependencies are ready."
 Write-Host "Inno Setup 6 is additionally required only when building the installer."

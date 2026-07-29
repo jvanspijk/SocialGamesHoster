@@ -79,6 +79,10 @@ Requirements:
 ./scripts/Build.ps1
 ```
 
+`Install-DevDependencies.ps1` also enables the repository pre-commit hook,
+which formats staged frontend files with Prettier before each commit. To enable
+it separately, run `./scripts/Install-GitHooks.ps1`.
+
 `Dev.ps1` starts the Go host on port 8090 and the Svelte development UI on port
 9091 with a local API proxy. `Build.ps1` verifies the projects, embeds the static
 web output, produces a console-free Windows x64 executable, builds the Inno
