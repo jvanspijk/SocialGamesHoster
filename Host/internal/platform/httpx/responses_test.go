@@ -23,15 +23,15 @@ func TestWriteErrorOmitsTraceForExpectedErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var response ErrorResponse
+	var response map[string]any
 	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
 	if recorder.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusUnprocessableEntity)
 	}
-	if response.TraceID != "" {
-		t.Fatalf("traceId = %q, want omitted", response.TraceID)
+	if _, present := response["traceId"]; present {
+		t.Fatalf("traceId must be omitted from expected-error responses: %#v", response)
 	}
 }
 
