@@ -3,39 +3,57 @@ package httpx
 import (
 	"encoding/json"
 	"errors"
-	"strings"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
 
-func TestErrorResponseOmitsTraceForExpectedErrors(t *testing.T) {
-	payload, err := json.Marshal(ErrorResponse{
-		Code:    "profile.invalid_name",
-		Message: "Enter a valid profile name.",
-		TraceID: "trace-should-not-be-visible",
-	})
-	if err != nil {
+func TestWriteErrorOmitsTraceForExpectedErrors(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	event := &core.RequestEvent{}
+	event.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+	event.Response = recorder
+	event.Set(TraceIDKey, "trace-should-not-be-visible")
+
+	if err := WriteError(event, result.Invalid("profile.invalid_name", "Enter a valid profile name.", nil)); err != nil {
 		t.Fatal(err)
 	}
 
-	// WriteError only supplies TraceID for an operational cause. The response
-	// shape must also keep the field absent when no trace is available.
-	withoutTrace, err := json.Marshal(ErrorResponse{Code: "profile.invalid_name", Message: "Enter a valid profile name."})
-	if err != nil {
+	var response ErrorResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(withoutTrace), "traceId") {
-		t.Fatalf("expected no traceId in validation response: %s", withoutTrace)
+	if recorder.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusUnprocessableEntity)
 	}
-	if !strings.Contains(string(payload), "trace-should-not-be-visible") {
-		t.Fatal("response contract should still allow an operational trace when explicitly supplied")
+	if response.TraceID != "" {
+		t.Fatalf("traceId = %q, want omitted", response.TraceID)
 	}
 }
 
-func TestInternalErrorRetainsOperationalCause(t *testing.T) {
-	err := result.Internal(errors.New("database unavailable"))
-	if err.Cause == nil {
-		t.Fatal("internal errors must retain their cause for diagnostics")
+func TestWriteErrorIncludesTraceForInternalErrors(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	event := &core.RequestEvent{}
+	event.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	event.Response = recorder
+	event.Set(TraceIDKey, "trace-123")
+
+	if err := WriteError(event, result.Internal(errors.New("database unavailable"))); err != nil {
+		t.Fatal(err)
+	}
+
+	var response ErrorResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusInternalServerError)
+	}
+	if response.TraceID != "trace-123" {
+		t.Fatalf("traceId = %q, want %q", response.TraceID, "trace-123")
 	}
 }
