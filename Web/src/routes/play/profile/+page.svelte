@@ -8,6 +8,7 @@
 	import Panel from '$lib/components/Panel.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { Profile } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
@@ -50,14 +51,11 @@
 			};
 			profilePreferences.applyProfile(profile);
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Profile details could not be loaded.',
-				{
-					actionLabel: 'Retry',
-					action: load,
-					persistent: true
-				}
-			);
+			toasts.error(errorMessage(caught, 'Profile details could not be loaded.'), {
+				actionLabel: 'Retry',
+				action: load,
+				persistent: true
+			});
 		}
 	}
 

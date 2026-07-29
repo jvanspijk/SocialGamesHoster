@@ -21,6 +21,7 @@
 	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/components/rulesets/VisualDefinitionEditor.svelte';
 	import { api, download, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { toFormError, type FormError } from '$lib/forms/errors';
 	import type { RulesetDefinition, RulesetSummary } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
@@ -283,7 +284,7 @@
 		} catch (caught) {
 			error = {
 				kind: 'validation',
-				message: caught instanceof Error ? caught.message : 'This section is not valid JSON.',
+				message: errorMessage(caught, 'This section is not valid JSON.'),
 				fieldErrors: {}
 			};
 			return false;

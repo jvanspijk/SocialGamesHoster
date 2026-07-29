@@ -3,6 +3,7 @@
 	import { CircleStop, Pause, Play, Plus, RotateCcw } from '@lucide/svelte';
 	import Button from './Button.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { TimerProjection } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -61,7 +62,7 @@
 			});
 			onchange(updated);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The timer could not be updated.');
+			toasts.error(errorMessage(caught, 'The timer could not be updated.'));
 		} finally {
 			busy = false;
 		}

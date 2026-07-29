@@ -16,6 +16,7 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { Participant } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -76,9 +77,7 @@
 			await gameState.refreshAdmin(view.game.id);
 			toasts.success('Role assignments saved.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Role assignments could not be saved.'
-			);
+			toasts.error(errorMessage(caught, 'Role assignments could not be saved.'));
 		} finally {
 			busy = false;
 		}
@@ -101,7 +100,7 @@
 			}
 			toasts.success('Roles randomized.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Roles could not be randomized.');
+			toasts.error(errorMessage(caught, 'Roles could not be randomized.'));
 		} finally {
 			busy = false;
 		}
@@ -120,9 +119,7 @@
 			hideRoleConfirmOpen = false;
 			toasts.success(rolesVisible ? 'Roles are available.' : 'Roles are hidden.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Role visibility could not be changed.'
-			);
+			toasts.error(errorMessage(caught, 'Role visibility could not be changed.'));
 		} finally {
 			busy = false;
 		}
@@ -139,7 +136,7 @@
 			await gameState.refreshAdmin(view.game.id);
 			toasts.success('Alias saved.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The alias could not be saved.');
+			toasts.error(errorMessage(caught, 'The alias could not be saved.'));
 		} finally {
 			busy = false;
 		}
@@ -156,7 +153,7 @@
 			await gameState.refreshAdmin(view.game.id);
 			toasts.success('Outcome saved.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The outcome could not be saved.');
+			toasts.error(errorMessage(caught, 'The outcome could not be saved.'));
 		} finally {
 			busy = false;
 		}
@@ -180,9 +177,7 @@
 			await gameState.refreshAdmin(view.game.id);
 			toasts.success(existing ? 'Achievement revoked.' : 'Achievement awarded.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The achievement could not be updated.'
-			);
+			toasts.error(errorMessage(caught, 'The achievement could not be updated.'));
 		} finally {
 			busy = false;
 		}
@@ -206,7 +201,7 @@
 						: 'Player kicked.'
 			);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The player could not be updated.');
+			toasts.error(errorMessage(caught, 'The player could not be updated.'));
 		} finally {
 			busy = false;
 		}

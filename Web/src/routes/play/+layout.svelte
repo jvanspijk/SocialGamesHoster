@@ -16,6 +16,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { Game, PlayerGameView } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { cursorIsAfter, readMarkerStorageKey } from '$lib/state/chatReadMarkers';
@@ -116,7 +117,7 @@
 			]);
 		} catch (caught) {
 			if (!accountRoute) {
-				toasts.error(caught instanceof Error ? caught.message : 'The game could not be loaded.', {
+				toasts.error(errorMessage(caught, 'The game could not be loaded.'), {
 					actionLabel: 'Retry',
 					action: initialize,
 					persistent: true
@@ -145,7 +146,7 @@
 			await api(`/games/${availableLobby.id}/join`, { method: 'POST', ...jsonBody({}) });
 			await initialize();
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The lobby could not be joined.');
+			toasts.error(errorMessage(caught, 'The lobby could not be joined.'));
 		} finally {
 			joiningLobby = false;
 		}
@@ -160,9 +161,7 @@
 			});
 			await gameState.refreshPlayer();
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The announcement could not be acknowledged.'
-			);
+			toasts.error(errorMessage(caught, 'The announcement could not be acknowledged.'));
 		} finally {
 			acknowledging = false;
 		}

@@ -4,6 +4,7 @@
 	import ChatApp from './ChatApp.svelte';
 	import Dialog from './Dialog.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { Room } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { gameState } from '$lib/state/game.svelte';
@@ -27,9 +28,7 @@
 			newMessageOpen = false;
 			await selectRoom(room.id);
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The conversation could not be opened.'
-			);
+			toasts.error(errorMessage(caught, 'The conversation could not be opened.'));
 		}
 	}
 </script>

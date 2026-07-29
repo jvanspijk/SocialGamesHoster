@@ -14,6 +14,7 @@
 	} from '@lucide/svelte';
 	import Button from './Button.svelte';
 	import { api, jsonBody, pb } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, MessageSummary, RealtimeEnvelope, Room } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import {
@@ -124,14 +125,11 @@
 			if (selectedRoomId) await openConversation(selectedRoomId);
 		} catch (caught) {
 			if (request !== roomLoadRequest) return;
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Conversations could not be loaded.',
-				{
-					actionLabel: 'Retry',
-					action: loadRooms,
-					persistent: true
-				}
-			);
+			toasts.error(errorMessage(caught, 'Conversations could not be loaded.'), {
+				actionLabel: 'Retry',
+				action: loadRooms,
+				persistent: true
+			});
 		} finally {
 			if (request === roomLoadRequest) loadingRooms = false;
 		}
@@ -209,7 +207,7 @@
 				scrollToBottom();
 			}
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Messages could not be loaded.');
+			toasts.error(errorMessage(caught, 'Messages could not be loaded.'));
 		} finally {
 			loadingMessages = false;
 		}
@@ -255,7 +253,7 @@
 			scrollToBottom();
 		} catch (caught) {
 			content = outgoing;
-			toasts.error(caught instanceof Error ? caught.message : 'The message could not be sent.');
+			toasts.error(errorMessage(caught, 'The message could not be sent.'));
 		} finally {
 			sending = false;
 		}
@@ -270,7 +268,7 @@
 			messages = messages.map((item) => (item.id === deleted.id ? deleted : item));
 			updateRoomMessage(selectedRoom.id, deleted);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The message could not be removed.');
+			toasts.error(errorMessage(caught, 'The message could not be removed.'));
 		}
 	}
 
@@ -284,9 +282,7 @@
 			rooms = rooms.map((room) => (room.id === updated.id ? updated : room));
 			toasts.success(updated.playersCanPost ? 'Players can post.' : 'Players are read-only.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Posting access could not be updated.'
-			);
+			toasts.error(errorMessage(caught, 'Posting access could not be updated.'));
 		}
 	}
 

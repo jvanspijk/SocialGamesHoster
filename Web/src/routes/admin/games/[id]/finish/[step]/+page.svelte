@@ -17,6 +17,7 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import GameSummaryCard from '$lib/components/GameSummaryCard.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { GameSummary, Participant } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -77,7 +78,7 @@
 			toasts.success('Outcomes saved.');
 			return true;
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Outcomes could not be saved.');
+			toasts.error(errorMessage(caught, 'Outcomes could not be saved.'));
 			return false;
 		} finally {
 			busy = false;
@@ -120,9 +121,7 @@
 			}
 			await gameState.refreshAdmin(view.game.id);
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The achievement could not be updated.'
-			);
+			toasts.error(errorMessage(caught, 'The achievement could not be updated.'));
 		} finally {
 			busy = false;
 		}
@@ -132,7 +131,7 @@
 		try {
 			summary = await api<GameSummary>(`/games/${page.params.id}/summary`);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The summary could not be loaded.', {
+			toasts.error(errorMessage(caught, 'The summary could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: loadSummary,
 				persistent: true
@@ -149,7 +148,7 @@
 			await goto(resolve(`/admin/games/${view.game.id}/overview`));
 			toasts.success('Returned to the game.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be restored.');
+			toasts.error(errorMessage(caught, 'The game could not be restored.'));
 		} finally {
 			busy = false;
 		}
@@ -168,7 +167,7 @@
 			await goto(resolve(`/admin/games/${view.game.id}/summary`));
 			toasts.success('Game finished and archived.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be archived.');
+			toasts.error(errorMessage(caught, 'The game could not be archived.'));
 		} finally {
 			busy = false;
 		}

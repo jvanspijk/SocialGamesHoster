@@ -4,6 +4,7 @@
 	import AttentionCard from '$lib/components/AttentionCard.svelte';
 	import TimerDisplay from '$lib/components/TimerDisplay.svelte';
 	import { api } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -22,9 +23,7 @@
 			});
 			await gameState.refreshPlayer();
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The announcement could not be acknowledged.'
-			);
+			toasts.error(errorMessage(caught, 'The announcement could not be acknowledged.'));
 		} finally {
 			acknowledging = false;
 		}

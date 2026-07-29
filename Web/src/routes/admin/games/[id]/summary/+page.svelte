@@ -5,6 +5,7 @@
 	import { ArrowLeft, MessageCircle } from '@lucide/svelte';
 	import GameSummaryCard from '$lib/components/GameSummaryCard.svelte';
 	import { api } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { GameSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -16,14 +17,11 @@
 		try {
 			summary = await api<GameSummary>(`/games/${page.params.id}/summary`);
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The game summary could not be loaded.',
-				{
-					actionLabel: 'Retry',
-					action: load,
-					persistent: true
-				}
-			);
+			toasts.error(errorMessage(caught, 'The game summary could not be loaded.'), {
+				actionLabel: 'Retry',
+				action: load,
+				persistent: true
+			});
 		}
 	}
 </script>

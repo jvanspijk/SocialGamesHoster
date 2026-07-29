@@ -18,6 +18,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { auth } from '$lib/state/auth.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -81,7 +82,7 @@
 				diagnostics = await api<Record<string, unknown>>('/diagnostics/resources');
 			}
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Settings could not be loaded.', {
+			toasts.error(errorMessage(caught, 'Settings could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: load,
 				persistent: true
@@ -105,7 +106,7 @@
 					: 'Settings saved.'
 			);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Settings could not be saved.');
+			toasts.error(errorMessage(caught, 'Settings could not be saved.'));
 		} finally {
 			busy = false;
 		}
@@ -118,7 +119,7 @@
 			backups = await api<Backup[]>('/owner/backups');
 			toasts.success('Backup created.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The backup could not be created.');
+			toasts.error(errorMessage(caught, 'The backup could not be created.'));
 		} finally {
 			busy = false;
 		}
@@ -134,9 +135,7 @@
 			addMasterOpen = false;
 			toasts.success('Game master added.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The game master could not be added.'
-			);
+			toasts.error(errorMessage(caught, 'The game master could not be added.'));
 		} finally {
 			busy = false;
 		}
@@ -157,7 +156,7 @@
 				persistent: true
 			});
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The backup could not be restored.');
+			toasts.error(errorMessage(caught, 'The backup could not be restored.'));
 		} finally {
 			busy = false;
 		}

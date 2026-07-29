@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Check, Clock3, RefreshCw, UserCheck, X } from '@lucide/svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { ProfileRequest } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 	import Button from './Button.svelte';
@@ -40,9 +41,7 @@
 				);
 				if (destroyed) unsubscribe?.();
 			} catch (caught) {
-				toasts.error(
-					caught instanceof Error ? caught.message : 'Live request updates could not be started.'
-				);
+				toasts.error(errorMessage(caught, 'Live request updates could not be started.'));
 			}
 		})();
 
@@ -64,7 +63,7 @@
 			replaceRequests(next);
 			loadError = '';
 		} catch (caught) {
-			loadError = caught instanceof Error ? caught.message : 'Requests could not be loaded.';
+			loadError = errorMessage(caught, 'Requests could not be loaded.');
 			if (!showLoading) {
 				toasts.error(loadError, { actionLabel: 'Retry', action: () => void load(false) });
 			}
@@ -110,9 +109,7 @@
 				rejectionReason = '';
 				toasts.info('This request was already decided. The list has been updated.');
 			} else {
-				toasts.error(
-					caught instanceof Error ? caught.message : 'The request could not be updated.'
-				);
+				toasts.error(errorMessage(caught, 'The request could not be updated.'));
 			}
 		} finally {
 			busyId = null;

@@ -9,6 +9,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { Game, RulesetSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -39,7 +40,7 @@
 			]);
 			form.rulesetVersionId ||= readyRulesets[0]?.latestPublishedVersion ?? '';
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Games could not be loaded.', {
+			toasts.error(errorMessage(caught, 'Games could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: load,
 				persistent: true
@@ -82,7 +83,7 @@
 			games = [created, ...games];
 			toasts.success('Game duplicated.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be duplicated.');
+			toasts.error(errorMessage(caught, 'The game could not be duplicated.'));
 		}
 	}
 
@@ -98,7 +99,7 @@
 			deleteTarget = null;
 			toasts.success('Game deleted.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be deleted.');
+			toasts.error(errorMessage(caught, 'The game could not be deleted.'));
 		} finally {
 			busy = false;
 		}

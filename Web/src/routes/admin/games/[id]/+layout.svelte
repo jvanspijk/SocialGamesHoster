@@ -17,6 +17,7 @@
 	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { api, pb } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, RealtimeEnvelope } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { auth } from '$lib/state/auth.svelte';
@@ -108,7 +109,7 @@
 			]);
 			await refreshUnreadChatCount();
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be loaded.', {
+			toasts.error(errorMessage(caught, 'The game could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: initialize,
 				persistent: true

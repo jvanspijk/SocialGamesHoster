@@ -3,6 +3,7 @@
 	import { UserX, UserCheck } from '@lucide/svelte';
 	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
 	import { api } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	type Profile = {
@@ -25,7 +26,7 @@
 		try {
 			profiles = await api<Profile[]>('/admin/profiles');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Profiles could not be loaded.', {
+			toasts.error(errorMessage(caught, 'Profiles could not be loaded.'), {
 				actionLabel: 'Retry profiles',
 				action: loadProfiles,
 				persistent: true
@@ -43,7 +44,7 @@
 			profiles = profiles.map((item) => (item.id === profile.id ? { ...item, active } : item));
 			toasts.success(active ? 'Profile restored.' : 'Profile disabled.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The profile could not be updated.');
+			toasts.error(errorMessage(caught, 'The profile could not be updated.'));
 		}
 	}
 </script>

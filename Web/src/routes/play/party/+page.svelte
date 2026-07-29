@@ -3,6 +3,7 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
 	import { api } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { Profile } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -26,9 +27,7 @@
 		try {
 			profile = await api<PartyProfile>(`/profiles/${profileId}/summary`);
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The player profile could not be loaded.'
-			);
+			toasts.error(errorMessage(caught, 'The player profile could not be loaded.'));
 		}
 	}
 </script>

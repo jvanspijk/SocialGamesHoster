@@ -17,6 +17,7 @@
 	import Panel from '$lib/components/Panel.svelte';
 	import TimerControl from '$lib/components/TimerControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { Game, TimerProjection } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -80,7 +81,7 @@
 			await gameState.refreshAdmin(view.game.id);
 			toasts.success(success);
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be updated.');
+			toasts.error(errorMessage(caught, 'The game could not be updated.'));
 		} finally {
 			busy = false;
 		}
@@ -105,7 +106,7 @@
 					});
 				} catch (caught) {
 					toasts.error(
-						`Phase changed, but the timer did not start. ${caught instanceof Error ? caught.message : ''}`.trim(),
+						`Phase changed, but the timer did not start. ${errorMessage(caught, '')}`.trim(),
 						{
 							actionLabel: 'Retry timer',
 							action: () => void retrySuggestedTimer(),
@@ -115,7 +116,7 @@
 				}
 			}
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The phase could not be changed.');
+			toasts.error(errorMessage(caught, 'The phase could not be changed.'));
 		} finally {
 			busy = false;
 		}
@@ -157,9 +158,7 @@
 			announcementOpen = false;
 			toasts.success('Announcement sent.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The announcement could not be sent.'
-			);
+			toasts.error(errorMessage(caught, 'The announcement could not be sent.'));
 		} finally {
 			busy = false;
 		}
@@ -178,9 +177,7 @@
 			hideRoleConfirmOpen = false;
 			toasts.success(rolesVisible ? 'Roles are available.' : 'Roles are hidden.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'Role visibility could not be changed.'
-			);
+			toasts.error(errorMessage(caught, 'Role visibility could not be changed.'));
 		} finally {
 			busy = false;
 		}
@@ -193,9 +190,7 @@
 			await api(`/games/${view.game.id}/completion/start`, { method: 'POST', ...jsonBody({}) });
 			await goto(resolve(`/admin/games/${view.game.id}/finish/outcomes`));
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The completion flow could not be started.'
-			);
+			toasts.error(errorMessage(caught, 'The completion flow could not be started.'));
 		} finally {
 			busy = false;
 		}

@@ -3,6 +3,7 @@
 	import Button from './Button.svelte';
 	import ProtectedMedia from './ProtectedMedia.svelte';
 	import { api, jsonBody } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { PlayerGameView } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -43,9 +44,7 @@
 			await gameState.refreshPlayer();
 			toasts.success('Ability activated.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The ability could not be activated.'
-			);
+			toasts.error(errorMessage(caught, 'The ability could not be activated.'));
 		} finally {
 			abilityBusy = '';
 		}
@@ -58,9 +57,7 @@
 			await gameState.refreshPlayer();
 			toasts.success('Ability activation undone.');
 		} catch (caught) {
-			toasts.error(
-				caught instanceof Error ? caught.message : 'The activation could not be undone.'
-			);
+			toasts.error(errorMessage(caught, 'The activation could not be undone.'));
 		} finally {
 			abilityBusy = '';
 		}

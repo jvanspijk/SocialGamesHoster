@@ -4,6 +4,7 @@
 	import { Archive, CheckCircle2, FileUp, Plus, ScrollText, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { api } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { RulesetSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -18,7 +19,7 @@
 		try {
 			rulesets = await api<RulesetSummary[]>('/rulesets');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Rulesets could not be loaded.', {
+			toasts.error(errorMessage(caught, 'Rulesets could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: load,
 				persistent: true
@@ -40,7 +41,7 @@
 			rulesets = [created.ruleset, ...rulesets];
 			toasts.success('Ruleset imported.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The ruleset could not be imported.');
+			toasts.error(errorMessage(caught, 'The ruleset could not be imported.'));
 		} finally {
 			importing = false;
 			importInput.value = '';

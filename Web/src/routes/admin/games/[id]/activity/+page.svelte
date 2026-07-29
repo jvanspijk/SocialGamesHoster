@@ -4,6 +4,7 @@
 	import { Activity, CheckCheck, Megaphone } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { api, pb } from '$lib/api/client';
+	import { errorMessage } from '$lib/api/errors';
 	import type { ActivityItem, AdminAttentionSummary } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -46,7 +47,7 @@
 			activityCursor = activityPage.nextCursor;
 			announcementCursor = announcementPage.nextCursor;
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Activity could not be loaded.', {
+			toasts.error(errorMessage(caught, 'Activity could not be loaded.'), {
 				actionLabel: 'Retry',
 				action: load,
 				persistent: true
