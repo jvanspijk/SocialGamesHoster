@@ -8,8 +8,9 @@
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
-	import { api, AppApiError, isValidationError, jsonBody } from '$lib/api/client';
-	import type { AppErrorBody, Game, RulesetSummary } from '$lib/api/types';
+	import { api, jsonBody } from '$lib/api/client';
+	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
+	import type { Game, RulesetSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let games = $state<Game[]>([]);
@@ -20,8 +21,7 @@
 	let deleteTarget = $state<Game | null>(null);
 	let busy = $state(false);
 	let form = $state({ name: '', rulesetVersionId: '' });
-	let fieldErrors = $state<Record<string, string>>({});
-	let formError = $state<AppErrorBody | null>(null);
+	let formError = $state<FormError | null>(null);
 
 	const visibleGames = $derived(games.filter((game) => showArchived || game.status !== 'archived'));
 	const readyRulesets = $derived(
@@ -52,7 +52,6 @@
 	async function createGame(event: SubmitEvent) {
 		event.preventDefault();
 		busy = true;
-		fieldErrors = {};
 		formError = null;
 		try {
 			const created = await api<Game>('/games', {
@@ -63,17 +62,12 @@
 			toasts.success('Game created.');
 			await goto(resolve(`/admin/games/${created.id}/overview`));
 		} catch (caught) {
-			if (caught instanceof AppApiError) {
-				fieldErrors = {
-					name: caught.body.fieldErrors?.name?.[0] ?? '',
-					rulesetVersionId: caught.body.fieldErrors?.rulesetVersionId?.[0] ?? ''
-				};
-				if (isValidationError(caught)) {
-					formError = caught.body;
-					return;
-				}
+			const nextError = toFormError(caught, 'The game could not be created.');
+			if (nextError.kind === 'validation') {
+				formError = nextError;
+				return;
 			}
-			toasts.error(caught instanceof Error ? caught.message : 'The game could not be created.');
+			toasts.error(nextError.message);
 		} finally {
 			busy = false;
 		}
@@ -207,14 +201,14 @@
 			label="Game name"
 			name="game-name"
 			bind:value={form.name}
-			error={fieldErrors.name}
+			error={fieldError(formError, 'name')}
 			required
 		/>
 		<label>
 			<span>Ruleset</span>
 			<select
 				bind:value={form.rulesetVersionId}
-				aria-invalid={fieldErrors.rulesetVersionId ? 'true' : undefined}
+				aria-invalid={fieldError(formError, 'rulesetVersionId') ? 'true' : undefined}
 				required
 			>
 				<option value="" disabled>Choose a ruleset</option>
@@ -222,7 +216,9 @@
 					<option value={ruleset.latestPublishedVersion}>{ruleset.name}</option>
 				{/each}
 			</select>
-			{#if fieldErrors.rulesetVersionId}<small>{fieldErrors.rulesetVersionId}</small>{/if}
+			{#if fieldError(formError, 'rulesetVersionId')}<small
+					>{fieldError(formError, 'rulesetVersionId')}</small
+				>{/if}
 			{#if readyRulesets.length === 0}
 				<small>No ready rulesets. Save a valid ruleset first.</small>
 			{/if}

@@ -8,7 +8,8 @@
 	import Button from '$lib/components/Button.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
 	import Field from '$lib/components/Field.svelte';
-	import { api, AppApiError, jsonBody } from '$lib/api/client';
+	import { api, jsonBody } from '$lib/api/client';
+	import { fieldErrorOrSummary, toFormError, type FormError } from '$lib/forms/errors';
 	import type { AuthResponse } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -16,7 +17,7 @@
 	let { children }: { children: import('svelte').Snippet } = $props();
 	let credentials = $state({ username: '', password: '' });
 	let busy = $state(false);
-	let loginError = $state('');
+	let loginError = $state<FormError | null>(null);
 
 	const liveRoute = $derived(
 		/^\/admin\/games\/[^/]+\/(overview|players|chat|activity|finish|summary)/.test(
@@ -50,7 +51,7 @@
 	async function login(event: SubmitEvent) {
 		event.preventDefault();
 		busy = true;
-		loginError = '';
+		loginError = null;
 		try {
 			const response = await api<AuthResponse>('/auth/game-master/login', {
 				method: 'POST',
@@ -58,12 +59,7 @@
 			});
 			auth.save(response);
 		} catch (caught) {
-			loginError =
-				caught instanceof AppApiError && caught.status === 401
-					? 'Username or password is incorrect'
-					: caught instanceof Error
-						? caught.message
-						: 'Sign-in failed. Try again.';
+			loginError = toFormError(caught, 'Sign-in failed. Try again.');
 		} finally {
 			busy = false;
 		}
@@ -100,7 +96,7 @@
 					type="password"
 					bind:value={credentials.password}
 					autocomplete="current-password"
-					error={loginError}
+					error={fieldErrorOrSummary(loginError, 'password')}
 					required
 				/>
 				<Button type="submit" loading={busy}>Sign in</Button>

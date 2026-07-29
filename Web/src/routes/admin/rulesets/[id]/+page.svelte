@@ -20,8 +20,9 @@
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/components/rulesets/VisualDefinitionEditor.svelte';
-	import { api, AppApiError, download, jsonBody } from '$lib/api/client';
-	import type { AppErrorBody, RulesetDefinition, RulesetSummary } from '$lib/api/types';
+	import { api, download, jsonBody } from '$lib/api/client';
+	import { toFormError, type FormError } from '$lib/forms/errors';
+	import type { RulesetDefinition, RulesetSummary } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -76,7 +77,7 @@
 	let definition = $state<RulesetDefinition>(structuredClone(blank));
 	let slug = $state('');
 	let text = $state('');
-	let error = $state<AppErrorBody | null>(null);
+	let error = $state<FormError | null>(null);
 	let report = $state<{
 		errors: Array<{ path: string; message: string }>;
 		warnings: Array<{ path: string; message: string }>;
@@ -443,11 +444,9 @@
 	}
 
 	function setError(caught: unknown) {
-		error =
-			caught instanceof AppApiError
-				? caught.body
-				: { code: 'ruleset.failed', message: 'The ruleset could not be updated.' };
-		toasts.error(error.message);
+		const nextError = toFormError(caught, 'The ruleset could not be updated.');
+		error = nextError;
+		if (nextError.kind !== 'validation') toasts.error(nextError.message);
 	}
 </script>
 

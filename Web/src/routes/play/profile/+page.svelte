@@ -7,8 +7,9 @@
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
-	import { api, AppApiError, jsonBody } from '$lib/api/client';
-	import type { AppErrorBody, Profile } from '$lib/api/types';
+	import { api, jsonBody } from '$lib/api/client';
+	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
+	import type { Profile } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -31,7 +32,7 @@
 	let history = $state<HistoryView | null>(null);
 	let form = $state({ displayName: '', bio: '', accent: 'crimson' });
 	let busy = $state(false);
-	let saveError = $state<AppErrorBody | null>(null);
+	let saveError = $state<FormError | null>(null);
 
 	onMount(load);
 
@@ -68,10 +69,11 @@
 			profilePreferences.applyProfile(profile);
 			toasts.success('Profile saved.');
 		} catch (caught) {
-			if (caught instanceof AppApiError && caught.status === 422) {
-				saveError = caught.body;
+			const nextError = toFormError(caught, 'The profile could not be saved.');
+			if (nextError.kind === 'validation') {
+				saveError = nextError;
 			} else {
-				toasts.error(caught instanceof Error ? caught.message : 'The profile could not be saved.');
+				toasts.error(nextError.message);
 			}
 		} finally {
 			busy = false;
@@ -114,14 +116,14 @@
 					label="Display name"
 					name="display-name"
 					bind:value={form.displayName}
-					error={saveError?.fieldErrors?.displayName?.[0] ?? ''}
+					error={fieldError(saveError, 'displayName')}
 					required
 				/>
 				<Field
 					label="Bio"
 					name="bio"
 					bind:value={form.bio}
-					error={saveError?.fieldErrors?.bio?.[0] ?? ''}
+					error={fieldError(saveError, 'bio')}
 					multiline
 				/>
 				<label>

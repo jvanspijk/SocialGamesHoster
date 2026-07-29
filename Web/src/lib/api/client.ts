@@ -11,15 +11,6 @@ export class AppApiError extends Error {
 	}
 }
 
-export function isValidationError(caught: unknown): caught is AppApiError {
-	if (!(caught instanceof AppApiError)) return false;
-	return caught.status === 422 || Object.keys(caught.body.fieldErrors ?? {}).length > 0;
-}
-
-export function firstFieldError(error: AppApiError | null, field: string): string {
-	return error?.body.fieldErrors?.[field]?.[0] ?? '';
-}
-
 export const pb = new PocketBase(browser ? window.location.origin : 'http://127.0.0.1');
 pb.autoCancellation(false);
 

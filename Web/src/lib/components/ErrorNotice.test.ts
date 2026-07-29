@@ -6,9 +6,9 @@ describe('ErrorNotice', () => {
 	it('shows actionable form guidance without technical details for expected input errors', () => {
 		render(ErrorNotice, {
 			error: {
-				code: 'profile.invalid_name',
+				kind: 'validation',
 				message: 'Please correct the highlighted details.',
-				fieldErrors: { displayName: ['Enter a valid profile name.'] }
+				fieldErrors: { displayName: 'Enter a valid profile name.' }
 			}
 		});
 

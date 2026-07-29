@@ -1,13 +1,12 @@
 <script lang="ts">
-	import type { AppErrorBody } from '$lib/api/types';
+	import type { FormError } from '$lib/forms/errors';
 
-	let { error }: { error: AppErrorBody | null } = $props();
-	const hasFieldErrors = $derived(Object.keys(error?.fieldErrors ?? {}).length > 0);
+	let { error }: { error: FormError | null } = $props();
 </script>
 
 {#if error}
 	<div class="error" role="alert" aria-live="assertive">
-		<strong>{hasFieldErrors ? 'Please correct the highlighted details.' : error.message}</strong>
+		<strong>{error.message}</strong>
 		{#if error.traceId}
 			<details>
 				<summary>Technical details</summary>

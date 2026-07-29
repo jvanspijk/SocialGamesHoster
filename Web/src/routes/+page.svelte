@@ -6,8 +6,9 @@
 	import Button from '$lib/components/Button.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
-	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
-	import type { AppErrorBody, AuthResponse, Game } from '$lib/api/types';
+	import { api, jsonBody, pb } from '$lib/api/client';
+	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
+	import type { AuthResponse, Game } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 
 	type PendingRequest = {
@@ -31,7 +32,7 @@
 	let liveGame = $state<Game | null>(null);
 	let joinUrl = $state('');
 	let showQr = $state(false);
-	let error = $state<AppErrorBody | null>(null);
+	let error = $state<FormError | null>(null);
 	let busy = $state(false);
 	let unsubscribeLiveGame = $state<(() => void) | null>(null);
 
@@ -179,10 +180,7 @@
 	}
 
 	function setError(caught: unknown) {
-		error =
-			caught instanceof AppApiError
-				? caught.body
-				: { code: 'network.failed', message: 'The local host could not be reached.' };
+		error = toFormError(caught, 'The local host could not be reached.');
 	}
 </script>
 
@@ -208,7 +206,7 @@
 				label="Username"
 				name="username"
 				bind:value={owner.username}
-				error={error?.fieldErrors?.username?.[0] ?? ''}
+				error={fieldError(error, 'username')}
 				autocomplete="username"
 				required
 			/>
@@ -216,7 +214,7 @@
 				label="Display name"
 				name="displayName"
 				bind:value={owner.displayName}
-				error={error?.fieldErrors?.displayName?.[0] ?? ''}
+				error={fieldError(error, 'displayName')}
 				required
 			/>
 			<Field
@@ -224,7 +222,7 @@
 				name="password"
 				type="password"
 				bind:value={owner.password}
-				error={error?.fieldErrors?.password?.[0] ?? ''}
+				error={fieldError(error, 'password')}
 				autocomplete="new-password"
 				help="At least 6 characters."
 				required
@@ -240,8 +238,8 @@
 					I understand and trust this local network.
 				</label>
 			</div>
-			{#if error?.fieldErrors?.trustedLanAcknowledged}
-				<p class="field-error" role="alert">{error.fieldErrors?.trustedLanAcknowledged?.[0]}</p>
+			{#if fieldError(error, 'trustedLanAcknowledged')}
+				<p class="field-error" role="alert">{fieldError(error, 'trustedLanAcknowledged')}</p>
 			{/if}
 			<Button type="submit" loading={busy}>Create owner</Button>
 		</form>
@@ -296,7 +294,7 @@
 						label="Profile name"
 						name="displayName"
 						bind:value={displayName}
-						error={error?.fieldErrors?.displayName?.[0] ?? ''}
+						error={fieldError(error, 'displayName')}
 						autocomplete="nickname"
 						required
 					/>
