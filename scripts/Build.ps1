@@ -5,7 +5,10 @@ param(
     [switch]$SkipInstaller
 )
 
-$buildLogPath = Join-Path $PSScriptRoot "Build.log"
+$logsRoot = Join-Path $PSScriptRoot "logs"
+New-Item -ItemType Directory -Path $logsRoot -Force | Out-Null
+$buildLogPath = Join-Path $logsRoot "Build.log"
+Remove-Item -LiteralPath $buildLogPath -Force -ErrorAction SilentlyContinue
 Start-Transcript -Path $buildLogPath -Force | Out-Null
 
 try {

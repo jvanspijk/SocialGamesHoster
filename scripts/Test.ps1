@@ -5,6 +5,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$logsRoot = Join-Path $PSScriptRoot "logs"
+New-Item -ItemType Directory -Path $logsRoot -Force | Out-Null
+$testLog = Join-Path $logsRoot "Test.log"
+Remove-Item -LiteralPath $testLog -Force -ErrorAction SilentlyContinue
+Start-Transcript -LiteralPath $testLog -Force
+
+try {
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
 $frontendDependencyInstaller = Join-Path $PSScriptRoot "Install-FrontendDependencies.ps1"
 . $frontendDependencyInstaller
@@ -70,4 +77,8 @@ try {
 }
 finally {
     Pop-Location
+}
+}
+finally {
+    Stop-Transcript
 }
