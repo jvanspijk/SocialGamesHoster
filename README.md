@@ -5,7 +5,7 @@ computer runs the application; players join from phones and laptops on the same
 trusted private network. Internet access, cloud accounts, Docker, PostgreSQL,
 .NET, and Node.js are not required at runtime.
 
-The rebuild is a single Go executable containing:
+The application is a single Go executable containing:
 
 - PocketBase `v0.39.9`, pinned exactly, with SQLite storage and SSE realtime;
 - compiled migrations and immutable ruleset/game snapshots;

@@ -2,12 +2,12 @@
 
 This audit is the removal gate for the former .NET, PostgreSQL, SignalR, and
 server-rendered SvelteKit implementation. It compares user capabilities rather
-than preserving old endpoint shapes. Database and API compatibility were
-explicitly excluded by the rebuild plan.
+than preserving old endpoint shapes. Database and API compatibility with the
+legacy implementation were deliberately excluded.
 
 ## Capability mapping
 
-| Legacy capability or TODO | Rebuild result | Evidence |
+| Legacy capability or TODO | Current result | Evidence |
 |---|---|---|
 | Administrator login | Replaced by named game-master accounts, 12-hour tokens, active-account checks, and owner-only account management | `Host/internal/features/auth/` |
 | Player login/name entry | Replaced by reusable passwordless profiles, explicit GM approval, one-time recovery capabilities, replay protection, and token rotation | `Host/internal/features/profiles/` |
@@ -64,5 +64,5 @@ explicitly excluded by the rebuild plan.
 ## Removal conclusion
 
 Every legacy user-facing capability is either mapped above or deliberately
-excluded by the rebuild plan. The legacy projects and runtime scripts are
-therefore safe to delete after the new automated suites and packaging build pass.
+excluded. The legacy projects and runtime scripts are therefore safe to delete
+after the current automated suites and packaging build pass.

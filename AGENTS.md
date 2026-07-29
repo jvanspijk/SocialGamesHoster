@@ -4,7 +4,8 @@ Guidance for coding assistants working in this repository.
 
 ## Product and scope
 
-- `REBUILD_PLAN.md` is the product and architecture source of truth.
+- `docs/ARCHITECTURE.md` documents the current runtime architecture and system
+  boundaries.
 - The application is a trusted-private-LAN party game host for Windows 10/11 x64.
 - Runtime: one console-free Go executable with PocketBase, SQLite, migrations,
   static Svelte assets, tray controls, and no external runtime dependencies.
@@ -60,16 +61,37 @@ disposable local test data directory.
 
 - For changes under `Web/`, follow the normative UI guidance in
   `Web/DESIGN.MD`, including its primitive-component composition rules.
-- Keep backend changes in the relevant vertical feature slice.
+- Treat the Go host as a modular monolith. Keep behavior in the owning vertical
+  feature slice and use `Host/cmd/socialgameshoster` only as the composition
+  root for wiring and process lifecycle.
+- Keep platform packages generic. They may provide transport and infrastructure
+  mechanisms, but must not own feature collection policy, lifecycle semantics,
+  or domain authorization decisions.
+- Keep shared domain policy small, dependency-neutral, and pure. PocketBase
+  lookups belong to feature/application policy; do not put `core.Record`, `dbx`,
+  HTTP response writing, handlers, or projections in the shared domain kernel.
+- Give cross-slice lifecycle and access semantics one domain owner. Do not
+  recreate participant-membership or archived-game policy as raw predicates in
+  other feature or platform packages.
+- Treat feature-to-feature imports as exceptional. Prefer a neutral domain
+  policy, narrow application contract, or composition-root callback when
+  behavior crosses slices.
+- Keep handlers as an imperative shell around deterministic policy: authorize,
+  decode, load, validate, transact, project, then publish after commit.
 - Keep PocketBase collection APIs locked; expose domain behavior through custom
   routes and reader-safe projections.
 - Use explicit result/error contracts and correct HTTP status codes.
 - Keep secrets, private roles, hidden achievements, anonymous identities, chat,
   history, and diagnostics out of unauthorized projections and events.
-- Pin PocketBase and the browser SDK to the versions in `REBUILD_PLAN.md`.
+- Keep PocketBase and runtime-sensitive dependencies exact-pinned in `go.mod`.
+  Keep frontend dependencies that affect API behavior exact-pinned in
+  `Web/package.json`.
 - Keep the Svelte frontend strict, accessible, responsive, and compatible with
   reduced motion.
-- Prefer small functions and avoid heavy dependencies.
+- Prefer small functions and avoid heavy dependencies. Do not introduce generic
+  repositories, dependency-injection containers, command or event buses, CQRS
+  frameworks, or persistence-independent mirror models without a demonstrated
+  need.
 
 ## Test philosophy
 
