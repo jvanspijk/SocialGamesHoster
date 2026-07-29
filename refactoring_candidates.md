@@ -725,7 +725,7 @@ policy rather than a discarded error by habit.
 |   4   |    [ ]    |   [ ]    |
 |   5   |    [ ]    |   [ ]    |
 |   6   |    [ ]    |   [ ]    |
-|   7   |    [ ]    |   [ ]    |
+|   7   |    [x]    |   [x]    |
 |   8   |    [ ]    |   [ ]    |
 |   9   |    [ ]    |   [ ]    |
 |  10   |    [ ]    |   [ ]    |

@@ -509,21 +509,9 @@ func latestMessageCursor(app core.App, roomID string) any {
 }
 
 func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue, itemID string) {
-	assets, err := app.FindRecordsByFilter(
-		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio'",
-		"",
-		1,
-		0,
-		dbx.Params{"version": game.GetString("ruleset_version"), "key": cue.AssetKey},
-	)
-	if err != nil || len(assets) != 1 {
+	payload, err := resolveAudioCuePayload(app, game, cue)
+	if err != nil || payload == nil {
 		return
-	}
-	asset := assets[0]
-	payload := map[string]any{
-		"cueKey": cue.ID, "name": cue.Name, "assetId": asset.Id,
-		"preview": "/api/app/v1/ruleset-assets/" + asset.Id,
 	}
 	_ = realtime.Publish(app, "game:"+game.Id+":public", realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: game.Id, Revision: game.GetInt("revision"),
@@ -573,21 +561,9 @@ func validateCueAudience(app core.App, game *core.Record, definition rulesets.De
 }
 
 func PublishAudioCue(app core.App, game *core.Record, definition rulesets.DefinitionV1, cue rulesets.AudioCue, audience, targetID string) {
-	assets, err := app.FindRecordsByFilter(
-		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio'",
-		"",
-		1,
-		0,
-		dbx.Params{"version": game.GetString("ruleset_version"), "key": cue.AssetKey},
-	)
-	if err != nil || len(assets) != 1 {
+	payload, err := resolveAudioCuePayload(app, game, cue)
+	if err != nil || payload == nil {
 		return
-	}
-	asset := assets[0]
-	payload := map[string]any{
-		"cueKey": cue.ID, "name": cue.Name, "assetId": asset.Id,
-		"preview": "/api/app/v1/ruleset-assets/" + asset.Id,
 	}
 	_ = realtime.Publish(app, "game:"+game.Id+":public", realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: game.Id, Revision: game.GetInt("revision"),
@@ -620,4 +596,27 @@ func PublishAudioCue(app core.App, game *core.Record, definition rulesets.Defini
 		}
 		return false
 	})
+}
+
+func resolveAudioCuePayload(app core.App, game *core.Record, cue rulesets.AudioCue) (map[string]any, error) {
+	assets, err := app.FindRecordsByFilter(
+		"ruleset_assets",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio'",
+		"",
+		1,
+		0,
+		dbx.Params{"version": game.GetString("ruleset_version"), "key": cue.AssetKey},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(assets) != 1 {
+		return nil, nil
+	}
+
+	asset := assets[0]
+	return map[string]any{
+		"cueKey": cue.ID, "name": cue.Name, "assetId": asset.Id,
+		"preview": "/api/app/v1/ruleset-assets/" + asset.Id,
+	}, nil
 }

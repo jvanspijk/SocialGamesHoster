@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
@@ -23,6 +25,81 @@ type attentionFixture struct {
 	profiles     []*core.Record
 	participants []*core.Record
 	definition   rulesets.DefinitionV1
+}
+
+func TestResolveAudioCuePayload(t *testing.T) {
+	game := core.NewRecord(&core.Collection{})
+	game.Set("ruleset_version", "version-1")
+	cue := rulesets.AudioCue{ID: "bell", Name: "Bell", AssetKey: "bell-audio"}
+
+	t.Run("success", func(t *testing.T) {
+		asset := core.NewRecord(&core.Collection{})
+		asset.Id = "asset-1"
+		payload, err := resolveAudioCuePayload(
+			audioCueLookupApp{records: []*core.Record{asset}},
+			game,
+			cue,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertAudioCuePayload(t, payload, map[string]any{
+			"cueKey":  "bell",
+			"name":    "Bell",
+			"assetId": "asset-1",
+			"preview": "/api/app/v1/ruleset-assets/asset-1",
+		})
+	})
+
+	t.Run("absent", func(t *testing.T) {
+		payload, err := resolveAudioCuePayload(audioCueLookupApp{}, game, cue)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if payload != nil {
+			t.Fatalf("payload = %#v, want nil", payload)
+		}
+	})
+
+	t.Run("query failure", func(t *testing.T) {
+		queryErr := errors.New("query failed")
+		payload, err := resolveAudioCuePayload(audioCueLookupApp{err: queryErr}, game, cue)
+		if !errors.Is(err, queryErr) {
+			t.Fatalf("error = %v, want %v", err, queryErr)
+		}
+		if payload != nil {
+			t.Fatalf("payload = %#v, want nil", payload)
+		}
+	})
+}
+
+type audioCueLookupApp struct {
+	core.App
+	records []*core.Record
+	err     error
+}
+
+func (app audioCueLookupApp) FindRecordsByFilter(
+	collection any,
+	filter string,
+	sort string,
+	limit int,
+	offset int,
+	params ...dbx.Params,
+) ([]*core.Record, error) {
+	return app.records, app.err
+}
+
+func assertAudioCuePayload(t *testing.T, actual, expected map[string]any) {
+	t.Helper()
+	if len(actual) != len(expected) {
+		t.Fatalf("payload = %#v, want %#v", actual, expected)
+	}
+	for key, expectedValue := range expected {
+		if actual[key] != expectedValue {
+			t.Fatalf("payload[%q] = %#v, want %#v", key, actual[key], expectedValue)
+		}
+	}
 }
 
 func TestAnnouncementRecipientsValidateAndFreezeAudience(t *testing.T) {
