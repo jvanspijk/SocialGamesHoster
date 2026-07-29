@@ -41,6 +41,7 @@ try {
     try {
         Invoke-Check "Go tests" { go test ./Host/... }
         Invoke-Check "Go vet" { go vet ./Host/... }
+        Invoke-Check "Architecture checks" { & (Join-Path $PSScriptRoot "Architecture.ps1") }
     }
     finally {
         $env:GOCACHE = $previousGoCache
