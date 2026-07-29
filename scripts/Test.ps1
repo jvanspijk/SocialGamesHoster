@@ -29,8 +29,15 @@ function Invoke-Check([string]$Step, [scriptblock]$Action, [string]$Remediation 
 
 Push-Location $projectRoot
 try {
-    Invoke-Check "Go tests" { go test ./Host/... }
-    Invoke-Check "Go vet" { go vet ./Host/... }
+    $previousGoCache = $env:GOCACHE
+    $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
+    try {
+        Invoke-Check "Go tests" { go test ./Host/... }
+        Invoke-Check "Go vet" { go vet ./Host/... }
+    }
+    finally {
+        $env:GOCACHE = $previousGoCache
+    }
 }
 finally {
     Pop-Location

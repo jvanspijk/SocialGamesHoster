@@ -73,14 +73,16 @@ Copy-Item -Path (Join-Path $webRoot "build\*") -Destination $embeddedRoot -Recur
 
 Push-Location $projectRoot
 try {
-    if (-not $SkipTests) {
-        go test ./Host/...
-        Assert-NativeSuccess "Go tests"
-    }
+    $previousGoCache = $env:GOCACHE
+    $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
     $previousGoOs = $env:GOOS
     $previousGoArch = $env:GOARCH
     $previousCgo = $env:CGO_ENABLED
     try {
+        if (-not $SkipTests) {
+            go test ./Host/...
+            Assert-NativeSuccess "Go tests"
+        }
         $env:GOOS = "windows"
         $env:GOARCH = "amd64"
         $env:CGO_ENABLED = "0"
@@ -90,6 +92,7 @@ try {
         Assert-NativeSuccess "Windows host build"
     }
     finally {
+        $env:GOCACHE = $previousGoCache
         $env:GOOS = $previousGoOs
         $env:GOARCH = $previousGoArch
         $env:CGO_ENABLED = $previousCgo
