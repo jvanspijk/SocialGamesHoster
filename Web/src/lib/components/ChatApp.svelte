@@ -55,7 +55,8 @@
 	let messagesElement = $state<HTMLDivElement>();
 	let subscriptions: Array<() => void> = [];
 	let markers = $state<Record<string, Marker>>({});
-	let loadedPolicyRevision = '';
+	let loadedPolicyRevision: string | undefined;
+	let roomLoadRequest = 0;
 	const scrollPositions = new SvelteMap<string, number>();
 
 	const selectedRoom = $derived(rooms.find((room) => room.id === selectedRoomId) ?? null);
@@ -74,7 +75,6 @@
 
 	onMount(() => {
 		loadMarkers();
-		void loadRooms();
 		return () => {
 			for (const unsubscribe of subscriptions) unsubscribe();
 		};
@@ -87,14 +87,9 @@
 	});
 
 	$effect(() => {
-		if (!policyRevision || !loadedPolicyRevision) {
-			loadedPolicyRevision = policyRevision;
-			return;
-		}
-		if (policyRevision !== loadedPolicyRevision) {
-			loadedPolicyRevision = policyRevision;
-			void loadRooms();
-		}
+		if (!policyRevision || policyRevision === loadedPolicyRevision) return;
+		loadedPolicyRevision = policyRevision;
+		void loadRooms();
 	});
 
 	function loadMarkers() {
@@ -116,15 +111,19 @@
 	}
 
 	async function loadRooms() {
+		const request = ++roomLoadRequest;
 		loadingRooms = true;
 		try {
-			rooms = await api<Room[]>(`/games/${gameId}/rooms`);
+			const loadedRooms = await api<Room[]>(`/games/${gameId}/rooms`);
+			if (request !== roomLoadRequest) return;
+			rooms = loadedRooms;
 			if (selectedRoomId && !rooms.some((room) => room.id === selectedRoomId)) {
 				selectRoom('');
 			}
 			await subscribeRooms();
 			if (selectedRoomId) await openConversation(selectedRoomId);
 		} catch (caught) {
+			if (request !== roomLoadRequest) return;
 			toasts.error(
 				caught instanceof Error ? caught.message : 'Conversations could not be loaded.',
 				{
@@ -134,7 +133,7 @@
 				}
 			);
 		} finally {
-			loadingRooms = false;
+			if (request === roomLoadRequest) loadingRooms = false;
 		}
 	}
 
