@@ -166,7 +166,7 @@
 		auth.save(response);
 		sessionStorage.removeItem('sgh.profile-request');
 		pending = null;
-		if (liveGame?.status === 'lobby') {
+		if (liveGame?.joiningOpen) {
 			await api(`/games/${liveGame.id}/join`, { method: 'POST', ...jsonBody({}) });
 		}
 		await goto(resolve('/play'));

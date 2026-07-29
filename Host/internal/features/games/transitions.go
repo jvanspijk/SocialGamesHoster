@@ -64,7 +64,6 @@ func transition(command Transition) func(*core.RequestEvent) error {
 		}
 		applyState(game, next)
 		if command == Start {
-			game.Set("joining_open", false)
 			if err := prepareRoleRooms(event.App, game); err != nil {
 				return httpx.WriteError(event, result.Internal(err))
 			}

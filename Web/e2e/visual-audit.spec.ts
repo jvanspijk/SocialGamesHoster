@@ -227,6 +227,19 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	await expect(playerOne.getByRole('button', { name: 'Role', exact: true })).toBeVisible();
 	await capture(playerOne, 'player-stage', 'running-timer');
 	await captureCritical(playerOne, 'player-stage', 'running-critical');
+
+	const latePlayerContext = await browser.newContext({ viewport: viewports[0] });
+	const latePlayer = await latePlayerContext.newPage();
+	await latePlayer.goto('/');
+	await latePlayer.getByLabel('Profile name').fill('Sage');
+	await latePlayer.getByRole('button', { name: 'Request entry' }).click();
+	await expect(latePlayer.getByRole('heading', { name: 'Awaiting approval' })).toBeVisible();
+	await clickTask(page, 'Approvals');
+	const lateRequest = page.locator('article').filter({ hasText: 'Sage' });
+	await lateRequest.getByRole('button', { name: 'Approve' }).click();
+	await expect(latePlayer).toHaveURL(/\/play$/);
+	await latePlayerContext.close();
+
 	await playerOne.getByRole('button', { name: 'Role', exact: true }).click();
 	await expect(playerOne.getByRole('button', { name: 'Reveal', exact: true })).toBeVisible();
 	await capture(playerOne, 'role', 'concealed');

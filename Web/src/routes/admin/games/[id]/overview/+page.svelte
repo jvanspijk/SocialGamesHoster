@@ -242,9 +242,9 @@
 					<Button
 						variant="ghost"
 						disabled={busy}
-						onclick={() => gameCommand('close-joining', 'Lobby closed.')}
+						onclick={() => gameCommand('close-joining', 'Lobby cancelled and reset.')}
 					>
-						Close lobby
+						Cancel &amp; reset
 					</Button>
 				{:else if view.game.status === 'running'}
 					<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
@@ -273,13 +273,19 @@
 						Continue finishing
 					</a>
 				{/if}
+				{#if view.game.joiningOpen && view.game.status !== 'lobby'}
+					<Button
+						variant="ghost"
+						disabled={busy}
+						onclick={() => gameCommand('close-joining', 'Joining closed.')}
+					>
+						Close joining
+					</Button>
+				{/if}
 			</div>
 
 			{#if view.game.joiningOpen}
-				<Panel
-					title="Lobby invitation"
-					description="Use this after the current game controls are handled."
-				>
+				<Panel title="Player invitation" description="Players can join while joining remains open.">
 					<div class="invitation">
 						<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
 						<div>

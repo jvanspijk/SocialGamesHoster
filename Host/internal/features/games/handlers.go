@@ -137,12 +137,22 @@ func deleteGame(event *core.RequestEvent) error {
 	return event.NoContent(http.StatusNoContent)
 }
 
-// closeJoining resets an accidentally opened lobby to a draft. It removes the
-// temporary roster and chat session so reopening the draft starts cleanly.
+// closeJoining stops new entries for an active game. Closing a lobby instead
+// resets it to a draft, removing its temporary roster and chat session so it
+// can be reopened cleanly.
 func closeJoining(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
 		return writeGameError(event, err)
+	}
+	if game.GetString("status") == string(StatusRunning) || game.GetString("status") == string(StatusPaused) {
+		game.Set("joining_open", false)
+		if err := event.App.Save(game); err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
+		_ = audit(event.App, event.Auth, game.Id, "game.joining_closed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		publishGame(event.App, game, "game.joining_closed", projectGame(game))
+		return event.JSON(http.StatusOK, projectGame(game))
 	}
 	next, err := ApplyTransition(stateFromRecord(game), CancelLobby, time.Now().UTC())
 	if err != nil {
@@ -303,8 +313,9 @@ func joinGame(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
-		if game.GetString("status") != string(StatusLobby) || !game.GetBool("joining_open") {
-			return result.AppError{Code: "game.joining_closed", Message: "This lobby is not accepting players.", Status: http.StatusConflict}
+		status := Status(game.GetString("status"))
+		if !IsLive(status) || !game.GetBool("joining_open") {
+			return result.AppError{Code: "game.joining_closed", Message: "This game is not accepting players.", Status: http.StatusConflict}
 		}
 		existing, err := tx.FindRecordsByFilter("participants", "game = {:game} && profile = {:profile}", "", 1, 0,
 			dbx.Params{"game": game.Id, "profile": event.Auth.Id})

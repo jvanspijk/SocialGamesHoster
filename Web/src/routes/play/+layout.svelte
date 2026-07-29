@@ -93,7 +93,7 @@
 				}
 				if (caught.body.code === 'game.not_joined') {
 					const liveGame = await api<Game>('/games/live');
-					if (liveGame.status === 'lobby' && liveGame.joiningOpen) {
+					if (liveGame.joiningOpen) {
 						availableLobby = liveGame;
 					}
 				}
@@ -208,14 +208,14 @@
 				{@render children()}
 			{:else if availableLobby}
 				<section class="unavailable">
-					<h1>Lobby open</h1>
-					<p>{availableLobby.name} is ready for players.</p>
-					<Button loading={joiningLobby} onclick={joinAvailableLobby}>Join lobby</Button>
+					<h1>Game accepting players</h1>
+					<p>{availableLobby.name} is ready for you to join.</p>
+					<Button loading={joiningLobby} onclick={joinAvailableLobby}>Join game</Button>
 				</section>
 			{:else}
 				<section class="unavailable">
 					<h1>No game available</h1>
-					<p>Wait for the game master to open a lobby, then return to the join page.</p>
+					<p>Wait for the game master to allow players to join, then return to the join page.</p>
 					<a href={resolve('/')}>Return to join page</a>
 				</section>
 			{/if}
