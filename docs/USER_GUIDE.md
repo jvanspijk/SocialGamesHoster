@@ -22,7 +22,7 @@ game audit; accounts should not be shared.
 3. Show the phone QR from the Installation page or tray. The link contains only
    the private IP address and port, never an account secret.
 4. A new or recovering player chooses their profile name. Approve the request
-   under **Approvals**.
+   from **Entry requests** in the live-game header, or under **Approvals**.
 5. Assign seats, aliases, and roles manually or use constrained randomization.
    The roster must satisfy the selected composition band before the game starts.
 

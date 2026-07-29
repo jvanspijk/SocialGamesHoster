@@ -6,6 +6,7 @@
 		Activity,
 		ArrowLeft,
 		MessageCircle,
+		ShieldCheck,
 		Users,
 		Volume2,
 		VolumeX,
@@ -13,6 +14,8 @@
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { api, pb } from '$lib/api/client';
 	import type { ChatMessage, RealtimeEnvelope } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
@@ -30,6 +33,8 @@
 	let unsubscribers: Array<() => void> = [];
 	let unreadChatCount = $state(0);
 	let unreadRequest = 0;
+	let requestsOpen = $state(false);
+	let pendingRequestCount = $state(0);
 
 	const view = $derived(gameState.admin);
 	const standalone = $derived(
@@ -164,6 +169,21 @@
 		{/if}
 		<div class="live-tools">
 			<ConnectionBadge />
+			{#if view && !standalone}
+				<button
+					type="button"
+					class="requests"
+					aria-label={pendingRequestCount > 0
+						? `Entry requests, ${pendingRequestCount} waiting`
+						: 'Entry requests'}
+					title="Entry requests"
+					onclick={() => (requestsOpen = true)}
+				>
+					<ShieldCheck size={18} />
+					<span>Entry requests</span>
+					{#if pendingRequestCount > 0}<em aria-hidden="true">New</em>{/if}
+				</button>
+			{/if}
 			<button
 				type="button"
 				class="sound"
@@ -187,6 +207,14 @@
 		{/if}
 	</main>
 </div>
+
+<Sheet open={requestsOpen} title="Entry requests" close={() => (requestsOpen = false)}>
+	<div class="request-sheet">
+		<p>Approve or reject players waiting to enter without leaving the live game.</p>
+		<PendingProfileRequests compact oncountchange={(count) => (pendingRequestCount = count)} />
+		<a href={resolve('/admin/approvals')}>Manage all profiles</a>
+	</div>
+</Sheet>
 
 <style>
 	.live-shell {
@@ -262,6 +290,65 @@
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.68rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.requests {
+		position: relative;
+		display: inline-flex;
+		width: var(--target-size);
+		min-height: var(--target-size);
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-1);
+		border: 1px solid var(--gold-dark);
+		background: rgb(255 255 255 / 4%);
+		color: var(--paper-light);
+		cursor: pointer;
+		font-family: var(--font-display);
+		font-size: 0.68rem;
+		font-weight: 700;
+		padding: 0;
+		text-transform: uppercase;
+	}
+
+	.requests span {
+		display: none;
+	}
+
+	.requests em {
+		position: absolute;
+		inset-block-start: -0.35rem;
+		inset-inline-end: -0.35rem;
+		border: 2px solid var(--wood);
+		border-radius: 999px;
+		background: var(--crimson-light);
+		color: var(--wood);
+		font-size: 0.54rem;
+		font-style: normal;
+		line-height: 1;
+		padding: 0.2rem 0.3rem;
+	}
+
+	.request-sheet {
+		display: grid;
+		align-content: start;
+		gap: var(--space-4);
+	}
+
+	.request-sheet > p {
+		margin: 0;
+		color: var(--ink-soft);
+	}
+
+	.request-sheet > a {
+		justify-self: start;
+		min-height: var(--target-size);
+		align-content: center;
+		color: var(--crimson-dark);
+		font-family: var(--font-display);
+		font-size: 0.72rem;
 		font-weight: 700;
 		text-transform: uppercase;
 	}

@@ -1,19 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Check, Clock3, UserCheck, UserX, X } from '@lucide/svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Dialog from '$lib/components/Dialog.svelte';
-	import Field from '$lib/components/Field.svelte';
-	import { api, jsonBody, pb } from '$lib/api/client';
+	import { UserX, UserCheck } from '@lucide/svelte';
+	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
+	import { api } from '$lib/api/client';
 	import { toasts } from '$lib/state/toasts.svelte';
 
-	type ProfileRequest = {
-		id: string;
-		requestType: string;
-		requestedName: string;
-		createdAt: string;
-		expiresAt: string;
-	};
 	type Profile = {
 		id: string;
 		displayName: string;
@@ -23,56 +14,24 @@
 		active: boolean;
 	};
 
-	let requests = $state<ProfileRequest[]>([]);
 	let profiles = $state<Profile[]>([]);
 	let loading = $state(true);
-	let rejectionTarget = $state<ProfileRequest | null>(null);
-	let rejectionReason = $state('');
-	let busy = $state(false);
-	let unsubscribe: (() => void) | null = null;
 
 	onMount(() => {
-		void load();
-		return () => unsubscribe?.();
+		void loadProfiles();
 	});
 
-	async function load() {
+	async function loadProfiles() {
 		try {
-			[requests, profiles] = await Promise.all([
-				api<ProfileRequest[]>('/admin/profile-requests'),
-				api<Profile[]>('/admin/profiles')
-			]);
-			unsubscribe?.();
-			unsubscribe = await pb.realtime.subscribe('profile-requests:game-masters', async () => {
-				requests = await api<ProfileRequest[]>('/admin/profile-requests');
-			});
+			profiles = await api<Profile[]>('/admin/profiles');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'Approvals could not be loaded.', {
-				actionLabel: 'Retry',
-				action: load,
+			toasts.error(caught instanceof Error ? caught.message : 'Profiles could not be loaded.', {
+				actionLabel: 'Retry profiles',
+				action: loadProfiles,
 				persistent: true
 			});
 		} finally {
 			loading = false;
-		}
-	}
-
-	async function decide(request: ProfileRequest, decision: 'approve' | 'reject') {
-		busy = true;
-		try {
-			await api(`/admin/profile-requests/${request.id}/${decision}`, {
-				method: 'POST',
-				...jsonBody(decision === 'reject' ? { reason: rejectionReason } : {})
-			});
-			requests = requests.filter((item) => item.id !== request.id);
-			if (decision === 'approve') profiles = await api<Profile[]>('/admin/profiles');
-			rejectionTarget = null;
-			rejectionReason = '';
-			toasts.success(decision === 'approve' ? 'Profile approved.' : 'Request rejected.');
-		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The request could not be updated.');
-		} finally {
-			busy = false;
 		}
 	}
 
@@ -95,44 +54,11 @@
 	<p>Review new entry requests and manage approved player profiles.</p>
 </header>
 
-{#if loading}
-	<p role="status">Loading approvals…</p>
-{:else}
-	<section aria-labelledby="pending-heading">
-		<div class="section-heading">
-			<h2 id="pending-heading">Pending requests</h2>
-			<span>{requests.length}</span>
-		</div>
-		{#if requests.length === 0}
-			<div class="empty">
-				<UserCheck size={34} strokeWidth={1.5} />
-				<div>
-					<h3>No pending requests</h3>
-					<p>New profile requests will appear here.</p>
-				</div>
-			</div>
-		{:else}
-			<div class="request-list">
-				{#each requests as request (request.id)}
-					<article>
-						<div class="avatar">{request.requestedName.slice(0, 1).toUpperCase()}</div>
-						<div>
-							<h3>{request.requestedName}</h3>
-							<p><Clock3 size={15} /> Requested {new Date(request.createdAt).toLocaleString()}</p>
-						</div>
-						<div class="actions">
-							<Button onclick={() => decide(request, 'approve')}><Check size={17} /> Approve</Button
-							>
-							<Button variant="secondary" onclick={() => (rejectionTarget = request)}
-								><X size={17} /> Reject</Button
-							>
-						</div>
-					</article>
-				{/each}
-			</div>
-		{/if}
-	</section>
+<PendingProfileRequests onapproved={loadProfiles} />
 
+{#if loading}
+	<p role="status">Loading profiles…</p>
+{:else}
 	<section aria-labelledby="profiles-heading">
 		<div class="section-heading">
 			<h2 id="profiles-heading">Approved profiles</h2>
@@ -154,31 +80,6 @@
 		</div>
 	</section>
 {/if}
-
-<Dialog
-	open={rejectionTarget !== null}
-	title="Reject profile request?"
-	description={rejectionTarget ? `Explain why ${rejectionTarget.requestedName} cannot enter.` : ''}
-	close={() => (rejectionTarget = null)}
->
-	<Field
-		label="Reason (optional)"
-		name="rejection-reason"
-		bind:value={rejectionReason}
-		multiline
-		help="Add a rejection reason for the player."
-	/>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (rejectionTarget = null)}>Cancel</Button>
-		<Button
-			variant="danger"
-			loading={busy}
-			onclick={() => rejectionTarget && decide(rejectionTarget, 'reject')}
-		>
-			Reject request
-		</Button>
-	{/snippet}
-</Dialog>
 
 <style>
 	.page-heading {
@@ -226,9 +127,7 @@
 		font-size: 0.78rem;
 	}
 
-	.request-list article,
-	.profile-grid article,
-	.empty {
+	.profile-grid article {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
@@ -251,21 +150,15 @@
 	}
 
 	h3,
-	article p,
-	.empty p {
+	.profile-grid article p {
 		margin: 0;
 	}
 
-	article p {
+	.profile-grid article p {
 		display: flex;
 		align-items: center;
 		gap: var(--space-1);
 		color: var(--ink-soft);
-	}
-
-	.actions {
-		display: flex;
-		gap: var(--space-2);
 	}
 
 	.profile-grid {
@@ -290,21 +183,5 @@
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;
-	}
-
-	.empty {
-		grid-template-columns: auto 1fr;
-	}
-
-	@media (max-width: 47.99rem) {
-		.request-list article {
-			grid-template-columns: auto minmax(0, 1fr);
-		}
-
-		.actions {
-			grid-column: 1 / -1;
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-		}
 	}
 </style>

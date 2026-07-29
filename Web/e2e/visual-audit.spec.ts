@@ -243,10 +243,16 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	await latePlayer.getByLabel('Profile name').fill('Sage');
 	await latePlayer.getByRole('button', { name: 'Request entry' }).click();
 	await expect(latePlayer.getByRole('heading', { name: 'Awaiting approval' })).toBeVisible();
-	await clickTask(page, 'Approvals');
-	const lateRequest = page.locator('article').filter({ hasText: 'Sage' });
+	const liveGameUrl = page.url();
+	await page.getByRole('button', { name: /Entry requests, 1 waiting/ }).click();
+	const requestSheet = page.getByRole('dialog', { name: 'Entry requests' });
+	await expect(requestSheet).toBeVisible();
+	const lateRequest = requestSheet.locator('article').filter({ hasText: 'Sage' });
 	await lateRequest.getByRole('button', { name: 'Approve' }).click();
 	await expect(latePlayer).toHaveURL(/\/play$/);
+	await expect(requestSheet.getByRole('heading', { name: 'No pending requests' })).toBeVisible();
+	await requestSheet.getByRole('button', { name: 'Close Entry requests' }).click();
+	expect(page.url()).toBe(liveGameUrl);
 	await latePlayerContext.close();
 
 	await playerOne.getByRole('button', { name: 'Role', exact: true }).click();

@@ -22,6 +22,14 @@ export interface Profile {
 	active: boolean;
 }
 
+export interface ProfileRequest {
+	id: string;
+	requestType: 'new' | 'recover';
+	requestedName: string;
+	createdAt: string;
+	expiresAt: string;
+}
+
 export interface AppErrorBody {
 	code: string;
 	message: string;

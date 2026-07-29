@@ -20,6 +20,16 @@ Then each phone shows its own current game state without a manual refresh
 And the timer remains visually in step with the game-master dashboard
 And each player sees only their own private role and knowledge
 
+## Scenario: Approve a late player without leaving the live game
+
+Given the game master is viewing the live-game dashboard
+When another phone requests entry with a new profile name
+Then the live-game entry-request control indicates that attention is needed
+When the game master opens entry requests and approves the profile
+Then the phone continues to the player game page without a manual refresh
+And the game master remains on the same live-game page
+And the entry-request attention state clears
+
 ## Scenario: Deliver a targeted sound announcement after phone interaction
 
 Given one player has selected Enable sound in their phone browser
