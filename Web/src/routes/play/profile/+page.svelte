@@ -3,11 +3,12 @@
 	import { resolve } from '$app/paths';
 	import { ArrowLeft, Save, Settings, UserRound } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
-	import { api, jsonBody } from '$lib/api/client';
-	import type { Profile } from '$lib/api/types';
+	import { api, AppApiError, jsonBody } from '$lib/api/client';
+	import type { AppErrorBody, Profile } from '$lib/api/types';
 	import { gameState } from '$lib/state/game.svelte';
 	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -30,6 +31,7 @@
 	let history = $state<HistoryView | null>(null);
 	let form = $state({ displayName: '', bio: '', accent: 'crimson' });
 	let busy = $state(false);
+	let saveError = $state<AppErrorBody | null>(null);
 
 	onMount(load);
 
@@ -60,12 +62,17 @@
 	async function saveProfile(event: SubmitEvent) {
 		event.preventDefault();
 		busy = true;
+		saveError = null;
 		try {
 			profile = await api<Profile>('/profiles/me', { method: 'PATCH', ...jsonBody(form) });
 			profilePreferences.applyProfile(profile);
 			toasts.success('Profile saved.');
 		} catch (caught) {
-			toasts.error(caught instanceof Error ? caught.message : 'The profile could not be saved.');
+			if (caught instanceof AppApiError && caught.status === 422) {
+				saveError = caught.body;
+			} else {
+				toasts.error(caught instanceof Error ? caught.message : 'The profile could not be saved.');
+			}
 		} finally {
 			busy = false;
 		}
@@ -102,8 +109,21 @@
 					</div>
 					<div><strong>{profile.displayName}</strong><span>Player profile</span></div>
 				</div>
-				<Field label="Display name" name="display-name" bind:value={form.displayName} required />
-				<Field label="Bio" name="bio" bind:value={form.bio} multiline />
+				<ErrorNotice error={saveError} />
+				<Field
+					label="Display name"
+					name="display-name"
+					bind:value={form.displayName}
+					error={saveError?.fieldErrors?.displayName?.[0] ?? ''}
+					required
+				/>
+				<Field
+					label="Bio"
+					name="bio"
+					bind:value={form.bio}
+					error={saveError?.fieldErrors?.bio?.[0] ?? ''}
+					multiline
+				/>
 				<label>
 					<span>Accent colour</span>
 					<select bind:value={form.accent}>

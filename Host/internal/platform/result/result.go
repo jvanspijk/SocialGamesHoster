@@ -17,7 +17,7 @@ func (e AppError) Error() string {
 }
 
 func Invalid(code, message string, fields FieldErrors) AppError {
-	return AppError{Code: code, Message: message, Status: http.StatusBadRequest, FieldErrors: fields}
+	return AppError{Code: code, Message: message, Status: http.StatusUnprocessableEntity, FieldErrors: fields}
 }
 
 func Forbidden(code, message string) AppError {

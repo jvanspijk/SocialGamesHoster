@@ -2,11 +2,12 @@
 	import type { AppErrorBody } from '$lib/api/types';
 
 	let { error }: { error: AppErrorBody | null } = $props();
+	const hasFieldErrors = $derived(Object.keys(error?.fieldErrors ?? {}).length > 0);
 </script>
 
 {#if error}
-	<div class="error" role="alert">
-		<strong>{error.message}</strong>
+	<div class="error" role="alert" aria-live="assertive">
+		<strong>{hasFieldErrors ? 'Please correct the highlighted details.' : error.message}</strong>
 		{#if error.traceId}
 			<details>
 				<summary>Technical details</summary>

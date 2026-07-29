@@ -203,19 +203,28 @@
 		</div>
 		<form class="card stack" onsubmit={createOwner}>
 			<Crown size={34} aria-hidden="true" />
+			<ErrorNotice {error} />
 			<Field
 				label="Username"
 				name="username"
 				bind:value={owner.username}
+				error={error?.fieldErrors?.username?.[0] ?? ''}
 				autocomplete="username"
 				required
 			/>
-			<Field label="Display name" name="displayName" bind:value={owner.displayName} required />
+			<Field
+				label="Display name"
+				name="displayName"
+				bind:value={owner.displayName}
+				error={error?.fieldErrors?.displayName?.[0] ?? ''}
+				required
+			/>
 			<Field
 				label="Password"
 				name="password"
 				type="password"
 				bind:value={owner.password}
+				error={error?.fieldErrors?.password?.[0] ?? ''}
 				autocomplete="new-password"
 				help="At least 6 characters."
 				required
@@ -231,7 +240,9 @@
 					I understand and trust this local network.
 				</label>
 			</div>
-			<ErrorNotice {error} />
+			{#if error?.fieldErrors?.trustedLanAcknowledged}
+				<p class="field-error" role="alert">{error.fieldErrors?.trustedLanAcknowledged?.[0]}</p>
+			{/if}
 			<Button type="submit" loading={busy}>Create owner</Button>
 		</form>
 	</section>
@@ -280,17 +291,18 @@
 					<ScrollText size={34} aria-hidden="true" />
 					<h2>Enter your profile name</h2>
 					<p class="muted">Sign in to an existing profile or create a new one.</p>
+					<ErrorNotice {error} />
 					<Field
 						label="Profile name"
 						name="displayName"
 						bind:value={displayName}
+						error={error?.fieldErrors?.displayName?.[0] ?? ''}
 						autocomplete="nickname"
 						required
 					/>
 					{#if liveGame}
 						<p class="game-line"><strong>{liveGame.name}</strong> · {liveGame.status}</p>
 					{/if}
-					<ErrorNotice {error} />
 					<Button type="submit" loading={busy}>Request entry</Button>
 				</form>
 			{/if}
@@ -371,6 +383,12 @@
 	.game-line {
 		border-block: 1px solid #b99b6c;
 		padding-block: 0.55rem;
+	}
+
+	.field-error {
+		margin: 0;
+		color: var(--danger);
+		font-size: 0.88rem;
 	}
 
 	.qr-card img {

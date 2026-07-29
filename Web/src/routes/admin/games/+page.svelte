@@ -5,10 +5,11 @@
 	import { Archive, Copy, History, Play, Plus, Trash2 } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
-	import { api, AppApiError, jsonBody } from '$lib/api/client';
-	import type { Game, RulesetSummary } from '$lib/api/types';
+	import { api, AppApiError, isValidationError, jsonBody } from '$lib/api/client';
+	import type { AppErrorBody, Game, RulesetSummary } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let games = $state<Game[]>([]);
@@ -20,6 +21,7 @@
 	let busy = $state(false);
 	let form = $state({ name: '', rulesetVersionId: '' });
 	let fieldErrors = $state<Record<string, string>>({});
+	let formError = $state<AppErrorBody | null>(null);
 
 	const visibleGames = $derived(games.filter((game) => showArchived || game.status !== 'archived'));
 	const readyRulesets = $derived(
@@ -51,6 +53,7 @@
 		event.preventDefault();
 		busy = true;
 		fieldErrors = {};
+		formError = null;
 		try {
 			const created = await api<Game>('/games', {
 				method: 'POST',
@@ -65,6 +68,10 @@
 					name: caught.body.fieldErrors?.name?.[0] ?? '',
 					rulesetVersionId: caught.body.fieldErrors?.rulesetVersionId?.[0] ?? ''
 				};
+				if (isValidationError(caught)) {
+					formError = caught.body;
+					return;
+				}
 			}
 			toasts.error(caught instanceof Error ? caught.message : 'The game could not be created.');
 		} finally {
@@ -195,6 +202,7 @@
 	close={() => (createOpen = false)}
 >
 	<form id="new-game-form" class="dialog-form" onsubmit={createGame}>
+		<ErrorNotice error={formError} />
 		<Field
 			label="Game name"
 			name="game-name"
