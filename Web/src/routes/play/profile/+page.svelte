@@ -10,6 +10,7 @@
 	import { api, jsonBody } from '$lib/api/client';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { Profile } from '$lib/api/types';
+	import { auth } from '$lib/state/auth.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -66,6 +67,7 @@
 		saveError = null;
 		try {
 			profile = await api<Profile>('/profiles/me', { method: 'PATCH', ...jsonBody(form) });
+			auth.updateDisplayName(profile.displayName);
 			profilePreferences.applyProfile(profile);
 			toasts.success('Profile saved.');
 		} catch (caught) {

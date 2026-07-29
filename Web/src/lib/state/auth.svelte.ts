@@ -7,6 +7,12 @@ pb.authStore.onChange((_token, record) => {
 	actor = record as Actor | null;
 });
 
+function updateDisplayName(displayName: string) {
+	const record = pb.authStore.record;
+	if (!record || !pb.authStore.token) return;
+	pb.authStore.save(pb.authStore.token, { ...record, displayName });
+}
+
 export const auth = {
 	get actor() {
 		return actor;
@@ -24,5 +30,6 @@ export const auth = {
 		return actor?.isOwner === true;
 	},
 	save: saveAuth,
-	clear: clearAuth
+	clear: clearAuth,
+	updateDisplayName
 };
