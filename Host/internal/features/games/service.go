@@ -12,7 +12,6 @@ import (
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -183,13 +182,6 @@ func publishGameMasters(app core.App, record *core.Record, kind string, payload 
 	}, func(auth *core.Record) bool {
 		return actorauth.IsActiveGameMaster(auth)
 	})
-}
-
-func writeGameError(event *core.RequestEvent, err error) error {
-	if appError, ok := err.(result.AppError); ok {
-		return httpx.WriteError(event, appError)
-	}
-	return httpx.WriteError(event, result.Internal(err))
 }
 
 func incrementRevision(record *core.Record) {

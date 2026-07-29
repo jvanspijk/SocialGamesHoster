@@ -81,6 +81,9 @@ disposable local test data directory.
 - Keep PocketBase collection APIs locked; expose domain behavior through custom
   routes and reader-safe projections.
 - Use explicit result/error contracts and correct HTTP status codes.
+- Translate arbitrary feature and domain errors to HTTP responses only through
+  the standard `httpx` error adapter. Route packages must not define local
+  `error -> result.AppError -> JSON` adapters.
 - Keep secrets, private roles, hidden achievements, anonymous identities, chat,
   history, and diagnostics out of unauthorized projections and events.
 - Keep PocketBase and runtime-sensitive dependencies exact-pinned in `go.mod`.

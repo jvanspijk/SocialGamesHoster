@@ -720,7 +720,7 @@ policy rather than a discarded error by habit.
 | Issue | Completed | Reviewed |
 | :---: | :-------: | :------: |
 |   1   |    [x]    |   [x]    |
-|   2   |    [ ]    |   [ ]    |
+|   2   |    [x]    |   [x]    |
 |   3   |    [x]    |   [x]    |
 |   4   |    [ ]    |   [ ]    |
 |   5   |    [ ]    |   [ ]    |

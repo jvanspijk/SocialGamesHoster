@@ -291,10 +291,7 @@ func publishVersion(event *core.RequestEvent) error {
 		return nil
 	})
 	if err != nil {
-		if appError, ok := err.(result.AppError); ok {
-			return httpx.WriteError(event, appError)
-		}
-		return httpx.WriteError(event, result.Internal(err))
+		return httpx.WriteErrorFrom(event, err)
 	}
 	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.published", "ruleset_version", published.Id,
 		map[string]any{"rulesetId": published.GetString("ruleset")}, event.Get(httpx.TraceIDKey))

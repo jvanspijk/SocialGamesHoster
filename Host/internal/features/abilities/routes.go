@@ -9,7 +9,6 @@ import (
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
-	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
 
 func Register(event *core.ServeEvent) {
@@ -21,7 +20,7 @@ func Register(event *core.ServeEvent) {
 func activate(event *core.RequestEvent) error {
 	choices, err := Activate(event.App, event.Request.PathValue("id"), event.Auth.Id, event.Request.PathValue("abilityId"), time.Now().UTC())
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	publishChanged(event.App, event.Request.PathValue("id"))
 	return event.JSON(http.StatusOK, map[string]any{"choices": choices})
@@ -30,7 +29,7 @@ func activate(event *core.RequestEvent) error {
 func undo(event *core.RequestEvent) error {
 	choices, err := Undo(event.App, event.Request.PathValue("id"), event.Auth.Id, event.Request.PathValue("abilityId"))
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	publishChanged(event.App, event.Request.PathValue("id"))
 	return event.JSON(http.StatusOK, map[string]any{"choices": choices})
@@ -47,11 +46,4 @@ func publishChanged(app core.App, gameID string) {
 	}, func(auth *core.Record) bool {
 		return auth != nil && auth.GetBool("active")
 	})
-}
-
-func writeError(event *core.RequestEvent, err error) error {
-	if appError, ok := err.(result.AppError); ok {
-		return httpx.WriteError(event, appError)
-	}
-	return httpx.WriteError(event, result.Internal(err))
 }

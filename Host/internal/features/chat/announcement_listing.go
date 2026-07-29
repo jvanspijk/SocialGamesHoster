@@ -15,7 +15,7 @@ import (
 func listAnnouncements(event *core.RequestEvent) error {
 	game, err := findAnnouncementGame(event)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	offset, err := decodeAnnouncementOffset(event.Request.URL.Query().Get("cursor"))
 	if err != nil {

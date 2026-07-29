@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -35,4 +36,21 @@ func WriteError(event *core.RequestEvent, appError result.AppError) error {
 		FieldErrors: appError.FieldErrors,
 		TraceID:     traceID,
 	})
+}
+
+// WriteErrorFrom translates an arbitrary application error at the HTTP
+// boundary. Expected application errors retain their public contract even when
+// wrapped; unexpected errors are exposed only as an internal error.
+func WriteErrorFrom(event *core.RequestEvent, err error) error {
+	var appError result.AppError
+	if errors.As(err, &appError) {
+		return WriteError(event, appError)
+	}
+
+	var appErrorPointer *result.AppError
+	if errors.As(err, &appErrorPointer) {
+		return WriteError(event, *appErrorPointer)
+	}
+
+	return WriteError(event, result.Internal(err))
 }

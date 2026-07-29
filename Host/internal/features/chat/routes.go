@@ -120,14 +120,14 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 func listRooms(event *core.RequestEvent) error {
 	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
 	if err != nil {
-		return writeError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
 	}
 	if event.Auth == nil || !event.Auth.GetBool("active") {
-		return writeError(event, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized})
+		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to continue.", Status: http.StatusUnauthorized})
 	}
 	rooms, err := event.App.FindRecordsByFilter("chat_rooms", "game = {:game} && kind != 'announcements'", "kind,label", 200, 0, dbx.Params{"game": game.Id})
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	response := make([]map[string]any, 0, len(rooms))
 	for _, room := range rooms {
@@ -147,37 +147,37 @@ type playerDMRequest struct {
 func createPlayerDM(event *core.RequestEvent) error {
 	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
 	if err != nil {
-		return writeError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
 	}
 	if !actorauth.IsActivePlayer(event.Auth) {
-		return writeError(event, result.AppError{Code: "auth.required", Message: "A player profile is required.", Status: http.StatusUnauthorized})
+		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "A player profile is required.", Status: http.StatusUnauthorized})
 	}
 	if game.GetString("status") != "running" && game.GetString("status") != "paused" {
-		return writeError(event, result.Conflict("chat.dm_not_allowed", "Player messages are only available during play."))
+		return httpx.WriteError(event, result.Conflict("chat.dm_not_allowed", "Player messages are only available during play."))
 	}
 	definition, err := definitionFromGame(game)
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	if definition.Chat.DefaultPolicy.PlayerDM == nil || !definition.Chat.DefaultPolicy.PlayerDM.Visible {
-		return writeError(event, result.Forbidden("chat.dm_disabled", "Player-to-player messages are disabled for this game."))
+		return httpx.WriteError(event, result.Forbidden("chat.dm_disabled", "Player-to-player messages are disabled for this game."))
 	}
 	var request playerDMRequest
 	if err := event.BindBody(&request); err != nil {
-		return writeError(event, result.Invalid("chat.invalid_dm", "Choose another player.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.invalid_dm", "Choose another player.", nil))
 	}
 	selfRecords, err := event.App.FindRecordsByFilter("participants",
 		"game = {:game} && profile = {:profile} && status = 'active'", "", 1, 0,
 		dbx.Params{"game": game.Id, "profile": event.Auth.Id})
 	if err != nil || len(selfRecords) == 0 {
-		return writeError(event, result.Forbidden("chat.forbidden", "Join this game before creating a room."))
+		return httpx.WriteError(event, result.Forbidden("chat.forbidden", "Join this game before creating a room."))
 	}
 	self := selfRecords[0]
 	other, err := event.App.FindRecordById("participants", request.ParticipantID)
 	if err != nil || other.GetString("game") != game.Id ||
 		!gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(other.GetString("status"))) ||
 		other.Id == self.Id {
-		return writeError(event, result.Invalid("chat.invalid_dm", "Choose another active player.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.invalid_dm", "Choose another active player.", nil))
 	}
 	ids := []string{self.Id, other.Id}
 	sort.Strings(ids)
@@ -210,11 +210,11 @@ func createPlayerDM(event *core.RequestEvent) error {
 		return ensureChatMembership(tx, room.Id, other.Id)
 	})
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	resolved, err := resolveAccess(event, room.Id)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	return event.JSON(http.StatusCreated, projectRoom(event.App, resolved))
 }
@@ -226,36 +226,36 @@ type messageRequest struct {
 func createMessage(event *core.RequestEvent) error {
 	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if gamepolicy.IsArchived(gamepolicy.GameStatus(resolved.Game.GetString("status"))) {
-		return writeError(event, result.Conflict("chat.read_only", "Archived chat is read-only."))
+		return httpx.WriteError(event, result.Conflict("chat.read_only", "Archived chat is read-only."))
 	}
 	if resolved.IsGM {
 		if !resolved.Policy.GameMasterMaySend && resolved.Room.GetString("kind") != "gm_dm" && resolved.Room.GetString("kind") != "announcements" {
-			return writeError(event, result.Forbidden("chat.send_forbidden", "Game masters cannot send to this room."))
+			return httpx.WriteError(event, result.Forbidden("chat.send_forbidden", "Game masters cannot send to this room."))
 		}
 	} else if !resolved.Policy.Sendable {
-		return writeError(event, result.Forbidden("chat.send_forbidden", "Sending is disabled in this room."))
+		return httpx.WriteError(event, result.Forbidden("chat.send_forbidden", "Sending is disabled in this room."))
 	}
 	var request messageRequest
 	if err := event.BindBody(&request); err != nil {
-		return writeError(event, result.Invalid("chat.invalid_message", "The message could not be read.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.invalid_message", "The message could not be read.", nil))
 	}
 	request.Content = strings.TrimSpace(request.Content)
 	if len([]rune(request.Content)) < 1 || len([]rune(request.Content)) > 1000 || hasDisallowedControl(request.Content) {
-		return writeError(event, result.Invalid("chat.invalid_message", "Enter a message of at most 1000 characters.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.invalid_message", "Enter a message of at most 1000 characters.", nil))
 	}
 	definition, err := definitionFromGame(resolved.Game)
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	if roomMessageRestriction(definition, resolved.Room) == rulesets.ChatEmojiOnly && !isEmojiOnly(request.Content) {
-		return writeError(event, result.Invalid("chat.emoji_only", "This channel accepts emoji only.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.emoji_only", "This channel accepts emoji only.", nil))
 	}
 	collection, err := event.App.FindCollectionByNameOrId("chat_messages")
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	message := core.NewRecord(collection)
 	message.Set("room", resolved.Room.Id)
@@ -267,7 +267,7 @@ func createMessage(event *core.RequestEvent) error {
 	} else {
 		label, err := playerSenderLabel(event.App, resolved, event.Auth)
 		if err != nil {
-			return writeError(event, result.Internal(err))
+			return httpx.WriteError(event, result.Internal(err))
 		}
 		message.Set("sender_type", "player")
 		message.Set("sender_participant", resolved.Participant.Id)
@@ -275,7 +275,7 @@ func createMessage(event *core.RequestEvent) error {
 	}
 	message.Set("content", request.Content)
 	if err := event.App.Save(message); err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
 	publishRoom(event.App, resolved, "chat.message_created", projected)
@@ -289,23 +289,23 @@ type updateRoomRequest struct {
 func updateRoom(event *core.RequestEvent) error {
 	room, err := event.App.FindRecordById("chat_rooms", event.Request.PathValue("roomId"))
 	if err != nil {
-		return writeError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
 	}
 	game, err := event.App.FindRecordById("games", room.GetString("game"))
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	if appError := gamepolicyapp.GameMutationError(game); appError != nil {
-		return writeError(event, *appError)
+		return httpx.WriteError(event, *appError)
 	}
 	var request updateRoomRequest
 	if err := event.BindBody(&request); err != nil || request.PlayersCanPost == nil {
-		return writeError(event, result.Invalid("chat.room_invalid", "Choose whether players can post.", nil))
+		return httpx.WriteError(event, result.Invalid("chat.room_invalid", "Choose whether players can post.", nil))
 	}
 	room.Set("players_can_post", *request.PlayersCanPost)
 	room.Set("manually_locked", !*request.PlayersCanPost)
 	if err := event.App.Save(room); err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	resolved := access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}
 	projected := projectRoom(event.App, resolved)
@@ -330,10 +330,10 @@ func hasDisallowedControl(value string) bool {
 func listMessages(event *core.RequestEvent) error {
 	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if !resolved.IsGM && !resolved.Policy.Readable {
-		return writeError(event, result.Forbidden("chat.read_forbidden", "Reading is disabled in this room."))
+		return httpx.WriteError(event, result.Forbidden("chat.read_forbidden", "Reading is disabled in this room."))
 	}
 	filter := "room = {:room}"
 	params := dbx.Params{"room": resolved.Room.Id}
@@ -346,7 +346,7 @@ func listMessages(event *core.RequestEvent) error {
 	if cursor := event.Request.URL.Query().Get("cursor"); cursor != "" {
 		created, id, err := decodeCursor(cursor)
 		if err != nil {
-			return writeError(event, result.Invalid("chat.invalid_cursor", "The message cursor is invalid.", nil))
+			return httpx.WriteError(event, result.Invalid("chat.invalid_cursor", "The message cursor is invalid.", nil))
 		}
 		filter += " && (created < {:created} || (created = {:created} && id < {:id}))"
 		params["created"] = created
@@ -354,7 +354,7 @@ func listMessages(event *core.RequestEvent) error {
 	}
 	records, err := event.App.FindRecordsByFilter("chat_messages", filter, "-created,-id", 51, 0, params)
 	if err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	hasMore := len(records) > 50
 	if hasMore {
@@ -375,19 +375,19 @@ func listMessages(event *core.RequestEvent) error {
 func deleteMessage(event *core.RequestEvent) error {
 	resolved, err := resolveAccess(event, event.Request.PathValue("roomId"))
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if appError := gamepolicyapp.GameMutationError(resolved.Game); appError != nil {
-		return writeError(event, *appError)
+		return httpx.WriteError(event, *appError)
 	}
 	message, err := event.App.FindRecordById("chat_messages", event.Request.PathValue("messageId"))
 	if err != nil || message.GetString("room") != resolved.Room.Id {
-		return writeError(event, result.AppError{Code: "chat.message_not_found", Message: "Message not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "chat.message_not_found", Message: "Message not found.", Status: http.StatusNotFound})
 	}
 	own := !resolved.IsGM && message.GetString("sender_type") == "player" &&
 		message.GetString("sender_participant") == resolved.Participant.Id
 	if !resolved.IsGM && !own {
-		return writeError(event, result.Forbidden("chat.delete_forbidden", "You cannot delete this message."))
+		return httpx.WriteError(event, result.Forbidden("chat.delete_forbidden", "You cannot delete this message."))
 	}
 	message.Set("content", "")
 	message.Set("deleted_at", time.Now().UTC())
@@ -395,7 +395,7 @@ func deleteMessage(event *core.RequestEvent) error {
 		message.Set("deleted_by", event.Auth.Id)
 	}
 	if err := event.App.Save(message); err != nil {
-		return writeError(event, result.Internal(err))
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
 	publishRoom(event.App, resolved, "chat.message_deleted", projected)
@@ -408,19 +408,19 @@ func setRoomLock(locked bool) func(*core.RequestEvent) error {
 	return func(event *core.RequestEvent) error {
 		room, err := event.App.FindRecordById("chat_rooms", event.Request.PathValue("roomId"))
 		if err != nil {
-			return writeError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
+			return httpx.WriteError(event, result.AppError{Code: "chat.room_not_found", Message: "Chat room not found.", Status: http.StatusNotFound})
 		}
 		game, err := event.App.FindRecordById("games", room.GetString("game"))
 		if err != nil {
-			return writeError(event, result.Internal(err))
+			return httpx.WriteError(event, result.Internal(err))
 		}
 		if appError := gamepolicyapp.GameMutationError(game); appError != nil {
-			return writeError(event, *appError)
+			return httpx.WriteError(event, *appError)
 		}
 		room.Set("manually_locked", locked)
 		room.Set("players_can_post", !locked)
 		if err := event.App.Save(room); err != nil {
-			return writeError(event, result.Internal(err))
+			return httpx.WriteError(event, result.Internal(err))
 		}
 		resolved := access{Game: game, Room: room, IsGM: true}
 		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "playersCanPost": !locked})
@@ -710,13 +710,6 @@ func decodeCursor(value string) (time.Time, string, error) {
 		return time.Time{}, "", fmt.Errorf("invalid cursor")
 	}
 	return cursor.Created, cursor.ID, nil
-}
-
-func writeError(event *core.RequestEvent, err error) error {
-	if appError, ok := err.(result.AppError); ok {
-		return httpx.WriteError(event, appError)
-	}
-	return httpx.WriteError(event, result.Internal(err))
 }
 
 func queryInt(values url.Values, key string, fallback int) int {

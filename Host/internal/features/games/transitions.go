@@ -41,11 +41,11 @@ func transition(command Transition) func(*core.RequestEvent) error {
 	return func(event *core.RequestEvent) error {
 		game, err := findGame(event)
 		if err != nil {
-			return writeGameError(event, err)
+			return httpx.WriteErrorFrom(event, err)
 		}
 		if command == Start {
 			if err := validateStart(event.App, game); err != nil {
-				return writeGameError(event, err)
+				return httpx.WriteErrorFrom(event, err)
 			}
 		}
 		next, err := ApplyTransition(stateFromRecord(game), command, time.Now().UTC())
@@ -151,7 +151,7 @@ type archiveRequest struct {
 func archiveGame(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusReview) {
 		return httpx.WriteError(event, result.Conflict("game.transition_not_allowed", "Only a game in review can be archived."))
@@ -191,7 +191,7 @@ type phaseRequest struct {
 func setPhase(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusRunning) && game.GetString("status") != string(StatusPaused) {
 		return httpx.WriteError(event, result.Conflict("game.phase_not_allowed", "Phases can only change while a game is running or paused."))

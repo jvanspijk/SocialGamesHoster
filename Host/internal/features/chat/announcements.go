@@ -88,7 +88,7 @@ type announcementRequest struct {
 func createAnnouncement(event *core.RequestEvent) error {
 	game, err := findAnnouncementGame(event)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(gamepolicy.GameLobby) && game.GetString("status") != string(gamepolicy.GameRunning) && game.GetString("status") != string(gamepolicy.GamePaused) {
 		return httpx.WriteError(event, result.Conflict("chat.read_only", "Announcements are only available during a live game."))
@@ -109,13 +109,13 @@ func createAnnouncement(event *core.RequestEvent) error {
 		event.App, game, definition, request.ImageAssetKey, "image", request.ImageDescription,
 	)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	request.AudioAlternative, err = validateAnnouncementAsset(
 		event.App, game, definition, request.AudioAssetKey, "audio", request.AudioAlternative,
 	)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	var cue *rulesets.AudioCue
 	if request.CueKey != "" {
@@ -173,7 +173,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 		return nil
 	})
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 
 	playerProjection := projectPlayerAttention(item)
@@ -198,7 +198,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 func acknowledgeAnnouncement(event *core.RequestEvent) error {
 	game, err := findAnnouncementGame(event)
 	if err != nil {
-		return writeError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	// Acknowledgement remains valid after archival because it only updates the
 	// authenticated participant's receipt, not archived game-owned content.

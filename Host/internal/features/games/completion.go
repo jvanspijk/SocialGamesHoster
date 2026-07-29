@@ -15,7 +15,7 @@ import (
 func startCompletion(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	status := game.GetString("status")
 	if status != string(StatusRunning) && status != string(StatusPaused) {
@@ -59,7 +59,7 @@ func startCompletion(event *core.RequestEvent) error {
 func cancelCompletion(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusReview) {
 		return httpx.WriteError(event, result.Conflict("game.completion_not_active", "This game is not in the completion flow."))
@@ -87,7 +87,7 @@ func cancelCompletion(event *core.RequestEvent) error {
 func gameSummary(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusReview) && game.GetString("status") != string(StatusArchived) {
 		return httpx.WriteError(event, result.Conflict("game.summary_not_available", "The summary is available while finishing or after archiving a game."))

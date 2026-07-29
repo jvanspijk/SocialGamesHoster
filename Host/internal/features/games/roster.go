@@ -26,7 +26,7 @@ type participantUpdateRequest struct {
 func updateParticipant(event *core.RequestEvent) error {
 	game, participant, err := rosterTarget(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if appError := gamepolicyapp.GameMutationError(game); appError != nil {
 		return httpx.WriteError(event, *appError)
@@ -56,7 +56,7 @@ func setParticipantStatus(status gamepolicy.ParticipantStatus) func(*core.Reques
 	return func(event *core.RequestEvent) error {
 		game, participant, err := rosterTarget(event)
 		if err != nil {
-			return writeGameError(event, err)
+			return httpx.WriteErrorFrom(event, err)
 		}
 		if appError := gamepolicyapp.GameMutationError(game); appError != nil {
 			return httpx.WriteError(event, *appError)
@@ -137,7 +137,7 @@ type assignmentRequest struct {
 func putAssignments(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusLobby) {
 		return httpx.WriteError(event, result.Conflict("game.assignments_not_allowed", "Assignments can only change in the lobby."))
@@ -171,7 +171,7 @@ func putAssignments(event *core.RequestEvent) error {
 func randomizeAssignments(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusLobby) {
 		return httpx.WriteError(event, result.Conflict("game.assignments_not_allowed", "Assignments can only change in the lobby."))
@@ -287,7 +287,7 @@ type outcomesRequest struct {
 func putOutcomes(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") != string(StatusRunning) && game.GetString("status") != string(StatusPaused) && game.GetString("status") != string(StatusReview) {
 		return httpx.WriteError(event, result.Conflict("game.outcomes_not_allowed", "Outcomes can only change during play or review."))
@@ -316,7 +316,7 @@ func putOutcomes(event *core.RequestEvent) error {
 		return tx.Save(game)
 	})
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	_ = audit(event.App, event.Auth, game.Id, "outcomes.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "outcomes.changed", map[string]any{"revision": game.GetInt("revision")})

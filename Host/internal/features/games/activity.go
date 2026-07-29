@@ -16,7 +16,7 @@ import (
 func listActivity(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	offset, err := decodeOffset(event.Request.URL.Query().Get("cursor"))
 	if err != nil {

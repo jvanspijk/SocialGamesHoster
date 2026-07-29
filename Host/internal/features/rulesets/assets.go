@@ -46,7 +46,7 @@ func registerAssetPreviewRoute(event *core.ServeEvent) {
 func listAssets(event *core.RequestEvent) error {
 	version, err := draftVersion(event.App, event.Request.PathValue("id"), false)
 	if err != nil {
-		return writeAssetError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	records, err := event.App.FindRecordsByFilter(
 		"ruleset_assets",
@@ -70,7 +70,7 @@ func uploadAsset(event *core.RequestEvent) error {
 	versionID := event.Request.PathValue("id")
 	version, err := draftVersion(event.App, versionID, true)
 	if err != nil {
-		return writeAssetError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	assetKey := strings.TrimSpace(event.Request.FormValue("assetKey"))
 	kind := strings.TrimSpace(event.Request.FormValue("kind"))
@@ -151,7 +151,7 @@ func deleteAsset(event *core.RequestEvent) error {
 	versionID := event.Request.PathValue("id")
 	version, err := draftVersion(event.App, versionID, true)
 	if err != nil {
-		return writeAssetError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	asset, err := event.App.FindRecordById("ruleset_assets", event.Request.PathValue("assetId"))
 	if err != nil || asset.GetString("ruleset_version") != versionID {
@@ -222,14 +222,6 @@ func draftVersion(app core.App, id string, requireDraft bool) (*core.Record, err
 		return nil, result.AppError{Code: "ruleset.published_immutable", Message: "Published ruleset assets cannot be changed.", Status: http.StatusConflict}
 	}
 	return record, nil
-}
-
-func writeAssetError(event *core.RequestEvent, err error) error {
-	var appError result.AppError
-	if errors.As(err, &appError) {
-		return httpx.WriteError(event, appError)
-	}
-	return httpx.WriteError(event, result.Internal(err))
 }
 
 func projectAsset(record *core.Record) map[string]any {

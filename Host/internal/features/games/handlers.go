@@ -80,7 +80,7 @@ func createGame(event *core.RequestEvent) error {
 func duplicateGame(event *core.RequestEvent) error {
 	source, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	collection, err := event.App.FindCollectionByNameOrId("games")
 	if err != nil {
@@ -108,7 +108,7 @@ func duplicateGame(event *core.RequestEvent) error {
 func deleteGame(event *core.RequestEvent) error {
 	record, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	// Deletion is an explicit exception to archived-game immutability: it
 	// removes the entire aggregate after an exact confirmation.
@@ -151,7 +151,7 @@ func canDeleteGame(status Status) bool {
 func closeJoining(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if game.GetString("status") == string(StatusRunning) || game.GetString("status") == string(StatusPaused) {
 		game.Set("joining_open", false)
@@ -237,7 +237,7 @@ func clearGameSession(app core.App, gameID string, includeAudit bool) error {
 func openLobby(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	now := time.Now().UTC()
 	next, err := ApplyTransition(stateFromRecord(game), OpenLobby, now)
@@ -277,7 +277,7 @@ func openLobby(event *core.RequestEvent) error {
 func openJoining(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	if !canOpenJoining(Status(game.GetString("status"))) {
 		return httpx.WriteError(event, result.Conflict(
@@ -301,7 +301,7 @@ func openJoining(event *core.RequestEvent) error {
 func joinGame(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	var participant *core.Record
 	err = event.App.RunInTransaction(func(tx core.App) error {
@@ -358,7 +358,7 @@ func joinGame(event *core.RequestEvent) error {
 		return tx.Save(game)
 	})
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	_ = audit(event.App, event.Auth, game.Id, "participant.joined", "participant", participant.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "participant.joined", projectParticipant(participant, false))
@@ -369,7 +369,7 @@ func joinGame(event *core.RequestEvent) error {
 func adminView(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	definition, err := snapshot(game)
 	if err != nil {

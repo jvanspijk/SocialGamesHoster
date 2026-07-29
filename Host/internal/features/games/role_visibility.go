@@ -17,7 +17,7 @@ type roleVisibilityRequest struct {
 func setRoleVisibility(event *core.RequestEvent) error {
 	game, err := findGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return httpx.WriteErrorFrom(event, err)
 	}
 	status := gamepolicy.GameStatus(game.GetString("status"))
 	if status == gamepolicy.GameDraft || gamepolicy.IsArchived(status) {

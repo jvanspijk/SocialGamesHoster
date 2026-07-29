@@ -220,10 +220,7 @@ func redeem(event *core.RequestEvent) error {
 		return txApp.Save(record)
 	})
 	if transactionErr != nil {
-		if appError, ok := transactionErr.(result.AppError); ok {
-			return httpx.WriteError(event, appError)
-		}
-		return httpx.WriteError(event, result.Internal(transactionErr))
+		return httpx.WriteErrorFrom(event, transactionErr)
 	}
 	token, err := profile.NewAuthToken()
 	if err != nil {
@@ -313,10 +310,7 @@ func approve(event *core.RequestEvent) error {
 		return txApp.Save(requestRecord)
 	})
 	if err != nil {
-		if appError, ok := err.(result.AppError); ok {
-			return httpx.WriteError(event, appError)
-		}
-		return httpx.WriteError(event, result.Internal(err))
+		return httpx.WriteErrorFrom(event, err)
 	}
 	approvedRequest := approvedRequestRecord(event.App, requestID)
 	publishProfileRequest(event.App, approvedRequest, "profile_request.approved")
