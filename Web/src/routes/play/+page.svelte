@@ -109,6 +109,7 @@
 
 	.phase-copy h1 {
 		font-size: clamp(2.5rem, 12vw, 5.5rem);
+		overflow-wrap: anywhere;
 	}
 
 	.eyebrow {

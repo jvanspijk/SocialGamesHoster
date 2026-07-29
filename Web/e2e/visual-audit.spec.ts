@@ -231,6 +231,10 @@ test('capture the visual overhaul acceptance ledger', async ({ browser, page }) 
 	await playerOne.reload();
 	await expect(playerOne.getByRole('button', { name: 'Role', exact: true })).toBeVisible();
 	await capture(playerOne, 'player-stage', 'running-timer');
+	await playerOne.setViewportSize(viewports[0]);
+	expect(
+		await playerOne.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+	).toBe(true);
 	await captureCritical(playerOne, 'player-stage', 'running-critical');
 
 	const latePlayerContext = await browser.newContext({ viewport: viewports[0] });
