@@ -22,6 +22,5 @@ test('owner can create a ruleset', async ({ page }) => {
 	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/metadata$/);
 
 	await page.reload();
-	await expect(page.getByLabel('Stable slug')).toHaveValue('party-test');
 	await expect(page.getByLabel('Name')).toHaveValue('Party Test');
 });

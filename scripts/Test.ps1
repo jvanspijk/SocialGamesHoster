@@ -24,7 +24,7 @@ function Invoke-Check([string]$Step, [scriptblock]$Action, [string]$Remediation 
     & $Action
     Assert-NativeSuccess $Step $Remediation
     $stopwatch.Stop()
-    Write-Host "$Step completed in $($stopwatch.Elapsed.ToString('m\\:ss'))."
+    Write-Host "$Step completed in $($stopwatch.Elapsed.ToString('m\:ss'))."
 }
 
 Push-Location $projectRoot
