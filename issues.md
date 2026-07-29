@@ -1,9 +1,3 @@
-- announcements should always be visible as a popup no matter which screen the player is on OR it should show an icon indicating a pending announcement on the game tab
-	- They also don't always update without refreshing automatically
-- Admin chat: I don't know if it's the issue above causing this but I can't reply to DM messages if I'm the game owner
-- In-game player view (game page) horizontal space is wrong
-- After playing a round and going to the players screen (the players have also refreshed their phones) all the role assignments are gone.
-	- This seems to be a visual bug since the players still can see their roles themselves
 - During playing the Echo Location game: the lookout was unable to use the lookout chat. This same issue might also occur for the other roles.
 
 ---
@@ -17,6 +11,3 @@
 - There's no distinction between application errors and validation errors when displaying errors. This is confusing for users as they are reporting errors when for something simple as a wrong password input or invalid profile name.
 	- Validation errors should also not create a trace log. 
 	- DO NOT solve this by appending Validation error: <error message>. This would look highly unprofessional and the user does not need to know the type of error.
-
-- After spamming a lot of messages in a chat channel (mind the DDOS protection!) I noticed I can't scroll down to see the last messages (after like 32 or so and after getting a warning for spamming too fast).
-	- refreshing did not solve this issue
