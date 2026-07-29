@@ -14,11 +14,11 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -31,9 +31,9 @@ func Register(event *core.ServeEvent) {
 	group.GET("/rooms/{roomId}/messages", listMessages)
 	group.POST("/rooms/{roomId}/messages", createMessage)
 	group.DELETE("/rooms/{roomId}/messages/{messageId}", deleteMessage)
-	group.PATCH("/rooms/{roomId}", updateRoom).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(platformauth.RequireGameMaster)
+	group.PATCH("/rooms/{roomId}", updateRoom).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(actorauth.RequireGameMaster)
 }
 
 type access struct {
@@ -57,10 +57,10 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	if err != nil {
 		return access{}, err
 	}
-	if event.Auth.Collection().Name == "game_masters" {
+	if actorauth.IsGameMaster(event.Auth) {
 		return access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}, nil
 	}
-	if event.Auth.Collection().Name != "player_profiles" {
+	if !actorauth.IsPlayer(event.Auth) {
 		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
 	}
 	participants, err := event.App.FindRecordsByFilter("participants", "game = {:game} && profile = {:profile}", "", 1, 0,
@@ -145,7 +145,7 @@ func createPlayerDM(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
 	}
-	if event.Auth == nil || event.Auth.Collection().Name != "player_profiles" || !event.Auth.GetBool("active") {
+	if !actorauth.IsActivePlayer(event.Auth) {
 		return writeError(event, result.AppError{Code: "auth.required", Message: "A player profile is required.", Status: http.StatusUnauthorized})
 	}
 	if game.GetString("status") != "running" && game.GetString("status") != "paused" {
@@ -613,10 +613,10 @@ func publishRoom(app core.App, resolved access, kind string, payload any) {
 		if auth == nil || !auth.GetBool("active") {
 			return false
 		}
-		if auth.Collection().Name == "game_masters" {
+		if actorauth.IsGameMaster(auth) {
 			return true
 		}
-		if auth.Collection().Name != "player_profiles" {
+		if !actorauth.IsPlayer(auth) {
 			return false
 		}
 		return playerMayReceiveRoomEvent(app, resolved, auth.Id)

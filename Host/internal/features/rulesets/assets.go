@@ -21,9 +21,9 @@ import (
 	"github.com/pocketbase/pocketbase/tools/router"
 	"golang.org/x/image/webp"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -185,8 +185,8 @@ func previewAsset(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Ruleset asset not found.", Status: http.StatusNotFound})
 	}
 	switch event.Auth.Collection().Name {
-	case platformauth.GameMastersCollection:
-	case platformauth.PlayerProfilesCollection:
+	case actorauth.GameMastersCollection:
+	case actorauth.PlayerProfilesCollection:
 		if !playerMayReadVersionAsset(event.App, event.Auth.Id, asset.GetString("ruleset_version"), asset.GetString("asset_key")) {
 			return httpx.WriteError(event, result.Forbidden("asset.forbidden", "This asset is not part of your current game."))
 		}

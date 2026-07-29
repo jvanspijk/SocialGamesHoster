@@ -12,7 +12,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 )
 
 func Register(event *core.ServeEvent, enabled bool, startedAt time.Time, applicationVersion string) {
@@ -20,7 +20,7 @@ func Register(event *core.ServeEvent, enabled bool, startedAt time.Time, applica
 		return
 	}
 	group := event.Router.Group("/api/app/v1/diagnostics")
-	group.BindFunc(platformauth.RequireOwner)
+	group.BindFunc(actorauth.RequireOwner)
 	group.GET("/health", func(request *core.RequestEvent) error {
 		return request.JSON(http.StatusOK, map[string]any{
 			"status":     "ok",

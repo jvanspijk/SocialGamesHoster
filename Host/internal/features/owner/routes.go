@@ -13,8 +13,8 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/desktop"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/recovery"
@@ -37,7 +37,7 @@ type restoreRequest struct {
 
 func Register(event *core.ServeEvent) {
 	group := event.Router.Group("/api/app/v1/owner")
-	group.BindFunc(platformauth.RequireOwner)
+	group.BindFunc(actorauth.RequireOwner)
 	group.GET("/settings", getSettings)
 	group.PATCH("/settings", updateSettings)
 	group.POST("/backups", createBackup)

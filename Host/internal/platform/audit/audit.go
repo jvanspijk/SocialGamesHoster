@@ -2,6 +2,8 @@ package audit
 
 import (
 	"github.com/pocketbase/pocketbase/core"
+
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 )
 
 func Record(
@@ -25,7 +27,7 @@ func Record(
 	if actor != nil {
 		record.Set("actor_id", actor.Id)
 		record.Set("actor_label", actor.GetString("display_name"))
-		if actor.Collection().Name == "game_masters" {
+		if actorauth.IsGameMaster(actor) {
 			record.Set("actor_type", "game_master")
 		} else {
 			record.Set("actor_type", "player")

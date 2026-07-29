@@ -10,13 +10,14 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/fixtures"
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/owner"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/profiles"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
 
-const collectionName = "game_masters"
+const collectionName = actorauth.GameMastersCollection
 
 type OwnerRequest struct {
 	Username               string `json:"username"`

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -32,7 +32,7 @@ func login(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("auth.invalid", "Username or password is incorrect.", nil))
 	}
-	record, err := event.App.FindFirstRecordByData(platformauth.GameMastersCollection, "username", strings.ToLower(strings.TrimSpace(request.Username)))
+	record, err := event.App.FindFirstRecordByData(actorauth.GameMastersCollection, "username", strings.ToLower(strings.TrimSpace(request.Username)))
 	if err != nil || !record.ValidatePassword(request.Password) || !record.GetBool("active") {
 		return httpx.WriteError(event, result.AppError{
 			Code:    "auth.invalid",

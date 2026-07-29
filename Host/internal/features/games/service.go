@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
@@ -118,7 +119,7 @@ func audit(app core.App, actor *core.Record, gameID, action, targetType, targetI
 	actorLabel := "System"
 	if actor != nil {
 		actorID = actor.Id
-		if actor.Collection().Name == "game_masters" {
+		if actorauth.IsGameMaster(actor) {
 			actorType = "game_master"
 			actorLabel = actor.GetString("display_name")
 		} else {
@@ -148,10 +149,10 @@ func publishGame(app core.App, record *core.Record, kind string, payload any) {
 		if auth == nil || !auth.GetBool("active") {
 			return false
 		}
-		if auth.Collection().Name == "game_masters" {
+		if actorauth.IsGameMaster(auth) {
 			return true
 		}
-		if auth.Collection().Name != "player_profiles" {
+		if !actorauth.IsPlayer(auth) {
 			return false
 		}
 		return gamepolicyapp.ProfileParticipatesInGame(app, record.Id, auth.Id)
@@ -161,7 +162,7 @@ func publishGame(app core.App, record *core.Record, kind string, payload any) {
 // publishLobbyOpened lets signed-in profiles that have not yet joined the new
 // lobby refresh their waiting screen. Game events remain participant-scoped.
 func publishLobbyOpened(app core.App, record *core.Record) {
-	profiles, err := app.FindRecordsByFilter("player_profiles", "active = true", "", 10000, 0)
+	profiles, err := app.FindRecordsByFilter(actorauth.PlayerProfilesCollection, "active = true", "", 10000, 0)
 	if err != nil {
 		return
 	}
@@ -170,7 +171,7 @@ func publishLobbyOpened(app core.App, record *core.Record) {
 			EventID: realtime.NewEventID(), GameID: record.Id, Revision: record.GetInt("revision"),
 			Kind: "game.lobby_opened", Payload: projectGame(record),
 		}, func(auth *core.Record) bool {
-			return auth != nil && auth.Collection().Name == "player_profiles" && auth.GetBool("active") && auth.Id == profile.Id
+			return actorauth.IsActivePlayer(auth) && auth.Id == profile.Id
 		})
 	}
 }
@@ -180,7 +181,7 @@ func publishGameMasters(app core.App, record *core.Record, kind string, payload 
 		EventID: realtime.NewEventID(), GameID: record.Id, Revision: record.GetInt("revision"),
 		Kind: kind, Payload: payload,
 	}, func(auth *core.Record) bool {
-		return auth != nil && auth.Collection().Name == "game_masters" && auth.GetBool("active")
+		return actorauth.IsActiveGameMaster(auth)
 	})
 }
 

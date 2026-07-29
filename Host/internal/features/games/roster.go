@@ -10,6 +10,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -131,8 +132,8 @@ func participantChanged(event *core.RequestEvent, game, participant *core.Record
 		Kind: kind, Payload: projectParticipantForPlayer(game, participant),
 	}, func(auth *core.Record) bool {
 		return auth != nil && auth.GetBool("active") &&
-			(auth.Collection().Name == "game_masters" ||
-				(auth.Collection().Name == "player_profiles" && auth.Id == participant.GetString("profile")))
+			(actorauth.IsGameMaster(auth) ||
+				(actorauth.IsPlayer(auth) && auth.Id == participant.GetString("profile")))
 	})
 	return event.JSON(http.StatusOK, private)
 }
@@ -265,8 +266,8 @@ func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
 			Kind: "assignments.changed", Payload: projectParticipantForPlayer(game, participant),
 		}, func(auth *core.Record) bool {
 			return auth != nil && auth.GetBool("active") &&
-				(auth.Collection().Name == "game_masters" ||
-					(auth.Collection().Name == "player_profiles" && auth.Id == participant.GetString("profile")))
+				(actorauth.IsGameMaster(auth) ||
+					(actorauth.IsPlayer(auth) && auth.Id == participant.GetString("profile")))
 		})
 	}
 	_ = audit(event.App, event.Auth, game.Id, "assignments.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))

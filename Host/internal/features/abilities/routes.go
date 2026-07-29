@@ -6,7 +6,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -14,8 +14,8 @@ import (
 
 func Register(event *core.ServeEvent) {
 	group := event.Router.Group("/api/app/v1")
-	group.POST("/games/{id}/abilities/{abilityId}/activate", activate).BindFunc(platformauth.RequirePlayer)
-	group.DELETE("/games/{id}/abilities/{abilityId}/activate", undo).BindFunc(platformauth.RequirePlayer)
+	group.POST("/games/{id}/abilities/{abilityId}/activate", activate).BindFunc(actorauth.RequirePlayer)
+	group.DELETE("/games/{id}/abilities/{abilityId}/activate", undo).BindFunc(actorauth.RequirePlayer)
 }
 
 func activate(event *core.RequestEvent) error {

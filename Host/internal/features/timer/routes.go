@@ -6,9 +6,9 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -21,11 +21,11 @@ type commandRequest struct {
 func Register(event *core.ServeEvent, service *Service) {
 	group := event.Router.Group("/api/app/v1")
 	group.GET("/games/{id}/timer", getTimer)
-	group.POST("/games/{id}/timer/start", timerCommand(service, "start")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/timer/pause", timerCommand(service, "pause")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/timer/resume", timerCommand(service, "resume")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/timer/adjust", timerCommand(service, "adjust")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/timer/stop", timerCommand(service, "stop")).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/timer/start", timerCommand(service, "start")).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/timer/pause", timerCommand(service, "pause")).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/timer/resume", timerCommand(service, "resume")).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/timer/adjust", timerCommand(service, "adjust")).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/timer/stop", timerCommand(service, "stop")).BindFunc(actorauth.RequireGameMaster)
 }
 
 func getTimer(event *core.RequestEvent) error {
@@ -58,10 +58,10 @@ func canViewTimer(event *core.RequestEvent, game *core.Record) bool {
 	if auth == nil || !auth.GetBool("active") {
 		return false
 	}
-	if auth.Collection().Name == "game_masters" {
+	if actorauth.IsGameMaster(auth) {
 		return true
 	}
-	if auth.Collection().Name != "player_profiles" {
+	if !actorauth.IsPlayer(auth) {
 		return false
 	}
 	return gamepolicyapp.ProfileParticipatesInGame(event.App, game.Id, auth.Id)

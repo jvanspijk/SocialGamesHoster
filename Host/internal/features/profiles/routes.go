@@ -19,10 +19,10 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	platformrealtime "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -58,7 +58,7 @@ func Register(event *core.ServeEvent) {
 	authGroup.POST("/{requestId}/redeem", redeem)
 
 	profileGroup := event.Router.Group("/api/app/v1/profiles")
-	profileGroup.BindFunc(platformauth.RequirePlayer)
+	profileGroup.BindFunc(actorauth.RequirePlayer)
 	profileGroup.GET("/me", me)
 	profileGroup.PATCH("/me", updateMe)
 	profileGroup.POST("/me/avatar", updateAvatar)
@@ -67,7 +67,7 @@ func Register(event *core.ServeEvent) {
 	event.Router.GET("/api/app/v1/profiles/{profileId}/avatar", avatar)
 
 	adminGroup := event.Router.Group("/api/app/v1/admin")
-	adminGroup.BindFunc(platformauth.RequireGameMaster)
+	adminGroup.BindFunc(actorauth.RequireGameMaster)
 	adminGroup.GET("/profile-requests", pendingRequests)
 	adminGroup.GET("/profiles", listProfiles)
 	adminGroup.GET("/profiles/{profileId}", adminProfileDetail)
@@ -79,7 +79,7 @@ func Register(event *core.ServeEvent) {
 
 func listProfiles(event *core.RequestEvent) error {
 	records, err := event.App.FindRecordsByFilter(
-		platformauth.PlayerProfilesCollection,
+		actorauth.PlayerProfilesCollection,
 		"",
 		"display_name",
 		500,
@@ -147,7 +147,7 @@ func requestProfile(event *core.RequestEvent) error {
 	record.Set("status", "pending")
 	record.Set("expires_at", time.Now().UTC().Add(requestLifetime))
 
-	existing, existingErr := event.App.FindFirstRecordByData(platformauth.PlayerProfilesCollection, "normalized_name", normalizedName)
+	existing, existingErr := event.App.FindFirstRecordByData(actorauth.PlayerProfilesCollection, "normalized_name", normalizedName)
 	requestType, profile, lookupErr := classifyProfileRequest(existing, existingErr)
 	if lookupErr != nil {
 		return httpx.WriteError(event, result.Internal(lookupErr))
@@ -211,7 +211,7 @@ func redeem(event *core.RequestEvent) error {
 		if record.GetString("status") != "approved" {
 			return result.AppError{Code: "profile_request.not_approved", Message: "This profile request has not been approved.", Status: http.StatusConflict}
 		}
-		profile, err = txApp.FindRecordById(platformauth.PlayerProfilesCollection, record.GetString("profile"))
+		profile, err = txApp.FindRecordById(actorauth.PlayerProfilesCollection, record.GetString("profile"))
 		if err != nil || !profile.GetBool("active") {
 			return result.AppError{Code: "profile.disabled", Message: "This profile is not available.", Status: http.StatusForbidden}
 		}
@@ -274,7 +274,7 @@ func approve(event *core.RequestEvent) error {
 		}
 
 		if requestRecord.GetString("request_type") == "recover" {
-			approvedProfile, err = txApp.FindRecordById(platformauth.PlayerProfilesCollection, requestRecord.GetString("profile"))
+			approvedProfile, err = txApp.FindRecordById(actorauth.PlayerProfilesCollection, requestRecord.GetString("profile"))
 			if err != nil {
 				return err
 			}
@@ -286,7 +286,7 @@ func approve(event *core.RequestEvent) error {
 				return err
 			}
 		} else {
-			collection, err := txApp.FindCollectionByNameOrId(platformauth.PlayerProfilesCollection)
+			collection, err := txApp.FindCollectionByNameOrId(actorauth.PlayerProfilesCollection)
 			if err != nil {
 				return err
 			}
@@ -446,10 +446,10 @@ func publishLiveParticipantNameChange(app core.App, game, participant *core.Reco
 			if auth == nil || !auth.GetBool("active") {
 				return false
 			}
-			if auth.Collection().Name == platformauth.GameMastersCollection {
+			if actorauth.IsGameMaster(auth) {
 				return true
 			}
-			return auth.Collection().Name == platformauth.PlayerProfilesCollection && auth.Id == participant.GetString("profile")
+			return actorauth.IsPlayer(auth) && auth.Id == participant.GetString("profile")
 		})
 	}
 }
@@ -485,15 +485,15 @@ func updateAvatar(event *core.RequestEvent) error {
 }
 
 func avatar(event *core.RequestEvent) error {
-	profile, err := event.App.FindRecordById(platformauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
+	profile, err := event.App.FindRecordById(actorauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
 	if err != nil || !profile.GetBool("active") || profile.GetString("avatar") == "" {
 		return httpx.WriteError(event, result.AppError{Code: "profile.avatar_not_found", Message: "Profile image not found.", Status: http.StatusNotFound})
 	}
 	if event.Auth == nil || !event.Auth.GetBool("active") {
 		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to view this profile image.", Status: http.StatusUnauthorized})
 	}
-	if event.Auth.Collection().Name != platformauth.GameMastersCollection &&
-		(event.Auth.Collection().Name != platformauth.PlayerProfilesCollection ||
+	if !actorauth.IsGameMaster(event.Auth) &&
+		(!actorauth.IsPlayer(event.Auth) ||
 			!partyMembers(event.App, event.Auth.Id, profile.Id)) {
 		return httpx.WriteError(event, result.Forbidden("profile.forbidden", "This profile image is visible only to party members."))
 	}
@@ -521,7 +521,7 @@ func avatar(event *core.RequestEvent) error {
 }
 
 func summary(event *core.RequestEvent) error {
-	profile, err := event.App.FindRecordById(platformauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
+	profile, err := event.App.FindRecordById(actorauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
 	if err != nil || !profile.GetBool("active") {
 		return httpx.WriteError(event, result.AppError{Code: "profile.not_found", Message: "Profile not found.", Status: http.StatusNotFound})
 	}
@@ -544,7 +544,7 @@ func privateHistory(event *core.RequestEvent) error {
 }
 
 func adminProfileDetail(event *core.RequestEvent) error {
-	profile, err := event.App.FindRecordById(platformauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
+	profile, err := event.App.FindRecordById(actorauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "profile.not_found", Message: "Profile not found.", Status: http.StatusNotFound})
 	}
@@ -637,7 +637,7 @@ func restore(event *core.RequestEvent) error {
 }
 
 func setActive(event *core.RequestEvent, active bool) error {
-	profile, err := event.App.FindRecordById(platformauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
+	profile, err := event.App.FindRecordById(actorauth.PlayerProfilesCollection, event.Request.PathValue("profileId"))
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "profile.not_found", Message: "Profile not found.", Status: http.StatusNotFound})
 	}
@@ -685,7 +685,7 @@ func publishProfileRequest(app core.App, record *core.Record, kind string) {
 		app.Logger().Error("profile request realtime publication failed", "requestId", record.Id, "error", err)
 	}
 	if err := platformrealtime.Publish(app, "profile-requests:game-masters", event, func(auth *core.Record) bool {
-		return auth != nil && auth.Collection().Name == platformauth.GameMastersCollection && auth.GetBool("active")
+		return actorauth.IsActiveGameMaster(auth)
 	}); err != nil {
 		app.Logger().Error("profile request admin publication failed", "requestId", record.Id, "error", err)
 	}
@@ -702,7 +702,7 @@ func publishProfile(app core.App, profile *core.Record, kind string) {
 	}
 	if err := platformrealtime.Publish(app, "profile:"+profile.Id, event, func(auth *core.Record) bool {
 		return auth != nil && (auth.Id == profile.Id ||
-			(auth.Collection().Name == platformauth.GameMastersCollection && auth.GetBool("active")))
+			actorauth.IsActiveGameMaster(auth))
 	}); err != nil {
 		app.Logger().Error("profile realtime publication failed", "profileId", profile.Id, "error", err)
 	}

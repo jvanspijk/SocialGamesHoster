@@ -6,9 +6,9 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/profiles"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -31,7 +31,7 @@ type resetPasswordRequest struct {
 
 func RegisterOwnerRoutes(event *core.ServeEvent) {
 	group := event.Router.Group("/api/app/v1/owner/game-masters")
-	group.BindFunc(platformauth.RequireOwner)
+	group.BindFunc(actorauth.RequireOwner)
 	group.GET("", listGameMasters)
 	group.POST("", createGameMaster)
 	group.PATCH("/{id}", updateGameMaster)
@@ -40,7 +40,7 @@ func RegisterOwnerRoutes(event *core.ServeEvent) {
 }
 
 func listGameMasters(event *core.RequestEvent) error {
-	records, err := event.App.FindRecordsByFilter(platformauth.GameMastersCollection, "", "username", 100, 0)
+	records, err := event.App.FindRecordsByFilter(actorauth.GameMastersCollection, "", "username", 100, 0)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -71,7 +71,7 @@ func createGameMaster(event *core.RequestEvent) error {
 	if len(fields) > 0 {
 		return httpx.WriteError(event, result.Invalid("game_master.invalid", "Correct the highlighted account details.", fields))
 	}
-	collection, err := event.App.FindCollectionByNameOrId(platformauth.GameMastersCollection)
+	collection, err := event.App.FindCollectionByNameOrId(actorauth.GameMastersCollection)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -92,7 +92,7 @@ func createGameMaster(event *core.RequestEvent) error {
 }
 
 func updateGameMaster(event *core.RequestEvent) error {
-	target, err := event.App.FindRecordById(platformauth.GameMastersCollection, event.Request.PathValue("id"))
+	target, err := event.App.FindRecordById(actorauth.GameMastersCollection, event.Request.PathValue("id"))
 	if err != nil {
 		return gameMasterNotFound(event)
 	}
@@ -120,7 +120,7 @@ func updateGameMaster(event *core.RequestEvent) error {
 		if err := transferOwnership(event.App, event.Auth.Id, target.Id); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		updated, err := event.App.FindRecordById(platformauth.GameMastersCollection, target.Id)
+		updated, err := event.App.FindRecordById(actorauth.GameMastersCollection, target.Id)
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
@@ -138,11 +138,11 @@ func updateGameMaster(event *core.RequestEvent) error {
 
 func transferOwnership(app core.App, currentOwnerID, nextOwnerID string) error {
 	return app.RunInTransaction(func(txApp core.App) error {
-		current, err := txApp.FindRecordById(platformauth.GameMastersCollection, currentOwnerID)
+		current, err := txApp.FindRecordById(actorauth.GameMastersCollection, currentOwnerID)
 		if err != nil {
 			return err
 		}
-		next, err := txApp.FindRecordById(platformauth.GameMastersCollection, nextOwnerID)
+		next, err := txApp.FindRecordById(actorauth.GameMastersCollection, nextOwnerID)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func transferOwnership(app core.App, currentOwnerID, nextOwnerID string) error {
 }
 
 func resetGameMasterPassword(event *core.RequestEvent) error {
-	target, err := event.App.FindRecordById(platformauth.GameMastersCollection, event.Request.PathValue("id"))
+	target, err := event.App.FindRecordById(actorauth.GameMastersCollection, event.Request.PathValue("id"))
 	if err != nil {
 		return gameMasterNotFound(event)
 	}
@@ -177,7 +177,7 @@ func resetGameMasterPassword(event *core.RequestEvent) error {
 }
 
 func deleteGameMaster(event *core.RequestEvent) error {
-	target, err := event.App.FindRecordById(platformauth.GameMastersCollection, event.Request.PathValue("id"))
+	target, err := event.App.FindRecordById(actorauth.GameMastersCollection, event.Request.PathValue("id"))
 	if err != nil {
 		return gameMasterNotFound(event)
 	}

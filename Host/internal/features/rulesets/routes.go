@@ -13,8 +13,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -30,7 +30,7 @@ type updateVersionRequest struct {
 
 func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group := event.Router.Group("/api/app/v1")
-	group.BindFunc(platformauth.RequireGameMaster)
+	group.BindFunc(actorauth.RequireGameMaster)
 	group.GET("/rulesets", listRulesets)
 	group.POST("/rulesets", createRuleset)
 	group.GET("/rulesets/{id}", getRuleset)

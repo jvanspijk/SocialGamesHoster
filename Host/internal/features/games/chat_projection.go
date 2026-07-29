@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
@@ -489,7 +490,7 @@ func announcementMedia(event *core.RequestEvent) error {
 	if err != nil || item.GetString("game") != game.Id {
 		return httpx.WriteError(event, result.AppError{Code: "attention.not_found", Message: "Announcement not found.", Status: http.StatusNotFound})
 	}
-	if event.Auth.Collection().Name != "game_masters" && !actorHasAttentionReceipt(event.App, item.Id, event.Auth) {
+	if !actorauth.IsGameMaster(event.Auth) && !actorHasAttentionReceipt(event.App, item.Id, event.Auth) {
 		return httpx.WriteError(event, result.Forbidden("attention.forbidden", "This announcement attachment is not available."))
 	}
 	kind := event.Request.PathValue("kind")
@@ -537,7 +538,7 @@ func announcementMedia(event *core.RequestEvent) error {
 }
 
 func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bool {
-	if auth == nil || !auth.GetBool("active") || auth.Collection().Name != "player_profiles" {
+	if !actorauth.IsActivePlayer(auth) {
 		return false
 	}
 	receipts, err := app.FindRecordsByFilter(
@@ -655,9 +656,9 @@ func publishAudioCue(app core.App, game *core.Record, definition rulesets.Defini
 			return false
 		}
 		if audience == "game_masters" {
-			return auth.Collection().Name == "game_masters"
+			return actorauth.IsGameMaster(auth)
 		}
-		if auth.Collection().Name != "player_profiles" {
+		if !actorauth.IsPlayer(auth) {
 			return false
 		}
 		participant, err := gamepolicyapp.CurrentParticipantByGameAndProfile(app, game.Id, auth.Id)

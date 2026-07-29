@@ -6,6 +6,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -109,10 +110,10 @@ func (service *Service) Publish(game *core.Record, kind string, projection *Proj
 		if auth == nil || !auth.GetBool("active") {
 			return false
 		}
-		if auth.Collection().Name == "game_masters" {
+		if actorauth.IsGameMaster(auth) {
 			return true
 		}
-		if auth.Collection().Name != "player_profiles" {
+		if !actorauth.IsPlayer(auth) {
 			return false
 		}
 		return gamepolicyapp.ProfileParticipatesInGame(service.app, game.Id, auth.Id)

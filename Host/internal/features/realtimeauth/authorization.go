@@ -8,8 +8,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 )
 
 func Register(app core.App) {
@@ -31,7 +31,7 @@ func canSubscribe(app core.App, auth *core.Record, topic string) bool {
 	if !ok {
 		return false
 	}
-	if activeGameMaster(auth) {
+	if actorauth.IsActiveGameMaster(auth) {
 		switch kind {
 		case "game", "game-master", "participant", "room", "profile":
 			return recordExists(app, collectionForTopic(kind), id)
@@ -41,7 +41,7 @@ func canSubscribe(app core.App, auth *core.Record, topic string) bool {
 			return false
 		}
 	}
-	if !activePlayer(auth) {
+	if !actorauth.IsActivePlayer(auth) {
 		return false
 	}
 
@@ -110,7 +110,7 @@ func collectionForTopic(kind string) string {
 	case "room":
 		return "chat_rooms"
 	case "profile":
-		return platformauth.PlayerProfilesCollection
+		return actorauth.PlayerProfilesCollection
 	default:
 		return ""
 	}
@@ -122,14 +122,6 @@ func recordExists(app core.App, collection, id string) bool {
 	}
 	_, err := app.FindRecordById(collection, id)
 	return err == nil
-}
-
-func activeGameMaster(auth *core.Record) bool {
-	return auth != nil && auth.Collection().Name == platformauth.GameMastersCollection && auth.GetBool("active")
-}
-
-func activePlayer(auth *core.Record) bool {
-	return auth != nil && auth.Collection().Name == platformauth.PlayerProfilesCollection && auth.GetBool("active")
 }
 
 func playerCanReadRoom(app core.App, roomID, profileID string) bool {

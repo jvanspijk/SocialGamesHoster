@@ -7,11 +7,11 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
-	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -19,8 +19,8 @@ import (
 
 func Register(event *core.ServeEvent) {
 	group := event.Router.Group("/api/app/v1")
-	group.POST("/games/{id}/achievement-awards", award).BindFunc(platformauth.RequireGameMaster)
-	group.DELETE("/games/{id}/achievement-awards/{awardId}", revoke).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/achievement-awards", award).BindFunc(actorauth.RequireGameMaster)
+	group.DELETE("/games/{id}/achievement-awards/{awardId}", revoke).BindFunc(actorauth.RequireGameMaster)
 }
 
 type awardRequest struct {
@@ -165,8 +165,8 @@ func publish(app core.App, game, participant *core.Record, kind string, payload 
 	}
 	authorize := func(auth *core.Record) bool {
 		return auth != nil && auth.GetBool("active") &&
-			(auth.Collection().Name == "game_masters" ||
-				(auth.Collection().Name == "player_profiles" && auth.Id == profileID))
+			(actorauth.IsGameMaster(auth) ||
+				(actorauth.IsPlayer(auth) && auth.Id == profileID))
 	}
 	if participantID != "" {
 		_ = realtime.Publish(app, "participant:"+participantID+":private", realtime.Event[any]{
