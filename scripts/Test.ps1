@@ -1,5 +1,7 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$SkipBrowserJourney
+)
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -17,12 +19,18 @@ function Assert-NativeSuccess([string]$Step, [string]$Remediation = "") {
     }
 }
 
+function Invoke-Check([string]$Step, [scriptblock]$Action, [string]$Remediation = "") {
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    & $Action
+    Assert-NativeSuccess $Step $Remediation
+    $stopwatch.Stop()
+    Write-Host "$Step completed in $($stopwatch.Elapsed.ToString('m\\:ss'))."
+}
+
 Push-Location $projectRoot
 try {
-    go test ./Host/...
-    Assert-NativeSuccess "Go tests"
-    go vet ./Host/...
-    Assert-NativeSuccess "Go vet"
+    Invoke-Check "Go tests" { go test ./Host/... }
+    Invoke-Check "Go vet" { go vet ./Host/... }
 }
 finally {
     Pop-Location
@@ -31,18 +39,12 @@ finally {
 Push-Location (Join-Path $projectRoot "Web")
 try {
     Install-FrontendDependencies -WebRoot (Get-Location).Path
-    npm run check
-    Assert-NativeSuccess "Frontend type checks"
-    npm run test:unit
-    Assert-NativeSuccess "Frontend contract tests"
-    npm run format:check
-    Assert-NativeSuccess "Frontend formatting check" 'Run `npm run format` from the Web directory, commit the resulting files, then rerun the check.'
-    npm run lint:eslint
-    Assert-NativeSuccess "Frontend ESLint check" 'Run `npm run lint:eslint` from the Web directory and fix the reported lint errors.'
-    npm run build
-    Assert-NativeSuccess "Frontend build"
-    npm audit --omit=dev --audit-level=high
-    Assert-NativeSuccess "Production dependency audit"
+    Invoke-Check "Frontend type checks" { npm run check }
+    Invoke-Check "Frontend contract tests" { npm run test:unit }
+    Invoke-Check "Frontend formatting check" { npm run format:check } 'Run `npm run format` from the Web directory, commit the resulting files, then rerun the check.'
+    Invoke-Check "Frontend ESLint check" { npm run lint:eslint } 'Run `npm run lint:eslint` from the Web directory and fix the reported lint errors.'
+    Invoke-Check "Frontend build" { npm run build }
+    Invoke-Check "Production dependency audit" { npm audit --omit=dev --audit-level=high }
 
     if (-not $embeddedRoot.StartsWith($projectRoot + [IO.Path]::DirectorySeparatorChar)) {
         throw "The embedded web target is outside the project."
@@ -52,8 +54,12 @@ try {
         Remove-Item -Recurse -Force
     Copy-Item -Path (Join-Path (Get-Location) "build\*") -Destination $embeddedRoot -Recurse -Force
 
-    npm run test:e2e
-    Assert-NativeSuccess "Browser journey"
+    if ($SkipBrowserJourney) {
+        Write-Host "Browser journey skipped."
+    }
+    else {
+        Invoke-Check "Browser journey" { npm run test:e2e }
+    }
 }
 finally {
     Pop-Location
