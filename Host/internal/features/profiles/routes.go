@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -146,11 +147,13 @@ func requestProfile(event *core.RequestEvent) error {
 	record.Set("expires_at", time.Now().UTC().Add(requestLifetime))
 
 	existing, existingErr := event.App.FindFirstRecordByData(platformauth.PlayerProfilesCollection, "normalized_name", normalizedName)
-	if existingErr == nil {
-		record.Set("request_type", "recover")
-		record.Set("profile", existing.Id)
-	} else {
-		record.Set("request_type", "new")
+	requestType, profile, lookupErr := classifyProfileRequest(existing, existingErr)
+	if lookupErr != nil {
+		return httpx.WriteError(event, result.Internal(lookupErr))
+	}
+	record.Set("request_type", requestType)
+	if profile != nil {
+		record.Set("profile", profile.Id)
 	}
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -163,6 +166,16 @@ func requestProfile(event *core.RequestEvent) error {
 		"status":        "pending",
 		"expiresAt":     record.GetDateTime("expires_at").Time().UTC(),
 	})
+}
+
+func classifyProfileRequest(existing *core.Record, lookupErr error) (requestType string, profile *core.Record, err error) {
+	if lookupErr == nil {
+		return "recover", existing, nil
+	}
+	if errors.Is(lookupErr, sql.ErrNoRows) {
+		return "new", nil, nil
+	}
+	return "", nil, lookupErr
 }
 
 func requestStatus(event *core.RequestEvent) error {

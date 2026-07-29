@@ -1,6 +1,9 @@
 package profiles
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,6 +13,40 @@ import (
 
 	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
 )
+
+func TestClassifyProfileRequest(t *testing.T) {
+	profile := &core.Record{}
+	wrappedNotFound := fmt.Errorf("wrapped not found: %w", sql.ErrNoRows)
+
+	tests := []struct {
+		name        string
+		existing    *core.Record
+		lookupErr   error
+		requestType string
+		profile     *core.Record
+		wantErr     bool
+	}{
+		{name: "existing profile", existing: profile, requestType: "recover", profile: profile},
+		{name: "missing profile", lookupErr: sql.ErrNoRows, requestType: "new"},
+		{name: "wrapped missing profile", lookupErr: wrappedNotFound, requestType: "new"},
+		{name: "unexpected lookup error", lookupErr: errors.New("database unavailable"), wantErr: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			requestType, gotProfile, err := classifyProfileRequest(test.existing, test.lookupErr)
+			if (err != nil) != test.wantErr {
+				t.Fatalf("error = %v, want error = %t", err, test.wantErr)
+			}
+			if requestType != test.requestType {
+				t.Fatalf("request type = %q, want %q", requestType, test.requestType)
+			}
+			if gotProfile != test.profile {
+				t.Fatalf("profile = %p, want %p", gotProfile, test.profile)
+			}
+		})
+	}
+}
 
 func TestSyncLiveParticipantNamesUpdatesOnlyLiveGames(t *testing.T) {
 	if err := os.MkdirAll(".testdata", 0o700); err != nil {
