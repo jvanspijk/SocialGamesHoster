@@ -1,6 +1,8 @@
 package games
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -145,6 +147,57 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 	adminAudio := projectedAnnouncementMedia(t, summary, "audio")
 	if adminAudio["alternative"] != "Three short bells." {
 		t.Fatalf("admin audio alternative missing: %#v", adminAudio)
+	}
+}
+
+func TestAnnouncementAcknowledgementRemainsAvailableAfterArchive(t *testing.T) {
+	fixture := newAttentionFixture(t)
+	itemCollection, err := fixture.app.FindCollectionByNameOrId("attention_items")
+	if err != nil {
+		t.Fatal(err)
+	}
+	item := core.NewRecord(itemCollection)
+	item.Set("game", fixture.game.Id)
+	item.Set("kind", "announcement")
+	item.Set("sender", fixture.gameMaster.Id)
+	item.Set("sender_label_snapshot", "Host")
+	item.Set("content", "Archived announcement")
+	item.Set("audience", "player")
+	item.Set("target_id", fixture.participants[0].Id)
+	if err := fixture.app.Save(item); err != nil {
+		t.Fatal(err)
+	}
+	receiptCollection, err := fixture.app.FindCollectionByNameOrId("attention_receipts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	receipt := core.NewRecord(receiptCollection)
+	receipt.Set("attention_item", item.Id)
+	receipt.Set("participant", fixture.participants[0].Id)
+	receipt.Set("acknowledged_at", time.Now().UTC())
+	if err := fixture.app.Save(receipt); err != nil {
+		t.Fatal(err)
+	}
+	fixture.game.Set("status", StatusArchived)
+	if err := fixture.app.Save(fixture.game); err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/games/"+fixture.game.Id+"/announcements/"+item.Id+"/acknowledge", nil)
+	request.SetPathValue("id", fixture.game.Id)
+	request.SetPathValue("announcementId", item.Id)
+	event := &core.RequestEvent{}
+	event.App = fixture.app
+	event.Auth = fixture.profiles[0]
+	event.Request = request
+	event.Response = recorder
+
+	if err := acknowledgeAnnouncement(event); err != nil {
+		t.Fatal(err)
+	}
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, body = %s", recorder.Code, recorder.Body.String())
 	}
 }
 

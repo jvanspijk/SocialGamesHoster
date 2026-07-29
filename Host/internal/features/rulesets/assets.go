@@ -21,6 +21,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/router"
 	"golang.org/x/image/webp"
 
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
@@ -276,15 +277,8 @@ func playerMayReadVersionAsset(app core.App, profileID, versionID, assetKey stri
 		return false
 	}
 	for _, game := range games {
-		participants, findErr := app.FindRecordsByFilter(
-			"participants",
-			"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-			"",
-			1,
-			0,
-			dbx.Params{"game": game.Id, "profile": profileID},
-		)
-		if findErr == nil && len(participants) == 1 {
+		participant, findErr := gamepolicyapp.CurrentParticipantByGameAndProfile(app, game.Id, profileID)
+		if findErr == nil {
 			attachments, attachmentErr := app.FindRecordsByFilter(
 				"attention_items",
 				"game = {:game} && (image_asset_key = {:key} || audio_asset_key = {:key})",
@@ -305,7 +299,7 @@ func playerMayReadVersionAsset(app core.App, profileID, versionID, assetKey stri
 						"",
 						1,
 						0,
-						dbx.Params{"item": attachment.Id, "participant": participants[0].Id},
+						dbx.Params{"item": attachment.Id, "participant": participant.Id},
 					)
 					if receiptErr == nil && len(receipts) == 1 {
 						mayReadAttachment = true

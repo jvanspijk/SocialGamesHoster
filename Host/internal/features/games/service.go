@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -102,8 +103,8 @@ func gameParticipants(app core.App, gameID string) ([]*core.Record, error) {
 	return app.FindRecordsByFilter("participants", "game = {:game}", "seat_number", 30, 0, dbx.Params{"game": gameID})
 }
 
-func activeParticipants(app core.App, gameID string) ([]*core.Record, error) {
-	return app.FindRecordsByFilter("participants", "game = {:game} && status != 'kicked' && status != 'left'", "seat_number", 30, 0, dbx.Params{"game": gameID})
+func currentParticipants(app core.App, gameID string) ([]*core.Record, error) {
+	return gamepolicyapp.CurrentParticipantsByGame(app, gameID)
 }
 
 func audit(app core.App, actor *core.Record, gameID, action, targetType, targetID string, detail any, traceID any) error {
@@ -153,10 +154,7 @@ func publishGame(app core.App, record *core.Record, kind string, payload any) {
 		if auth.Collection().Name != "player_profiles" {
 			return false
 		}
-		records, err := app.FindRecordsByFilter("participants",
-			"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-			"", 1, 0, dbx.Params{"game": record.Id, "profile": auth.Id})
-		return err == nil && len(records) == 1
+		return gamepolicyapp.ProfileParticipatesInGame(app, record.Id, auth.Id)
 	})
 }
 

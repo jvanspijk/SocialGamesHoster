@@ -5,6 +5,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 )
 
@@ -39,9 +40,9 @@ func Register(event *core.ServeEvent) {
 	group.GET("/games/{id}/announcements", listAnnouncements).BindFunc(platformauth.RequireGameMaster)
 
 	group.PATCH("/games/{id}/participants/{participantId}", updateParticipant).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/participants/{participantId}/kick", setParticipantStatus("kicked")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/participants/{participantId}/eliminate", setParticipantStatus("eliminated")).BindFunc(platformauth.RequireGameMaster)
-	group.POST("/games/{id}/participants/{participantId}/reinstate", setParticipantStatus("active")).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/participants/{participantId}/kick", setParticipantStatus(gamepolicy.ParticipantKicked)).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/participants/{participantId}/eliminate", setParticipantStatus(gamepolicy.ParticipantEliminated)).BindFunc(platformauth.RequireGameMaster)
+	group.POST("/games/{id}/participants/{participantId}/reinstate", setParticipantStatus(gamepolicy.ParticipantActive)).BindFunc(platformauth.RequireGameMaster)
 	group.PUT("/games/{id}/assignments", putAssignments).BindFunc(platformauth.RequireGameMaster)
 	group.POST("/games/{id}/assignments/randomize", randomizeAssignments).BindFunc(platformauth.RequireGameMaster)
 	group.PUT("/games/{id}/outcomes", putOutcomes).BindFunc(platformauth.RequireGameMaster)

@@ -108,7 +108,7 @@ func transition(command Transition) func(*core.RequestEvent) error {
 }
 
 func validateStart(app core.App, game *core.Record) error {
-	participants, err := activeParticipants(app, game.Id)
+	participants, err := currentParticipants(app, game.Id)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func prepareRoleRooms(app core.App, game *core.Record) error {
 	if err != nil {
 		return err
 	}
-	participants, err := activeParticipants(app, game.Id)
+	participants, err := currentParticipants(app, game.Id)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func archiveGame(event *core.RequestEvent) error {
 	}
 	var request archiveRequest
 	_ = event.BindBody(&request)
-	participants, err := activeParticipants(event.App, game.Id)
+	participants, err := currentParticipants(event.App, game.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}

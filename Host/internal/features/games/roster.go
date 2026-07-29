@@ -10,6 +10,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -25,8 +27,8 @@ func updateParticipant(event *core.RequestEvent) error {
 	if err != nil {
 		return writeGameError(event, err)
 	}
-	if game.GetString("status") == string(StatusArchived) {
-		return httpx.WriteError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	if appError := gamepolicyapp.GameMutationError(game); appError != nil {
+		return httpx.WriteError(event, *appError)
 	}
 	var request participantUpdateRequest
 	if err := event.BindBody(&request); err != nil {
@@ -49,40 +51,40 @@ func updateParticipant(event *core.RequestEvent) error {
 	return participantChanged(event, game, participant, "participant.updated")
 }
 
-func setParticipantStatus(status string) func(*core.RequestEvent) error {
+func setParticipantStatus(status gamepolicy.ParticipantStatus) func(*core.RequestEvent) error {
 	return func(event *core.RequestEvent) error {
 		game, participant, err := rosterTarget(event)
 		if err != nil {
 			return writeGameError(event, err)
 		}
-		if game.GetString("status") == string(StatusArchived) {
-			return httpx.WriteError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+		if appError := gamepolicyapp.GameMutationError(game); appError != nil {
+			return httpx.WriteError(event, *appError)
 		}
 		switch status {
-		case "kicked":
-			if participant.GetString("status") == "kicked" {
+		case gamepolicy.ParticipantKicked:
+			if gamepolicy.ParticipantStatus(participant.GetString("status")) == gamepolicy.ParticipantKicked {
 				return event.JSON(http.StatusOK, projectParticipant(participant, true))
 			}
-		case "eliminated":
+		case gamepolicy.ParticipantEliminated:
 			if game.GetString("status") != string(StatusRunning) && game.GetString("status") != string(StatusPaused) {
 				return httpx.WriteError(event, result.Conflict("participant.elimination_not_allowed", "Players can only be eliminated during play."))
 			}
-		case "active":
-			if participant.GetString("status") != "eliminated" {
+		case gamepolicy.ParticipantActive:
+			if gamepolicy.ParticipantStatus(participant.GetString("status")) != gamepolicy.ParticipantEliminated {
 				return httpx.WriteError(event, result.Conflict("participant.reinstate_not_allowed", "Only an eliminated player can be reinstated."))
 			}
 		}
 		err = event.App.RunInTransaction(func(tx core.App) error {
 			participant.Set("status", status)
-			if status == "eliminated" {
+			if status == gamepolicy.ParticipantEliminated {
 				participant.Set("eliminated_at", time.Now().UTC())
-			} else if status == "active" {
+			} else if status == gamepolicy.ParticipantActive {
 				participant.Set("eliminated_at", nil)
 			}
 			if err := tx.Save(participant); err != nil {
 				return err
 			}
-			if status == "kicked" {
+			if status == gamepolicy.ParticipantKicked {
 				memberships, err := tx.FindRecordsByFilter("chat_memberships", "participant = {:participant} && left_at = ''", "", 200, 0,
 					dbx.Params{"participant": participant.Id})
 				if err != nil {
@@ -101,7 +103,7 @@ func setParticipantStatus(status string) func(*core.RequestEvent) error {
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		return participantChanged(event, game, participant, "participant."+status)
+		return participantChanged(event, game, participant, "participant."+string(status))
 	}
 }
 
@@ -151,7 +153,7 @@ func putAssignments(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("game.assignments_invalid", "The assignments could not be read.", nil))
 	}
-	participants, err := activeParticipants(event.App, game.Id)
+	participants, err := currentParticipants(event.App, game.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -185,7 +187,7 @@ func randomizeAssignments(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("game.assignments_invalid", "The locked assignments could not be read.", nil))
 	}
-	participants, err := activeParticipants(event.App, game.Id)
+	participants, err := currentParticipants(event.App, game.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -251,7 +253,7 @@ func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Ass
 }
 
 func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
-	participants, err := activeParticipants(event.App, game.Id)
+	participants, err := currentParticipants(event.App, game.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}

@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"slices"
 	"time"
+
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 )
 
-type Status string
+type Status = gamepolicy.GameStatus
 
 const (
-	StatusDraft    Status = "draft"
-	StatusLobby    Status = "lobby"
-	StatusRunning  Status = "running"
-	StatusPaused   Status = "paused"
-	StatusReview   Status = "review"
-	StatusArchived Status = "archived"
+	StatusDraft    = gamepolicy.GameDraft
+	StatusLobby    = gamepolicy.GameLobby
+	StatusRunning  = gamepolicy.GameRunning
+	StatusPaused   = gamepolicy.GamePaused
+	StatusReview   = gamepolicy.GameReview
+	StatusArchived = gamepolicy.GameArchived
 )
 
 type Transition string
@@ -39,7 +41,7 @@ type State struct {
 
 func ApplyTransition(state State, transition Transition, now time.Time) (State, error) {
 	if state.Status == StatusArchived {
-		return state, fmt.Errorf("archived games are immutable")
+		return state, gamepolicy.ErrArchivedImmutable
 	}
 
 	allowed := map[Transition][]Status{

@@ -12,6 +12,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -107,8 +109,9 @@ func deleteGame(event *core.RequestEvent) error {
 	if err != nil {
 		return writeGameError(event, err)
 	}
-	status := record.GetString("status")
-	if status != string(StatusDraft) && status != string(StatusReview) && status != string(StatusArchived) {
+	// Deletion is an explicit exception to archived-game immutability: it
+	// removes the entire aggregate after an exact confirmation.
+	if !canDeleteGame(Status(record.GetString("status"))) {
 		return httpx.WriteError(event, result.Conflict("game.delete_not_allowed", "Only draft, review, or archived games can be deleted."))
 	}
 	var request struct {
@@ -135,6 +138,10 @@ func deleteGame(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	return event.NoContent(http.StatusNoContent)
+}
+
+func canDeleteGame(status Status) bool {
+	return status == StatusDraft || status == StatusReview || status == StatusArchived
 }
 
 // closeJoining stops new entries for an active game. Closing a lobby instead
@@ -350,7 +357,7 @@ func joinGame(event *core.RequestEvent) error {
 		}
 		if len(existing) > 0 {
 			participant = existing[0]
-			if participant.GetString("status") == "kicked" {
+			if gamepolicy.ParticipantStatus(participant.GetString("status")) == gamepolicy.ParticipantKicked {
 				return result.AppError{Code: "game.player_kicked", Message: "A game master removed this profile from the game.", Status: http.StatusForbidden}
 			}
 			return nil
@@ -375,7 +382,7 @@ func joinGame(event *core.RequestEvent) error {
 		participant.Set("profile", event.Auth.Id)
 		participant.Set("display_name_snapshot", event.Auth.GetString("display_name"))
 		participant.Set("seat_number", nextSeat(participants))
-		participant.Set("status", "active")
+		participant.Set("status", gamepolicy.ParticipantActive)
 		participant.Set("outcome", "unset")
 		participant.Set("joined_at", time.Now().UTC())
 		if err := tx.Save(participant); err != nil {
@@ -505,13 +512,10 @@ func playerView(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "game.no_live_game", Message: "There is no live game.", Status: http.StatusNotFound})
 	}
-	records, err := event.App.FindRecordsByFilter("participants",
-		"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'", "", 1, 0,
-		dbx.Params{"game": game.Id, "profile": event.Auth.Id})
-	if err != nil || len(records) == 0 {
+	participant, err := gamepolicyapp.CurrentParticipantByGameAndProfile(event.App, game.Id, event.Auth.Id)
+	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "game.not_joined", Message: "Join the live game to view it.", Status: http.StatusForbidden})
 	}
-	participant := records[0]
 	definition, err := snapshot(game)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -536,7 +540,7 @@ func playerView(event *core.RequestEvent) error {
 	}
 	party := make([]map[string]any, 0, len(participants))
 	for _, member := range participants {
-		if member.GetString("status") == "kicked" || member.GetString("status") == "left" {
+		if !gamepolicy.IsCurrentMember(gamepolicy.ParticipantStatus(member.GetString("status"))) {
 			continue
 		}
 		party = append(party, map[string]any{
@@ -746,7 +750,7 @@ func projectKnowledge(app core.App, gameID string, viewer *core.Record, definiti
 			viewerRole = role
 		}
 	}
-	participants, err := activeParticipants(app, gameID)
+	participants, err := currentParticipants(app, gameID)
 	if err != nil {
 		return nil, err
 	}

@@ -30,12 +30,12 @@ import (
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/games"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/owner"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/profiles"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/realtimeauth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/setup"
 	timerfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/timer"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/desktop"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
-	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/recovery"
 	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
 )
@@ -89,7 +89,7 @@ func main() {
 	})
 	profiles.RegisterJobs(app)
 	owner.RegisterJobs(app)
-	realtime.RegisterAuthorization(app)
+	realtimeauth.Register(app)
 	timerService := timerfeature.NewService(app)
 
 	web, err := fs.Sub(embedded.Web, "web")

@@ -7,6 +7,8 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
@@ -32,7 +34,8 @@ func award(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
 	}
-	if game.GetString("status") == "draft" || game.GetString("status") == "lobby" || game.GetString("status") == "archived" {
+	status := gamepolicy.GameStatus(game.GetString("status"))
+	if status == gamepolicy.GameDraft || status == gamepolicy.GameLobby || gamepolicy.IsArchived(status) {
 		return httpx.WriteError(event, result.Conflict("achievement.not_allowed", "Achievements can only be awarded during play or review."))
 	}
 	var request awardRequest
@@ -94,8 +97,8 @@ func revoke(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "game.not_found", Message: "Game not found.", Status: http.StatusNotFound})
 	}
-	if game.GetString("status") == "archived" {
-		return httpx.WriteError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	if appError := gamepolicyapp.GameMutationError(game); appError != nil {
+		return httpx.WriteError(event, *appError)
 	}
 	record, err := event.App.FindRecordById("achievement_awards", event.Request.PathValue("awardId"))
 	if err != nil || record.GetString("game") != game.Id {

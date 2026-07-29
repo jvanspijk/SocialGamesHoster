@@ -4,10 +4,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 )
 
@@ -115,9 +115,6 @@ func (service *Service) Publish(game *core.Record, kind string, projection *Proj
 		if auth.Collection().Name != "player_profiles" {
 			return false
 		}
-		records, err := service.app.FindRecordsByFilter("participants",
-			"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-			"", 1, 0, dbx.Params{"game": game.Id, "profile": auth.Id})
-		return err == nil && len(records) == 1
+		return gamepolicyapp.ProfileParticipatesInGame(service.app, game.Id, auth.Id)
 	})
 }

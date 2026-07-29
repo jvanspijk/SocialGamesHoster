@@ -13,6 +13,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -38,7 +40,7 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 		}
 		state := chatfeature.ParticipantState{
 			IsMember:       membership.GetDateTime("left_at").IsZero(),
-			IsActive:       participant.GetString("status") == "active",
+			IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
 			HistoricalRead: membership.GetBool("historical_access"),
 		}
 		policy := chatfeature.EffectivePolicy(base, override, state, chatfeature.RoomState{
@@ -256,22 +258,16 @@ func acknowledgeAnnouncement(event *core.RequestEvent) error {
 	if err != nil {
 		return writeGameError(event, err)
 	}
+	// Acknowledgement remains valid after archival because it only updates the
+	// authenticated participant's receipt, not archived game-owned content.
 	item, err := event.App.FindRecordById("attention_items", event.Request.PathValue("announcementId"))
 	if err != nil || item.GetString("game") != game.Id || item.GetString("kind") != "announcement" {
 		return httpx.WriteError(event, result.AppError{Code: "attention.not_found", Message: "Announcement not found.", Status: http.StatusNotFound})
 	}
-	participants, err := event.App.FindRecordsByFilter(
-		"participants",
-		"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-		"",
-		1,
-		0,
-		dbx.Params{"game": game.Id, "profile": event.Auth.Id},
-	)
-	if err != nil || len(participants) != 1 {
+	participant, err := gamepolicyapp.CurrentParticipantByGameAndProfile(event.App, game.Id, event.Auth.Id)
+	if err != nil {
 		return httpx.WriteError(event, result.Forbidden("attention.forbidden", "This announcement is not available."))
 	}
-	participant := participants[0]
 	receipts, err := event.App.FindRecordsByFilter(
 		"attention_receipts",
 		"attention_item = {:item} && participant = {:participant}",
@@ -307,7 +303,7 @@ func acknowledgeAnnouncement(event *core.RequestEvent) error {
 }
 
 func resolveAnnouncementRecipients(app core.App, game *core.Record, definition rulesets.DefinitionV1, audience, targetID string) ([]*core.Record, error) {
-	participants, err := activeParticipants(app, game.Id)
+	participants, err := currentParticipants(app, game.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +542,7 @@ func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bo
 	}
 	receipts, err := app.FindRecordsByFilter(
 		"attention_receipts",
-		"attention_item = {:item} && participant.profile = {:profile} && participant.status != 'kicked' && participant.status != 'left'",
+		"attention_item = {:item} && participant.profile = {:profile} && "+gamepolicyapp.CurrentRelatedParticipantStatusFilter,
 		"",
 		1,
 		0,
@@ -623,7 +619,7 @@ func validateCueAudience(app core.App, game *core.Record, definition rulesets.De
 	case "player":
 		participant, err := app.FindRecordById("participants", targetID)
 		if err != nil || participant.GetString("game") != game.Id ||
-			participant.GetString("status") == "kicked" || participant.GetString("status") == "left" {
+			!gamepolicy.IsCurrentMember(gamepolicy.ParticipantStatus(participant.GetString("status"))) {
 			value := result.Invalid("audio.invalid_target", "Choose a player in this game.", nil)
 			return &value
 		}
@@ -664,18 +660,10 @@ func publishAudioCue(app core.App, game *core.Record, definition rulesets.Defini
 		if auth.Collection().Name != "player_profiles" {
 			return false
 		}
-		participants, err := app.FindRecordsByFilter(
-			"participants",
-			"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-			"",
-			1,
-			0,
-			dbx.Params{"game": game.Id, "profile": auth.Id},
-		)
-		if err != nil || len(participants) != 1 {
+		participant, err := gamepolicyapp.CurrentParticipantByGameAndProfile(app, game.Id, auth.Id)
+		if err != nil {
 			return false
 		}
-		participant := participants[0]
 		switch audience {
 		case "all":
 			return true

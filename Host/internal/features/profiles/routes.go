@@ -19,6 +19,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
@@ -407,9 +408,7 @@ func updateMe(event *core.RequestEvent) error {
 }
 
 func syncLiveParticipantNames(app core.App, profile *core.Record) error {
-	participants, err := app.FindRecordsByFilter("participants",
-		"profile = {:profile} && status != 'kicked' && status != 'left'", "", 1000, 0,
-		dbx.Params{"profile": profile.Id})
+	participants, err := gamepolicyapp.CurrentParticipantsByProfile(app, profile.Id)
 	if err != nil {
 		return err
 	}

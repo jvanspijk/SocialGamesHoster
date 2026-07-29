@@ -10,6 +10,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -197,7 +198,7 @@ func ProjectPlayerChoices(app core.App, game, participant *core.Record, definiti
 func ProjectAdmin(app core.App, game *core.Record, definition rulesets.DefinitionV1, participants []*core.Record) (map[string]any, []map[string]any, error) {
 	eligible := 0
 	for _, participant := range participants {
-		if participant.GetString("status") != "active" {
+		if !gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))) {
 			continue
 		}
 		role := findRole(definition, participant.GetString("role_key"))

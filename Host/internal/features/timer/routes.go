@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -64,10 +64,7 @@ func canViewTimer(event *core.RequestEvent, game *core.Record) bool {
 	if auth.Collection().Name != "player_profiles" {
 		return false
 	}
-	records, err := event.App.FindRecordsByFilter("participants",
-		"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-		"", 1, 0, dbx.Params{"game": game.Id, "profile": auth.Id})
-	return err == nil && len(records) == 1
+	return gamepolicyapp.ProfileParticipatesInGame(event.App, game.Id, auth.Id)
 }
 
 func timerCommand(service *Service, command string) func(*core.RequestEvent) error {

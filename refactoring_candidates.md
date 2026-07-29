@@ -719,9 +719,9 @@ policy rather than a discarded error by habit.
 
 | Issue | Completed | Reviewed |
 | :---: | :-------: | :------: |
-|   1   |    [ ]    |   [ ]    |
+|   1   |    [x]    |   [x]    |
 |   2   |    [ ]    |   [ ]    |
-|   3   |    [ ]    |   [ ]    |
+|   3   |    [x]    |   [x]    |
 |   4   |    [ ]    |   [ ]    |
 |   5   |    [ ]    |   [ ]    |
 |   6   |    [ ]    |   [ ]    |

@@ -14,6 +14,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
@@ -87,7 +89,7 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	}
 	policy := EffectivePolicy(base, override, ParticipantState{
 		IsMember:       membership.GetDateTime("left_at").IsZero(),
-		IsActive:       participant.GetString("status") == "active",
+		IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
 		HistoricalRead: membership.GetBool("historical_access"),
 	}, RoomState{
 		ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
@@ -95,7 +97,8 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	if room.GetString("kind") == "custom" && !customChannelSenderAllowed(definition, room, participant) {
 		policy.Sendable = false
 	}
-	if game.GetString("status") == "review" || game.GetString("status") == "archived" {
+	if game.GetString("status") == string(gamepolicy.GameReview) ||
+		gamepolicy.IsArchived(gamepolicy.GameStatus(game.GetString("status"))) {
 		policy.Sendable = false
 	}
 	if game.GetString("status") == "paused" && room.GetString("kind") != "gm_dm" {
@@ -167,7 +170,9 @@ func createPlayerDM(event *core.RequestEvent) error {
 	}
 	self := selfRecords[0]
 	other, err := event.App.FindRecordById("participants", request.ParticipantID)
-	if err != nil || other.GetString("game") != game.Id || other.GetString("status") != "active" || other.Id == self.Id {
+	if err != nil || other.GetString("game") != game.Id ||
+		!gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(other.GetString("status"))) ||
+		other.Id == self.Id {
 		return writeError(event, result.Invalid("chat.invalid_dm", "Choose another active player.", nil))
 	}
 	ids := []string{self.Id, other.Id}
@@ -219,7 +224,7 @@ func createMessage(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, err)
 	}
-	if resolved.Game.GetString("status") == "archived" {
+	if gamepolicy.IsArchived(gamepolicy.GameStatus(resolved.Game.GetString("status"))) {
 		return writeError(event, result.Conflict("chat.read_only", "Archived chat is read-only."))
 	}
 	if resolved.IsGM {
@@ -286,8 +291,8 @@ func updateRoom(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, result.Internal(err))
 	}
-	if game.GetString("status") == "archived" {
-		return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	if appError := gamepolicyapp.GameMutationError(game); appError != nil {
+		return writeError(event, *appError)
 	}
 	var request updateRoomRequest
 	if err := event.BindBody(&request); err != nil || request.PlayersCanPost == nil {
@@ -368,8 +373,8 @@ func deleteMessage(event *core.RequestEvent) error {
 	if err != nil {
 		return writeError(event, err)
 	}
-	if resolved.Game.GetString("status") == "archived" {
-		return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+	if appError := gamepolicyapp.GameMutationError(resolved.Game); appError != nil {
+		return writeError(event, *appError)
 	}
 	message, err := event.App.FindRecordById("chat_messages", event.Request.PathValue("messageId"))
 	if err != nil || message.GetString("room") != resolved.Room.Id {
@@ -405,8 +410,8 @@ func setRoomLock(locked bool) func(*core.RequestEvent) error {
 		if err != nil {
 			return writeError(event, result.Internal(err))
 		}
-		if game.GetString("status") == "archived" {
-			return writeError(event, result.Conflict("game.archived_immutable", "Archived games cannot be changed."))
+		if appError := gamepolicyapp.GameMutationError(game); appError != nil {
+			return writeError(event, *appError)
 		}
 		room.Set("manually_locked", locked)
 		room.Set("players_can_post", !locked)
@@ -620,7 +625,7 @@ func publishRoom(app core.App, resolved access, kind string, payload any) {
 
 func playerMayReceiveRoomEvent(app core.App, resolved access, profileID string) bool {
 	memberships, err := app.FindRecordsByFilter("chat_memberships",
-		"room = {:room} && participant.profile = {:profile} && ((left_at = '' && participant.status != 'kicked' && participant.status != 'left') || historical_access = true)",
+		gamepolicyapp.RoomReadableByCurrentOrHistoricalParticipantFilter,
 		"", 1, 0, dbx.Params{"room": resolved.Room.Id, "profile": profileID})
 	if err != nil || len(memberships) != 1 {
 		return false
@@ -642,7 +647,7 @@ func playerMayReceiveRoomEvent(app core.App, resolved access, profileID string) 
 	}
 	policy := EffectivePolicy(base, override, ParticipantState{
 		IsMember:       memberships[0].GetDateTime("left_at").IsZero(),
-		IsActive:       participant.GetString("status") == "active",
+		IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
 		HistoricalRead: memberships[0].GetBool("historical_access"),
 	}, RoomState{
 		ManuallyLocked:           !resolved.Room.GetBool("players_can_post"),

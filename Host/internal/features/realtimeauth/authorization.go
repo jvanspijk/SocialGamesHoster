@@ -1,4 +1,4 @@
-package realtime
+package realtimeauth
 
 import (
 	"crypto/subtle"
@@ -7,9 +7,12 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
+
+	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
+	platformauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/auth"
 )
 
-func RegisterAuthorization(app core.App) {
+func Register(app core.App) {
 	app.OnRealtimeSubscribeRequest().BindFunc(func(event *core.RealtimeSubscribeRequestEvent) error {
 		for _, topic := range event.Subscriptions {
 			if !canSubscribe(app, event.Auth, topic) {
@@ -46,9 +49,9 @@ func canSubscribe(app core.App, auth *core.Record, topic string) bool {
 	case "profile":
 		return auth.Id == id
 	case "participant":
-		return participantBelongsToProfile(app, id, auth.Id)
+		return gamepolicyapp.ParticipantBelongsToProfile(app, id, auth.Id)
 	case "game":
-		return playerParticipatesInGame(app, id, auth.Id)
+		return gamepolicyapp.ProfileParticipatesInGame(app, id, auth.Id)
 	case "room":
 		return playerCanReadRoom(app, id, auth.Id)
 	default:
@@ -107,7 +110,7 @@ func collectionForTopic(kind string) string {
 	case "room":
 		return "chat_rooms"
 	case "profile":
-		return "player_profiles"
+		return platformauth.PlayerProfilesCollection
 	default:
 		return ""
 	}
@@ -122,36 +125,17 @@ func recordExists(app core.App, collection, id string) bool {
 }
 
 func activeGameMaster(auth *core.Record) bool {
-	return auth != nil && auth.Collection().Name == "game_masters" && auth.GetBool("active")
+	return auth != nil && auth.Collection().Name == platformauth.GameMastersCollection && auth.GetBool("active")
 }
 
 func activePlayer(auth *core.Record) bool {
-	return auth != nil && auth.Collection().Name == "player_profiles" && auth.GetBool("active")
-}
-
-func participantBelongsToProfile(app core.App, participantID, profileID string) bool {
-	record, err := app.FindRecordById("participants", participantID)
-	if err != nil || record.GetString("profile") != profileID {
-		return false
-	}
-	status := record.GetString("status")
-	return status != "kicked" && status != "left"
-}
-
-func playerParticipatesInGame(app core.App, gameID, profileID string) bool {
-	records, err := app.FindRecordsByFilter("participants",
-		"game = {:game} && profile = {:profile} && status != 'kicked' && status != 'left'",
-		"",
-		1,
-		0,
-		dbx.Params{"game": gameID, "profile": profileID},
-	)
-	return err == nil && len(records) == 1
+	return auth != nil && auth.Collection().Name == platformauth.PlayerProfilesCollection && auth.GetBool("active")
 }
 
 func playerCanReadRoom(app core.App, roomID, profileID string) bool {
-	records, err := app.FindRecordsByFilter("chat_memberships",
-		"room = {:room} && participant.profile = {:profile} && ((left_at = '' && participant.status != 'kicked' && participant.status != 'left') || historical_access = true)",
+	records, err := app.FindRecordsByFilter(
+		"chat_memberships",
+		gamepolicyapp.RoomReadableByCurrentOrHistoricalParticipantFilter,
 		"",
 		1,
 		0,

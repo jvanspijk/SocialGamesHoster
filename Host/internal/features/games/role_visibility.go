@@ -5,6 +5,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -18,7 +19,8 @@ func setRoleVisibility(event *core.RequestEvent) error {
 	if err != nil {
 		return writeGameError(event, err)
 	}
-	if game.GetString("status") == string(StatusDraft) || game.GetString("status") == string(StatusArchived) {
+	status := gamepolicy.GameStatus(game.GetString("status"))
+	if status == gamepolicy.GameDraft || gamepolicy.IsArchived(status) {
 		return httpx.WriteError(event, result.Conflict("game.role_visibility_not_allowed", "Role visibility can only change in an active game."))
 	}
 	var request roleVisibilityRequest
@@ -29,7 +31,7 @@ func setRoleVisibility(event *core.RequestEvent) error {
 		return event.JSON(http.StatusOK, projectRoleVisibility(game))
 	}
 	if request.RolesVisible {
-		participants, err := activeParticipants(event.App, game.Id)
+		participants, err := currentParticipants(event.App, game.Id)
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
