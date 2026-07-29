@@ -282,8 +282,9 @@
 			return true;
 		} catch (caught) {
 			error = {
-				code: 'ruleset.invalid_json',
-				message: caught instanceof Error ? caught.message : 'This section is not valid JSON.'
+				kind: 'validation',
+				message: caught instanceof Error ? caught.message : 'This section is not valid JSON.',
+				fieldErrors: {}
 			};
 			return false;
 		}
