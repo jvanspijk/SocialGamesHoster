@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -86,16 +86,8 @@ func setParticipantStatus(status gamepolicy.ParticipantStatus) func(*core.Reques
 				return err
 			}
 			if status == gamepolicy.ParticipantKicked {
-				memberships, err := tx.FindRecordsByFilter("chat_memberships", "participant = {:participant} && left_at = ''", "", 200, 0,
-					dbx.Params{"participant": participant.Id})
-				if err != nil {
+				if err := chatfeature.CloseParticipantMemberships(tx, participant.Id, time.Now().UTC()); err != nil {
 					return err
-				}
-				for _, membership := range memberships {
-					membership.Set("left_at", time.Now().UTC())
-					if err := tx.Save(membership); err != nil {
-						return err
-					}
 				}
 			}
 			incrementRevision(game)

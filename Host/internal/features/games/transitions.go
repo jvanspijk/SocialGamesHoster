@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
+	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -64,7 +64,15 @@ func transition(command Transition) func(*core.RequestEvent) error {
 		}
 		applyState(game, next)
 		if command == Start {
-			if err := prepareRoleRooms(event.App, game); err != nil {
+			definition, err := snapshot(game)
+			if err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			participants, err := currentParticipants(event.App, game.Id)
+			if err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			if err := chatfeature.PrepareRoleRooms(event.App, game.Id, definition, participants); err != nil {
 				return httpx.WriteError(event, result.Internal(err))
 			}
 		}
@@ -136,62 +144,6 @@ func validateStart(app core.App, game *core.Record) error {
 	return nil
 }
 
-func prepareRoleRooms(app core.App, game *core.Record) error {
-	definition, err := snapshot(game)
-	if err != nil {
-		return err
-	}
-	participants, err := currentParticipants(app, game.Id)
-	if err != nil {
-		return err
-	}
-	roleTeam := map[string]string{}
-	roles := map[string]rulesets.Role{}
-	teamName := map[string]string{}
-	for _, role := range definition.Roles {
-		roleTeam[role.ID] = role.TeamID
-		roles[role.ID] = role
-	}
-	for _, team := range definition.Teams {
-		teamName[team.ID] = team.Name
-	}
-	for teamID := range definition.Chat.DefaultPolicy.Teams {
-		room, err := ensureRoom(app, game.Id, "team:"+teamID, "team", teamName[teamID], teamID)
-		if err != nil {
-			return err
-		}
-		for _, participant := range participants {
-			if roleTeam[participant.GetString("role_key")] == teamID {
-				if err := ensureMembership(app, room.Id, participant.Id); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	for _, channel := range definition.Chat.Channels {
-		room, err := ensureRoom(
-			app,
-			game.Id,
-			rulesets.CustomChatRoomPrefix+channel.ID,
-			"custom",
-			channel.Name,
-			"",
-		)
-		if err != nil {
-			return err
-		}
-		for _, participant := range participants {
-			role, ok := roles[participant.GetString("role_key")]
-			if ok && rulesets.ChatChannelAudienceMatches(channel, role, false) {
-				if err := ensureMembership(app, room.Id, participant.Id); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
 type archiveRequest struct {
 	ConfirmUnsetOutcomes bool `json:"confirmUnsetOutcomes"`
 }
@@ -223,21 +175,7 @@ func archiveGame(event *core.RequestEvent) error {
 		if err := tx.Save(game); err != nil {
 			return err
 		}
-		memberships, err := tx.FindRecordsByFilter("chat_memberships", "room.game = {:game}", "", 1000, 0, dbx.Params{"game": game.Id})
-		if err != nil {
-			return err
-		}
-		now := time.Now().UTC()
-		for _, membership := range memberships {
-			membership.Set("historical_access", true)
-			if membership.GetDateTime("left_at").IsZero() {
-				membership.Set("left_at", now)
-			}
-			if err := tx.Save(membership); err != nil {
-				return err
-			}
-		}
-		return nil
+		return chatfeature.FreezeHistoricalAccess(tx, game.Id, time.Now().UTC())
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -301,7 +239,7 @@ func setPhase(event *core.RequestEvent) error {
 		for _, cue := range definition.AudioCues {
 			if cue.ID == phase.AudioCueID &&
 				(cue.DefaultAudience == "all" || cue.DefaultAudience == "game_masters") {
-				publishAudioCue(event.App, game, definition, cue, cue.DefaultAudience, "")
+				chatfeature.PublishAudioCue(event.App, game, definition, cue, cue.DefaultAudience, "")
 				break
 			}
 		}

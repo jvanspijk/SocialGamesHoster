@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
+	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -212,43 +213,8 @@ func clearGameSession(app core.App, gameID string, includeAudit bool) error {
 			return err
 		}
 	}
-	items, err := app.FindRecordsByFilter("attention_items", "game = {:game}", "", 10000, 0, dbx.Params{"game": gameID})
-	if err != nil {
+	if err := chatfeature.ClearGameSession(app, gameID); err != nil {
 		return err
-	}
-	for _, item := range items {
-		receipts, err := app.FindRecordsByFilter("attention_receipts", "attention_item = {:item}", "", 10000, 0, dbx.Params{"item": item.Id})
-		if err != nil {
-			return err
-		}
-		for _, receipt := range receipts {
-			if err := app.Delete(receipt); err != nil {
-				return err
-			}
-		}
-		if err := app.Delete(item); err != nil {
-			return err
-		}
-	}
-	rooms, err := app.FindRecordsByFilter("chat_rooms", "game = {:game}", "", 500, 0, dbx.Params{"game": gameID})
-	if err != nil {
-		return err
-	}
-	for _, room := range rooms {
-		for _, collection := range []string{"chat_messages", "chat_memberships"} {
-			dependents, err := app.FindRecordsByFilter(collection, "room = {:room}", "", 10000, 0, dbx.Params{"room": room.Id})
-			if err != nil {
-				return err
-			}
-			for _, dependent := range dependents {
-				if err := app.Delete(dependent); err != nil {
-					return err
-				}
-			}
-		}
-		if err := app.Delete(room); err != nil {
-			return err
-		}
 	}
 	collections := []string{"achievement_awards", "participants"}
 	if includeAudit {
@@ -294,10 +260,7 @@ func openLobby(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
-		if definition.Chat.DefaultPolicy.General != nil {
-			_, err = ensureRoom(tx, game.Id, "general", "general", "General", "")
-		}
-		return err
+		return chatfeature.EnsureLobbyRoom(tx, game.Id, definition)
 	})
 	if err != nil {
 		event.App.Logger().Error("failed to open game lobby", "gameId", game.Id, "error", err)
@@ -388,24 +351,8 @@ func joinGame(event *core.RequestEvent) error {
 		if err := tx.Save(participant); err != nil {
 			return err
 		}
-		dm, err := ensureRoom(
-			tx,
-			game.Id,
-			"gm:"+participant.Id,
-			"gm_dm",
-			"Game master · "+participant.GetString("display_name_snapshot"),
-			"",
-		)
-		if err != nil {
+		if err := chatfeature.AddParticipant(tx, game.Id, participant); err != nil {
 			return err
-		}
-		if err := ensureMembership(tx, dm.Id, participant.Id); err != nil {
-			return err
-		}
-		if general, err := findRoom(tx, game.Id, "general"); err == nil {
-			if err := ensureMembership(tx, general.Id, participant.Id); err != nil {
-				return err
-			}
 		}
 		incrementRevision(game)
 		return tx.Save(game)
@@ -436,14 +383,7 @@ func adminView(event *core.RequestEvent) error {
 	for index, participant := range participants {
 		projected[index] = projectParticipant(participant, true)
 	}
-	rooms, _ := event.App.FindRecordsByFilter("chat_rooms", "game = {:game} && kind != 'announcements'", "kind,label", 200, 0, dbx.Params{"game": game.Id})
-	attentionItems, _ := event.App.FindRecordsByFilter("attention_items", "game = {:game}", "-created,-id", 50, 0, dbx.Params{"game": game.Id})
-	attentionSummaries := make([]map[string]any, 0, len(attentionItems))
-	for _, item := range attentionItems {
-		if summary, summaryErr := projectAdminAttentionSummary(event.App, item); summaryErr == nil {
-			attentionSummaries = append(attentionSummaries, summary)
-		}
-	}
+	rooms, attentionSummaries := chatfeature.AdminViewData(event.App, game.Id)
 	assetRecords, _ := event.App.FindRecordsByFilter(
 		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
 		dbx.Params{"version": game.GetString("ruleset_version")},
@@ -483,7 +423,7 @@ func adminView(event *core.RequestEvent) error {
 		"timer":           projectTimer(game),
 		"ruleset":         game.Get("ruleset_snapshot"),
 		"participants":    projected,
-		"rooms":           projectRooms(event.App, rooms),
+		"rooms":           rooms,
 		"attentionItems":  attentionSummaries,
 		"assets":          projectedAssets,
 		"awards":          projectedAwards,
@@ -530,7 +470,7 @@ func playerView(event *core.RequestEvent) error {
 			return httpx.WriteError(event, result.Internal(err))
 		}
 	}
-	rooms, err := visibleRoomsForPlayer(event.App, game, participant, definition)
+	rooms, err := chatfeature.VisibleRoomsForPlayer(event.App, game, participant, definition)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -549,7 +489,7 @@ func playerView(event *core.RequestEvent) error {
 			"seatNumber": member.GetInt("seat_number"), "status": member.GetString("status"),
 		})
 	}
-	attentionItems, err := unacknowledgedAttentionForParticipant(event.App, game.Id, participant.Id)
+	attentionItems, err := chatfeature.UnacknowledgedAttentionForParticipant(event.App, game.Id, participant.Id)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -627,59 +567,6 @@ func nextSeat(participants []*core.Record) int {
 		}
 	}
 	return maximum + 1
-}
-
-func ensureRoom(app core.App, gameID, key, kind, label, teamKey string) (*core.Record, error) {
-	if room, err := findRoom(app, gameID, key); err == nil {
-		return room, nil
-	}
-	collection, err := app.FindCollectionByNameOrId("chat_rooms")
-	if err != nil {
-		return nil, err
-	}
-	room := core.NewRecord(collection)
-	room.Set("game", gameID)
-	room.Set("room_key", key)
-	room.Set("kind", kind)
-	room.Set("label", label)
-	room.Set("team_key", teamKey)
-	room.Set("players_can_post", true)
-	room.Set("manual_visibility_override", "default")
-	room.Set("sender_display", "profile_name")
-	if err := app.Save(room); err != nil {
-		return nil, err
-	}
-	return room, nil
-}
-
-func findRoom(app core.App, gameID, key string) (*core.Record, error) {
-	records, err := app.FindRecordsByFilter("chat_rooms", "game = {:game} && room_key = {:key}", "", 1, 0,
-		dbx.Params{"game": gameID, "key": key})
-	if err != nil || len(records) == 0 {
-		return nil, fmt.Errorf("room not found")
-	}
-	return records[0], nil
-}
-
-func ensureMembership(app core.App, roomID, participantID string) error {
-	existing, err := app.FindRecordsByFilter("chat_memberships", "room = {:room} && participant = {:participant}", "", 1, 0,
-		dbx.Params{"room": roomID, "participant": participantID})
-	if err != nil {
-		return err
-	}
-	if len(existing) > 0 {
-		existing[0].Set("left_at", nil)
-		return app.Save(existing[0])
-	}
-	collection, err := app.FindCollectionByNameOrId("chat_memberships")
-	if err != nil {
-		return err
-	}
-	record := core.NewRecord(collection)
-	record.Set("room", roomID)
-	record.Set("participant", participantID)
-	record.Set("joined_at", time.Now().UTC())
-	return app.Save(record)
 }
 
 func roleByID(definition rulesets.DefinitionV1, id string) any {
@@ -829,50 +716,6 @@ func selectorMatches(role rulesets.Role, selector rulesets.Selector) bool {
 		}
 	}
 	return len(selector.Tags) == 0
-}
-
-func projectRooms(app core.App, rooms []*core.Record) []map[string]any {
-	result := make([]map[string]any, 0, len(rooms))
-	for _, room := range rooms {
-		if room.GetString("kind") == "announcements" {
-			continue
-		}
-		projected := map[string]any{
-			"id": room.Id, "key": room.GetString("room_key"), "kind": room.GetString("kind"),
-			"label": room.GetString("label"), "teamKey": room.GetString("team_key"),
-			"playersCanPost": room.GetBool("players_can_post"),
-		}
-		projected["latestMessage"] = latestMessageSummary(app, room.Id)
-		result = append(result, projected)
-	}
-	return result
-}
-
-func latestMessageSummary(app core.App, roomID string) any {
-	messages, err := app.FindRecordsByFilter(
-		"chat_messages",
-		"room = {:room} && message_kind != 'announcement'",
-		"-created,-id",
-		1,
-		0,
-		dbx.Params{"room": roomID},
-	)
-	if err != nil || len(messages) == 0 {
-		return nil
-	}
-	message := messages[0]
-	preview := message.GetString("content")
-	if !message.GetDateTime("deleted_at").IsZero() {
-		preview = "Message removed"
-	}
-	runes := []rune(strings.TrimSpace(preview))
-	if len(runes) > 120 {
-		preview = string(runes[:120]) + "…"
-	}
-	return map[string]any{
-		"id": message.Id, "createdAt": dateValue(message, "created"),
-		"senderLabel": message.GetString("sender_label_snapshot"), "preview": preview,
-	}
 }
 
 func decodeSnapshot(record *core.Record, target any) error {

@@ -1,4 +1,4 @@
-package games
+package chat
 
 import (
 	"testing"
@@ -22,10 +22,10 @@ func TestPrepareRoleRoomsFreezesCustomChannelReaders(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := prepareRoleRooms(fixture.app, fixture.game); err != nil {
+	if err := PrepareRoleRooms(fixture.app, fixture.game.Id, fixture.definition, fixture.participants); err != nil {
 		t.Fatal(err)
 	}
-	room, err := findRoom(fixture.app, fixture.game.Id, rulesets.CustomChatRoomPrefix+"red_council")
+	room, err := findRoomByKey(fixture.app, fixture.game.Id, rulesets.CustomChatRoomPrefix+"red_council")
 	if err != nil || room.GetString("kind") != "custom" {
 		t.Fatalf("custom room not created: %v, %#v", err, room)
 	}

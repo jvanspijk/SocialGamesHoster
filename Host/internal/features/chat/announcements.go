@@ -1,4 +1,4 @@
-package games
+package chat
 
 import (
 	"errors"
@@ -13,16 +13,16 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
-	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
+	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
 
-func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definition rulesets.DefinitionV1) ([]map[string]any, error) {
+func VisibleRoomsForPlayer(app core.App, game, participant *core.Record, definition rulesets.DefinitionV1) ([]map[string]any, error) {
 	memberships, err := app.FindRecordsByFilter("chat_memberships", "participant = {:participant}", "", 200, 0,
 		dbx.Params{"participant": participant.Id})
 	if err != nil {
@@ -34,26 +34,26 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 		if err != nil || room.GetString("game") != game.Id || room.GetString("kind") == "announcements" {
 			continue
 		}
-		base, override := roomPolicy(definition, game.GetString("phase_key"), room)
+		base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
 		if room.GetString("kind") == "announcements" || room.GetString("kind") == "gm_dm" {
 			base = rulesets.RoomPermission{Visible: true, Readable: true, Sendable: room.GetString("kind") == "gm_dm", SenderDisplay: rulesets.SenderProfileName}
 			override = nil
 		}
-		state := chatfeature.ParticipantState{
+		state := ParticipantState{
 			IsMember:       membership.GetDateTime("left_at").IsZero(),
 			IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
 			HistoricalRead: membership.GetBool("historical_access"),
 		}
-		policy := chatfeature.EffectivePolicy(base, override, state, chatfeature.RoomState{
+		policy := EffectivePolicy(base, override, state, RoomState{
 			ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 		})
 		if room.GetString("kind") == "custom" && !customChannelSenderAllowed(definition, room, participant) {
 			policy.Sendable = false
 		}
-		if game.GetString("status") == string(StatusReview) || game.GetString("status") == string(StatusArchived) {
+		if game.GetString("status") == string(gamepolicy.GameReview) || gamepolicy.IsArchived(gamepolicy.GameStatus(game.GetString("status"))) {
 			policy.Sendable = false
 		}
-		if game.GetString("status") == string(StatusPaused) && room.GetString("kind") != "gm_dm" {
+		if game.GetString("status") == string(gamepolicy.GamePaused) && room.GetString("kind") != "gm_dm" {
 			explicitlyAllowed := override != nil && override.Sendable != nil && *override.Sendable
 			if !explicitlyAllowed {
 				policy.Sendable = false
@@ -74,65 +74,6 @@ func visibleRoomsForPlayer(app core.App, game, participant *core.Record, definit
 	return result, nil
 }
 
-func roomPolicy(definition rulesets.DefinitionV1, phaseKey string, room *core.Record) (rulesets.RoomPermission, *rulesets.PartialRoomPermission) {
-	var base rulesets.RoomPermission
-	var override *rulesets.PartialRoomPermission
-	switch room.GetString("kind") {
-	case "general":
-		if definition.Chat.DefaultPolicy.General != nil {
-			base = *definition.Chat.DefaultPolicy.General
-		}
-		if phase, ok := definition.Chat.PhaseOverrides[phaseKey]; ok {
-			override = phase.General
-		}
-	case "player_dm":
-		if definition.Chat.DefaultPolicy.PlayerDM != nil {
-			base = *definition.Chat.DefaultPolicy.PlayerDM
-		}
-		if phase, ok := definition.Chat.PhaseOverrides[phaseKey]; ok {
-			override = phase.PlayerDM
-		}
-	case "team":
-		base = definition.Chat.DefaultPolicy.Teams[room.GetString("team_key")]
-		if phase, ok := definition.Chat.PhaseOverrides[phaseKey]; ok {
-			value, exists := phase.Teams[room.GetString("team_key")]
-			if exists {
-				override = &value
-			}
-		}
-	case "custom":
-		channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
-		if channel != nil {
-			base, override = rulesets.ChatChannelPolicy(*channel, phaseKey)
-		}
-	}
-	return base, override
-}
-
-func customChannelSenderAllowed(definition rulesets.DefinitionV1, room, participant *core.Record) bool {
-	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
-	if channel == nil {
-		return false
-	}
-	for _, role := range definition.Roles {
-		if role.ID == participant.GetString("role_key") {
-			return rulesets.ChatChannelAudienceMatches(*channel, role, true)
-		}
-	}
-	return false
-}
-
-func roomMessageRestriction(definition rulesets.DefinitionV1, room *core.Record) rulesets.ChatMessageRestriction {
-	if room.GetString("kind") != "custom" {
-		return rulesets.ChatNormalText
-	}
-	channel := rulesets.FindChatChannel(definition, rulesets.ChatChannelIDFromRoomKey(room.GetString("room_key")))
-	if channel == nil {
-		return rulesets.ChatNormalText
-	}
-	return channel.MessageRestriction
-}
-
 type announcementRequest struct {
 	Content          string `json:"content"`
 	CueKey           string `json:"cueKey"`
@@ -145,11 +86,11 @@ type announcementRequest struct {
 }
 
 func createAnnouncement(event *core.RequestEvent) error {
-	game, err := findGame(event)
+	game, err := findAnnouncementGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return writeError(event, err)
 	}
-	if game.GetString("status") != string(StatusLobby) && game.GetString("status") != string(StatusRunning) && game.GetString("status") != string(StatusPaused) {
+	if game.GetString("status") != string(gamepolicy.GameLobby) && game.GetString("status") != string(gamepolicy.GameRunning) && game.GetString("status") != string(gamepolicy.GamePaused) {
 		return httpx.WriteError(event, result.Conflict("chat.read_only", "Announcements are only available during a live game."))
 	}
 	var request announcementRequest
@@ -160,7 +101,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if len([]rune(request.Content)) > 1000 || request.Content == "" || containsControlCharacter(request.Content) {
 		return httpx.WriteError(event, result.Invalid("attention.invalid_announcement", "Enter an announcement of at most 1000 characters.", nil))
 	}
-	definition, err := snapshot(game)
+	definition, err := definitionFromGame(game)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -168,13 +109,13 @@ func createAnnouncement(event *core.RequestEvent) error {
 		event.App, game, definition, request.ImageAssetKey, "image", request.ImageDescription,
 	)
 	if err != nil {
-		return writeGameError(event, err)
+		return writeError(event, err)
 	}
 	request.AudioAlternative, err = validateAnnouncementAsset(
 		event.App, game, definition, request.AudioAssetKey, "audio", request.AudioAlternative,
 	)
 	if err != nil {
-		return writeGameError(event, err)
+		return writeError(event, err)
 	}
 	var cue *rulesets.AudioCue
 	if request.CueKey != "" {
@@ -232,7 +173,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 		return nil
 	})
 	if err != nil {
-		return writeGameError(event, err)
+		return writeError(event, err)
 	}
 
 	playerProjection := projectPlayerAttention(item)
@@ -245,7 +186,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if cue != nil {
 		publishAttentionCue(event.App, game, *cue, item.Id)
 	}
-	_ = audit(event.App, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
+	_ = platformaudit.Record(event.App, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
 		map[string]any{"cueKey": request.CueKey, "audience": request.Audience, "targetId": request.TargetID, "recipientTotal": len(recipients)}, event.Get(httpx.TraceIDKey))
 	summary, err := projectAdminAttentionSummary(event.App, item)
 	if err != nil {
@@ -255,9 +196,9 @@ func createAnnouncement(event *core.RequestEvent) error {
 }
 
 func acknowledgeAnnouncement(event *core.RequestEvent) error {
-	game, err := findGame(event)
+	game, err := findAnnouncementGame(event)
 	if err != nil {
-		return writeGameError(event, err)
+		return writeError(event, err)
 	}
 	// Acknowledgement remains valid after archival because it only updates the
 	// authenticated participant's receipt, not archived game-owned content.
@@ -298,13 +239,13 @@ func acknowledgeAnnouncement(event *core.RequestEvent) error {
 	}
 	summary, err := projectAdminAttentionSummary(event.App, item)
 	if err == nil {
-		publishGameMasters(event.App, game, "attention.announcement_acknowledged", summary)
+		publishAnnouncementGameMasters(event.App, game, "attention.announcement_acknowledged", summary)
 	}
 	return event.NoContent(http.StatusNoContent)
 }
 
 func resolveAnnouncementRecipients(app core.App, game *core.Record, definition rulesets.DefinitionV1, audience, targetID string) ([]*core.Record, error) {
-	participants, err := currentParticipants(app, game.Id)
+	participants, err := currentAnnouncementParticipants(app, game.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +297,7 @@ func resolveAnnouncementRecipients(app core.App, game *core.Record, definition r
 	}
 }
 
-func unacknowledgedAttentionForParticipant(app core.App, gameID, participantID string) ([]map[string]any, error) {
+func UnacknowledgedAttentionForParticipant(app core.App, gameID, participantID string) ([]map[string]any, error) {
 	receipts, err := app.FindRecordsByFilter(
 		"attention_receipts",
 		"participant = {:participant} && acknowledged_at = ''",
@@ -395,7 +336,7 @@ func projectPlayerAttention(item *core.Record) map[string]any {
 		"id": item.Id, "kind": "announcement",
 		"senderLabel": item.GetString("sender_label_snapshot"),
 		"content":     item.GetString("content"), "cueKey": item.GetString("cue_key"),
-		"createdAt": dateValue(item, "created"),
+		"createdAt": recordDateValue(item, "created"),
 	}
 	projectAnnouncementMedia(item, projected)
 	return projected
@@ -424,7 +365,7 @@ func projectAdminAttentionSummary(app core.App, item *core.Record) (map[string]a
 		"senderLabel": item.GetString("sender_label_snapshot"),
 		"content":     item.GetString("content"), "audience": item.GetString("audience"),
 		"targetId": item.GetString("target_id"), "cueKey": item.GetString("cue_key"),
-		"createdAt": dateValue(item, "created"), "recipientTotal": len(receipts),
+		"createdAt": recordDateValue(item, "created"), "recipientTotal": len(receipts),
 		"acknowledgementCount": acknowledged,
 	}
 	projectAnnouncementMedia(item, projected)
@@ -564,7 +505,7 @@ func latestMessageCursor(app core.App, roomID string) any {
 	if err != nil || len(messages) == 0 {
 		return nil
 	}
-	return map[string]any{"createdAt": dateValue(messages[0], "created"), "id": messages[0].Id}
+	return map[string]any{"createdAt": recordDateValue(messages[0], "created"), "id": messages[0].Id}
 }
 
 func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue, itemID string) {
@@ -631,7 +572,7 @@ func validateCueAudience(app core.App, game *core.Record, definition rulesets.De
 	return nil
 }
 
-func publishAudioCue(app core.App, game *core.Record, definition rulesets.DefinitionV1, cue rulesets.AudioCue, audience, targetID string) {
+func PublishAudioCue(app core.App, game *core.Record, definition rulesets.DefinitionV1, cue rulesets.AudioCue, audience, targetID string) {
 	assets, err := app.FindRecordsByFilter(
 		"ruleset_assets",
 		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio'",

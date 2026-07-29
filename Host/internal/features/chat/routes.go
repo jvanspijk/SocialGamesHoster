@@ -34,6 +34,10 @@ func Register(event *core.ServeEvent) {
 	group.PATCH("/rooms/{roomId}", updateRoom).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/announcements", createAnnouncement).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/announcements/{announcementId}/acknowledge", acknowledgeAnnouncement).BindFunc(actorauth.RequirePlayer)
+	group.GET("/games/{id}/announcements/{announcementId}/media/{kind}", announcementMedia)
+	group.GET("/games/{id}/announcements", listAnnouncements).BindFunc(actorauth.RequireGameMaster)
 }
 
 type access struct {

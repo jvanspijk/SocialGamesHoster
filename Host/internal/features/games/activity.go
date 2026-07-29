@@ -47,36 +47,6 @@ func listActivity(event *core.RequestEvent) error {
 	return event.JSON(http.StatusOK, map[string]any{"items": items, "nextCursor": nextCursor})
 }
 
-func listAnnouncements(event *core.RequestEvent) error {
-	game, err := findGame(event)
-	if err != nil {
-		return writeGameError(event, err)
-	}
-	offset, err := decodeOffset(event.Request.URL.Query().Get("cursor"))
-	if err != nil {
-		return httpx.WriteError(event, result.Invalid("announcement.invalid_cursor", "The announcement cursor is invalid.", nil))
-	}
-	records, err := event.App.FindRecordsByFilter("attention_items", "game = {:game}", "-created,-id", 51, offset, dbx.Params{"game": game.Id})
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	hasMore := len(records) > 50
-	if hasMore {
-		records = records[:50]
-	}
-	items := make([]map[string]any, 0, len(records))
-	for _, record := range records {
-		if summary, err := projectAdminAttentionSummary(event.App, record); err == nil {
-			items = append(items, summary)
-		}
-	}
-	nextCursor := ""
-	if hasMore {
-		nextCursor = encodeOffset(offset + 50)
-	}
-	return event.JSON(http.StatusOK, map[string]any{"items": items, "nextCursor": nextCursor})
-}
-
 func activityLabel(actor, action string) string {
 	if strings.TrimSpace(actor) == "" {
 		actor = "A game master"

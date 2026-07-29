@@ -1,4 +1,4 @@
-package games
+package chat
 
 import (
 	"net/http"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
@@ -109,7 +110,7 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 		t.Fatal("game master must not receive the player attention event")
 	}
 
-	projected, err := unacknowledgedAttentionForParticipant(
+	projected, err := UnacknowledgedAttentionForParticipant(
 		fixture.app,
 		fixture.game.Id,
 		fixture.participants[0].Id,
@@ -121,7 +122,7 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 	if err := fixture.app.Save(receipts[0]); err != nil {
 		t.Fatal(err)
 	}
-	projected, err = unacknowledgedAttentionForParticipant(
+	projected, err = UnacknowledgedAttentionForParticipant(
 		fixture.app,
 		fixture.game.Id,
 		fixture.participants[0].Id,
@@ -178,7 +179,7 @@ func TestAnnouncementAcknowledgementRemainsAvailableAfterArchive(t *testing.T) {
 	if err := fixture.app.Save(receipt); err != nil {
 		t.Fatal(err)
 	}
-	fixture.game.Set("status", StatusArchived)
+	fixture.game.Set("status", gamepolicy.GameArchived)
 	if err := fixture.app.Save(fixture.game); err != nil {
 		t.Fatal(err)
 	}
