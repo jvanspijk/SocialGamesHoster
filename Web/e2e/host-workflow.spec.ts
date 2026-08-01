@@ -23,4 +23,39 @@ test('owner can create a ruleset', async ({ page }) => {
 
 	await page.reload();
 	await expect(page.getByLabel('Name')).toHaveValue('Party Test');
+
+	const actions = page.getByRole('button', { name: 'Actions', exact: true });
+	await actions.click();
+	const actionsDialog = page.getByRole('dialog', { name: 'Ruleset actions' });
+	await expect(actionsDialog).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Close Ruleset actions' })).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(actionsDialog).not.toBeVisible();
+	await expect(actions).toBeFocused();
+
+	await page.setViewportSize({ width: 390, height: 844 });
+	const sections = page.getByRole('button', { name: /Sections/ });
+	await sections.click();
+	const sheet = page.getByRole('dialog', { name: 'Ruleset sections' });
+	await expect(sheet).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Close Ruleset sections' })).toBeFocused();
+	const phoneSheet = await sheet.boundingBox();
+	expect(phoneSheet).not.toBeNull();
+	expect(phoneSheet?.x).toBe(0);
+	expect(phoneSheet?.y).toBe(0);
+	expect(phoneSheet?.width).toBe(390);
+	expect(phoneSheet?.height).toBe(844);
+
+	await page.setViewportSize({ width: 1280, height: 800 });
+	const desktopSheet = await sheet.boundingBox();
+	expect(desktopSheet).not.toBeNull();
+	expect(desktopSheet?.width).toBeLessThan(600);
+	expect(desktopSheet?.height).toBeLessThan(800);
+	expect(desktopSheet?.x).toBeGreaterThan(600);
+	expect(desktopSheet?.y).toBeGreaterThan(0);
+
+	await page.setViewportSize({ width: 390, height: 844 });
+	await page.keyboard.press('Escape');
+	await expect(sheet).not.toBeVisible();
+	await expect(sections).toBeFocused();
 });
