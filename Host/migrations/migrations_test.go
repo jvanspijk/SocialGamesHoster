@@ -19,6 +19,8 @@ func TestInitialMigrationUp(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// This test deliberately exercises the raw migration lifecycle, so it does
+	// not use the migrated PocketBase test-app helper.
 	app := core.NewBaseApp(core.BaseAppConfig{DataDir: dataDir, EncryptionEnv: "sgh_test_encryption"})
 	if err := app.Bootstrap(); err != nil {
 		t.Fatal(err)

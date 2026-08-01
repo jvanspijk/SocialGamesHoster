@@ -4,14 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/pocketbase/pocketbase/core"
 
-	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
 func TestClassifyProfileRequest(t *testing.T) {
@@ -49,28 +47,7 @@ func TestClassifyProfileRequest(t *testing.T) {
 }
 
 func TestSyncLiveParticipantNamesUpdatesOnlyLiveGames(t *testing.T) {
-	if err := os.MkdirAll(".testdata", 0o700); err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err := os.MkdirTemp(".testdata", "profiles-routes-")
-	if err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err = filepath.Abs(dataDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	app := core.NewBaseApp(core.BaseAppConfig{DataDir: dataDir, EncryptionEnv: "sgh_test_encryption"})
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		app.ResetBootstrapState()
-		_ = os.RemoveAll(dataDir)
-	})
-	if err := app.RunAllMigrations(); err != nil {
-		t.Fatal(err)
-	}
+	app := testutil.NewPocketBaseApp(t)
 	gameMasters, _ := app.FindCollectionByNameOrId("game_masters")
 	gameMaster := core.NewRecord(gameMasters)
 	gameMaster.Set("username", "host")

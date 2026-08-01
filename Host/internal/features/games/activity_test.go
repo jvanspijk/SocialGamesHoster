@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -14,7 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
 func TestActivityListingKeepsBoundedEnvelopeAndKeysetCursor(t *testing.T) {
@@ -204,30 +202,7 @@ func min(left, right int) int {
 
 func newActivityListingFixture(t *testing.T) (core.App, *core.Record) {
 	t.Helper()
-	if err := os.MkdirAll(".testdata", 0o700); err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err := os.MkdirTemp(".testdata", "activity-listing-*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err = filepath.Abs(dataDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	app := core.NewBaseApp(core.BaseAppConfig{DataDir: dataDir, EncryptionEnv: "sgh_test_encryption"})
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		app.ResetBootstrapState()
-		if err := os.RemoveAll(dataDir); err != nil {
-			t.Errorf("remove test data: %v", err)
-		}
-	})
-	if err := app.RunAllMigrations(); err != nil {
-		t.Fatal(err)
-	}
+	app := testutil.NewPocketBaseApp(t)
 
 	gameMasters, _ := app.FindCollectionByNameOrId("game_masters")
 	gameMaster := core.NewRecord(gameMasters)

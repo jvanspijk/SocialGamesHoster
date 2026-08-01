@@ -4,8 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,7 +13,7 @@ import (
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
-	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
 type attentionFixture struct {
@@ -290,32 +288,7 @@ func projectedAnnouncementMedia(t *testing.T, projection map[string]any, key str
 
 func newAttentionFixture(t *testing.T) attentionFixture {
 	t.Helper()
-	if err := os.MkdirAll(".testdata", 0o700); err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err := os.MkdirTemp(".testdata", "attention-*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err = filepath.Abs(dataDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	app := core.NewBaseApp(core.BaseAppConfig{
-		DataDir: dataDir, EncryptionEnv: "sgh_test_encryption",
-	})
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		app.ResetBootstrapState()
-		if err := os.RemoveAll(dataDir); err != nil {
-			t.Errorf("remove test data: %v", err)
-		}
-	})
-	if err := app.RunAllMigrations(); err != nil {
-		t.Fatal(err)
-	}
+	app := testutil.NewPocketBaseApp(t)
 
 	gameMasterCollection, _ := app.FindCollectionByNameOrId("game_masters")
 	gameMaster := core.NewRecord(gameMasterCollection)

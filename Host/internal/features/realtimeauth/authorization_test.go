@@ -2,7 +2,6 @@ package realtimeauth
 
 import (
 	"errors"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
-	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
 func TestGameMasterTopicRemainsDistinctFromPublicGameTopic(t *testing.T) {
@@ -135,22 +134,7 @@ func authorizationFixture(t *testing.T) (
 	*core.Record,
 ) {
 	t.Helper()
-	dataDir, err := filepath.Abs(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	app := core.NewBaseApp(core.BaseAppConfig{DataDir: dataDir, EncryptionEnv: "sgh_test_encryption"})
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		if err := app.ResetBootstrapState(); err != nil {
-			t.Errorf("reset bootstrap state: %v", err)
-		}
-	})
-	if err := app.RunAllMigrations(); err != nil {
-		t.Fatal(err)
-	}
+	app := testutil.NewPocketBaseApp(t)
 
 	gameMasters, err := app.FindCollectionByNameOrId("game_masters")
 	if err != nil {

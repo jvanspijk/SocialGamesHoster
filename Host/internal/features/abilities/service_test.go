@@ -1,8 +1,6 @@
 package abilities
 
 import (
-	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -12,7 +10,7 @@ import (
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
-	_ "github.com/jvanspijk/SocialGamesHoster/Host/migrations"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
 func TestAbilityOwnershipPhaseCombinationUndoAndFinalization(t *testing.T) {
@@ -89,25 +87,7 @@ func TestConcurrentCombinableActivationIsAtomic(t *testing.T) {
 
 func abilityFixture(t *testing.T) (core.App, *core.Record, *core.Record, *core.Record, rulesets.DefinitionV1) {
 	t.Helper()
-	if err := os.MkdirAll(".testdata", 0o700); err != nil {
-		t.Fatal(err)
-	}
-	dataDir, err := os.MkdirTemp(".testdata", "abilities-*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	dataDir, _ = filepath.Abs(dataDir)
-	app := core.NewBaseApp(core.BaseAppConfig{DataDir: dataDir, EncryptionEnv: "sgh_test_encryption"})
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		app.ResetBootstrapState()
-		_ = os.RemoveAll(dataDir)
-	})
-	if err := app.RunAllMigrations(); err != nil {
-		t.Fatal(err)
-	}
+	app := testutil.NewPocketBaseApp(t)
 	gmCollection, _ := app.FindCollectionByNameOrId("game_masters")
 	gm := core.NewRecord(gmCollection)
 	gm.Set("username", "host")
