@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -114,8 +115,18 @@ func uploadAsset(event *core.RequestEvent) error {
 	}
 	var record *core.Record
 	newRecord := false
+	var replaced *core.Record
 	if len(existing) == 1 {
-		record = existing[0]
+		// Keep the current ready asset public while its replacement is staged.
+		replaced = existing[0]
+		collection, collectionErr := event.App.FindCollectionByNameOrId("ruleset_assets")
+		if collectionErr != nil {
+			return httpx.WriteError(event, result.Internal(collectionErr))
+		}
+		record = core.NewRecord(collection)
+		record.Set("ruleset_version", versionID)
+		record.Set("asset_key", fmt.Sprintf("staging-%x", time.Now().UnixNano()))
+		newRecord = true
 	} else {
 		count, countErr := event.App.CountRecords("ruleset_assets", dbx.HashExp{"ruleset_version": versionID})
 		if countErr != nil {
@@ -159,6 +170,18 @@ func uploadAsset(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
+		if replaced != nil {
+			old, err := tx.FindRecordById("ruleset_assets", replaced.Id)
+			if err != nil {
+				return err
+			}
+			old.Set("asset_key", "replaced-"+old.Id)
+			old.Set("storage_state", "staging")
+			if err := tx.Save(old); err != nil {
+				return err
+			}
+			current.Set("asset_key", assetKey)
+		}
 		current.Set("storage_state", "ready")
 		if err := tx.Save(current); err != nil {
 			return err
@@ -167,8 +190,13 @@ func uploadAsset(event *core.RequestEvent) error {
 		return auditRecord(tx, event.Auth, "", "ruleset.asset_uploaded", "ruleset_asset", record.Id,
 			map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": assetKey, "kind": kind}, event.Get(httpx.TraceIDKey))
 	}); err != nil {
-		_ = event.App.Delete(record) // compensates an un-audited staged upload.
+		_ = event.App.Delete(record) // old ready record is unchanged on rollback.
 		return httpx.WriteErrorFrom(event, err)
+	}
+	if replaced != nil {
+		if err := event.App.Delete(replaced); err != nil {
+			event.App.Logger().Error("replaced asset cleanup failed", "assetId", replaced.Id, "error", err)
+		}
 	}
 	return event.JSON(http.StatusCreated, projectAsset(record))
 }

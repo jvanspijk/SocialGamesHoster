@@ -169,6 +169,7 @@ func saveRuleset(event *core.RequestEvent) error {
 	var report ValidationReport
 	createdSuccessor := false
 	usedExistingDraft := false
+	needsAssetFinalization := false
 	previousPublishedID := logical.GetString("latest_published_version")
 	err = event.App.RunInTransaction(func(tx core.App) error {
 		currentLogical, err := tx.FindRecordById("rulesets", logical.Id)
@@ -208,6 +209,11 @@ func saveRuleset(event *core.RequestEvent) error {
 				return err
 			}
 		}
+		staged, err := tx.FindRecordsByFilter("ruleset_assets", "ruleset_version = {:version} && storage_state = 'staging'", "", MaxBundleFiles, 0, dbx.Params{"version": saved.Id})
+		if err != nil {
+			return err
+		}
+		needsAssetFinalization = len(staged) > 0
 		saved.Set("definition", request.Definition)
 		saved.Set("definition_checksum", "")
 		if err := tx.Save(saved); err != nil {
@@ -219,7 +225,7 @@ func saveRuleset(event *core.RequestEvent) error {
 		}
 		// Successor files remain staged until their post-commit upload succeeds,
 		// but their already validated keys still participate in draft validation.
-		if createdSuccessor {
+		if createdSuccessor || needsAssetFinalization {
 			for _, asset := range preparedAssets {
 				assetKeys[asset.key] = struct{}{}
 			}
@@ -227,11 +233,13 @@ func saveRuleset(event *core.RequestEvent) error {
 		report = Validate(request.Definition, assetKeys)
 		currentLogical.Set("name", request.Definition.Metadata.Name)
 		if !report.Valid() {
-			currentLogical.Set("latest_published_version", "")
+			if !createdSuccessor {
+				currentLogical.Set("latest_published_version", "")
+			}
 			if err := tx.Save(currentLogical); err != nil {
 				return err
 			}
-			if usedExistingDraft {
+			if usedExistingDraft && !needsAssetFinalization {
 				return auditRecord(tx, event.Auth, "", "ruleset.saved_invalid", "ruleset_version", saved.Id, map[string]any{"rulesetId": logical.Id, "availability": "invalid"}, event.Get(httpx.TraceIDKey))
 			}
 			return nil
@@ -240,18 +248,22 @@ func saveRuleset(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
-		saved.Set("state", "published")
 		saved.Set("definition_checksum", checksum(canonical))
-		saved.Set("published_by", event.Auth.Id)
-		saved.Set("published_at", time.Now().UTC())
+		if !createdSuccessor && !needsAssetFinalization {
+			saved.Set("state", "published")
+			saved.Set("published_by", event.Auth.Id)
+			saved.Set("published_at", time.Now().UTC())
+		}
 		if err := tx.Save(saved); err != nil {
 			return err
 		}
-		currentLogical.Set("latest_published_version", saved.Id)
+		if !createdSuccessor && !needsAssetFinalization {
+			currentLogical.Set("latest_published_version", saved.Id)
+		}
 		if err := tx.Save(currentLogical); err != nil {
 			return err
 		}
-		if usedExistingDraft {
+		if usedExistingDraft && !needsAssetFinalization {
 			return auditRecord(tx, event.Auth, "", "ruleset.saved_ready", "ruleset_version", saved.Id, map[string]any{"rulesetId": logical.Id, "availability": "ready"}, event.Get(httpx.TraceIDKey))
 		}
 		return nil
@@ -263,7 +275,7 @@ func saveRuleset(event *core.RequestEvent) error {
 	if report.Valid() {
 		availability = "ready"
 	}
-	if createdSuccessor {
+	if (createdSuccessor || needsAssetFinalization) && report.Valid() {
 		if err := uploadStagedVersionAssets(event.App, saved.Id, preparedAssets); err != nil {
 			_ = discardStagedSuccessor(event.App, logical.Id, saved.Id, previousPublishedID)
 			return httpx.WriteError(event, result.Internal(err))
@@ -273,10 +285,29 @@ func saveRuleset(event *core.RequestEvent) error {
 	if report.Valid() {
 		action = "ruleset.saved_ready"
 	}
-	if !usedExistingDraft {
+	if !usedExistingDraft || needsAssetFinalization {
 		if err := event.App.RunInTransaction(func(tx core.App) error {
-			if createdSuccessor {
+			if (createdSuccessor || needsAssetFinalization) && report.Valid() {
 				if err := markVersionAssetsReady(tx, saved.Id); err != nil {
+					return err
+				}
+				current, err := tx.FindRecordById("ruleset_versions", saved.Id)
+				if err != nil {
+					return err
+				}
+				current.Set("state", "published")
+				current.Set("published_by", event.Auth.Id)
+				current.Set("published_at", time.Now().UTC())
+				if err := tx.Save(current); err != nil {
+					return err
+				}
+				saved = current
+				logicalCurrent, err := tx.FindRecordById("rulesets", logical.Id)
+				if err != nil {
+					return err
+				}
+				logicalCurrent.Set("latest_published_version", saved.Id)
+				if err := tx.Save(logicalCurrent); err != nil {
 					return err
 				}
 			}
