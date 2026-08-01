@@ -7,7 +7,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
-	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
+	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';

@@ -17,9 +17,9 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
-	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
+	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
-	import VisualDefinitionEditor from '$lib/components/rulesets/VisualDefinitionEditor.svelte';
+	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
 	import { api, download, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { toFormError, type FormError } from '$lib/forms/errors';

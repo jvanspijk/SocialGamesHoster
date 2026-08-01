@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { AttentionItem } from '$lib/api/types';
-	import Button from './Button.svelte';
-	import ProtectedMedia from './ProtectedMedia.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 
 	let {
 		item,

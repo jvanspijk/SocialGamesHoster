@@ -5,9 +5,9 @@
 	import { errorMessage } from '$lib/api/errors';
 	import type { ProfileRequest } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
-	import Button from './Button.svelte';
-	import Dialog from './Dialog.svelte';
-	import Field from './Field.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import Field from '$lib/components/Field.svelte';
 
 	let {
 		compact = false,

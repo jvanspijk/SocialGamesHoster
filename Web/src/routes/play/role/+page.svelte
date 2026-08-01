@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import RoleReveal from '$lib/components/RoleReveal.svelte';
+	import RoleReveal from '$lib/features/play/components/RoleReveal.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 
 	let revealed = $state(false);

@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import Dialog from './Dialog.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 
 	let {
 		open,

@@ -12,7 +12,7 @@
 		Trash2,
 		Users
 	} from '@lucide/svelte';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { api, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, MessageSummary, RealtimeEnvelope, Room } from '$lib/api/types';

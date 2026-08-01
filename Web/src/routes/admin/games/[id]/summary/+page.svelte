@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { ArrowLeft, MessageCircle } from '@lucide/svelte';
-	import GameSummaryCard from '$lib/components/GameSummaryCard.svelte';
+	import GameSummaryCard from '$lib/features/games/components/GameSummaryCard.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';

@@ -15,7 +15,7 @@
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import GameSummaryCard from '$lib/components/GameSummaryCard.svelte';
+	import GameSummaryCard from '$lib/features/games/components/GameSummaryCard.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { GameSummary, Participant } from '$lib/api/types';

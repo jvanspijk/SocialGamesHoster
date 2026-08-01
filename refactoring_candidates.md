@@ -812,7 +812,7 @@ legitimately consume stores.
 
 | Issue | Completed | Reviewed |
 | :---: | :-------: | :------: |
-|   1   |    [ ]    |   [ ]    |
+|   1   |    [x]    |   [x]    |
 |   2   |    [ ]    |   [ ]    |
 |   3   |    [ ]    |   [ ]    |
 |   4   |    [ ]    |   [ ]    |

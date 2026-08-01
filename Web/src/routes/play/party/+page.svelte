@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { UserRound } from '@lucide/svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
+	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Profile } from '$lib/api/types';

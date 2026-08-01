@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { UserX, UserCheck } from '@lucide/svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
-	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
+	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { toasts } from '$lib/state/toasts.svelte';

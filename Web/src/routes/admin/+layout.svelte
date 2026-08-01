@@ -6,7 +6,7 @@
 	import { Gamepad2, LogOut, ScrollText, Settings, ShieldCheck, Swords } from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { fieldErrorOrSummary, toFormError, type FormError } from '$lib/forms/errors';

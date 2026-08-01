@@ -15,7 +15,7 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
-	import TimerControl from '$lib/components/TimerControl.svelte';
+	import TimerControl from '$lib/features/games/components/TimerControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Game, TimerProjection } from '$lib/api/types';

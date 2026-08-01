@@ -12,9 +12,9 @@
 		VolumeX
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import AttentionCard from '$lib/components/AttentionCard.svelte';
+	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
+	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Game, PlayerGameView } from '$lib/api/types';

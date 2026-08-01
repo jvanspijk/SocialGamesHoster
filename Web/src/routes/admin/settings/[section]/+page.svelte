@@ -14,7 +14,7 @@
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import DisplaySettings from '$lib/components/DisplaySettings.svelte';
+	import DisplaySettings from '$lib/features/settings/components/DisplaySettings.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';

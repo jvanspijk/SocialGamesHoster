@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { CircleStop, Pause, Play, Plus, RotateCcw } from '@lucide/svelte';
-	import Button from './Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { TimerProjection } from '$lib/api/types';

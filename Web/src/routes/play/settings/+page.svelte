@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { ArrowLeft, LogOut, UserRound, Volume2, VolumeX, Wifi } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
-	import DisplaySettings from '$lib/components/DisplaySettings.svelte';
+	import DisplaySettings from '$lib/features/settings/components/DisplaySettings.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';

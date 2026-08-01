@@ -88,6 +88,10 @@ same markup, behavior, or styles.
   action.
 - Keep domain components focused on composition and domain behavior. They
   should assemble primitives instead of copying their HTML and CSS.
+- `src/lib/components` is reserved for domain- and route-neutral visual and
+  interaction primitives. Components that load data, issue commands, subscribe
+  to realtime updates, read application state, or use domain API projections
+  live under their owning `src/lib/features/<feature>/components` location.
 - Use Svelte 5 snippets/render props for new slot-like APIs. Existing
   `<slot>`-based components may remain until they are otherwise changed.
 - Keep primitive APIs semantic and deliberately small. Use props for stable

@@ -5,8 +5,8 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
-	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
-	import ToastViewport from '$lib/components/ToastViewport.svelte';
+	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
+	import ToastViewport from '$lib/features/shell/components/ToastViewport.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
 	import { displayPreferences } from '$lib/state/display.svelte';

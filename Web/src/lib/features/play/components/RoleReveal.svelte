@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ArrowLeft, Eye, EyeOff, Shield } from '@lucide/svelte';
-	import Button from './Button.svelte';
-	import ProtectedMedia from './ProtectedMedia.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { PlayerGameView } from '$lib/api/types';

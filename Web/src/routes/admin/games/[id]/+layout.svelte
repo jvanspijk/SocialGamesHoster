@@ -13,8 +13,8 @@
 		Gauge
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import ConnectionBadge from '$lib/components/ConnectionBadge.svelte';
-	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
+	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
+	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { api, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
