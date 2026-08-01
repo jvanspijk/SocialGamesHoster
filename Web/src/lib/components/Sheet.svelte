@@ -5,14 +5,18 @@
 	let {
 		open,
 		title,
+		description = '',
 		close,
-		children
+		children,
+		actions
 	}: {
 		open: boolean;
 		title: string;
+		description?: string;
 		close: () => void;
 		children: Snippet;
+		actions?: Snippet;
 	} = $props();
 </script>
 
-<ModalOverlay {open} {title} {close} presentation="sheet" {children} />
+<ModalOverlay {open} {title} {description} {close} presentation="sheet" {children} {actions} />

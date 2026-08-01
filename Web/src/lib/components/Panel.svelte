@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import ContentHeader from './ContentHeader.svelte';
 
 	let {
 		title,
@@ -18,12 +19,12 @@
 
 <section class:focal={variant === 'focal'} class:dark={variant === 'dark'}>
 	{#if title || actions}
-		<header>
-			<div>
-				{#if title}<h2>{title}</h2>{/if}
-				{#if description}<p>{description}</p>{/if}
-			</div>
-			{#if actions}<div class="actions">{@render actions()}</div>{/if}
+		<header class="panel-header">
+			<ContentHeader {description} {actions} density="compact">
+				{#snippet title()}
+					{#if title}<h2>{title}</h2>{/if}
+				{/snippet}
+			</ContentHeader>
 		</header>
 	{/if}
 	<div class="body">
@@ -38,29 +39,8 @@
 		padding-block: var(--space-4);
 	}
 
-	header {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: var(--space-3);
+	.panel-header {
 		margin-block-end: var(--space-3);
-	}
-
-	h2,
-	p {
-		margin: 0;
-	}
-
-	header p {
-		margin-block-start: var(--space-1);
-		color: var(--ink-soft);
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: var(--space-2);
 	}
 
 	.focal {
@@ -78,7 +58,7 @@
 		padding: var(--space-4);
 	}
 
-	.dark header p {
+	.dark :global(.description) {
 		color: var(--paper-muted);
 	}
 </style>

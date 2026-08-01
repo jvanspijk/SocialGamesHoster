@@ -19,7 +19,9 @@ describe('Sheet', () => {
 		await fireEvent.click(trigger);
 		const dialog = screen.getByRole('dialog', { name: 'Display settings' });
 		expect(dialog).toHaveAttribute('data-presentation', 'sheet');
+		expect(dialog).toHaveAttribute('aria-describedby');
 		expect(dialog).toHaveAttribute('open');
+		expect(screen.getByRole('button', { name: 'Save display settings' })).toBeVisible();
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Update sheet content' }));
 		expect(screen.getByTestId('updates')).toHaveTextContent('1');

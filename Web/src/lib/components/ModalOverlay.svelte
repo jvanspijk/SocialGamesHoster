@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import ContentHeader from './ContentHeader.svelte';
 	import IconButton from './IconButton.svelte';
 
 	type Presentation = 'dialog' | 'sheet';
@@ -107,11 +108,14 @@
 	oncancel={handleCancel}
 	ontransitionend={handleTransitionEnd}
 >
-	<header>
-		<div>
-			<h2 id={titleId}>{title}</h2>
-			{#if description}<p id={descriptionId}>{description}</p>{/if}
-		</div>
+	<header class="overlay-header">
+		<ContentHeader
+			{description}
+			descriptionId={description ? descriptionId : undefined}
+			density="flush"
+		>
+			{#snippet title()}<h2 id={titleId}>{title}</h2>{/snippet}
+		</ContentHeader>
 		<IconButton autofocus label={`Close ${title}`} variant="ghost" onclick={requestClose}>
 			{#snippet icon()}<X size={presentation === 'dialog' ? 21 : 22} />{/snippet}
 		</IconButton>
@@ -183,7 +187,7 @@
 		transform: translateX(var(--space-3));
 	}
 
-	header {
+	.overlay-header {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
@@ -192,14 +196,8 @@
 		padding: var(--space-4);
 	}
 
-	h2,
-	p {
-		margin: 0;
-	}
-
-	header p {
-		margin-block-start: var(--space-1);
-		color: var(--ink-soft);
+	.overlay-header :global(.content-header) {
+		flex: 1 1 auto;
 	}
 
 	.overlay-body {
@@ -220,7 +218,7 @@
 		padding: var(--space-3) var(--space-4);
 	}
 
-	.sheet-presentation header {
+	.sheet-presentation .overlay-header {
 		position: sticky;
 		z-index: 1;
 		inset-block-start: 0;
@@ -230,7 +228,7 @@
 			max(var(--space-3), env(safe-area-inset-right)) var(--space-3) var(--space-4);
 	}
 
-	.sheet-presentation h2 {
+	.sheet-presentation .overlay-header :global(h2) {
 		font-size: 1.15rem;
 	}
 

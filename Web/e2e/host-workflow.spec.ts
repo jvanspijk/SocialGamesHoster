@@ -58,4 +58,23 @@ test('owner can create a ruleset', async ({ page }) => {
 	await page.keyboard.press('Escape');
 	await expect(sheet).not.toBeVisible();
 	await expect(sections).toBeFocused();
+
+	await sections.click();
+	await sheet.getByRole('button', { name: 'Role setup', exact: true }).click();
+	await page.getByRole('button', { name: 'Add band', exact: true }).click();
+
+	const roleSlots = page
+		.locator('.content-header')
+		.filter({ has: page.getByText('Role slots', { exact: true }) });
+	await expect(roleSlots).toBeVisible();
+
+	await page.setViewportSize({ width: 700, height: 844 });
+	await expect(roleSlots).toHaveCSS('flex-direction', 'column');
+	const roleSlotsTitle = roleSlots.getByText('Role slots', { exact: true });
+	const addSlot = roleSlots.getByRole('button', { name: 'Add slot', exact: true });
+	const titleBox = await roleSlotsTitle.boundingBox();
+	const actionBox = await addSlot.boundingBox();
+	expect(titleBox).not.toBeNull();
+	expect(actionBox).not.toBeNull();
+	expect(actionBox!.y).toBeGreaterThan(titleBox!.y);
 });

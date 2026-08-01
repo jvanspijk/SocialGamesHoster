@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import RoomPermissionEditor from './RoomPermissionEditor.svelte';
 	import SelectorEditor from './SelectorEditor.svelte';
@@ -285,20 +286,20 @@
 </script>
 
 {#if section === 'teams'}
-	<div class="section-title">
-		<div>
-			<h2>Teams</h2>
-			<p class="muted">The main sides or factions in the game.</p>
-		</div>
-		<Button variant="secondary" onclick={addTeam}>Add team</Button>
-	</div>
+	<ContentHeader density="dense" description="The main sides or factions in the game.">
+		{#snippet title()}<h2>Teams</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addTeam}>Add team</Button>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.teams as team, index (team.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{team.name || 'Unnamed team'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.teams, index)}>Remove</button>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{team.name || 'Unnamed team'}</h3>{/snippet}
+					{#snippet actions()}<button
+							class="remove"
+							onclick={() => removeAt(definition.teams, index)}>Remove</button
+						>{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Name" name={`team-name-${index}`} bind:value={team.name} required />
 					<Field
@@ -330,22 +331,24 @@
 		{/each}
 	</div>
 
-	<div class="section-title subsection">
-		<div>
-			<h2>Categories</h2>
-			<p class="muted">Optional labels such as Investigative or Support.</p>
-		</div>
-		<Button variant="secondary" onclick={addCategory}>Add category</Button>
+	<div class="subsection">
+		<ContentHeader density="dense" description="Optional labels such as Investigative or Support.">
+			{#snippet title()}<h2>Categories</h2>{/snippet}
+			{#snippet actions()}<Button variant="secondary" onclick={addCategory}>Add category</Button
+				>{/snippet}
+		</ContentHeader>
 	</div>
 	<div class="cards compact">
 		{#each definition.categories as category, index (category.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{category.name || 'Unnamed category'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.categories, index)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{category.name || 'Unnamed category'}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.categories, index)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Name" name={`category-name-${index}`} bind:value={category.name} required />
 					<Field
@@ -365,22 +368,22 @@
 		{/each}
 	</div>
 {:else if section === 'roles'}
-	<div class="section-title">
-		<div>
-			<h2>Abilities</h2>
-			<p class="muted">Reusable powers that can be assigned to roles.</p>
-		</div>
-		<Button variant="secondary" onclick={addAbility}>Add ability</Button>
-	</div>
+	<ContentHeader density="dense" description="Reusable powers that can be assigned to roles.">
+		{#snippet title()}<h2>Abilities</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addAbility}>Add ability</Button
+			>{/snippet}
+	</ContentHeader>
 	<div class="cards compact">
 		{#each definition.abilities as ability, index (ability.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{ability.name || 'Unnamed ability'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.abilities, index)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{ability.name || 'Unnamed ability'}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.abilities, index)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Name" name={`ability-name-${index}`} bind:value={ability.name} required />
 					<Field label="Stable ID" name={`ability-id-${index}`} bind:value={ability.id} required />
@@ -422,20 +425,25 @@
 		{/each}
 	</div>
 
-	<div class="section-title subsection">
-		<div>
-			<h2>Roles</h2>
-			<p class="muted">What each player may be assigned and how that role wins.</p>
-		</div>
-		<Button variant="secondary" onclick={addRole}>Add role</Button>
+	<div class="subsection">
+		<ContentHeader
+			density="dense"
+			description="What each player may be assigned and how that role wins."
+		>
+			{#snippet title()}<h2>Roles</h2>{/snippet}
+			{#snippet actions()}<Button variant="secondary" onclick={addRole}>Add role</Button>{/snippet}
+		</ContentHeader>
 	</div>
 	<div class="cards">
 		{#each definition.roles as role, index (role.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{role.name || 'Unnamed role'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.roles, index)}>Remove</button>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{role.name || 'Unnamed role'}</h3>{/snippet}
+					{#snippet actions()}<button
+							class="remove"
+							onclick={() => removeAt(definition.roles, index)}>Remove</button
+						>{/snippet}
+				</ContentHeader>
 				<div class="form-grid thirds">
 					<Field label="Name" name={`role-name-${index}`} bind:value={role.name} required />
 					<Field label="Stable ID" name={`role-id-${index}`} bind:value={role.id} required />
@@ -512,20 +520,20 @@
 		{/each}
 	</div>
 {:else if section === 'phases'}
-	<div class="section-title">
-		<div>
-			<h2>Phases</h2>
-			<p class="muted">The ordered steps a game master advances through.</p>
-		</div>
-		<Button variant="secondary" onclick={addPhase}>Add phase</Button>
-	</div>
+	<ContentHeader density="dense" description="The ordered steps a game master advances through.">
+		{#snippet title()}<h2>Phases</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addPhase}>Add phase</Button>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.phases as phase, index (phase.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{phase.order}. {phase.name || 'Unnamed phase'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.phases, index)}>Remove</button>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{phase.order}. {phase.name || 'Unnamed phase'}</h3>{/snippet}
+					{#snippet actions()}<button
+							class="remove"
+							onclick={() => removeAt(definition.phases, index)}>Remove</button
+						>{/snippet}
+				</ContentHeader>
 				<div class="form-grid thirds">
 					<Field label="Name" name={`phase-name-${index}`} bind:value={phase.name} required />
 					<Field label="Stable ID" name={`phase-id-${index}`} bind:value={phase.id} required />
@@ -564,22 +572,24 @@
 		{/each}
 	</div>
 {:else if section === 'composition'}
-	<div class="section-title">
-		<div>
-			<h2>Player-count bands</h2>
-			<p class="muted">Define how many slots are filled for every supported party size.</p>
-		</div>
-		<Button variant="secondary" onclick={addBand}>Add band</Button>
-	</div>
+	<ContentHeader
+		density="dense"
+		description="Define how many slots are filled for every supported party size."
+	>
+		{#snippet title()}<h2>Player-count bands</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addBand}>Add band</Button>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.compositionBands as band, bandIndex (band.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{band.minPlayers}–{band.maxPlayers} players</h3>
-					<button class="remove" onclick={() => removeAt(definition.compositionBands, bandIndex)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{band.minPlayers}–{band.maxPlayers} players</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.compositionBands, bandIndex)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid thirds">
 					<Field label="Stable ID" name={`band-id-${bandIndex}`} bind:value={band.id} required />
 					<label
@@ -600,15 +610,22 @@
 					>
 				</div>
 				<div class="nested-heading">
-					<strong>Role slots</strong>
-					<button class="add-small" onclick={() => addSlot(bandIndex)}>Add slot</button>
+					<ContentHeader density="dense">
+						{#snippet title()}<strong>Role slots</strong>{/snippet}
+						{#snippet actions()}<button class="add-small" onclick={() => addSlot(bandIndex)}
+								>Add slot</button
+							>{/snippet}
+					</ContentHeader>
 				</div>
 				{#each band.slots as slot, slotIndex (slot.id)}
 					<div class="nested">
-						<div class="card-heading">
-							<strong>{slot.label || 'Unnamed slot'}</strong>
-							<button class="remove" onclick={() => removeAt(band.slots, slotIndex)}>Remove</button>
-						</div>
+						<ContentHeader density="dense">
+							{#snippet title()}<strong>{slot.label || 'Unnamed slot'}</strong>{/snippet}
+							{#snippet actions()}<button
+									class="remove"
+									onclick={() => removeAt(band.slots, slotIndex)}>Remove</button
+								>{/snippet}
+						</ContentHeader>
 						<div class="form-grid thirds">
 							<Field
 								label="Label"
@@ -642,23 +659,26 @@
 		{/each}
 	</div>
 
-	<div class="section-title subsection">
-		<div>
-			<h2>Conditional changes</h2>
-			<p class="muted">Adjust slots when a particular role appears.</p>
-		</div>
-		<Button variant="secondary" onclick={addModifier}>Add condition</Button>
+	<div class="subsection">
+		<ContentHeader density="dense" description="Adjust slots when a particular role appears.">
+			{#snippet title()}<h2>Conditional changes</h2>{/snippet}
+			{#snippet actions()}<Button variant="secondary" onclick={addModifier}>Add condition</Button
+				>{/snippet}
+		</ContentHeader>
 	</div>
 	<div class="cards">
 		{#each definition.compositionModifiers as modifier, modifierIndex (modifier.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{modifier.id}</h3>
-					<button
-						class="remove"
-						onclick={() => removeAt(definition.compositionModifiers, modifierIndex)}>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{modifier.id}</h3>{/snippet}
+					{#snippet actions()}
+						<button
+							class="remove"
+							onclick={() => removeAt(definition.compositionModifiers, modifierIndex)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Stable ID" name={`modifier-id-${modifierIndex}`} bind:value={modifier.id} />
 					<label>
@@ -693,8 +713,13 @@
 					</div>
 				</div>
 				<div class="nested-heading">
-					<strong>Slot changes</strong>
-					<button class="add-small" onclick={() => addAdjustment(modifierIndex)}>Add change</button>
+					<ContentHeader density="dense">
+						{#snippet title()}<strong>Slot changes</strong>{/snippet}
+						{#snippet actions()}<button
+								class="add-small"
+								onclick={() => addAdjustment(modifierIndex)}>Add change</button
+							>{/snippet}
+					</ContentHeader>
 				</div>
 				{#each modifier.slotAdjustments as adjustment, adjustmentIndex (adjustment)}
 					<div class="inline-row">
@@ -726,22 +751,23 @@
 		{/each}
 	</div>
 {:else if section === 'knowledge'}
-	<div class="section-title">
-		<div>
-			<h2>Starting knowledge</h2>
-			<p class="muted">Choose what one group learns about another group.</p>
-		</div>
-		<Button variant="secondary" onclick={addKnowledge}>Add knowledge rule</Button>
-	</div>
+	<ContentHeader density="dense" description="Choose what one group learns about another group.">
+		{#snippet title()}<h2>Starting knowledge</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addKnowledge}
+				>Add knowledge rule</Button
+			>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.knowledgeRules as rule, index (rule)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>Knowledge rule {index + 1}</h3>
-					<button class="remove" onclick={() => removeAt(definition.knowledgeRules, index)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>Knowledge rule {index + 1}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.knowledgeRules, index)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="selector-grid">
 					<SelectorEditor
 						selector={rule.viewer}
@@ -781,57 +807,61 @@
 		{/each}
 	</div>
 {:else if section === 'chat'}
-	<div class="section-title">
-		<div>
-			<h2>Normal chat settings</h2>
-			<p class="muted">These settings apply unless a phase changes them.</p>
-		</div>
-	</div>
+	<ContentHeader density="dense" description="These settings apply unless a phase changes them.">
+		{#snippet title()}<h2>Normal chat settings</h2>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		<article class="item-card">
-			<div class="card-heading">
-				<h3>General room</h3>
-				{#if definition.chat.defaultPolicy.general}
-					<button class="remove" onclick={() => delete definition.chat.defaultPolicy.general}
-						>Disable room</button
-					>
-				{:else}
-					<button class="add-small" onclick={() => addDefaultRoom('general')}>Enable room</button>
-				{/if}
-			</div>
+			<ContentHeader density="dense">
+				{#snippet title()}<h3>General room</h3>{/snippet}
+				{#snippet actions()}
+					{#if definition.chat.defaultPolicy.general}
+						<button class="remove" onclick={() => delete definition.chat.defaultPolicy.general}
+							>Disable room</button
+						>
+					{:else}
+						<button class="add-small" onclick={() => addDefaultRoom('general')}>Enable room</button>
+					{/if}
+				{/snippet}
+			</ContentHeader>
 			{#if definition.chat.defaultPolicy.general}
 				<RoomPermissionEditor policy={definition.chat.defaultPolicy.general} />
 			{/if}
 		</article>
 		<article class="item-card">
-			<div class="card-heading">
-				<h3>Private player messages</h3>
-				{#if definition.chat.defaultPolicy.playerDm}
-					<button class="remove" onclick={() => delete definition.chat.defaultPolicy.playerDm}
-						>Disable room</button
-					>
-				{:else}
-					<button class="add-small" onclick={() => addDefaultRoom('playerDm')}>Enable room</button>
-				{/if}
-			</div>
+			<ContentHeader density="dense">
+				{#snippet title()}<h3>Private player messages</h3>{/snippet}
+				{#snippet actions()}
+					{#if definition.chat.defaultPolicy.playerDm}
+						<button class="remove" onclick={() => delete definition.chat.defaultPolicy.playerDm}
+							>Disable room</button
+						>
+					{:else}
+						<button class="add-small" onclick={() => addDefaultRoom('playerDm')}>Enable room</button
+						>
+					{/if}
+				{/snippet}
+			</ContentHeader>
 			{#if definition.chat.defaultPolicy.playerDm}
 				<RoomPermissionEditor policy={definition.chat.defaultPolicy.playerDm} />
 			{/if}
 		</article>
 		{#each definition.teams as team (team.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{team.name} team room</h3>
-					{#if definition.chat.defaultPolicy.teams[team.id]}
-						<button
-							class="remove"
-							onclick={() => delete definition.chat.defaultPolicy.teams[team.id]}
-							>Disable room</button
-						>
-					{:else}
-						<button class="add-small" onclick={() => addDefaultTeam(team.id)}>Enable room</button>
-					{/if}
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{team.name} team room</h3>{/snippet}
+					{#snippet actions()}
+						{#if definition.chat.defaultPolicy.teams[team.id]}
+							<button
+								class="remove"
+								onclick={() => delete definition.chat.defaultPolicy.teams[team.id]}
+								>Disable room</button
+							>
+						{:else}
+							<button class="add-small" onclick={() => addDefaultTeam(team.id)}>Enable room</button>
+						{/if}
+					{/snippet}
+				</ContentHeader>
 				{#if definition.chat.defaultPolicy.teams[team.id]}
 					<RoomPermissionEditor policy={definition.chat.defaultPolicy.teams[team.id]} />
 				{/if}
@@ -839,24 +869,27 @@
 		{/each}
 	</div>
 
-	<div class="section-title subsection">
-		<div>
-			<h2>Custom channels</h2>
-			<p class="muted">
-				Create role- or team-specific conversations, including emoji-only channels.
-			</p>
-		</div>
-		<Button variant="secondary" onclick={addCustomChannel}>Add channel</Button>
+	<div class="subsection">
+		<ContentHeader
+			density="dense"
+			description="Create role- or team-specific conversations, including emoji-only channels."
+		>
+			{#snippet title()}<h2>Custom channels</h2>{/snippet}
+			{#snippet actions()}<Button variant="secondary" onclick={addCustomChannel}>Add channel</Button
+				>{/snippet}
+		</ContentHeader>
 	</div>
 	<div class="cards">
 		{#each definition.chat.channels ?? [] as channel, channelIndex (channel.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{channel.name || 'Unnamed channel'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.chat.channels, channelIndex)}
-						>Remove channel</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{channel.name || 'Unnamed channel'}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.chat.channels, channelIndex)}
+							>Remove channel</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field
 						label="Channel name"
@@ -1005,69 +1038,79 @@
 		{/each}
 	</div>
 
-	<div class="section-title subsection">
-		<div>
-			<h2>Phase changes</h2>
-			<p class="muted">Temporarily override only the settings that need to change.</p>
-		</div>
+	<div class="subsection">
+		<ContentHeader
+			density="dense"
+			description="Temporarily override only the settings that need to change."
+		>
+			{#snippet title()}<h2>Phase changes</h2>{/snippet}
+		</ContentHeader>
 	</div>
 	<div class="cards">
 		{#each definition.phases as phase (phase.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{phase.name}</h3>
-					{#if definition.chat.phaseOverrides[phase.id]}
-						<button class="remove" onclick={() => delete definition.chat.phaseOverrides[phase.id]}
-							>Remove changes</button
-						>
-					{:else}
-						<button class="add-small" onclick={() => addPhaseOverride(phase.id)}
-							>Add phase changes</button
-						>
-					{/if}
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{phase.name}</h3>{/snippet}
+					{#snippet actions()}
+						{#if definition.chat.phaseOverrides[phase.id]}
+							<button class="remove" onclick={() => delete definition.chat.phaseOverrides[phase.id]}
+								>Remove changes</button
+							>
+						{:else}
+							<button class="add-small" onclick={() => addPhaseOverride(phase.id)}
+								>Add phase changes</button
+							>
+						{/if}
+					{/snippet}
+				</ContentHeader>
 				{#if definition.chat.phaseOverrides[phase.id]}
 					{@const override = definition.chat.phaseOverrides[phase.id]}
 					<div class="override-room">
-						<div class="card-heading">
-							<strong>General room</strong>
-							{#if override.general}
-								<button class="remove" onclick={() => delete override.general}>Clear</button>
-							{:else}
-								<button class="add-small" onclick={() => addOverrideRoom(phase.id, 'general')}
-									>Change</button
-								>
-							{/if}
-						</div>
+						<ContentHeader density="dense">
+							{#snippet title()}<strong>General room</strong>{/snippet}
+							{#snippet actions()}
+								{#if override.general}
+									<button class="remove" onclick={() => delete override.general}>Clear</button>
+								{:else}
+									<button class="add-small" onclick={() => addOverrideRoom(phase.id, 'general')}
+										>Change</button
+									>
+								{/if}
+							{/snippet}
+						</ContentHeader>
 						{#if override.general}<RoomPermissionEditor policy={override.general} partial />{/if}
 					</div>
 					<div class="override-room">
-						<div class="card-heading">
-							<strong>Private player messages</strong>
-							{#if override.playerDm}
-								<button class="remove" onclick={() => delete override.playerDm}>Clear</button>
-							{:else}
-								<button class="add-small" onclick={() => addOverrideRoom(phase.id, 'playerDm')}
-									>Change</button
-								>
-							{/if}
-						</div>
+						<ContentHeader density="dense">
+							{#snippet title()}<strong>Private player messages</strong>{/snippet}
+							{#snippet actions()}
+								{#if override.playerDm}
+									<button class="remove" onclick={() => delete override.playerDm}>Clear</button>
+								{:else}
+									<button class="add-small" onclick={() => addOverrideRoom(phase.id, 'playerDm')}
+										>Change</button
+									>
+								{/if}
+							{/snippet}
+						</ContentHeader>
 						{#if override.playerDm}<RoomPermissionEditor policy={override.playerDm} partial />{/if}
 					</div>
 					{#each definition.teams as team (team.id)}
 						<div class="override-room">
-							<div class="card-heading">
-								<strong>{team.name} room</strong>
-								{#if override.teams?.[team.id]}
-									<button class="remove" onclick={() => delete override.teams?.[team.id]}
-										>Clear</button
-									>
-								{:else}
-									<button class="add-small" onclick={() => addOverrideTeam(phase.id, team.id)}
-										>Change</button
-									>
-								{/if}
-							</div>
+							<ContentHeader density="dense">
+								{#snippet title()}<strong>{team.name} room</strong>{/snippet}
+								{#snippet actions()}
+									{#if override.teams?.[team.id]}
+										<button class="remove" onclick={() => delete override.teams?.[team.id]}
+											>Clear</button
+										>
+									{:else}
+										<button class="add-small" onclick={() => addOverrideTeam(phase.id, team.id)}
+											>Change</button
+										>
+									{/if}
+								{/snippet}
+							</ContentHeader>
 							{#if override.teams?.[team.id]}
 								<RoomPermissionEditor policy={override.teams[team.id]} partial />
 							{/if}
@@ -1080,22 +1123,22 @@
 		{/each}
 	</div>
 {:else if section === 'achievements'}
-	<div class="section-title">
-		<div>
-			<h2>Achievements</h2>
-			<p class="muted">Awards a game master can give after a game.</p>
-		</div>
-		<Button variant="secondary" onclick={addAchievement}>Add achievement</Button>
-	</div>
+	<ContentHeader density="dense" description="Awards a game master can give after a game.">
+		{#snippet title()}<h2>Achievements</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addAchievement}>Add achievement</Button
+			>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.achievements as achievement, index (achievement.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{achievement.name || 'Unnamed achievement'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.achievements, index)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{achievement.name || 'Unnamed achievement'}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.achievements, index)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field
 						label="Name"
@@ -1141,22 +1184,25 @@
 		{/each}
 	</div>
 {:else if section === 'audio'}
-	<div class="section-title">
-		<div>
-			<h2>Audio cues</h2>
-			<p class="muted">Named sounds a game master or phase can play for selected listeners.</p>
-		</div>
-		<Button variant="secondary" onclick={addAudioCue}>Add audio cue</Button>
-	</div>
+	<ContentHeader
+		density="dense"
+		description="Named sounds a game master or phase can play for selected listeners."
+	>
+		{#snippet title()}<h2>Audio cues</h2>{/snippet}
+		{#snippet actions()}<Button variant="secondary" onclick={addAudioCue}>Add audio cue</Button
+			>{/snippet}
+	</ContentHeader>
 	<div class="cards">
 		{#each definition.audioCues as cue, index (cue.id)}
 			<article class="item-card">
-				<div class="card-heading">
-					<h3>{cue.name || 'Unnamed cue'}</h3>
-					<button class="remove" onclick={() => removeAt(definition.audioCues, index)}
-						>Remove</button
-					>
-				</div>
+				<ContentHeader density="dense">
+					{#snippet title()}<h3>{cue.name || 'Unnamed cue'}</h3>{/snippet}
+					{#snippet actions()}
+						<button class="remove" onclick={() => removeAt(definition.audioCues, index)}
+							>Remove</button
+						>
+					{/snippet}
+				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required />
 					<Field label="Stable ID" name={`cue-id-${index}`} bind:value={cue.id} required />
@@ -1193,20 +1239,11 @@
 {/if}
 
 <style>
-	.section-title,
-	.card-heading,
-	.nested-heading,
 	.inline-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
-	}
-
-	.section-title h2,
-	.section-title p,
-	.card-heading h3 {
-		margin: 0;
 	}
 
 	.subsection {
@@ -1249,7 +1286,7 @@
 
 	label > span,
 	.choice-block > strong,
-	.nested-heading > strong,
+	.nested-heading :global(strong),
 	.override-room strong {
 		font-family: var(--font-display);
 		font-size: 0.67rem;
@@ -1386,7 +1423,6 @@
 			grid-template-columns: 1fr;
 		}
 
-		.section-title,
 		.inline-row {
 			align-items: stretch;
 			flex-direction: column;
