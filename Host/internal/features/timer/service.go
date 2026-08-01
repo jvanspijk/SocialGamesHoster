@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -19,6 +20,10 @@ type Service struct {
 	gameID   string
 	revision int
 }
+
+// auditRecord is replaced only by package tests to exercise transaction
+// rollback when durable auditing is unavailable.
+var auditRecord = applicationaudit.Record
 
 func NewService(app core.App) *Service {
 	return &Service{app: app}
@@ -33,12 +38,9 @@ func (service *Service) Reconcile() {
 	game := records[0]
 	state := Reconcile(stateFromRecord(game), time.Now().UTC())
 	if state.Status == Completed {
-		saveState(game, state)
-		if service.app.Save(game) == nil {
-			_, _ = abilities.FinalizePhase(service.app, game.Id, time.Now().UTC())
-			if current, findErr := service.app.FindRecordById("games", game.Id); findErr == nil {
-				game = current
-			}
+		now := time.Now().UTC()
+		if completed, err := service.completeTransaction(game.Id, state.Revision, now); err == nil && completed {
+			game, _ = service.app.FindRecordById("games", game.Id)
 			service.Publish(game, "timer.completed", Project(state, time.Now().UTC()))
 		}
 		return
@@ -91,15 +93,45 @@ func (service *Service) complete(gameID string, revision int) {
 		service.Schedule(gameID, state)
 		return
 	}
-	saveState(game, state)
-	if service.app.Save(game) != nil {
+	completed, err := service.completeTransaction(game.Id, revision, now)
+	if err != nil || !completed {
 		return
 	}
-	_, _ = abilities.FinalizePhase(service.app, game.Id, now)
-	if current, findErr := service.app.FindRecordById("games", game.Id); findErr == nil {
-		game = current
-	}
+	game, _ = service.app.FindRecordById("games", game.Id)
 	service.Publish(game, "timer.completed", Project(state, now))
+}
+
+func (service *Service) completeTransaction(gameID string, expectedRevision int, now time.Time) (bool, error) {
+	completed := false
+	err := service.app.RunInTransaction(func(tx core.App) error {
+		game, err := tx.FindRecordById("games", gameID)
+		if err != nil {
+			return err
+		}
+		state := Reconcile(stateFromRecord(game), now)
+		if state.Status != Completed || state.Revision != expectedRevision {
+			return nil
+		}
+		// A completed record may be reconciled repeatedly; only the transition
+		// from a running timer owns completion, revision, audit, and publication.
+		if game.GetString("timer_state") != string(Running) {
+			return nil
+		}
+		saveState(game, state)
+		if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+			return err
+		}
+		game.Set("revision", game.GetInt("revision")+1)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		if err := auditRecord(tx, nil, game.Id, "timer.completed", "game", game.Id, nil, nil); err != nil {
+			return err
+		}
+		completed = true
+		return nil
+	})
+	return completed, err
 }
 
 func (service *Service) Publish(game *core.Record, kind string, projection *Projection) {

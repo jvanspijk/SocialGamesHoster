@@ -1,6 +1,7 @@
 package abilities
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -43,7 +44,23 @@ func TestAbilityOwnershipPhaseCombinationUndoAndFinalization(t *testing.T) {
 		t.Fatalf("pending admin projection leaked or lost progress: %#v %#v %v", progress, results, err)
 	}
 
-	locked, err := FinalizePhase(app, game.Id, now.Add(time.Minute))
+	locked := false
+	err = app.RunInTransaction(func(tx core.App) error {
+		var finalizeErr error
+		current, err := tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
+		}
+		locked, finalizeErr = FinalizePhase(tx, current, now.Add(time.Minute))
+		if finalizeErr != nil {
+			return finalizeErr
+		}
+		if locked {
+			current.Set("revision", current.GetInt("revision")+1)
+			return tx.Save(current)
+		}
+		return nil
+	})
 	if err != nil || !locked {
 		t.Fatalf("finalize: %t %v", locked, err)
 	}
@@ -57,6 +74,36 @@ func TestAbilityOwnershipPhaseCombinationUndoAndFinalization(t *testing.T) {
 	progress, results, err = ProjectAdmin(app, game, definition, []*core.Record{participant})
 	if err != nil || progress["locked"] != true || len(results) != 1 {
 		t.Fatalf("final admin projection: %#v %#v %v", progress, results, err)
+	}
+}
+
+func TestFinalizePhaseRollsBackWithCallerTransaction(t *testing.T) {
+	app, game, profile, participant, definition := abilityFixture(t)
+	now := time.Now().UTC()
+	if _, err := Activate(app, game.Id, profile.Id, "solo", now); err != nil {
+		t.Fatalf("activate: %v", err)
+	}
+	err := app.RunInTransaction(func(tx core.App) error {
+		current, err := tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
+		}
+		locked, err := FinalizePhase(tx, current, now.Add(time.Minute))
+		if err != nil || !locked {
+			t.Fatalf("finalize in transaction: %t %v", locked, err)
+		}
+		return errors.New("force rollback")
+	})
+	if err == nil {
+		t.Fatal("expected rollback error")
+	}
+	game, _ = app.FindRecordById("games", game.Id)
+	if !game.GetDateTime("ability_phase_locked_at").IsZero() {
+		t.Fatal("ability phase lock persisted after rollback")
+	}
+	choices, err := ProjectPlayer(app, game, participant, definition)
+	if err != nil || len(choices) != 1 || choices[0].Status != "Activated" {
+		t.Fatalf("ability choice persisted as finalized after rollback: %#v, %v", choices, err)
 	}
 }
 

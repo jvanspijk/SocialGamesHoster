@@ -81,13 +81,14 @@ func createGameMaster(event *core.RequestEvent) error {
 	record.Set("active", true)
 	record.Set("is_owner", false)
 	record.SetPassword(request.Password)
-	if err := event.App.Save(record); err != nil {
-		return httpx.WriteError(event, result.Invalid("game_master.save_failed", "The account could not be created.", result.FieldErrors{
-			"username": {"Choose a different username."},
-		}))
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(record); err != nil {
+			return result.Invalid("game_master.save_failed", "The account could not be created.", result.FieldErrors{"username": {"Choose a different username."}})
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "game_master.created", "game_master", record.Id, map[string]any{"username": username}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.created", "game_master", record.Id,
-		map[string]any{"username": username}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGameMaster(record))
 }
 
@@ -117,28 +118,29 @@ func updateGameMaster(event *core.RequestEvent) error {
 		}
 	}
 	if request.MakeOwner && !target.GetBool("is_owner") {
-		if err := transferOwnership(event.App, event.Auth.Id, target.Id); err != nil {
+		if err := transferOwnership(event.App, event.Auth, target.Id, event.Get(httpx.TraceIDKey)); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
 		updated, err := event.App.FindRecordById(actorauth.GameMastersCollection, target.Id)
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.ownership_transferred", "game_master", target.Id,
-			nil, event.Get(httpx.TraceIDKey))
 		return event.JSON(http.StatusOK, projectGameMaster(updated))
 	}
-	if err := event.App.Save(target); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(target); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "game_master.updated", "game_master", target.Id, map[string]any{"active": target.GetBool("active")}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.updated", "game_master", target.Id,
-		map[string]any{"active": target.GetBool("active")}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectGameMaster(target))
 }
 
-func transferOwnership(app core.App, currentOwnerID, nextOwnerID string) error {
+func transferOwnership(app core.App, actor *core.Record, nextOwnerID string, traceID any) error {
 	return app.RunInTransaction(func(txApp core.App) error {
-		current, err := txApp.FindRecordById(actorauth.GameMastersCollection, currentOwnerID)
+		current, err := txApp.FindRecordById(actorauth.GameMastersCollection, actor.Id)
 		if err != nil {
 			return err
 		}
@@ -154,7 +156,10 @@ func transferOwnership(app core.App, currentOwnerID, nextOwnerID string) error {
 		}
 		current.Set("is_owner", false)
 		current.RefreshTokenKey()
-		return txApp.Save(current)
+		if err := txApp.Save(current); err != nil {
+			return err
+		}
+		return applicationaudit.Record(txApp, actor, "", "game_master.ownership_transferred", "game_master", nextOwnerID, nil, traceID)
 	})
 }
 
@@ -168,11 +173,14 @@ func resetGameMasterPassword(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Invalid("game_master.invalid_password", "Use a password of at least 6 characters.", nil))
 	}
 	target.SetPassword(request.Password)
-	if err := event.App.Save(target); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(target); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "game_master.password_reset", "game_master", target.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.password_reset", "game_master", target.Id,
-		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
 
@@ -187,11 +195,14 @@ func deleteGameMaster(event *core.RequestEvent) error {
 	if target.GetBool("is_owner") {
 		return httpx.WriteError(event, result.Conflict("game_master.owner_required", "Transfer ownership before deleting the owner account."))
 	}
-	if err := event.App.Delete(target); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Delete(target); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "game_master.deleted", "game_master", target.Id, map[string]any{"username": target.GetString("username")}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.deleted", "game_master", target.Id,
-		map[string]any{"username": target.GetString("username")}, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
 

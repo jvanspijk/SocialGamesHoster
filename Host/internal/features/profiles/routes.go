@@ -307,7 +307,11 @@ func approve(event *core.RequestEvent) error {
 		requestRecord.Set("status", "approved")
 		requestRecord.Set("decided_by", event.Auth.Id)
 		requestRecord.Set("decided_at", time.Now().UTC())
-		return txApp.Save(requestRecord)
+		if err := txApp.Save(requestRecord); err != nil {
+			return err
+		}
+		return applicationaudit.Record(txApp, event.Auth, "", "profile_request.approved", "player_profile", approvedProfile.Id,
+			map[string]any{"requestId": requestID}, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
@@ -319,8 +323,6 @@ func approve(event *core.RequestEvent) error {
 		profileEventKind = "profile.recovered"
 	}
 	publishProfile(event.App, approvedProfile, profileEventKind)
-	_ = applicationaudit.Record(event.App, event.Auth, "", "profile_request.approved", "player_profile", approvedProfile.Id,
-		map[string]any{"requestId": requestID}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, map[string]any{
 		"requestId": requestID,
 		"status":    "approved",
@@ -348,12 +350,15 @@ func reject(event *core.RequestEvent) error {
 	record.Set("rejection_reason", request.Reason)
 	record.Set("decided_by", event.Auth.Id)
 	record.Set("decided_at", time.Now().UTC())
-	if err := event.App.Save(record); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(record); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "profile_request.rejected", "profile_request", record.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	publishProfileRequest(event.App, record, "profile_request.rejected")
-	_ = applicationaudit.Record(event.App, event.Auth, "", "profile_request.rejected", "profile_request", record.Id,
-		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
 
@@ -637,7 +642,16 @@ func setActive(event *core.RequestEvent, active bool) error {
 	}
 	profile.Set("active", active)
 	profile.RefreshTokenKey()
-	if err := event.App.Save(profile); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(profile); err != nil {
+			return err
+		}
+		kind := "profile.disabled"
+		if active {
+			kind = "profile.recovered"
+		}
+		return applicationaudit.Record(tx, event.Auth, "", kind, "player_profile", profile.Id, map[string]any{"active": active}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	kind := "profile.disabled"
@@ -645,8 +659,6 @@ func setActive(event *core.RequestEvent, active bool) error {
 		kind = "profile.recovered"
 	}
 	publishProfile(event.App, profile, kind)
-	_ = applicationaudit.Record(event.App, event.Auth, "", kind, "player_profile", profile.Id,
-		map[string]any{"active": active}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectAdminProfile(profile))
 }
 

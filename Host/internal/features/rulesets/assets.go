@@ -22,7 +22,6 @@ import (
 	"golang.org/x/image/webp"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
-	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -50,7 +49,7 @@ func listAssets(event *core.RequestEvent) error {
 	}
 	records, err := event.App.FindRecordsByFilter(
 		"ruleset_assets",
-		"ruleset_version = {:version}",
+		"ruleset_version = {:version} && storage_state = 'ready'",
 		"asset_key",
 		MaxBundleFiles,
 		0,
@@ -114,6 +113,7 @@ func uploadAsset(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	var record *core.Record
+	newRecord := false
 	if len(existing) == 1 {
 		record = existing[0]
 	} else {
@@ -129,21 +129,47 @@ func uploadAsset(event *core.RequestEvent) error {
 			return httpx.WriteError(event, result.Internal(collectionErr))
 		}
 		record = core.NewRecord(collection)
+		newRecord = true
 		record.Set("ruleset_version", versionID)
 		record.Set("asset_key", assetKey)
 	}
 	record.Set("kind", kind)
-	record.Set("file", uploaded)
 	record.Set("mime_type", mimeType)
 	digest := sha256.Sum256(content)
 	record.Set("checksum", hex.EncodeToString(digest[:]))
 	record.Set("metadata", metadata)
+	// FileField uploads perform filesystem I/O. Stage the record outside the
+	// database transaction and keep staged assets out of every reader path.
+	record.Set("storage_state", "staging")
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Invalid("asset.save_failed", "The asset could not be saved.", nil))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.asset_uploaded", "ruleset_asset", record.Id,
-		map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": assetKey, "kind": kind},
-		event.Get(httpx.TraceIDKey))
+	record.Set("file", uploaded)
+	if err := event.App.Save(record); err != nil {
+		if newRecord {
+			_ = event.App.Delete(record)
+		} else {
+			record.Set("storage_state", "ready")
+			_ = event.App.Save(record)
+		}
+		return httpx.WriteError(event, result.Invalid("asset.save_failed", "The asset could not be saved.", nil))
+	}
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		current, err := tx.FindRecordById("ruleset_assets", record.Id)
+		if err != nil {
+			return err
+		}
+		current.Set("storage_state", "ready")
+		if err := tx.Save(current); err != nil {
+			return err
+		}
+		record = current
+		return auditRecord(tx, event.Auth, "", "ruleset.asset_uploaded", "ruleset_asset", record.Id,
+			map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": assetKey, "kind": kind}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		_ = event.App.Delete(record) // compensates an un-audited staged upload.
+		return httpx.WriteErrorFrom(event, err)
+	}
 	return event.JSON(http.StatusCreated, projectAsset(record))
 }
 
@@ -167,12 +193,26 @@ func deleteAsset(event *core.RequestEvent) error {
 	if containsString(tree, asset.GetString("asset_key")) {
 		return httpx.WriteError(event, result.Conflict("asset.in_use", "Remove this asset key from the draft definition before deleting the file."))
 	}
-	if err := event.App.Delete(asset); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		current, err := tx.FindRecordById("ruleset_assets", asset.Id)
+		if err != nil {
+			return err
+		}
+		// Hiding the asset is transactional; the FileField delete itself is
+		// post-commit because PocketBase performs filesystem work in Delete.
+		current.Set("storage_state", "staging")
+		if err := tx.Save(current); err != nil {
+			return err
+		}
+		return auditRecord(tx, event.Auth, "", "ruleset.asset_deleted", "ruleset_asset", asset.Id,
+			map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": asset.GetString("asset_key")}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.asset_deleted", "ruleset_asset", asset.Id,
-		map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": asset.GetString("asset_key")},
-		event.Get(httpx.TraceIDKey))
+	if err := event.App.Delete(asset); err != nil {
+		event.App.Logger().Error("staged ruleset asset cleanup failed", "assetId", asset.Id, "error", err)
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	return event.NoContent(http.StatusNoContent)
 }
 
@@ -181,7 +221,7 @@ func previewAsset(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to view this ruleset asset.", Status: http.StatusUnauthorized})
 	}
 	asset, err := event.App.FindRecordById("ruleset_assets", event.Request.PathValue("id"))
-	if err != nil {
+	if err != nil || asset.GetString("storage_state") != "ready" {
 		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Ruleset asset not found.", Status: http.StatusNotFound})
 	}
 	switch event.Auth.Collection().Name {

@@ -183,11 +183,15 @@ func updateSettings(event *core.RequestEvent) error {
 	settings.Set("preferred_adapter", strings.TrimSpace(request.PreferredAdapter))
 	settings.Set("trusted_lan_acknowledged", request.TrustedLANAcknowledged)
 	settings.Set("automatic_backups", request.AutomaticBackups)
-	if err := event.App.Save(settings); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(settings); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, "", "host.settings_updated", "host_settings", settings.Id,
+			map[string]any{"port": request.Port, "automaticBackups": request.AutomaticBackups}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, "", "host.settings_updated", "host_settings", settings.Id,
-		map[string]any{"port": request.Port, "automaticBackups": request.AutomaticBackups}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectSettings(event.App, settings))
 }
 
@@ -203,6 +207,9 @@ func createBackup(event *core.RequestEvent) error {
 	}
 	for _, backup := range backups {
 		if backup["id"] == name {
+			// Backup creation is an external filesystem operation and cannot be
+			// rolled back with SQLite. Audit failure is therefore best-effort;
+			// the durable backup is retained and the failure is logged.
 			_ = applicationaudit.Record(event.App, event.Auth, "", "backup.created", "backup", name,
 				nil, event.Get(httpx.TraceIDKey))
 			return event.JSON(http.StatusCreated, backup)
@@ -243,6 +250,8 @@ func restoreBackup(event *core.RequestEvent) error {
 	if err := recovery.Schedule(event.App, name); err != nil {
 		return httpx.WriteError(event, result.Conflict("backup.restore_unavailable", "The restore could not be scheduled. The current data remains unchanged."))
 	}
+	// Restore scheduling crosses a process/filesystem boundary. The scheduled
+	// compensating rollback backup remains available if this best-effort audit fails.
 	_ = applicationaudit.Record(event.App, event.Auth, "", "backup.restore_scheduled", "backup", name,
 		map[string]any{"rollbackBackup": rollback}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusAccepted, map[string]any{

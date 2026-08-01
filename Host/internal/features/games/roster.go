@@ -46,7 +46,11 @@ func updateParticipant(event *core.RequestEvent) error {
 			return err
 		}
 		incrementRevision(game)
-		return tx.Save(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "participant.updated", "participant", participant.Id,
+			map[string]any{"status": participant.GetString("status")}, event.Get(httpx.TraceIDKey))
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -92,7 +96,11 @@ func setParticipantStatus(status gamepolicy.ParticipantStatus) func(*core.Reques
 				}
 			}
 			incrementRevision(game)
-			return tx.Save(game)
+			if err := tx.Save(game); err != nil {
+				return err
+			}
+			return applicationaudit.Record(tx, event.Auth, game.Id, "participant."+string(status), "participant", participant.Id,
+				map[string]any{"status": participant.GetString("status")}, event.Get(httpx.TraceIDKey))
 		})
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
@@ -114,8 +122,6 @@ func rosterTarget(event *core.RequestEvent) (*core.Record, *core.Record, error) 
 }
 
 func participantChanged(event *core.RequestEvent, game, participant *core.Record, kind string) error {
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, kind, "participant", participant.Id,
-		map[string]any{"status": participant.GetString("status")}, event.Get(httpx.TraceIDKey))
 	public := projectParticipant(participant, false)
 	publishGame(event.App, game, kind, public)
 	private := projectParticipant(participant, true)
@@ -163,7 +169,7 @@ func putAssignments(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Invalid("game.assignments_invalid", "The assignments do not satisfy the ruleset composition.",
 			result.FieldErrors{"assignments": report.Errors}))
 	}
-	if err := saveAssignments(event.App, game, request.Assignments, event.Auth.Id); err != nil {
+	if err := saveAssignments(event.App, game, request.Assignments, event.Auth.Id, event.Auth, event.Get(httpx.TraceIDKey)); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	return assignmentsChanged(event, game)
@@ -201,7 +207,7 @@ func randomizeAssignments(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Conflict("game.assignment_unsatisfiable", err.Error()))
 	}
-	if err := saveAssignments(event.App, game, assignments, event.Auth.Id); err != nil {
+	if err := saveAssignments(event.App, game, assignments, event.Auth.Id, event.Auth, event.Get(httpx.TraceIDKey)); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	return assignmentsChanged(event, game)
@@ -227,7 +233,7 @@ func validateAssignmentParticipants(participants []*core.Record, assignments []r
 	return nil
 }
 
-func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Assignment, gameMasterID string) error {
+func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Assignment, gameMasterID string, actor *core.Record, traceID any) error {
 	return app.RunInTransaction(func(tx core.App) error {
 		for _, assignment := range assignments {
 			participant, err := tx.FindRecordById("participants", assignment.ParticipantID)
@@ -242,7 +248,10 @@ func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Ass
 			}
 		}
 		incrementRevision(game)
-		return tx.Save(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, actor, game.Id, "assignments.changed", "game", game.Id, nil, traceID)
 	})
 }
 
@@ -263,7 +272,6 @@ func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
 					(actorauth.IsPlayer(auth) && auth.Id == participant.GetString("profile")))
 		})
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "assignments.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGameMasters(event.App, game, "assignments.changed", admin)
 	publishGame(event.App, game, "game.revision_changed", map[string]any{"revision": game.GetInt("revision")})
 	return event.JSON(http.StatusOK, map[string]any{"revision": game.GetInt("revision"), "assignments": admin})
@@ -314,12 +322,14 @@ func putOutcomes(event *core.RequestEvent) error {
 			}
 		}
 		incrementRevision(game)
-		return tx.Save(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "outcomes.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "outcomes.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "outcomes.changed", map[string]any{"revision": game.GetInt("revision")})
 	return event.JSON(http.StatusOK, map[string]any{"revision": game.GetInt("revision")})
 }

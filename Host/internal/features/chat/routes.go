@@ -302,16 +302,24 @@ func updateRoom(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil || request.PlayersCanPost == nil {
 		return httpx.WriteError(event, result.Invalid("chat.room_invalid", "Choose whether players can post.", nil))
 	}
-	room.Set("players_can_post", *request.PlayersCanPost)
-	room.Set("manually_locked", !*request.PlayersCanPost)
-	if err := event.App.Save(room); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		room, err = tx.FindRecordById("chat_rooms", room.Id)
+		if err != nil {
+			return err
+		}
+		room.Set("players_can_post", *request.PlayersCanPost)
+		room.Set("manually_locked", !*request.PlayersCanPost)
+		if err := tx.Save(room); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "chat.players_can_post_changed", "chat_room", room.Id,
+			map[string]any{"playersCanPost": *request.PlayersCanPost}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
 	resolved := access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}
 	projected := projectRoom(event.App, resolved)
 	publishRoom(event.App, resolved, "chat.room_updated", projected)
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "chat.players_can_post_changed", "chat_room", room.Id,
-		map[string]any{"playersCanPost": *request.PlayersCanPost}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projected)
 }
 
@@ -389,18 +397,26 @@ func deleteMessage(event *core.RequestEvent) error {
 	if !resolved.IsGM && !own {
 		return httpx.WriteError(event, result.Forbidden("chat.delete_forbidden", "You cannot delete this message."))
 	}
-	message.Set("content", "")
-	message.Set("deleted_at", time.Now().UTC())
-	if resolved.IsGM {
-		message.Set("deleted_by", event.Auth.Id)
-	}
-	if err := event.App.Save(message); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		message, err = tx.FindRecordById("chat_messages", message.Id)
+		if err != nil {
+			return err
+		}
+		message.Set("content", "")
+		message.Set("deleted_at", time.Now().UTC())
+		if resolved.IsGM {
+			message.Set("deleted_by", event.Auth.Id)
+		}
+		if err := tx.Save(message); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, resolved.Game.Id, "chat.message_deleted", "chat_message", message.Id,
+			map[string]any{"roomId": resolved.Room.Id}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
 	publishRoom(event.App, resolved, "chat.message_deleted", projected)
-	_ = applicationaudit.Record(event.App, event.Auth, resolved.Game.Id, "chat.message_deleted", "chat_message", message.Id,
-		map[string]any{"roomId": resolved.Room.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projected)
 }
 
@@ -417,15 +433,23 @@ func setRoomLock(locked bool) func(*core.RequestEvent) error {
 		if appError := gamepolicyapp.GameMutationError(game); appError != nil {
 			return httpx.WriteError(event, *appError)
 		}
-		room.Set("manually_locked", locked)
-		room.Set("players_can_post", !locked)
-		if err := event.App.Save(room); err != nil {
-			return httpx.WriteError(event, result.Internal(err))
+		if err := event.App.RunInTransaction(func(tx core.App) error {
+			room, err = tx.FindRecordById("chat_rooms", room.Id)
+			if err != nil {
+				return err
+			}
+			room.Set("manually_locked", locked)
+			room.Set("players_can_post", !locked)
+			if err := tx.Save(room); err != nil {
+				return err
+			}
+			return applicationaudit.Record(tx, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
+				map[string]any{"locked": locked}, event.Get(httpx.TraceIDKey))
+		}); err != nil {
+			return httpx.WriteErrorFrom(event, err)
 		}
 		resolved := access{Game: game, Room: room, IsGM: true}
 		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "playersCanPost": !locked})
-		_ = applicationaudit.Record(event.App, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
-			map[string]any{"locked": locked}, event.Get(httpx.TraceIDKey))
 		return event.JSON(http.StatusOK, map[string]any{"id": room.Id, "playersCanPost": !locked})
 	}
 }

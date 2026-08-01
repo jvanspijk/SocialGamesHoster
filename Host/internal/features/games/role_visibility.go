@@ -53,18 +53,26 @@ func setRoleVisibility(event *core.RequestEvent) error {
 			}
 		}
 	}
-	game.Set("roles_visible", request.RolesVisible)
-	game.Set("role_visibility_revision", game.GetInt("role_visibility_revision")+1)
-	incrementRevision(game)
-	if err := event.App.Save(game); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
 	action := "game.roles_hidden"
 	if request.RolesVisible {
 		action = "game.roles_available"
 	}
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		game, err = tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
+		}
+		game.Set("roles_visible", request.RolesVisible)
+		game.Set("role_visibility_revision", game.GetInt("role_visibility_revision")+1)
+		incrementRevision(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, action, "game", game.Id, projectRoleVisibility(game), event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
+	}
 	payload := projectRoleVisibility(game)
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, action, "game", game.Id, payload, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.role_visibility_changed", payload)
 	return event.JSON(http.StatusOK, payload)
 }

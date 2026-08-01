@@ -22,37 +22,42 @@ func startCompletion(event *core.RequestEvent) error {
 	if status != string(StatusRunning) && status != string(StatusPaused) {
 		return httpx.WriteError(event, result.Conflict("game.completion_not_allowed", "Only a running or paused game can be finished."))
 	}
-	if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	game, err = event.App.FindRecordById("games", game.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	game.Set("completion_previous_status", status)
-	if status == string(StatusRunning) && game.GetString("timer_state") == "running" {
-		remaining := game.GetDateTime("timer_ends_at").Time().Sub(time.Now().UTC()).Milliseconds()
-		if remaining < 0 {
-			remaining = 0
+	now := time.Now().UTC()
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		game, err = tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
 		}
-		game.Set("timer_remaining_ms", remaining)
-		game.Set("timer_ends_at", nil)
-		if remaining == 0 {
-			game.Set("timer_state", "completed")
-		} else {
-			game.Set("timer_state", "paused")
+		if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+			return err
 		}
-		game.Set("timer_revision", game.GetInt("timer_revision")+1)
+		game.Set("completion_previous_status", status)
+		if status == string(StatusRunning) && game.GetString("timer_state") == "running" {
+			remaining := game.GetDateTime("timer_ends_at").Time().Sub(now).Milliseconds()
+			if remaining < 0 {
+				remaining = 0
+			}
+			game.Set("timer_remaining_ms", remaining)
+			game.Set("timer_ends_at", nil)
+			if remaining == 0 {
+				game.Set("timer_state", "completed")
+			} else {
+				game.Set("timer_state", "paused")
+			}
+			game.Set("timer_revision", game.GetInt("timer_revision")+1)
+		}
+		next, err := ApplyTransition(stateFromRecord(game), BeginReview, now)
+		if err != nil {
+			return err
+		}
+		applyState(game, next)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.completion_started", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
-	next, err := ApplyTransition(stateFromRecord(game), BeginReview, time.Now().UTC())
-	if err != nil {
-		return httpx.WriteError(event, result.Conflict("game.completion_not_allowed", err.Error()))
-	}
-	applyState(game, next)
-	if err := event.App.Save(game); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.completion_started", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.completion_started", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -69,18 +74,27 @@ func cancelCompletion(event *core.RequestEvent) error {
 	if previous != string(StatusPaused) {
 		previous = string(StatusRunning)
 	}
-	game.Set("status", previous)
-	game.Set("completion_previous_status", "")
-	if previous == string(StatusRunning) && game.GetString("timer_state") == "paused" && game.GetInt("timer_remaining_ms") > 0 {
-		game.Set("timer_state", "running")
-		game.Set("timer_ends_at", time.Now().UTC().Add(time.Duration(game.GetInt("timer_remaining_ms"))*time.Millisecond))
-		game.Set("timer_revision", game.GetInt("timer_revision")+1)
+	now := time.Now().UTC()
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		game, err = tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
+		}
+		game.Set("status", previous)
+		game.Set("completion_previous_status", "")
+		if previous == string(StatusRunning) && game.GetString("timer_state") == "paused" && game.GetInt("timer_remaining_ms") > 0 {
+			game.Set("timer_state", "running")
+			game.Set("timer_ends_at", now.Add(time.Duration(game.GetInt("timer_remaining_ms"))*time.Millisecond))
+			game.Set("timer_revision", game.GetInt("timer_revision")+1)
+		}
+		incrementRevision(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.completion_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
-	incrementRevision(game)
-	if err := event.App.Save(game); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.completion_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.completion_cancelled", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }

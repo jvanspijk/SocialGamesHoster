@@ -49,68 +49,76 @@ func transition(command Transition) func(*core.RequestEvent) error {
 				return httpx.WriteErrorFrom(event, err)
 			}
 		}
-		next, err := ApplyTransition(stateFromRecord(game), command, time.Now().UTC())
+		now := time.Now().UTC()
+		next, err := ApplyTransition(stateFromRecord(game), command, now)
 		if err != nil {
 			return httpx.WriteError(event, result.Conflict("game.transition_not_allowed", err.Error()))
 		}
-		if command == BeginReview {
-			if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
-				return httpx.WriteError(event, result.Internal(err))
-			}
-			game, err = event.App.FindRecordById("games", game.Id)
+		if err := event.App.RunInTransaction(func(tx core.App) error {
+			game, err = tx.FindRecordById("games", game.Id)
 			if err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+				return err
 			}
-			next, _ = ApplyTransition(stateFromRecord(game), command, time.Now().UTC())
-		}
-		applyState(game, next)
-		if command == Start {
-			definition, err := snapshot(game)
+			if command == BeginReview {
+				if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+					return err
+				}
+			}
+			next, err = ApplyTransition(stateFromRecord(game), command, now)
 			if err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+				return err
 			}
-			participants, err := currentParticipants(event.App, game.Id)
-			if err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+			applyState(game, next)
+			if command == Pause && game.GetString("timer_state") == "running" {
+				remaining := game.GetDateTime("timer_ends_at").Time().Sub(time.Now().UTC()).Milliseconds()
+				if remaining < 0 {
+					remaining = 0
+				}
+				game.Set("timer_remaining_ms", remaining)
+				game.Set("timer_ends_at", nil)
+				if remaining == 0 {
+					game.Set("timer_state", "completed")
+				} else {
+					game.Set("timer_state", "paused")
+				}
+				game.Set("timer_revision", game.GetInt("timer_revision")+1)
 			}
-			if err := chatfeature.PrepareRoleRooms(event.App, game.Id, definition, participants); err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+			if command == BeginReview {
+				game.Set("timer_state", "inactive")
+				game.Set("timer_total_ms", 0)
+				game.Set("timer_remaining_ms", 0)
+				game.Set("timer_ends_at", nil)
+				game.Set("timer_revision", game.GetInt("timer_revision")+1)
 			}
-		}
-		if command == Pause && game.GetString("timer_state") == "running" {
-			remaining := game.GetDateTime("timer_ends_at").Time().Sub(time.Now().UTC()).Milliseconds()
-			if remaining < 0 {
-				remaining = 0
+			if command == Pause && game.GetString("timer_state") == "completed" {
+				if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+					return err
+				}
 			}
-			game.Set("timer_remaining_ms", remaining)
-			game.Set("timer_ends_at", nil)
-			if remaining == 0 {
-				game.Set("timer_state", "completed")
-			} else {
-				game.Set("timer_state", "paused")
+			if command == Start {
+				definition, err := snapshot(game)
+				if err != nil {
+					return err
+				}
+				participants, err := currentParticipants(tx, game.Id)
+				if err != nil {
+					return err
+				}
+				if err := chatfeature.PrepareRoleRooms(tx, game.Id, definition, participants); err != nil {
+					return err
+				}
 			}
-			game.Set("timer_revision", game.GetInt("timer_revision")+1)
-		}
-		if command == BeginReview {
-			game.Set("timer_state", "inactive")
-			game.Set("timer_total_ms", 0)
-			game.Set("timer_remaining_ms", 0)
-			game.Set("timer_ends_at", nil)
-			game.Set("timer_revision", game.GetInt("timer_revision")+1)
-		}
-		if err := event.App.Save(game); err != nil {
-			return httpx.WriteError(event, result.Internal(err))
-		}
-		if command == Pause && game.GetString("timer_state") == "completed" {
-			if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+			// A lifecycle command has one externally-visible game revision, even
+			// when it also finalizes ability choices or changes timer state.
+			if err := tx.Save(game); err != nil {
+				return err
 			}
-			if current, findErr := event.App.FindRecordById("games", game.Id); findErr == nil {
-				game = current
-			}
+			action := "game." + string(command)
+			return applicationaudit.Record(tx, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		}); err != nil {
+			return httpx.WriteErrorFrom(event, err)
 		}
 		action := "game." + string(command)
-		_ = applicationaudit.Record(event.App, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 		publishGame(event.App, game, action, projectGame(game))
 		return event.JSON(http.StatusOK, projectGame(game))
 	}
@@ -176,11 +184,13 @@ func archiveGame(event *core.RequestEvent) error {
 		if err := tx.Save(game); err != nil {
 			return err
 		}
-		return chatfeature.FreezeHistoricalAccess(tx, game.Id, time.Now().UTC())
+		if err := chatfeature.FreezeHistoricalAccess(tx, game.Id, time.Now().UTC()); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.archived", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.archived", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.archived", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -215,26 +225,31 @@ func setPhase(event *core.RequestEvent) error {
 	if phase == nil {
 		return httpx.WriteError(event, result.Invalid("game.invalid_phase", "That phase is not part of this ruleset.", nil))
 	}
-	if _, err := abilities.FinalizePhase(event.App, game.Id, time.Now().UTC()); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	game, err = event.App.FindRecordById("games", game.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	if phase.StartsRound {
-		game.Set("round_number", game.GetInt("round_number")+1)
-	}
-	game.Set("phase_key", phase.ID)
-	game.Set("phase_started_at", time.Now().UTC())
-	game.Set("ability_phase_instance", game.GetInt("ability_phase_instance")+1)
-	abilities.ResetPhaseLock(game)
-	incrementRevision(game)
-	if err := event.App.Save(game); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+	now := time.Now().UTC()
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		game, err = tx.FindRecordById("games", game.Id)
+		if err != nil {
+			return err
+		}
+		if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+			return err
+		}
+		if phase.StartsRound {
+			game.Set("round_number", game.GetInt("round_number")+1)
+		}
+		game.Set("phase_key", phase.ID)
+		game.Set("phase_started_at", now)
+		game.Set("ability_phase_instance", game.GetInt("ability_phase_instance")+1)
+		abilities.ResetPhaseLock(game)
+		incrementRevision(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.phase_changed", "phase", phase.ID, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
 	payload := map[string]any{"game": projectGame(game), "phase": phase}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.phase_changed", "phase", phase.ID, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.phase_changed", payload)
 	if phase.AudioCueID != "" {
 		for _, cue := range definition.AudioCues {

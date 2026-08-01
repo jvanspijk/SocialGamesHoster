@@ -126,38 +126,28 @@ func Undo(app core.App, gameID, profileID, abilityID string) ([]PlayerChoice, er
 	return choices, err
 }
 
-func FinalizePhase(app core.App, gameID string, now time.Time) (bool, error) {
-	locked := false
-	err := app.RunInTransaction(func(tx core.App) error {
-		game, err := tx.FindRecordById("games", gameID)
-		if err != nil {
-			return err
-		}
-		if game.GetString("phase_key") == "" || !game.GetDateTime("ability_phase_locked_at").IsZero() {
-			return nil
-		}
-		records, err := phaseChoices(tx, game, "")
-		if err != nil {
-			return err
-		}
-		for _, record := range records {
-			if record.GetString("status") == "activated" {
-				record.Set("status", "finalized")
-				record.Set("finalized_at", now.UTC())
-				if err := tx.Save(record); err != nil {
-					return err
-				}
+func FinalizePhase(app core.App, game *core.Record, now time.Time) (bool, error) {
+	if game.GetString("phase_key") == "" || !game.GetDateTime("ability_phase_locked_at").IsZero() {
+		return false, nil
+	}
+	records, err := phaseChoices(app, game, "")
+	if err != nil {
+		return false, err
+	}
+	for _, record := range records {
+		if record.GetString("status") == "activated" {
+			record.Set("status", "finalized")
+			record.Set("finalized_at", now.UTC())
+			if err := app.Save(record); err != nil {
+				return false, err
 			}
 		}
-		game.Set("ability_phase_locked_at", now.UTC())
-		game.Set("revision", game.GetInt("revision")+1)
-		if err := tx.Save(game); err != nil {
-			return err
-		}
-		locked = true
-		return nil
-	})
-	return locked, err
+	}
+	game.Set("ability_phase_locked_at", now.UTC())
+	if err := app.Save(game); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func ResetPhaseLock(game *core.Record) {

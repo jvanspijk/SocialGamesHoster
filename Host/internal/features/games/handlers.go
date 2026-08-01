@@ -71,10 +71,14 @@ func createGame(event *core.RequestEvent) error {
 	record.Set("roles_visible", false)
 	record.Set("role_visibility_revision", 0)
 	record.Set("created_by", event.Auth.Id)
-	if err := event.App.Save(record); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(record); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, record.Id, "game.created", "game", record.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, record.Id, "game.created", "game", record.Id, nil, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGame(record))
 }
 
@@ -99,10 +103,14 @@ func duplicateGame(event *core.RequestEvent) error {
 	record.Set("roles_visible", false)
 	record.Set("role_visibility_revision", 0)
 	record.Set("created_by", event.Auth.Id)
-	if err := event.App.Save(record); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(record); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, record.Id, "game.duplicated", "game", source.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, record.Id, "game.duplicated", "game", source.Id, nil, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGame(record))
 }
 
@@ -156,10 +164,14 @@ func closeJoining(event *core.RequestEvent) error {
 	}
 	if game.GetString("status") == string(StatusRunning) || game.GetString("status") == string(StatusPaused) {
 		game.Set("joining_open", false)
-		if err := event.App.Save(game); err != nil {
+		if err := event.App.RunInTransaction(func(tx core.App) error {
+			if err := tx.Save(game); err != nil {
+				return err
+			}
+			return applicationaudit.Record(tx, event.Auth, game.Id, "game.joining_closed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		}); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.joining_closed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 		publishGame(event.App, game, "game.joining_closed", projectGame(game))
 		return event.JSON(http.StatusOK, projectGame(game))
 	}
@@ -191,7 +203,10 @@ func closeJoining(event *core.RequestEvent) error {
 		current.Set("roles_visible", false)
 		current.Set("role_visibility_revision", current.GetInt("role_visibility_revision")+1)
 		current.Set("completion_previous_status", "")
-		return tx.Save(current)
+		if err := tx.Save(current); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, current.Id, "game.lobby_cancelled", "game", current.Id, nil, event.Get(httpx.TraceIDKey))
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -199,7 +214,6 @@ func closeJoining(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.lobby_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.lobby_cancelled", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -261,13 +275,15 @@ func openLobby(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
-		return chatfeature.EnsureLobbyRoom(tx, game.Id, definition)
+		if err := chatfeature.EnsureLobbyRoom(tx, game.Id, definition); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.lobby_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		event.App.Logger().Error("failed to open game lobby", "gameId", game.Id, "error", err)
 		return httpx.WriteError(event, result.Conflict("game.live_game_exists", "Another lobby or game is already live."))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.lobby_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.lobby_opened", projectGame(game))
 	publishLobbyOpened(event.App, game)
 	return event.JSON(http.StatusOK, projectGame(game))
@@ -290,10 +306,14 @@ func openJoining(event *core.RequestEvent) error {
 		return event.JSON(http.StatusOK, projectGame(game))
 	}
 	game.Set("joining_open", true)
-	if err := event.App.Save(game); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "game.joining_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.joining_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.joining_opened", projectGame(game))
 	publishLobbyOpened(event.App, game)
 	return event.JSON(http.StatusOK, projectGame(game))
@@ -356,12 +376,14 @@ func joinGame(event *core.RequestEvent) error {
 			return err
 		}
 		incrementRevision(game)
-		return tx.Save(game)
+		if err := tx.Save(game); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "participant.joined", "participant", participant.Id, nil, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "participant.joined", "participant", participant.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "participant.joined", projectParticipant(participant, false))
 	publishGameMasters(event.App, game, "participant.joined_private", projectParticipant(participant, true))
 	return event.JSON(http.StatusOK, projectParticipant(participant, false))
@@ -386,7 +408,7 @@ func adminView(event *core.RequestEvent) error {
 	}
 	rooms, attentionSummaries := chatfeature.AdminViewData(event.App, game.Id)
 	assetRecords, _ := event.App.FindRecordsByFilter(
-		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
+		"ruleset_assets", "ruleset_version = {:version} && storage_state = 'ready'", "asset_key", 100, 0,
 		dbx.Params{"version": game.GetString("ruleset_version")},
 	)
 	projectedAssets := make([]map[string]any, 0, len(assetRecords))
@@ -499,7 +521,7 @@ func playerView(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	assetRecords, _ := event.App.FindRecordsByFilter(
-		"ruleset_assets", "ruleset_version = {:version}", "asset_key", 100, 0,
+		"ruleset_assets", "ruleset_version = {:version} && storage_state = 'ready'", "asset_key", 100, 0,
 		dbx.Params{"version": game.GetString("ruleset_version")},
 	)
 	privateKeys := map[string]bool{}

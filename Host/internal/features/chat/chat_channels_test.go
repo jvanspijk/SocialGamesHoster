@@ -1,9 +1,11 @@
 package chat
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 )
@@ -45,5 +47,23 @@ func TestPrepareRoleRoomsFreezesCustomChannelReaders(t *testing.T) {
 	}
 	if customChannelSenderAllowed(fixture.definition, room, fixture.participants[1]) {
 		t.Fatal("reader-only role could send")
+	}
+}
+
+func TestPrepareRoleRoomsRollsBackWithOwningGameTransaction(t *testing.T) {
+	fixture := newAttentionFixture(t)
+	fixture.definition.Chat.DefaultPolicy.Teams = map[string]rulesets.RoomPermission{"red": {Visible: true, Readable: true}}
+	err := fixture.app.RunInTransaction(func(tx core.App) error {
+		if err := PrepareRoleRooms(tx, fixture.game.Id, fixture.definition, fixture.participants); err != nil {
+			return err
+		}
+		return errors.New("force rollback")
+	})
+	if err == nil {
+		t.Fatal("expected rollback")
+	}
+	rooms, err := fixture.app.FindRecordsByFilter("chat_rooms", "game = {:game} && room_key = 'team:red'", "", 10, 0, dbx.Params{"game": fixture.game.Id})
+	if err != nil || len(rooms) != 0 {
+		t.Fatalf("role room persisted after rollback: %d %v", len(rooms), err)
 	}
 }

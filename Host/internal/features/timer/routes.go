@@ -39,16 +39,55 @@ func getTimer(event *core.RequestEvent) error {
 	now := time.Now().UTC()
 	state := stateFromRecord(game)
 	reconciled := Reconcile(state, now)
-	if reconciled.Status != state.Status || reconciled.Remaining != state.Remaining {
-		saveState(game, reconciled)
-		if err := event.App.Save(game); err != nil {
-			return httpx.WriteError(event, result.Internal(err))
+	needsFinalize := reconciled.Status == Completed && game.GetDateTime("ability_phase_locked_at").IsZero()
+	stale := false
+	completedTransition := false
+	if reconciled.Status != state.Status || reconciled.Remaining != state.Remaining || needsFinalize {
+		if err := event.App.RunInTransaction(func(tx core.App) error {
+			game, err = tx.FindRecordById("games", game.Id)
+			if err != nil {
+				return err
+			}
+			current := stateFromRecord(game)
+			if current.Revision != state.Revision {
+				stale = true
+				reconciled = current
+				return nil // A command won the race; never overwrite its timer state.
+			}
+			reconciled = Reconcile(current, now)
+			completedTransition = current.Status == Running && reconciled.Status == Completed
+			saveState(game, reconciled)
+			finalized := false
+			if reconciled.Status == Completed {
+				finalized, err = abilities.FinalizePhase(tx, game, now)
+				if err != nil {
+					return err
+				}
+			}
+			if reconciled.Status != state.Status || reconciled.Remaining != state.Remaining || finalized {
+				game.Set("revision", game.GetInt("revision")+1)
+			}
+			if completedTransition {
+				if err := auditRecord(tx, event.Auth, game.Id, "timer.completed", "game", game.Id, nil, event.Get(httpx.TraceIDKey)); err != nil {
+					return err
+				}
+			}
+			return tx.Save(game)
+		}); err != nil {
+			return httpx.WriteErrorFrom(event, err)
 		}
 	}
-	if reconciled.Status == Completed {
-		if _, err := abilities.FinalizePhase(event.App, game.Id, now); err != nil {
+	if stale {
+		current, err := event.App.FindRecordById("games", game.Id)
+		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
+		game = current
+		reconciled = stateFromRecord(game)
+	}
+	if completedTransition {
+		service := NewService(event.App)
+		service.Publish(game, "timer.completed", Project(reconciled, now))
 	}
 	return event.JSON(http.StatusOK, Project(reconciled, now))
 }
@@ -103,17 +142,27 @@ func timerCommand(service *Service, command string) func(*core.RequestEvent) err
 		if err != nil {
 			return httpx.WriteError(event, result.Conflict("timer.transition_not_allowed", err.Error()))
 		}
-		saveState(game, next)
-		if err := event.App.Save(game); err != nil {
-			return httpx.WriteError(event, result.Internal(err))
-		}
-		if next.Status == Completed {
-			if _, err := abilities.FinalizePhase(event.App, game.Id, now); err != nil {
-				return httpx.WriteError(event, result.Internal(err))
+		if err := event.App.RunInTransaction(func(tx core.App) error {
+			game, err = tx.FindRecordById("games", game.Id)
+			if err != nil {
+				return err
 			}
-			if current, findErr := event.App.FindRecordById("games", game.Id); findErr == nil {
-				game = current
+			if stateFromRecord(game).Revision != state.Revision {
+				return result.Conflict("timer.transition_not_allowed", "The timer changed; refresh and try again.")
 			}
+			saveState(game, next)
+			if next.Status == Completed {
+				if _, err := abilities.FinalizePhase(tx, game, now); err != nil {
+					return err
+				}
+			}
+			game.Set("revision", game.GetInt("revision")+1)
+			if err := tx.Save(game); err != nil {
+				return err
+			}
+			return auditRecord(tx, event.Auth, game.Id, "timer."+command, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		}); err != nil {
+			return httpx.WriteErrorFrom(event, err)
 		}
 		service.Schedule(game.Id, next)
 		projection := Project(next, now)

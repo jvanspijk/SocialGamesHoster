@@ -170,7 +170,8 @@ func createAnnouncement(event *core.RequestEvent) error {
 				return saveErr
 			}
 		}
-		return nil
+		return applicationaudit.Record(tx, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
+			map[string]any{"cueKey": request.CueKey, "audience": request.Audience, "targetId": request.TargetID, "recipientTotal": len(recipients)}, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
@@ -186,8 +187,6 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if cue != nil {
 		publishAttentionCue(event.App, game, *cue, item.Id)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
-		map[string]any{"cueKey": request.CueKey, "audience": request.Audience, "targetId": request.TargetID, "recipientTotal": len(recipients)}, event.Get(httpx.TraceIDKey))
 	summary, err := projectAdminAttentionSummary(event.App, item)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -391,7 +390,7 @@ func validateAnnouncementAsset(app core.App, game *core.Record, definition rules
 	}
 	assets, err := app.FindRecordsByFilter(
 		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind}",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind} && storage_state = 'ready'",
 		"",
 		1,
 		0,
@@ -449,7 +448,7 @@ func announcementMedia(event *core.RequestEvent) error {
 	}
 	assets, err := event.App.FindRecordsByFilter(
 		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind}",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind} && storage_state = 'ready'",
 		"",
 		1,
 		0,
@@ -601,7 +600,7 @@ func PublishAudioCue(app core.App, game *core.Record, definition rulesets.Defini
 func resolveAudioCuePayload(app core.App, game *core.Record, cue rulesets.AudioCue) (map[string]any, error) {
 	assets, err := app.FindRecordsByFilter(
 		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio'",
+		"ruleset_version = {:version} && asset_key = {:key} && kind = 'audio' && storage_state = 'ready'",
 		"",
 		1,
 		0,

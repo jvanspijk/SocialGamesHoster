@@ -80,15 +80,19 @@ func award(event *core.RequestEvent) error {
 	record.Set("hidden_until_game_completed", achievement.HiddenUntilGameCompleted)
 	record.Set("awarded_by", event.Auth.Id)
 	record.Set("note", request.Note)
-	if err := event.App.Save(record); err != nil {
-		return httpx.WriteError(event, result.Conflict("achievement.duplicate", "This achievement has already been awarded to that player in this game."))
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Save(record); err != nil {
+			return result.Conflict("achievement.duplicate", "This achievement has already been awarded to that player in this game.")
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "achievement.awarded", "achievement_award", record.Id,
+			map[string]any{"achievementKey": achievement.ID, "participantId": participant.Id}, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
 	projected := projectAward(record, true)
 	if awardVisibleDuringStatus(record.GetBool("hidden_until_game_completed"), game.GetString("status")) {
 		publish(event.App, game, participant, "achievement.awarded", projected)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "achievement.awarded", "achievement_award", record.Id,
-		map[string]any{"achievementKey": achievement.ID, "participantId": participant.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projected)
 }
 
@@ -113,15 +117,18 @@ func revoke(event *core.RequestEvent) error {
 	}
 	awardID := record.Id
 	visible := awardVisibleDuringStatus(record.GetBool("hidden_until_game_completed"), game.GetString("status"))
-	if err := event.App.Delete(record); err != nil {
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := tx.Delete(record); err != nil {
+			return err
+		}
+		return applicationaudit.Record(tx, event.Auth, game.Id, "achievement.revoked", "achievement_award", awardID, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	payload := map[string]any{"id": awardID}
 	if visible {
 		publish(event.App, game, participant, "achievement.revoked", payload)
 	}
-	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "achievement.revoked", "achievement_award", awardID,
-		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
 
