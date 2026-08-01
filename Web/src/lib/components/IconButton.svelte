@@ -6,6 +6,7 @@
 		icon,
 		variant = 'default',
 		type = 'button',
+		autofocus = false,
 		disabled = false,
 		loading = false,
 		onclick
@@ -14,12 +15,14 @@
 		icon: Snippet;
 		variant?: 'default' | 'ghost' | 'danger';
 		type?: 'button' | 'submit';
+		autofocus?: boolean;
 		disabled?: boolean;
 		loading?: boolean;
 		onclick?: (event: MouseEvent) => void;
 	} = $props();
 </script>
 
+<!-- svelte-ignore a11y_autofocus -->
 <button
 	aria-busy={loading || undefined}
 	aria-label={loading ? `Loading ${label}` : label}
@@ -28,6 +31,7 @@
 	class:loading
 	data-variant={variant}
 	{type}
+	{autofocus}
 	disabled={disabled || loading}
 	{onclick}
 >
