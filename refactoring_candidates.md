@@ -825,7 +825,7 @@ legitimately consume stores.
 |  11   |    [ ]    |   [ ]    |
 |  12   |    [ ]    |   [ ]    |
 |  13   |    [ ]    |   [ ]    |
-|  14   |    [ ]    |   [ ]    |
+|  14   |    [x]    |   [x]    |
 |  15   |    [ ]    |   [ ]    |
 
 When all issues in the table are fully completed and reviewed, bump the patch

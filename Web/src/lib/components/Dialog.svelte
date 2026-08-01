@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import IconButton from './IconButton.svelte';
 
 	let {
 		open,
@@ -55,7 +56,9 @@
 			<h2 id="dialog-title" tabindex="-1" bind:this={heading}>{title}</h2>
 			{#if description}<p id="dialog-description">{description}</p>{/if}
 		</div>
-		<button type="button" aria-label={`Close ${title}`} onclick={close}><X size={21} /></button>
+		<IconButton label={`Close ${title}`} variant="ghost" onclick={close}>
+			{#snippet icon()}<X size={21} />{/snippet}
+		</IconButton>
 	</header>
 	<div class="dialog-body">
 		{@render children()}
@@ -101,18 +104,6 @@
 	header p {
 		margin-block-start: var(--space-1);
 		color: var(--ink-soft);
-	}
-
-	header button {
-		display: grid;
-		width: var(--target-size);
-		height: var(--target-size);
-		flex: 0 0 auto;
-		place-items: center;
-		border: 0;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
 	}
 
 	.dialog-body {

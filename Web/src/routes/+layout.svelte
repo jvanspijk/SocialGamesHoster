@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import ToastViewport from '$lib/features/shell/components/ToastViewport.svelte';
 	import { api } from '$lib/api/client';
@@ -75,7 +76,9 @@
 					<Shield size={17} /> Host
 				</a>
 				{#if auth.authenticated}
-					<button aria-label="Sign out" onclick={logout}><LogOut size={18} /></button>
+					<IconButton label="Sign out" variant="ghost" onclick={logout}>
+						{#snippet icon()}<LogOut size={18} />{/snippet}
+					</IconButton>
 				{/if}
 			</nav>
 			<ConnectionBadge />
@@ -123,8 +126,7 @@
 		gap: clamp(0.45rem, 1.5vw, 1rem);
 	}
 
-	nav a,
-	nav button {
+	nav a {
 		display: inline-flex;
 		min-width: var(--target-size);
 		min-height: var(--target-size);
@@ -145,8 +147,7 @@
 	}
 
 	nav a:hover,
-	nav a.active,
-	nav button:hover {
+	nav a.active {
 		border-color: var(--crimson);
 		color: var(--crimson-dark);
 	}

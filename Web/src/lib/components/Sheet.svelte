@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import IconButton from './IconButton.svelte';
 
 	let {
 		open,
@@ -48,9 +49,9 @@
 <dialog bind:this={dialog} class="app-sheet" aria-label={title} onclose={handleClose}>
 	<header>
 		<h2 tabindex="-1" bind:this={heading}>{title}</h2>
-		<button class="icon-button" type="button" aria-label={`Close ${title}`} onclick={close}>
-			<X size={22} />
-		</button>
+		<IconButton label={`Close ${title}`} variant="ghost" onclick={close}>
+			{#snippet icon()}<X size={22} />{/snippet}
+		</IconButton>
 	</header>
 	<div class="sheet-content">
 		{@render children()}
@@ -93,18 +94,6 @@
 	h2 {
 		margin: 0;
 		font-size: 1.15rem;
-	}
-
-	.icon-button {
-		display: grid;
-		width: var(--target-size);
-		height: var(--target-size);
-		flex: 0 0 auto;
-		place-items: center;
-		border: 1px solid transparent;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
 	}
 
 	.sheet-content {

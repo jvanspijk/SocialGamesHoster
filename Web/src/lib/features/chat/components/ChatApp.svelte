@@ -13,6 +13,7 @@
 		Users
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { api, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, MessageSummary, RealtimeEnvelope, Room } from '$lib/api/types';
@@ -332,9 +333,9 @@
 				<h1>Conversations</h1>
 			</div>
 			{#if newMessage}
-				<button type="button" aria-label="New message" onclick={newMessage}
-					><Plus size={22} /></button
-				>
+				<IconButton label="New message" variant="ghost" onclick={newMessage}>
+					{#snippet icon()}<Plus size={22} />{/snippet}
+				</IconButton>
 			{/if}
 		</header>
 		<label class="search">
@@ -393,14 +394,11 @@
 	<section class="conversation">
 		{#if selectedRoom}
 			<header class="conversation-header">
-				<button
-					class="back"
-					type="button"
-					aria-label="Back to conversations"
-					onclick={() => selectRoom('')}
-				>
-					<ArrowLeft size={21} />
-				</button>
+				<div class="back">
+					<IconButton label="Back to conversations" variant="ghost" onclick={() => selectRoom('')}>
+						{#snippet icon()}<ArrowLeft size={21} />{/snippet}
+					</IconButton>
+				</div>
 				<span class="conversation-avatar">{selectedRoom.label.slice(0, 1).toUpperCase()}</span>
 				<div>
 					<h2>{selectedRoom.label}</h2>
@@ -551,17 +549,6 @@
 		font-size: 0.64rem;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
-	}
-
-	.conversation-rail header button {
-		display: grid;
-		width: var(--target-size);
-		height: var(--target-size);
-		place-items: center;
-		border: 1px solid var(--gold-dark);
-		background: transparent;
-		color: var(--gold-light);
-		cursor: pointer;
 	}
 
 	.search {
@@ -747,13 +734,6 @@
 
 	.back {
 		display: none;
-		width: var(--target-size);
-		height: var(--target-size);
-		place-items: center;
-		border: 0;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
 	}
 
 	.posting-toggle {

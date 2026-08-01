@@ -6,6 +6,7 @@
 	import { Gamepad2, LogOut, ScrollText, Settings, ShieldCheck, Swords } from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import { api, jsonBody } from '$lib/api/client';
@@ -113,7 +114,9 @@
 			<a class="product" href={resolve('/admin/games')}><Swords size={23} /> Social Games Hoster</a>
 			<div class="header-actions">
 				<ConnectionBadge />
-				<button type="button" aria-label="Sign out" onclick={logout}><LogOut size={20} /></button>
+				<IconButton label="Sign out" variant="ghost" onclick={logout}>
+					{#snippet icon()}<LogOut size={20} />{/snippet}
+				</IconButton>
 			</div>
 		</header>
 		<main class="management-content">
@@ -199,17 +202,6 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-	}
-
-	.header-actions button {
-		display: grid;
-		width: var(--target-size);
-		height: var(--target-size);
-		place-items: center;
-		border: 0;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
 	}
 
 	.management-content {

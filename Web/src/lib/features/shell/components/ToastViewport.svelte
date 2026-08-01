@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CircleCheck, Info, TriangleAlert, X } from '@lucide/svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { toasts, type ToastMessage } from '$lib/state/toasts.svelte';
 
 	const timers = new SvelteMap<string, { started: number; remaining: number; handle: number }>();
@@ -73,14 +74,13 @@
 					>{toast.actionLabel}</button
 				>
 			{/if}
-			<button
-				class="dismiss"
-				type="button"
-				aria-label="Dismiss notification"
+			<IconButton
+				label="Dismiss notification"
+				variant="ghost"
 				onclick={() => toasts.dismiss(toast.id)}
 			>
-				<X size={18} />
-			</button>
+				{#snippet icon()}<X size={18} />{/snippet}
+			</IconButton>
 		</article>
 	{/each}
 </section>
@@ -134,11 +134,5 @@
 		color: var(--gold-light);
 		font-family: var(--font-display);
 		font-weight: 700;
-	}
-
-	.dismiss {
-		display: grid;
-		width: var(--target-size);
-		place-items: center;
 	}
 </style>
