@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -51,7 +52,7 @@ func startCompletion(event *core.RequestEvent) error {
 	if err := event.App.Save(game); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.completion_started", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.completion_started", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.completion_started", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -79,7 +80,7 @@ func cancelCompletion(event *core.RequestEvent) error {
 	if err := event.App.Save(game); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.completion_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.completion_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.completion_cancelled", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }

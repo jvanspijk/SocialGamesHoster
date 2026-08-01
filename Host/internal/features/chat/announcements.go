@@ -13,10 +13,10 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -186,7 +186,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if cue != nil {
 		publishAttentionCue(event.App, game, *cue, item.Id)
 	}
-	_ = platformaudit.Record(event.App, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "attention.announcement_sent", "attention_item", item.Id,
 		map[string]any{"cueKey": request.CueKey, "audience": request.Audience, "targetId": request.TargetID, "recipientTotal": len(recipients)}, event.Get(httpx.TraceIDKey))
 	summary, err := projectAdminAttentionSummary(event.App, item)
 	if err != nil {

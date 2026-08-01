@@ -6,6 +6,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -109,7 +110,7 @@ func transition(command Transition) func(*core.RequestEvent) error {
 			}
 		}
 		action := "game." + string(command)
-		_ = audit(event.App, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		_ = applicationaudit.Record(event.App, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 		publishGame(event.App, game, action, projectGame(game))
 		return event.JSON(http.StatusOK, projectGame(game))
 	}
@@ -179,7 +180,7 @@ func archiveGame(event *core.RequestEvent) error {
 	}); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.archived", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.archived", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.archived", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -233,7 +234,7 @@ func setPhase(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	payload := map[string]any{"game": projectGame(game), "phase": phase}
-	_ = audit(event.App, event.Auth, game.Id, "game.phase_changed", "phase", phase.ID, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.phase_changed", "phase", phase.ID, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.phase_changed", payload)
 	if phase.AudioCueID != "" {
 		for _, cue := range definition.AudioCues {

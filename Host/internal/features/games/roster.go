@@ -10,6 +10,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
@@ -113,7 +114,7 @@ func rosterTarget(event *core.RequestEvent) (*core.Record, *core.Record, error) 
 }
 
 func participantChanged(event *core.RequestEvent, game, participant *core.Record, kind string) error {
-	_ = audit(event.App, event.Auth, game.Id, kind, "participant", participant.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, kind, "participant", participant.Id,
 		map[string]any{"status": participant.GetString("status")}, event.Get(httpx.TraceIDKey))
 	public := projectParticipant(participant, false)
 	publishGame(event.App, game, kind, public)
@@ -262,7 +263,7 @@ func assignmentsChanged(event *core.RequestEvent, game *core.Record) error {
 					(actorauth.IsPlayer(auth) && auth.Id == participant.GetString("profile")))
 		})
 	}
-	_ = audit(event.App, event.Auth, game.Id, "assignments.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "assignments.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGameMasters(event.App, game, "assignments.changed", admin)
 	publishGame(event.App, game, "game.revision_changed", map[string]any{"revision": game.GetInt("revision")})
 	return event.JSON(http.StatusOK, map[string]any{"revision": game.GetInt("revision"), "assignments": admin})
@@ -318,7 +319,7 @@ func putOutcomes(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = audit(event.App, event.Auth, game.Id, "outcomes.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "outcomes.changed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "outcomes.changed", map[string]any{"revision": game.GetInt("revision")})
 	return event.JSON(http.StatusOK, map[string]any{"revision": game.GetInt("revision")})
 }

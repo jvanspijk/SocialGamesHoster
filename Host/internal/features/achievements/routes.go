@@ -8,10 +8,10 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -87,7 +87,7 @@ func award(event *core.RequestEvent) error {
 	if awardVisibleDuringStatus(record.GetBool("hidden_until_game_completed"), game.GetString("status")) {
 		publish(event.App, game, participant, "achievement.awarded", projected)
 	}
-	_ = platformaudit.Record(event.App, event.Auth, game.Id, "achievement.awarded", "achievement_award", record.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "achievement.awarded", "achievement_award", record.Id,
 		map[string]any{"achievementKey": achievement.ID, "participantId": participant.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projected)
 }
@@ -120,7 +120,7 @@ func revoke(event *core.RequestEvent) error {
 	if visible {
 		publish(event.App, game, participant, "achievement.revoked", payload)
 	}
-	_ = platformaudit.Record(event.App, event.Auth, game.Id, "achievement.revoked", "achievement_award", awardID,
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "achievement.revoked", "achievement_award", awardID,
 		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }

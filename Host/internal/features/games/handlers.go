@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
@@ -73,7 +74,7 @@ func createGame(event *core.RequestEvent) error {
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, record.Id, "game.created", "game", record.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, record.Id, "game.created", "game", record.Id, nil, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGame(record))
 }
 
@@ -101,7 +102,7 @@ func duplicateGame(event *core.RequestEvent) error {
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, record.Id, "game.duplicated", "game", source.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, record.Id, "game.duplicated", "game", source.Id, nil, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGame(record))
 }
 
@@ -158,7 +159,7 @@ func closeJoining(event *core.RequestEvent) error {
 		if err := event.App.Save(game); err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		_ = audit(event.App, event.Auth, game.Id, "game.joining_closed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+		_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.joining_closed", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 		publishGame(event.App, game, "game.joining_closed", projectGame(game))
 		return event.JSON(http.StatusOK, projectGame(game))
 	}
@@ -198,7 +199,7 @@ func closeJoining(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.lobby_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.lobby_cancelled", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.lobby_cancelled", projectGame(game))
 	return event.JSON(http.StatusOK, projectGame(game))
 }
@@ -266,7 +267,7 @@ func openLobby(event *core.RequestEvent) error {
 		event.App.Logger().Error("failed to open game lobby", "gameId", game.Id, "error", err)
 		return httpx.WriteError(event, result.Conflict("game.live_game_exists", "Another lobby or game is already live."))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.lobby_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.lobby_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.lobby_opened", projectGame(game))
 	publishLobbyOpened(event.App, game)
 	return event.JSON(http.StatusOK, projectGame(game))
@@ -292,7 +293,7 @@ func openJoining(event *core.RequestEvent) error {
 	if err := event.App.Save(game); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = audit(event.App, event.Auth, game.Id, "game.joining_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "game.joining_opened", "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.joining_opened", projectGame(game))
 	publishLobbyOpened(event.App, game)
 	return event.JSON(http.StatusOK, projectGame(game))
@@ -360,7 +361,7 @@ func joinGame(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = audit(event.App, event.Auth, game.Id, "participant.joined", "participant", participant.Id, nil, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "participant.joined", "participant", participant.Id, nil, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "participant.joined", projectParticipant(participant, false))
 	publishGameMasters(event.App, game, "participant.joined_private", projectParticipant(participant, true))
 	return event.JSON(http.StatusOK, projectParticipant(participant, false))

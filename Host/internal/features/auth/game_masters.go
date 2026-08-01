@@ -7,8 +7,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/profiles"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -86,7 +86,7 @@ func createGameMaster(event *core.RequestEvent) error {
 			"username": {"Choose a different username."},
 		}))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "game_master.created", "game_master", record.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.created", "game_master", record.Id,
 		map[string]any{"username": username}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectGameMaster(record))
 }
@@ -124,14 +124,14 @@ func updateGameMaster(event *core.RequestEvent) error {
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		_ = platformaudit.Record(event.App, event.Auth, "", "game_master.ownership_transferred", "game_master", target.Id,
+		_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.ownership_transferred", "game_master", target.Id,
 			nil, event.Get(httpx.TraceIDKey))
 		return event.JSON(http.StatusOK, projectGameMaster(updated))
 	}
 	if err := event.App.Save(target); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "game_master.updated", "game_master", target.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.updated", "game_master", target.Id,
 		map[string]any{"active": target.GetBool("active")}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectGameMaster(target))
 }
@@ -171,7 +171,7 @@ func resetGameMasterPassword(event *core.RequestEvent) error {
 	if err := event.App.Save(target); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "game_master.password_reset", "game_master", target.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.password_reset", "game_master", target.Id,
 		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
@@ -190,7 +190,7 @@ func deleteGameMaster(event *core.RequestEvent) error {
 	if err := event.App.Delete(target); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "game_master.deleted", "game_master", target.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "game_master.deleted", "game_master", target.Id,
 		map[string]any{"username": target.GetString("username")}, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }

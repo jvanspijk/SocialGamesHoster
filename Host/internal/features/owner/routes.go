@@ -14,7 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/desktop"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/recovery"
@@ -186,7 +186,7 @@ func updateSettings(event *core.RequestEvent) error {
 	if err := event.App.Save(settings); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "host.settings_updated", "host_settings", settings.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "host.settings_updated", "host_settings", settings.Id,
 		map[string]any{"port": request.Port, "automaticBackups": request.AutomaticBackups}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectSettings(event.App, settings))
 }
@@ -203,7 +203,7 @@ func createBackup(event *core.RequestEvent) error {
 	}
 	for _, backup := range backups {
 		if backup["id"] == name {
-			_ = platformaudit.Record(event.App, event.Auth, "", "backup.created", "backup", name,
+			_ = applicationaudit.Record(event.App, event.Auth, "", "backup.created", "backup", name,
 				nil, event.Get(httpx.TraceIDKey))
 			return event.JSON(http.StatusCreated, backup)
 		}
@@ -243,7 +243,7 @@ func restoreBackup(event *core.RequestEvent) error {
 	if err := recovery.Schedule(event.App, name); err != nil {
 		return httpx.WriteError(event, result.Conflict("backup.restore_unavailable", "The restore could not be scheduled. The current data remains unchanged."))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "backup.restore_scheduled", "backup", name,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "backup.restore_scheduled", "backup", name,
 		map[string]any{"rollbackBackup": rollback}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusAccepted, map[string]any{
 		"status": "restarting", "backup": name, "rollbackBackup": rollback,

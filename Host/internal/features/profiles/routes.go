@@ -20,9 +20,9 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	platformrealtime "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -319,7 +319,7 @@ func approve(event *core.RequestEvent) error {
 		profileEventKind = "profile.recovered"
 	}
 	publishProfile(event.App, approvedProfile, profileEventKind)
-	_ = platformaudit.Record(event.App, event.Auth, "", "profile_request.approved", "player_profile", approvedProfile.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "profile_request.approved", "player_profile", approvedProfile.Id,
 		map[string]any{"requestId": requestID}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, map[string]any{
 		"requestId": requestID,
@@ -352,7 +352,7 @@ func reject(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	publishProfileRequest(event.App, record, "profile_request.rejected")
-	_ = platformaudit.Record(event.App, event.Auth, "", "profile_request.rejected", "profile_request", record.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "profile_request.rejected", "profile_request", record.Id,
 		nil, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
@@ -645,7 +645,7 @@ func setActive(event *core.RequestEvent, active bool) error {
 		kind = "profile.recovered"
 	}
 	publishProfile(event.App, profile, kind)
-	_ = platformaudit.Record(event.App, event.Auth, "", kind, "player_profile", profile.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", kind, "player_profile", profile.Id,
 		map[string]any{"active": active}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectAdminProfile(profile))
 }

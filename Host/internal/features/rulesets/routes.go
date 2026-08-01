@@ -14,7 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -83,7 +83,7 @@ func createRuleset(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Invalid("ruleset.save_failed", "The ruleset could not be created. The slug may already be in use.", nil))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.created", "ruleset", rulesetRecord.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.created", "ruleset", rulesetRecord.Id,
 		map[string]any{"slug": request.Slug}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, map[string]any{
 		"ruleset": projectRuleset(rulesetRecord),
@@ -219,7 +219,7 @@ func saveRuleset(event *core.RequestEvent) error {
 		availability = "ready"
 		action = "ruleset.saved_ready"
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", action, "ruleset_version", saved.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", action, "ruleset_version", saved.Id,
 		map[string]any{"rulesetId": logical.Id, "availability": availability}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, map[string]any{
 		"version":      projectVersion(saved),
@@ -293,7 +293,7 @@ func publishVersion(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.published", "ruleset_version", published.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.published", "ruleset_version", published.Id,
 		map[string]any{"rulesetId": published.GetString("ruleset")}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectVersion(published))
 }
@@ -339,7 +339,7 @@ func createDraft(event *core.RequestEvent) error {
 	if err := cloneVersionAssets(event.App, source.Id, draft.Id); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.draft_created", "ruleset_version", draft.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.draft_created", "ruleset_version", draft.Id,
 		map[string]any{"rulesetId": logical.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectVersion(draft))
 }
@@ -401,7 +401,7 @@ func archiveRuleset(event *core.RequestEvent) error {
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.archived", "ruleset", record.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.archived", "ruleset", record.Id,
 		nil, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projectRuleset(record))
 }
@@ -452,7 +452,7 @@ func deleteRuleset(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id,
 		map[string]any{"slug": logical.GetString("slug")}, event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)
 }
@@ -476,7 +476,7 @@ func duplicateVersion(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.duplicated", "ruleset", logical.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.duplicated", "ruleset", logical.Id,
 		map[string]any{"sourceVersionId": source.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, map[string]any{"ruleset": projectRuleset(logical), "draft": projectVersion(draft)})
 }
@@ -536,7 +536,7 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.imported", "ruleset", logical.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.imported", "ruleset", logical.Id,
 		map[string]any{"sourceVersion": imported.Manifest.SourceVersionNumber}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, map[string]any{"ruleset": projectRuleset(logical), "draft": projectVersion(draft)})
 }

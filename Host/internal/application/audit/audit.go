@@ -1,3 +1,4 @@
+// Package audit writes immutable application audit entries.
 package audit
 
 import (
@@ -6,6 +7,9 @@ import (
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 )
 
+// Record persists one audit entry using the supplied app, which may be the
+// base app or a transaction app. Feature slices choose the action, target, and
+// safe detail payload; this package snapshots the actor at write time.
 func Record(
 	app core.App,
 	actor *core.Record,
@@ -20,18 +24,19 @@ func Record(
 	if err != nil {
 		return err
 	}
+
 	record := core.NewRecord(collection)
 	record.Set("game", gameID)
 	record.Set("actor_type", "system")
 	record.Set("actor_label", "System")
-	if actor != nil {
+	if actorauth.IsGameMaster(actor) {
 		record.Set("actor_id", actor.Id)
+		record.Set("actor_type", "game_master")
 		record.Set("actor_label", actor.GetString("display_name"))
-		if actorauth.IsGameMaster(actor) {
-			record.Set("actor_type", "game_master")
-		} else {
-			record.Set("actor_type", "player")
-		}
+	} else if actorauth.IsPlayer(actor) {
+		record.Set("actor_id", actor.Id)
+		record.Set("actor_type", "player")
+		record.Set("actor_label", actor.GetString("display_name"))
 	}
 	record.Set("action", action)
 	record.Set("target_type", targetType)

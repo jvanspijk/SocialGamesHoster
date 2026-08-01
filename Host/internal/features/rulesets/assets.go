@@ -22,8 +22,8 @@ import (
 	"golang.org/x/image/webp"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -141,7 +141,7 @@ func uploadAsset(event *core.RequestEvent) error {
 	if err := event.App.Save(record); err != nil {
 		return httpx.WriteError(event, result.Invalid("asset.save_failed", "The asset could not be saved.", nil))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.asset_uploaded", "ruleset_asset", record.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.asset_uploaded", "ruleset_asset", record.Id,
 		map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": assetKey, "kind": kind},
 		event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusCreated, projectAsset(record))
@@ -170,7 +170,7 @@ func deleteAsset(event *core.RequestEvent) error {
 	if err := event.App.Delete(asset); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	_ = platformaudit.Record(event.App, event.Auth, "", "ruleset.asset_deleted", "ruleset_asset", asset.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, "", "ruleset.asset_deleted", "ruleset_asset", asset.Id,
 		map[string]any{"rulesetId": version.GetString("ruleset"), "versionId": versionID, "assetKey": asset.GetString("asset_key")},
 		event.Get(httpx.TraceIDKey))
 	return event.NoContent(http.StatusNoContent)

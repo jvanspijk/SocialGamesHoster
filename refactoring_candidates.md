@@ -731,7 +731,7 @@ policy rather than a discarded error by habit.
 |  10   |    [x]    |   [x]    |
 |  11   |    [x]    |   [x]    |
 |  12   |    [x]    |   [x]    |
-|  13   |    [ ]    |   [ ]    |
+|  13   |    [x]    |   [x]    |
 |  14   |    [ ]    |   [ ]    |
 
 When all issues in table are fully completed and reviewed, bump patch version of app.

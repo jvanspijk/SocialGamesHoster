@@ -5,6 +5,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -63,7 +64,7 @@ func setRoleVisibility(event *core.RequestEvent) error {
 		action = "game.roles_available"
 	}
 	payload := projectRoleVisibility(game)
-	_ = audit(event.App, event.Auth, game.Id, action, "game", game.Id, payload, event.Get(httpx.TraceIDKey))
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, action, "game", game.Id, payload, event.Get(httpx.TraceIDKey))
 	publishGame(event.App, game, "game.role_visibility_changed", payload)
 	return event.JSON(http.StatusOK, payload)
 }

@@ -107,39 +107,6 @@ func currentParticipants(app core.App, gameID string) ([]*core.Record, error) {
 	return gamepolicyapp.CurrentParticipantsByGame(app, gameID)
 }
 
-func audit(app core.App, actor *core.Record, gameID, action, targetType, targetID string, detail any, traceID any) error {
-	collection, err := app.FindCollectionByNameOrId("game_audit")
-	if err != nil {
-		return err
-	}
-	record := core.NewRecord(collection)
-	actorType := "system"
-	actorID := ""
-	actorLabel := "System"
-	if actor != nil {
-		actorID = actor.Id
-		if actorauth.IsGameMaster(actor) {
-			actorType = "game_master"
-			actorLabel = actor.GetString("display_name")
-		} else {
-			actorType = "player"
-			actorLabel = actor.GetString("display_name")
-		}
-	}
-	record.Set("game", gameID)
-	record.Set("actor_type", actorType)
-	record.Set("actor_id", actorID)
-	record.Set("actor_label", actorLabel)
-	record.Set("action", action)
-	record.Set("target_type", targetType)
-	record.Set("target_id", targetID)
-	record.Set("detail", detail)
-	if trace, ok := traceID.(string); ok {
-		record.Set("request_id", trace)
-	}
-	return app.Save(record)
-}
-
 func publishGame(app core.App, record *core.Record, kind string, payload any) {
 	_ = realtime.Publish(app, "game:"+record.Id+":public", realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: record.Id, Revision: record.GetInt("revision"),

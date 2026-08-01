@@ -15,10 +15,10 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
-	platformaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
@@ -310,7 +310,7 @@ func updateRoom(event *core.RequestEvent) error {
 	resolved := access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}
 	projected := projectRoom(event.App, resolved)
 	publishRoom(event.App, resolved, "chat.room_updated", projected)
-	_ = platformaudit.Record(event.App, event.Auth, game.Id, "chat.players_can_post_changed", "chat_room", room.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, game.Id, "chat.players_can_post_changed", "chat_room", room.Id,
 		map[string]any{"playersCanPost": *request.PlayersCanPost}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projected)
 }
@@ -399,7 +399,7 @@ func deleteMessage(event *core.RequestEvent) error {
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
 	publishRoom(event.App, resolved, "chat.message_deleted", projected)
-	_ = platformaudit.Record(event.App, event.Auth, resolved.Game.Id, "chat.message_deleted", "chat_message", message.Id,
+	_ = applicationaudit.Record(event.App, event.Auth, resolved.Game.Id, "chat.message_deleted", "chat_message", message.Id,
 		map[string]any{"roomId": resolved.Room.Id}, event.Get(httpx.TraceIDKey))
 	return event.JSON(http.StatusOK, projected)
 }
@@ -424,7 +424,7 @@ func setRoomLock(locked bool) func(*core.RequestEvent) error {
 		}
 		resolved := access{Game: game, Room: room, IsGM: true}
 		publishRoom(event.App, resolved, "chat.room_updated", map[string]any{"id": room.Id, "playersCanPost": !locked})
-		_ = platformaudit.Record(event.App, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
+		_ = applicationaudit.Record(event.App, event.Auth, game.Id, "chat.room_lock_changed", "chat_room", room.Id,
 			map[string]any{"locked": locked}, event.Get(httpx.TraceIDKey))
 		return event.JSON(http.StatusOK, map[string]any{"id": room.Id, "playersCanPost": !locked})
 	}
