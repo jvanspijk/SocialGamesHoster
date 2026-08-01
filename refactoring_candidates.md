@@ -2,736 +2,831 @@
 
 ## Purpose
 
-This plan records the high-signal DRY candidates found by mechanically scanning
-the Go, Svelte, and TypeScript sources for repeated code fingerprints, literals,
-queries, and policy branches, followed by targeted inspection of the strongest
-matches. It is not a request to eliminate all duplication. Repetition is worth
-removing only when it represents shared policy, a shared external contract, or
-substantial behavior that must change together.
+This plan records the high-signal component-boundary and composition problems
+found by reviewing the hand-written Svelte files under
+`Web/src/lib/components`, their public props, application imports, route usage,
+markup, styles, and the normative composition guidance in `Web/DESIGN.MD`.
+
+The shared UI inventory should contain generic, composable components whose
+names and APIs do not reveal the product domain or the route on which they are
+used. Feature views may still be implemented as Svelte files, but they must live
+with their owning feature or route and assemble the shared UI primitives. A file
+does not become a reusable UI component merely because two routes import it.
 
 The priorities are:
 
-1. prevent authorization and lifecycle policy from drifting;
-2. establish clear domain/transport boundaries where the current duplication
-   exposes an architectural gap;
-3. remove routine boilerplate with narrow, typed abstractions; and
-4. avoid generic utility layers, repository abstractions, generated clients, or
-   dependency-injection machinery that would be disproportionate for this
-   application.
+1. separate reusable UI primitives from feature views and application
+   controllers;
+2. remove API, realtime, global-state, and domain-model dependencies from the
+   shared UI layer;
+3. consolidate repeated accessibility, interaction, form, feedback, and
+   surface behavior in deliberately small primitives; and
+4. decompose the largest feature views without creating generic escape-hatch
+   components or speculative abstractions.
 
-Unless an issue explicitly says otherwise, preserve all API payloads, status
-codes, realtime topics, authorization behavior, accessible names, visual
-behavior, and PocketBase query limits. Refactoring should proceed in small
-reviewable changes. Use the smallest relevant checks for each issue and run
-`./scripts/Test.ps1` after the architectural work has been integrated across the
-codebase.
+Unless an issue explicitly says otherwise, preserve all routes, API payloads,
+realtime topics, authorization behavior, public copy, accessible names, focus
+behavior, responsive behavior, visual appearance, and reduced-motion behavior.
+Refactoring should proceed in small reviewable changes. Use the smallest
+relevant frontend checks for each issue and run `./scripts/Test.ps1` after the
+component-boundary work has been integrated across the SPA.
+
+`AdminChatPage.svelte` and `PlayerChatPage.svelte` are page adapters and are not
+the subject of the reusable-component rule. They may remain distinct because
+they normalize different data and own different navigation and authorization
+behavior. Their shared visual content is covered by the issues below.
 
 ## Recommended sequence
 
-- Implement issues 1 and 3 together because they establish the same game-policy
-  ownership boundary. Preserve capability-specific errors rather than forcing
-  every archived-game check through one public error.
-- Implement issue 11 before or with issue 1 so actor classification and
-  application authorization no longer depend on platform-owned feature policy.
-- Implement issue 2 independently and migrate every equivalent production
-  adapter, including transaction boundaries in profiles and rulesets.
-- Implement issue 12 before issues 7 and 8 because audio cues and announcement
-  pagination should move with their owning chat/announcement slice.
-- Implement issue 13 before issue 14 so atomic commands have one
-  transaction-composable audit writer.
-- Issues 4-6 and 9-10 can be separate changes. Issues 5 and 6 should not be
-  mixed with unrelated visual changes.
-- Replace issue 8's offset cursor with keyset pagination after issue 12 has
-  established endpoint ownership.
-- Do not mark an issue complete when only one call site has migrated. Completion
-  means the stated scope has been searched again and all applicable production
-  occurrences use the new pattern.
+- Implement issue 1 first so every later extraction has a clear destination and
+  the shared UI inventory has an enforceable boundary.
+- Implement issues 8-10 and 13-15 next. They establish the overlay, header,
+  feedback, form, button, status, and state-boundary primitives needed by the
+  larger decompositions.
+- Implement issue 11 after the shared dialog and selectable-list foundations
+  exist.
+- Implement issues 2-7 and 12 as separate feature-focused changes. Do not mix
+  all large component decompositions into one review.
+- Implement issue 7 before deleting either timer component so countdown
+  semantics and application commands remain continuously covered.
+- Do not mark an issue complete when only the new primitive exists. Completion
+  means all stated production call sites have migrated, obsolete duplicated
+  markup and styles have been removed, and the shared component inventory has
+  been reviewed again for domain or route leakage.
 
-## Issue 1: Put participant access policy in the domain
+## Issue 1: Reserve the shared component inventory for generic UI
 
 **Problem and evidence**
 
-The meaning of a participant who may still access a game is encoded repeatedly
-as `status != 'kicked' && status != 'left'`. It appears in realtime subscription
-authorization, timer publishing, ruleset-asset access, game projections, game
-handlers, and audio-cue authorization. Some code uses an equivalent Go
-condition, while ability activation deliberately uses the narrower
-`status = 'active'`. The distinction between "currently belongs to the game" and
-"currently alive/active in play" is important and should be named rather than
-left implicit in filters.
+`Web/src/lib/components` currently mixes generic primitives such as `Button`,
+`Field`, `Panel`, `Dialog`, and `Sheet` with complete feature views and
+application controllers such as:
 
-Representative locations:
+- `ChatApp.svelte`;
+- `PendingProfileRequests.svelte`;
+- `RoleReveal.svelte`;
+- `GameSummaryCard.svelte`;
+- `AttentionCard.svelte`; and
+- the editors under `components/rulesets`.
 
-- `Host/internal/platform/realtime/authorization.go`
-- `Host/internal/features/timer/service.go`
-- `Host/internal/features/timer/routes.go`
-- `Host/internal/features/rulesets/assets.go`
-- `Host/internal/features/games/service.go`
-- `Host/internal/features/games/handlers.go`
-- `Host/internal/features/games/chat_projection.go`
-- `Host/internal/features/profiles/routes.go`
-
-This is an architectural issue because the platform realtime package currently
-owns knowledge of feature collections, relations, and participant lifecycle
-states.
+Several of these files import API clients, realtime clients, global application
+state, and domain projection types. Their names also expose product concepts in
+what otherwise appears to be the reusable UI catalogue. This makes it difficult
+to tell whether a component is safe to reuse and encourages feature behavior to
+accumulate in the shared directory.
 
 **Proposed change**
 
-Create a narrow, dependency-neutral domain-policy owner, for example
-`Host/internal/features/gamepolicy`. The domain package must use pure Go values
-and must not depend on PocketBase `core`, `dbx`, `httpx`, route handlers,
-projections, or platform realtime. Do not create a second lifecycle vocabulary:
-shared game and participant status constants must have one owner, with the
-existing games lifecycle using or aliasing that vocabulary. Give pure concepts
-explicit names, for example:
+Define and enforce two distinct homes:
 
-- whether a status represents a current game member;
-- whether a game status is archived or mutable; and
-- the typed statuses and domain errors needed by those invariants.
+- a shared UI location containing only generic visual and interaction
+  primitives; and
+- feature-local locations for domain compositions, data loading, commands,
+  realtime subscriptions, and route-adjacent views.
 
-Keep PocketBase-dependent operations out of that domain kernel. Put
-purpose-specific operations such as finding a current participant by game and
-profile, checking whether a participant record belongs to a profile, and
-providing a stable composable PocketBase filter in a narrow application-policy
-package adjacent to the domain policy. That package may depend on `core` and
-`dbx`, but it must not become a generic repository or own response writing.
+The exact directory names should follow the existing `$lib` organization, but
+the boundary must be evident from imports. A shared UI component must not import
+the application API client, realtime client, authentication/game stores, or
+domain-specific API projections. It may import semantic tokens, generic Svelte
+utilities, icons, and other shared UI primitives.
 
-Do not use the word `active` for the broad kicked/left exclusion because an
-eliminated participant still satisfies it. Keep ability eligibility separate.
-Prefer pure status predicates in the domain package and purpose-specific
-lookups in the application-policy package. Do not turn either package into a
-generic repository or a collection of arbitrary query builders.
+Do not disguise feature views by giving them vague generic names. Move them to
+their owning feature and keep truthful feature names there. Only the shared UI
+inventory must be domain- and route-neutral.
 
-Move realtime subscription policy out of
-`Host/internal/platform/realtime/authorization.go` into an application/feature
-package that may depend on the pure domain policy and its narrow
-PocketBase-backed application-policy adapter. The platform realtime package
-should retain generic topic publication mechanics, event envelopes, and
-authorization callback support; it should not decide what a game participant or
-chat membership means. Keep topic parsing close to the subscription policy
-unless it is independently useful to the generic publisher.
-
-Migrate every applicable production query and predicate. Relation-specific
-queries such as historical room access may remain specialized when sharing the
-filter would require a brittle general-purpose query builder. Their
-current-participant semantics must still be covered by the same policy tests.
+Add a short boundary rule to `Web/DESIGN.MD` or the relevant architecture
+guidance once the destination is established. Avoid a new barrel file unless it
+materially improves enforcement or import clarity.
 
 **Arguments and constraints**
 
-- This is security-sensitive shared knowledge, not merely duplicated query text.
-- A generic repository layer would add indirection without improving the
-  invariant; prefer explicit domain functions over arbitrary query builders.
-- Do not collapse "current member", "active/alive player", "may post", and
-  "historical room reader" into one boolean. They are distinct capabilities.
-- Query failures in authorization paths must continue to fail closed.
-
-**Architecture constraint**
-
-`AGENTS.md` and `docs/ARCHITECTURE.md` already establish that shared domain
-policy is pure and dependency-neutral, PocketBase access belongs to application
-policy, and platform mechanisms do not own feature authorization. Implement
-this issue within those rules; no additional package-specific repository rule
-is required.
+- Reuse is determined by responsibility and API shape, not import count.
+- Feature compositions are legitimate Svelte components; they are not shared UI
+  primitives.
+- Do not move files mechanically before their dependencies and callers are
+  understood.
+- Do not force domain types through `unknown`, broad generics, or render-everything
+  escape hatches merely to satisfy the directory rule.
 
 **Verification**
 
-- Add table-driven tests for all participant statuses, explicitly covering
-  eliminated, kicked, and left participants.
-- Preserve realtime authorization tests for game, participant, profile, and room
-  topics, including historical room access and fail-closed query behavior.
-- Search production Go sources for the old compound status predicate and review
-  every remaining occurrence.
-- Run focused tests for realtime, games, timer, ruleset assets, profiles, and
-  abilities, followed by the full gate after issues 1 and 3 are integrated.
+- Inventory every production `.svelte` file in the shared UI location.
+- Confirm none imports `$lib/api/client`, PocketBase/realtime state, feature
+  stores, or domain-specific API projection types.
+- Confirm shared component filenames do not disclose a feature, actor, route,
+  or product workflow.
+- Run frontend type checks, lint, formatting, contract tests, and the affected
+  browser journeys after all moves are integrated.
 
-## Issue 2: Establish one domain-error-to-HTTP boundary
+## Issue 2: Decompose the chat application into UI primitives and a feature controller
 
 **Problem and evidence**
 
-Chat, abilities, games, and ruleset assets each contain a small adapter that
-checks whether an error is a `result.AppError` and otherwise wraps it with
-`result.Internal`. The implementations already differ: some use a direct type
-assertion while ruleset assets uses `errors.As`, so wrapped domain errors can be
-treated differently depending on the route.
+`Web/src/lib/components/ChatApp.svelte` is approximately one thousand lines and
+owns several independent responsibilities:
 
-Representative locations:
+- room loading, sorting, filtering, and selection;
+- realtime room and message subscriptions;
+- local read-marker persistence;
+- message pagination, sending, removal, and scrolling;
+- moderation and posting-policy commands;
+- the conversation rail and search UI;
+- message grouping, unread and day dividers, empty/loading states; and
+- the composer and responsive master-detail layout.
 
-- `Host/internal/features/chat/routes.go`
-- `Host/internal/features/abilities/routes.go`
-- `Host/internal/features/games/service.go`
-- `Host/internal/features/rulesets/assets.go`
-- `Host/internal/platform/httpx/responses.go`
+It accepts a `gameId`, calls `/games` and `/rooms` endpoints, reads application
+authentication state, and contains product-specific labels such as `Game chat`
+and `Ruleset channel`. It is a feature application rather than a reusable UI
+component.
 
 **Proposed change**
 
-Add one function to `httpx` that accepts `error`, uses `errors.As` to recover a
-possibly wrapped `result.AppError`, and otherwise writes
-`result.Internal(err)`. Because `AppError.Error` currently has a value receiver,
-both `result.AppError` and `*result.AppError` implement `error`; the adapter must
-support both representations or the application must first standardize on one.
-An `errors.As` target for only the value form is incomplete. Keep the existing
-function that accepts a concrete `result.AppError` for direct validation
-failures.
+Move data loading, realtime behavior, markers, moderation, and commands into a
+chat feature controller or feature-local view. Assemble its presentation from
+small neutral components, extracting only established recurring structures.
+Strong candidates include:
 
-Migrate all equivalent feature-local adapters and transaction fallbacks and
-remove them. Search the entire host for manual domain-error type assertions,
-including profiles and ruleset publication, not only the four known functions.
-Do not fold deliberately specialized responses such as diagnostics support
-bundle failures into the generic adapter.
+- `SplitView` for the responsive rail/detail layout;
+- `ItemRail` and `SelectableList` for the searchable conversation list;
+- `SearchField`;
+- `MessageList` and `MessageItem`;
+- `DayDivider` and `UnreadDivider`;
+- `Composer`;
+- `EmptyState`, `LoadingState`, and `StatusBanner`; and
+- the shared form and icon-button primitives from later issues.
+
+Keep domain normalization in the feature layer. For example, the feature should
+convert room kinds into caller-owned labels and icons rather than teaching a
+generic list component about teams, game masters, rulesets, or posting policy.
+
+Do not create one equally large `ConversationView` with the same responsibilities
+under a more generic name. The controller may remain cohesive where behavior
+must change together, but presentation regions and repeated interaction
+patterns should have narrow inputs and callbacks.
 
 **Arguments and constraints**
 
-- This is the transport boundary for public codes, messages, field errors,
-  status codes, and trace IDs; behavior should not vary by feature.
-- Do not add automatic logging in several layers. Unexpected-error logging and
-  trace exposure should have one clearly documented owner.
-- Do not make handlers return raw errors directly to PocketBase unless the
-  public JSON error contract remains guaranteed.
-
-**AGENTS.md rule to add**
-
-Document that arbitrary feature/domain errors are translated to HTTP responses
-only through the standard `httpx` error adapter. Route packages must not create
-local `error -> result.AppError -> JSON` adapters.
+- Preserve read-marker ordering, scroll restoration, first-unread placement,
+  realtime deduplication, and message pagination.
+- The admin and player page adapters remain separate.
+- Generic message presentation may understand sender, timestamp, body, own,
+  deleted, and available actions; it must not understand application room or
+  participant policy.
+- Avoid a generic chat SDK, event bus, or client-side repository layer.
 
 **Verification**
 
-- Extend `Host/internal/platform/httpx/responses_test.go` with direct and wrapped
-  value-form errors, direct and wrapped pointer-form errors, and unexpected
-  errors.
-- Assert that expected errors omit trace IDs and internal errors retain them.
-- Search for the removed adapters and direct `result.AppError` assertions.
-- Run the focused `httpx`, chat, abilities, games, and ruleset-assets tests.
+- Preserve component/contract coverage for loading rooms, selecting a room,
+  loading earlier messages, sending, removing, unread markers, and read-only
+  states.
+- Test the extracted rail, list, message item, composer, and empty states through
+  semantic roles and accessible names.
+- Verify the master-detail transition at phone and desktop widths.
+- Run the focused chat tests and compiled-host browser chat journey.
 
-## Issue 3: Make archived-game immutability one invariant
+## Issue 3: Split the visual definition editor into feature sections built from editor primitives
 
 **Problem and evidence**
 
-The archived-game status check and the
-`game.archived_immutable` conflict are repeated in chat room changes, roster
-changes, and achievement revocation. New mutation endpoints can easily omit the
-guard or change its public error contract.
+`Web/src/lib/components/rulesets/VisualDefinitionEditor.svelte` is approximately
+1,395 lines. It switches between eight domain sections, creates IDs and default
+domain records, mutates the complete ruleset definition, filters assets, and
+contains repeated section headings, editable cards, form grids, remove actions,
+select fields, checkbox groups, empty states, and nested repeaters.
 
-Representative locations:
-
-- `Host/internal/features/chat/routes.go`
-- `Host/internal/features/games/roster.go`
-- `Host/internal/features/achievements/routes.go`
+`RoomPermissionEditor.svelte` and `SelectorEditor.svelte` are also tied directly
+to ruleset domain types and vocabulary. Together these files make the shared UI
+inventory reveal the product model and concentrate too much behavior in one
+component.
 
 **Proposed change**
 
-Add a pure archived-status predicate or guard accepting the typed game status to
-the dependency-neutral domain policy introduced by issue 1. Do not pass
-`*core.Record` into the shared domain kernel. Add a narrow application-policy
-guard or error constructor that extracts the record status and returns the
-existing `game.archived_immutable` application error where that is genuinely
-the stable public contract. Do not force capability-specific archived checks
-through that error: `chat.read_only`, `achievement.not_allowed`,
-`game.role_visibility_not_allowed`, and `game.transition_not_allowed`
-communicate different failed capabilities and must remain stable.
+Move the definition editor and its domain section components into the owning
+feature. Split each independently editable section into a feature-local
+component so changes to one domain area do not require editing a single
+thousand-line switch.
 
-Inventory all custom mutation routes for games, participants, chat,
-achievements, timers, abilities, and announcements and explicitly classify each
-as:
+Build those sections from neutral editor primitives such as:
 
-- forbidden for archived games and guarded by the shared invariant or a
-  capability-specific lifecycle predicate;
-- intentionally allowed after archival, with a test and explanatory comment; or
-- unreachable because a stronger lifecycle precondition applies.
+- `SectionHeader`;
+- `CollectionEditor`;
+- `EditableCard`;
+- `FormGrid`;
+- `RepeaterRow`;
+- `ChoiceGroup` and `CheckboxGroup`;
+- `SelectField` and `CheckboxField`; and
+- `EmptyState`.
 
-Do not use broad HTTP middleware for this rule. The middleware would have to
-infer domain targets and mutation semantics from routes and would become
-fragile.
+Keep ID generation, default record construction, domain relationships,
+inheritance semantics, and ruleset mutations in the feature layer. A shared
+primitive should receive labels, values, states, snippets, and callbacks rather
+than `RulesetDefinition`, `RulesetRole`, `RulesetTeam`, or related types.
+
+Extract primitives only after comparing at least two real instances. Prefer a
+few clear editor structures over a universal schema-driven form renderer.
 
 **Arguments and constraints**
 
-- The pure domain policy owns archived-status semantics. The application-policy
-  guard owns the general archived-immutability error, not request lookup or
-  response writing. Features may use the pure predicate while retaining a more
-  specific public error.
-- Avoid importing the `games` package from chat or achievements because games
-  already imports chat. A dependency-neutral policy package prevents cycles.
-- Preserve operations that are intentionally read-only or required for
-  diagnostics/history.
-
-**Architecture constraint**
-
-`AGENTS.md` and `docs/ARCHITECTURE.md` already require cross-slice lifecycle
-semantics to have a dependency-neutral domain owner. Any new mutation touching
-game-owned state must apply the relevant lifecycle policy or include a test and
-comment explaining why it remains valid after archival.
+- Do not replace the current file with a configuration language or dynamic form
+  engine.
+- Do not hide direct Svelte binding behind untyped mutation callbacks.
+- Preserve stable IDs, selection relationships, inherited policy behavior,
+  asset selection, and empty-list guidance.
+- Feature-local section names may remain domain-specific; shared UI names may
+  not.
 
 **Verification**
 
-- Add a table-driven invariant test for every game status.
-- Add route-level regression coverage for at least one mutation in each affected
-  feature slice.
-- Review all registered mutation routes. Explicitly cover intentional
-  exceptions such as archived-game deletion and any post-archive announcement
-  acknowledgement in tests.
-- Search for direct `status == archived` mutation guards and for duplicated
-  `game.archived_immutable` construction.
+- Add focused tests for adding, removing, and editing records in every section.
+- Cover nested collection editing and inherited yes/no/default states.
+- Verify labels, field descriptions, keyboard access, 320px reflow, and large
+  text for representative dense sections.
+- Search the feature sections for repeated editable-card and form-control CSS
+  after migration.
 
-## Issue 4: Centralize frontend unknown-error messages
+## Issue 4: Separate the pending-request workflow from its presentation
 
 **Problem and evidence**
 
-The SPA contains roughly fifty repetitions of
-`caught instanceof Error ? caught.message : <operation-specific fallback>`.
-This is boilerplate and makes future treatment of `AppApiError`, cancellation,
-or non-Error throws difficult to change consistently.
+`PendingProfileRequests.svelte` combines API loading, realtime subscription,
+count synchronization, approval/rejection commands, conflict recovery, toast
+publication, two confirmation workflows, list-row rendering, status tags,
+avatars, loading/error/empty states, and compact/full layouts.
+
+The file imports application clients and `ProfileRequest`, calls admin-specific
+endpoints, and owns public workflow copy. It is a feature controller and view,
+not a reusable UI component.
 
 **Proposed change**
 
-Add a small typed function such as `errorMessage(caught: unknown, fallback:
-string): string` in the frontend API/error module. Migrate equivalent message
-extraction throughout `Web/src`.
+Move the workflow into its owning feature and keep request loading, realtime
+updates, decisions, conflict handling, and application copy there. Assemble the
+view from neutral primitives:
 
-Keep operation-specific fallback copy at each call site. Do not add a global
-toast-on-error API wrapper: some failures are displayed inline, some are
-background refresh failures, and some require additional recovery behavior.
-Treat an empty `Error.message` as absent. Do not display arbitrary thrown
-strings or objects. Cancellation that should be suppressed must be classified
-by the caller before converting the error to a message.
+- `ApprovalQueue` or a generic actionable list composition;
+- `IdentityRow`;
+- `StatusBadge`;
+- `ActionGroup`;
+- `EmptyState`, `LoadingState`, and `ErrorState`; and
+- the existing dialog and field primitives after issues 8 and 13.
 
-**Verification**
+The feature view should decide whether a request is a recovery, what approving
+means, which dialog copy to show, and which API command to invoke. Shared list
+and row primitives should receive rendered supporting content and actions.
 
-- Unit-test `Error`, `AppApiError`, strings/objects, and the fallback case.
-- Search `Web/src` for remaining `caught instanceof Error` expressions and
-  review justified exceptions.
-- Run frontend checks and focused component tests.
-
-## Issue 5: Introduce a composable page-heading primitive
-
-**Problem and evidence**
-
-Many routes repeat page-heading markup, margin resets, eyebrow typography,
-responsive action layout, and mobile stacking. This conflicts with the
-composition guidance in `Web/DESIGN.MD` and allows small visual differences to
-accumulate.
-
-**Proposed change**
-
-Create a semantic `PageHeading.svelte` primitive with a deliberately small API:
-eyebrow, title, optional description, and an optional typed Svelte 5 actions
-snippet. It should own the semantic header, `h1`, and shared presentation.
-Provide only variants that correspond to established recurring layouts; do not
-add arbitrary heading-level or styling escape hatches.
-
-Migrate conventional admin and account page headings. Do not force highly
-specialized focal headings—such as the live phase display or ruleset editor
-toolbar—through the primitive when their semantics or layout differ.
-
-If eyebrow text is also used outside page headings, place its typography in a
-shared semantic class/token rather than recreating it in each scoped style
-block.
-
-**Verification**
-
-- Add a component test for heading semantics, description, and optional actions.
-- Verify representative phone and desktop routes, including 320px layout and
-  large text.
-- Search scoped Svelte styles for repeated conventional `.page-heading` and
-  `.eyebrow` definitions; inspect rather than blindly removing specialized
-  uses.
-
-## Issue 6: Extract the direct-message player chooser
-
-**Problem and evidence**
-
-`AdminChatPage.svelte` and `PlayerChatPage.svelte` duplicate the new-message
-dialog, player row, avatar initial, seat label, and all related CSS. The actual
-room selection behavior and source models differ.
-
-**Proposed change**
-
-Extract a presentation-focused chooser that accepts normalized entries with an
-ID, display label, optional supporting label, and avatar text, plus an
-`onchoose` callback. Let each wrapper filter and normalize its own participant
-model and perform its own asynchronous room-opening operation.
-
-Do not merge the admin and player chat wrappers. Their authorization, navigation
-paths, and room creation behavior are legitimate reasons to remain separate.
-Continue composing the existing `Dialog` primitive so that focus trapping,
-Escape handling, and focus restoration retain one owner. The chooser must render
-a meaningful empty state and use native buttons for entries.
-
-**Verification**
-
-- Test dialog labeling, player selection, empty input, and keyboard-accessible
-  buttons.
-- Keep wrapper tests focused on the different room-opening behaviors.
-- Run the relevant chat component and frontend checks.
-
-## Issue 7: Reuse audio-cue asset resolution and payload construction
-
-**Problem and evidence**
-
-`publishAttentionCue` and `publishAudioCue` repeat the ruleset audio-asset query,
-missing-asset behavior, and public payload construction in
-`Host/internal/features/games/chat_projection.go`.
-
-**Proposed change**
-
-After issue 12 places announcement/audio behavior in its owning slice, extract a
-package-local function there that resolves the audio asset for a game and cue
-and returns the complete payload while distinguishing success, absence, and
-query failure with an ordinary small Go return signature. Do not introduce an
-elaborate result hierarchy for two callers. Keep the two publication functions
-and their authorization callbacks distinct: attention-receipt authorization and
-audience-based authorization protect different data.
-
-Decide explicitly whether missing assets, query failures, and publication
-failures should remain best-effort/silent or become observable. Do not
-accidentally change behavior as a side effect of the extraction.
-
-**Verification**
-
-- Test successful resolution, absent assets, query failure behavior, and payload
-  fields.
-- Preserve separate authorization tests for attention recipients, all players,
-  one player, one team, and game masters.
-
-## Issue 8: Replace unstable offset cursors with local keyset pagination
-
-**Problem and evidence**
-
-The activity and announcement listing handlers currently repeat the 50-item
-limit, 51-record lookahead, trimming, offset cursor calculation, and response
-envelope logic in `Host/internal/features/games/activity.go`. More importantly,
-both feeds sort newest-first while using offsets. A record inserted between
-requests shifts later offsets and can cause records to be duplicated or
-skipped. Issue 12 will move announcement listing to its owning slice, so these
-endpoints must not be coupled through a games-local pagination abstraction.
-
-**Proposed change**
-
-Replace the opaque offset cursor with a keyset cursor containing the last
-record's `created` and `id` values. Query the next page strictly after that
-position in the existing `-created,-id` order. Preserve the 50-item page size,
-51-record lookahead, response envelope, endpoint-specific invalid-cursor codes,
-and bounded PocketBase queries.
-
-After both endpoints have correct cursor semantics and ownership, keep their
-pagination local unless a genuinely neutral opaque cursor codec remains
-materially identical. Do not create a cross-application pagination framework.
-The message-history cursor remains a separate abstraction because its record and
-contract semantics differ.
-
-**Verification**
-
-- Test empty, partial, exact-50, and greater-than-50 result sets.
-- Test malformed cursors and tuple ordering when multiple records share a
-  timestamp.
-- Insert a newer record between page requests and prove that the next page
-  neither repeats nor skips older records.
-- Confirm response payloads and endpoint-specific error codes are unchanged.
-
-## Issue 9: Share game-status presentation vocabulary
-
-**Problem and evidence**
-
-The frontend independently maps game statuses to labels in the game list and
-game layout. A new status or wording change can produce inconsistent navigation
-and listing text.
-
-**Proposed change**
-
-Define an exhaustive map adjacent to shared frontend game presentation helpers,
-using `satisfies Record<Game['status'], string>` so completeness is checked
-without unnecessarily widening the inferred values. Use it everywhere the same
-concise status label is intended. Callers must accept `Game['status']`; do not
-retain a `string` fallback that silently displays unknown backend values.
-
-Do not send presentation labels from the backend. Contextual sentences such as
-"The game is paused" are not the same abstraction and should remain local.
-
-**Verification**
-
-- Let TypeScript enforce exhaustiveness.
-- Search for duplicate full status maps and review contextual status copy
-  separately.
-- Run frontend type checks and affected tests.
-
-## Issue 10: Provide a test-only PocketBase application fixture
-
-**Problem and evidence**
-
-Several Go tests repeat temporary data-directory creation, `core.NewBaseApp`,
-the test encryption value, `Bootstrap`, bootstrap-state reset, and cleanup.
-Lifecycle boilerplate makes it easier for future integration tests to omit
-cleanup or initialize the app differently.
-
-**Proposed change**
-
-PocketBase v0.39.9 already provides `tests.NewTestApp`,
-`tests.NewTestAppWithConfig`, migration execution, bootstrap reset, request-log
-suppression, and `TestApp.Cleanup`. Add only a thin project test helper around
-that supported fixture. Its narrow API should ensure project migrations are
-registered, return the app shape needed by fixtures, and register cleanup with
-`testing.TB`.
-
-Keep `Host/migrations/migrations_test.go` explicit because a test of migration
-registration and execution must control its own lifecycle. Do not reproduce
-PocketBase's test lifecycle, and do not introduce production application
-factories, repository interfaces, or dependency injection solely for tests.
-
-**Verification**
-
-- Migrate all feature tests that use the standard lifecycle to the thin wrapper;
-  leave migration-specific tests explicit and comment why.
-- Run affected packages repeatedly to detect leaked global bootstrap state or
-  file handles.
-- Run `go test ./Host/...`.
-
-## Issue 11: Move actor authorization policy out of platform
-
-**Problem and evidence**
-
-`Host/internal/platform/auth/auth.go` owns the `game_masters` and
-`player_profiles` collection names, active-account semantics, owner semantics,
-and the public errors for requiring a game master, owner, or player. Feature
-packages also import its collection constants for record access and
-authorization branches.
-
-These are application identity and authorization decisions, not generic
-authentication plumbing. Their placement directly contradicts the rule that
-platform packages must not own feature collection policy or domain
-authorization.
-
-**Proposed change**
-
-Move actor collection vocabulary, actor classification, and the three route
-guards to a narrow application identity/authorization package. It may depend on
-PocketBase request/auth records and the standard HTTP error boundary because it
-is application policy, not the pure shared domain kernel. Keep collection
-constants and active/owner classification in one owner so feature packages do
-not recreate raw collection-name and boolean predicates.
-
-Platform may retain only genuinely generic mechanics for obtaining or carrying
-an authenticated PocketBase record. If nothing generic remains,
-`Host/internal/platform/auth` should be removed.
-
-Migrate all route bindings and collection-constant consumers. Coordinate the
-public-error writing with issue 2 so response codes, messages, statuses, and
-envelopes remain unchanged.
+Do not create a global approval framework. Extract only the visual structures
+that recur elsewhere or are independently meaningful.
 
 **Arguments and constraints**
 
-- Do not split the shared guards between the auth and profiles feature packages;
-  every feature needs actor classification and that would replace a platform
-  dependency with widespread feature-to-feature imports.
-- Do not introduce an authentication service interface or dependency-injection
-  container. This is a package ownership correction.
-- Keep feature-resource authorization, such as game membership or room access,
-  out of the actor guard. Actor type is necessary but not sufficient for those
-  decisions.
+- Preserve realtime cleanup, count-change notifications, stale-decision
+  handling, and the distinction between approval and recovery approval.
+- Preserve the compact embedding behavior without teaching a generic queue
+  component about the route where it appears.
+- Confirmation dialogs must retain focus restoration and explicit destructive
+  wording.
 
 **Verification**
 
-- Add table-driven guard tests for missing auth, wrong collection, inactive
-  actors, active game masters, active players, owners, and non-owner game
-  masters.
-- Preserve the existing unauthorized versus forbidden status distinction and
-  exact public error contracts.
-- Search production code for imports of `internal/platform/auth` and raw
-  `game_masters`/`player_profiles` actor classification outside the new owner.
-- Run focused auth, profiles, games, chat, timer, rulesets, achievements, owner,
-  and diagnostics tests.
+- Test initial loading, empty, error/retry, approval, recovery confirmation,
+  rejection with reason, stale decisions, and realtime refresh.
+- Verify action disabling and loading states during decisions.
+- Run the affected approvals and game-layout frontend tests.
 
-## Issue 12: Restore chat and announcement slice ownership
+## Issue 5: Turn the role reveal into a feature view assembled from neutral disclosure primitives
 
 **Problem and evidence**
 
-The architecture assigns chat policy, rooms, memberships, moderation, and
-announcements to the chat slice, but the games slice currently owns substantial
-chat state and behavior:
+`RoleReveal.svelte` consumes `PlayerGameView`, reads phase and participant
+policy, calls ability activation endpoints, refreshes global game state, emits
+toasts, formats domain knowledge, and owns three full-screen states: unavailable,
+concealed, and revealed. It also combines media hero presentation, private
+disclosure, ability cards, knowledge details, and a fixed action deck.
 
-- `Host/internal/features/games/handlers.go` deletes chat rooms, memberships,
-  messages, attention items, and receipts and builds chat-related projections;
-- `Host/internal/features/games/roster.go` closes chat memberships;
-- `Host/internal/features/games/transitions.go` creates role rooms and
-  memberships and freezes historical access;
-- `Host/internal/features/games/chat_projection.go` contains room projections,
-  announcement storage and routes, attention receipts/media, and audio
-  publication; and
-- `Host/internal/features/games/routes.go` and `activity.go` register and list
-  announcements.
-
-Games also imports the chat feature's pure policy while continuing to implement
-the persistence around that policy. Ownership is therefore split in both
-directions, making cycles and policy drift increasingly likely.
+This is route-level feature behavior presented as a shared component.
 
 **Proposed change**
 
-Move chat-room and membership persistence, chat reader projections,
-announcement/attention behavior, protected announcement media, and
-announcement/audio publication behind narrow application functions owned by
-the chat slice. Move announcement route registration and listing with that
-behavior while preserving every URL and response contract.
+Move the feature flow and ability commands to the owning player feature. Compose
+the presentation from neutral components such as:
 
-Games continues to own lifecycle decisions and aggregate orchestration. When a
-game starts, changes roster state, archives, resets, duplicates, or is deleted,
-it should call explicit chat application operations using the caller's
-`core.App` or transaction. The chat operations must be transaction-composable
-and must not start nested transactions. Pass the relevant ruleset snapshot,
-participants, and lifecycle facts explicitly rather than allowing chat to reach
-back into games.
+- `PrivacyGate` or `RevealGate`;
+- `MediaHero`;
+- `DetailSection`;
+- `ActionCard`;
+- `StatusBadge`; and
+- `ActionDock`.
 
-Keep pure chat policy dependency-neutral where practical. Do not replace direct
-calls with a repository abstraction or internal event bus.
+The feature view should supply the title, description, image, status labels,
+available actions, and detail content. The disclosure primitive should own only
+the interaction of hiding/revealing sensitive on-screen content and its
+accessibility behavior; it must not understand roles, abilities, phases, teams,
+or participants.
+
+Keep application commands outside the visual cards. Ability actions should be
+passed as callbacks with explicit busy/disabled state.
 
 **Arguments and constraints**
 
-- Moving files alone is not completion; games must stop knowing chat collection
-  cleanup, membership, and projection mechanics.
-- Game deletion/reset remains aggregate orchestration, but each affected slice
-  owns how its records are changed or removed.
-- This issue changes the implementation location assumed by issues 7 and 8.
-  Complete it first so those refactors do not entrench the wrong owner.
-- Preserve transaction scope, reader-safe projections, historical access,
-  realtime topics, authorization callbacks, and query limits.
+- Preserve the privacy warning and hide/reveal behavior.
+- Preserve the fixed mobile action placement, safe-area handling, and desktop
+  navigation offset.
+- Do not generalize domain knowledge formatting into the UI layer.
+- Do not split every text block into a component; extract meaningful recurring
+  structures.
 
 **Verification**
 
-- Preserve route and projection tests for GM/player room visibility, sender
-  labels, moderation, historical access, announcements, media, receipts, and
-  audio audiences.
-- Add lifecycle integration tests proving start, roster removal, archive,
-  reset/duplicate, and delete still produce the correct chat state.
-- Search the games package for direct access to `chat_rooms`,
-  `chat_memberships`, `chat_messages`, `attention_items`, and
-  `attention_receipts`; every remaining occurrence must be explicitly justified
-  as aggregate orchestration rather than chat mechanics.
-- Run focused games and chat tests, followed by the browser chat journey.
+- Test unavailable, concealed, revealed, no-media, media, no-abilities, active,
+  finalized, and unavailable-action states.
+- Test reveal, hide, activate, undo, busy, and error behavior.
+- Verify private content is not rendered while concealed.
+- Check phone, desktop, large-text, high-contrast, and reduced-motion behavior.
 
-## Issue 13: Give audit persistence one application owner
+## Issue 6: Rebuild attention presentation as a feature composition
 
 **Problem and evidence**
 
-`Host/internal/platform/audit/audit.go` is not generic platform infrastructure.
-It owns the `game_audit` collection, actor collection classification,
-application actor types and labels, target/detail fields, and request ID
-projection. `Host/internal/features/games/service.go` contains a second,
-substantially equivalent audit writer.
+`AttentionCard.svelte` accepts the application `AttentionItem` projection,
+understands announcement kinds, formats sender copy, resolves protected image
+and audio attachments, displays queue position, and owns acknowledgement
+behavior. It currently handles only one event kind and falls back to version
+copy for everything else.
 
-This violates both platform/domain separation and the one-owner rule. The two
-writers can already drift in actor classification or persisted fields.
+Although its name is generic, its public API and rendering policy are not.
 
 **Proposed change**
 
-Create one narrow application-level audit writer and remove both existing
-implementations. It may depend directly on PocketBase and must accept any
-`core.App` supplied by the caller so the same function works inside a
-transaction. Reuse the actor classification established by issue 11 or accept a
-small typed actor snapshot; do not infer feature actor semantics independently
-in the audit package.
+Keep attention-item interpretation and acknowledgement in the owning feature.
+Compose the visible item from neutral pieces such as:
 
-Feature slices continue to choose their action names, targets, and safe detail
-payloads. The shared writer owns only the durable audit schema and persistence.
-It is not a logging framework, generic repository, or event bus.
+- `QueuePosition`;
+- `Notice` or the existing `Panel` with an appropriate reusable variant;
+- `MediaAttachment`;
+- `ActionGroup`; and
+- the shared button primitive.
 
-**Arguments and constraints**
+The feature view should decide which item kinds exist, sender wording, media
+alternatives, acknowledgement copy, and unsupported-event behavior. The shared
+surface should accept caller-owned content and actions through Svelte 5
+snippets.
 
-- Preserve immutable actor labels and the existing system/game-master/player
-  actor types.
-- Keep private or secret values out of audit detail. Consolidation must not
-  broaden what callers record.
-- Do not silently decide that every audit is best-effort. Issue 14 must classify
-  which audits are part of a database command and which external operations
-  cannot be atomic.
+Before adding a new notice surface, determine whether `Panel` can express the
+established frame with a semantic variant. Do not create another card solely to
+rename the same border, background, padding, and action layout.
 
 **Verification**
 
-- Add tests for system, game-master, and player actor snapshots; game-scoped and
-  host-scoped actions; detail; and request IDs.
-- Prove the writer works with both the base app and a transaction app.
-- Search for all direct `game_audit` record construction and remove duplicate
-  writers.
-- Run focused audit consumers across auth, profiles, rulesets, games, chat,
-  achievements, and owner.
+- Test queue position, text-only, image, audio, busy acknowledgement, and
+  unsupported-item behavior at the feature level.
+- Verify media alternatives and accessible announcement position remain
+  available.
+- Compare the final surface against `Panel` and remove duplicated surface CSS.
 
-## Issue 14: Make multi-record commands atomic
+## Issue 7: Share one presentation-only countdown and keep timer commands outside UI
 
 **Problem and evidence**
 
-Several lifecycle commands split one logical state change across independent
-transactions or saves:
+`TimerControl.svelte` and `TimerDisplay.svelte` independently calculate remaining
+time, update the current time every 250ms, format `MM:SS`, map status to visual
+state, and render a countdown. Both import `TimerProjection`; one calls timer
+command endpoints and the other loads from a game-specific endpoint.
 
-- `abilities.FinalizePhase` starts its own transaction before games or timer
-  applies the related lifecycle change;
-- game transitions and completion can finalize ability choices, then fail to
-  save the new game state;
-- timer completion can save timer state before ability finalization fails;
-- game start creates chat rooms and memberships before saving the lifecycle
-  transition; and
-- database mutations commonly commit before their audit write, then explicitly
-  discard the audit error.
-
-These orderings permit finalized ability choices without the corresponding
-phase/review transition, completed timers without finalized choices, partial
-room setup, and durable changes without their required audit record. They
-contradict the documented command sequence: validate, write dependent state,
-revise, audit, commit, then publish.
+This duplicates timing behavior while coupling both visual components to the
+application API and game model.
 
 **Proposed change**
 
-Inventory multi-record commands and give each one an explicit transaction owner.
-Make ability finalization, chat lifecycle operations from issue 12, and the
-audit writer from issue 13 transaction-composable: they accept the caller's
-`core.App` and do not start a nested transaction. The orchestrating game, timer,
-or feature command opens one short PocketBase transaction containing all
-required database writes, the revision increment, and the required audit
-record. Realtime publication and response projection happen only after commit.
+Create one presentation-only `Countdown` component with a small typed UI model:
+status/tone, total or remaining time, optional end time, accessible label, and a
+compact visual variant only if both existing presentations require it. Give
+time calculation and formatting one owner, either inside this primitive or in a
+small adjacent pure helper used by it.
 
-Provide a standalone transactional wrapper only where an operation is genuinely
-invoked outside a larger command. Name transaction-required functions clearly
-enough that future callers do not accidentally use the base app piecemeal.
+Keep fetching, refreshing on visibility change, and start/pause/resume/adjust/
+stop commands in feature-local controllers. Compose controls from `Countdown`,
+`SelectField`, `Button`, and `ActionGroup`, passing callbacks and busy state.
 
-Explicitly classify audits for operations involving external filesystem or
-process effects, such as backup creation or scheduled restore. Those cannot be
-made atomic with SQLite and require a documented best-effort or compensating
-policy rather than a discarded error by habit.
+Do not combine read-only display and command orchestration into a universal
+timer component. They share countdown presentation, not application lifecycle.
 
 **Arguments and constraints**
 
-- Keep transactions short and free of network, filesystem, realtime, and other
-  blocking external work.
-- Do not publish from inside a transaction.
-- Do not solve composition with nested transactions, a distributed transaction
-  abstraction, or an event bus.
-- Preserve idempotency and existing revision semantics; avoid incrementing the
-  game revision twice when ability finalization joins a larger command.
+- Preserve rounding, completion behavior, status announcements, tabular digits,
+  compact presentation, and 250ms visual updates.
+- Define behavior for an end time crossing zero and for visibility restoration.
+- Keep application status mapping exhaustive outside or at a narrow adapter
+  boundary.
 
 **Verification**
 
-- Add failure-path tests demonstrating that an error after dependent writes
-  rolls back ability choices, game/timer state, chat lifecycle records,
-  revisions, and required audits together.
-- Add success tests asserting one coherent revision and publication only after
-  commit.
-- Review every ignored audit error and document the few intentionally
-  best-effort external-operation cases.
-- Search all `RunInTransaction` callers for nested transaction-composing
-  operations.
-- Run focused games, timer, abilities, chat, and audit tests, followed by
-  `go test ./Host/...`.
+- Unit-test formatting below one minute, above one hour, zero, and completion.
+- Use controlled time in component tests for running and paused states.
+- Preserve command tests for start, pause, resume, adjust, restart, and clear.
+- Search for duplicate `MM:SS` timer formatting after migration.
+
+## Issue 8: Give dialogs and sheets one modal-overlay foundation
+
+**Problem and evidence**
+
+`Dialog.svelte` and `Sheet.svelte` duplicate the difficult parts of modal
+behavior:
+
+- storing and restoring trigger focus;
+- calling `showModal` and `close`;
+- moving focus to the heading;
+- rendering a backdrop and elevated surface;
+- providing a close control; and
+- managing a scrollable body.
+
+Their implementations already differ slightly in close/cancel handling and
+focus restoration, increasing the chance that accessibility fixes apply to only
+one component.
+
+**Proposed change**
+
+Create one internal modal-overlay foundation that owns native dialog lifecycle,
+Escape/cancel behavior, focus entry, focus restoration, backdrop semantics, and
+the close transition. Keep `Dialog` and `Sheet` as clear public presentation
+variants if their geometry and semantics remain meaningfully different.
+
+Use Svelte 5 snippets for header/body/actions where caller-owned structure is
+needed. Keep the public APIs deliberately small. The foundation should expose a
+semantic presentation variant, not arbitrary classes, dimensions, or z-index
+escape hatches.
+
+Factor the shared close control through the icon-button primitive from issue 14.
+
+**Arguments and constraints**
+
+- Preserve the dialog's bounded centered geometry and the sheet's full-phone/
+  side-panel behavior.
+- Preserve native focus trapping and do not introduce a heavy overlay library.
+- Ensure every instance has an accessible name and restores focus exactly once.
+- Layer values and safe-area padding remain tokenized.
+
+**Verification**
+
+- Extend dialog and sheet harness tests for opening, initial focus, Escape,
+  explicit close, external close, and trigger-focus restoration.
+- Verify phone full-screen sheet and desktop side-panel geometry.
+- Test nested application state updates do not reopen or double-close an
+  overlay.
+
+## Issue 9: Consolidate repeated surface-header structure
+
+**Problem and evidence**
+
+`PageHeading.svelte`, `Panel.svelte`, `Dialog.svelte`, and `Sheet.svelte` each
+implement a variation of title, optional description, optional actions, spacing,
+and responsive alignment. Feature components also recreate local section-title
+and card-heading structures.
+
+The repetition is not identical enough to merge the enclosing components, but
+the heading composition and typography must change together.
+
+**Proposed change**
+
+Introduce a small neutral heading composition, for example `ContentHeader` or
+`SurfaceHeader`, with semantic title content, optional eyebrow/description, and
+an optional actions snippet. Provide only established density/alignment
+variants.
+
+Allow callers to retain the correct heading level and enclosing semantic
+element. Do not force every instance to render `h1`, and do not add an arbitrary
+HTML-tag escape hatch. A title snippet or a constrained level prop is acceptable
+if it remains typed and accessible.
+
+Use the shared composition inside page headings, panels, overlay headers, and
+repeated editor section headers where their structure genuinely matches. Keep
+close-button behavior in the overlay rather than in the generic header.
+
+**Arguments and constraints**
+
+- Do not combine `PageHeading`, `Panel`, `Dialog`, and `Sheet` into one component;
+  only consolidate their recurring header structure.
+- Preserve responsive action stacking and existing heading hierarchy.
+- Avoid a styling escape hatch that merely moves scoped CSS into props.
+
+**Verification**
+
+- Test title, description, eyebrow, actions, and heading semantics.
+- Verify page, panel, dialog, sheet, and dense-editor examples at phone and
+  desktop widths.
+- Search for repeated `.section-title`, `.card-heading`, and header action-layout
+  CSS and review remaining specialized instances.
+
+## Issue 10: Establish shared feedback-state primitives
+
+**Problem and evidence**
+
+Loading, empty, error, informational, success, warning, and read-only states are
+implemented repeatedly across `PendingProfileRequests.svelte`, `ChatApp.svelte`,
+`RoleReveal.svelte`, `ErrorNotice.svelte`, and `ToastViewport.svelte`. These
+instances repeat icon/text/action structure, borders, muted copy, live-region
+semantics, and recovery-action layout.
+
+`ErrorNotice.svelte` is narrowly coupled to `FormError`, while
+`ToastViewport.svelte` combines viewport/timer management with the presentation
+of each notification.
+
+**Proposed change**
+
+Create a deliberately small feedback family:
+
+- `Alert` for persistent inline status with semantic tone and optional action;
+- `EmptyState` for explanation and an optional primary action;
+- `LoadingState` for literal progress/status copy; and
+- `Toast` for one transient notification item.
+
+Keep `ToastViewport` responsible for placement, timeout, pause/resume, and store
+coordination, but render each item through `Toast`. Adapt `FormError` to `Alert`
+outside the primitive, passing message and optional technical-detail content.
+
+Do not create a single universal `State` component with dozens of conditional
+props. Empty, loading, alert, and toast states have meaningfully different
+semantics and behavior.
+
+**Arguments and constraints**
+
+- Preserve assertive form-error announcements and polite toast announcements.
+- Success, warning, danger, and information must use icon/shape/text in addition
+  to color.
+- Recovery actions remain accessible buttons with explicit labels.
+- Loading states must not introduce fake skeleton content unless a separate
+  established need appears.
+
+**Verification**
+
+- Test every tone, optional action, optional details, dismissal, timeout,
+  persistence, hover pause, and focus pause.
+- Test empty and loading semantics with and without actions.
+- Search feature styles for repeated `.empty`, `.error-state`, `.status`, and
+  equivalent feedback frames after migration.
+
+## Issue 11: Generalize the direct-message chooser into a selection dialog
+
+**Problem and evidence**
+
+`DirectMessageChooser.svelte` is structurally a generic list-selection dialog:
+it accepts normalized IDs, primary/supporting labels, and avatar text, then
+invokes a selection callback. Its public type, fixed title, class names, and
+empty-state copy nevertheless bake in direct messages and players.
+
+The file therefore exposes a feature in the shared component inventory even
+though almost all of its structure is reusable.
+
+**Proposed change**
+
+Replace it with a neutral `SelectionDialog` or `ChoiceDialog` composed from the
+shared dialog foundation and a selectable-list primitive. Accept caller-owned:
+
+- title and description;
+- normalized entries;
+- accessible item labels;
+- optional supporting content or item snippet;
+- empty-state content; and
+- selection and close callbacks.
+
+Keep participant filtering, avatar text construction, room creation, direct-
+message terminology, and navigation in the admin/player feature adapters.
+
+Do not add a generic item-render escape hatch if a small normalized entry model
+covers every current use. If richer rows are genuinely required, use a typed
+Svelte snippet rather than arbitrary HTML strings or class props.
+
+**Arguments and constraints**
+
+- Preserve native button semantics and keyboard activation for every entry.
+- Preserve stable keyed rendering and dialog focus behavior.
+- Do not merge the admin and player page adapters.
+
+**Verification**
+
+- Test title/description labeling, empty state, item selection, supporting
+  labels, keyboard activation, closing, and focus restoration.
+- Preserve wrapper tests for their distinct filtering, room-opening, and
+  navigation behavior.
+
+## Issue 12: Replace the domain summary card with reusable summary structures
+
+**Problem and evidence**
+
+`GameSummaryCard.svelte` consumes `GameSummary` directly and combines several
+independent presentation structures:
+
+- a dark focal hero with an initial mark;
+- title, metadata, duration, and participant count;
+- a responsive participant record list;
+- outcome status presentation; and
+- achievement chips.
+
+The name and API expose the product domain, while the implementation duplicates
+surface, record-list, status, and tag patterns that can be useful elsewhere.
+
+**Proposed change**
+
+Move summary-model interpretation and participant-name fallback into the owning
+feature. Assemble the output from neutral structures such as:
+
+- `SummaryHero` or an established focal `Panel` variant;
+- `RecordList` and `RecordItem`;
+- `StatusBadge`; and
+- `TagList` or `Tag`.
+
+Prefer extending `Panel` when the hero differs only by an established dark/focal
+variant. Create `SummaryHero` only if its mark-plus-copy structure recurs and is
+meaningfully distinct from a panel header.
+
+The feature should supply formatted duration, counts, outcome labels, tag text,
+and icons. Shared components must not know about games, rulesets, seats,
+participants, outcomes, or achievements.
+
+**Arguments and constraints**
+
+- Preserve compact phone reflow, tabular metadata meaning, and non-color outcome
+  text.
+- Avoid nested ornamental cards and retain one strong focal frame.
+- Do not turn the record list into a table abstraction unless table semantics
+  fit every consumer.
+
+**Verification**
+
+- Test zero/many tags, long names, status tones, metadata wrapping, and phone
+  record reflow.
+- Preserve feature-level summary tests for duration, participant names, seats,
+  outcomes, and achievement labels.
+- Compare surface and tag CSS with existing primitives and remove duplication.
+
+## Issue 13: Add the missing form primitives and rebuild settings/editors from them
+
+**Problem and evidence**
+
+`Field.svelte` centralizes text and textarea behavior, but selects, checkboxes,
+toggle-setting rows, checkbox groups, and inherited yes/no/default controls are
+implemented repeatedly with raw elements and local CSS in:
+
+- `DisplaySettings.svelte`;
+- `RoomPermissionEditor.svelte`;
+- `SelectorEditor.svelte`;
+- `TimerControl.svelte`; and
+- `VisualDefinitionEditor.svelte`.
+
+This duplicates labels, descriptions, target sizes, borders, disabled states,
+and accessible association. Some controls use 40px minimum heights despite the
+44px phone-target rule.
+
+**Proposed change**
+
+Add narrow form primitives for the established structures:
+
+- `SelectField` with label, help, error, required, disabled, value, and a typed
+  option model or options snippet;
+- `CheckboxField` for one boolean choice with supporting description;
+- `CheckboxGroup` or `ChoiceGroup` for a labeled set of related choices; and
+- `ToggleSetting` only if the title-plus-description setting row is materially
+  distinct from `CheckboxField` in more than one use.
+
+For inherited yes/no/default values, use `SelectField` with caller-provided
+options unless tri-state semantics recur independently enough to justify a
+small wrapper.
+
+Do not expand `Field.svelte` into one component controlled by a large `kind`
+switch. Text entry, selection, and checkbox interactions have different markup
+and accessibility behavior and may remain separate primitives.
+
+`DisplaySettings.svelte` may remain a feature composition outside the shared UI
+inventory; it should assemble the generic setting rows while retaining ownership
+of `displayPreferences`.
+
+**Arguments and constraints**
+
+- Each primitive owns label association, descriptions, errors, required and
+  disabled treatment, focus styles, and minimum target size.
+- Option values remain typed; avoid string-casting application unions throughout
+  callers.
+- Preserve native controls and avoid a custom select or switch implementation
+  without a demonstrated need.
+
+**Verification**
+
+- Test labels, help, errors, required, disabled, keyboard interaction, group
+  naming, and bound value updates.
+- Verify every interactive control reaches the 44x44 phone target.
+- Migrate the stated production call sites and search for repeated form-control
+  border, label, help, and disabled CSS.
+- Run frontend accessibility and type checks.
+
+## Issue 14: Add one reusable icon-button primitive
+
+**Problem and evidence**
+
+Dialog close controls, sheet close controls, chat navigation and removal
+controls, new-message actions, and other compact actions use raw `<button>`
+elements with repeated square sizing, centering, transparent backgrounds,
+focus/hover behavior, and accessible-label requirements.
+
+`Button.svelte` is intentionally optimized for labeled actions and is not a
+clear fit for icon-only controls. As a result, every feature recreates the same
+interaction primitive.
+
+**Proposed change**
+
+Add an `IconButton` primitive with a required accessible label, icon snippet,
+button type, disabled/loading state where genuinely needed, click callback, and
+a small set of semantic variants such as default, ghost, and danger. It should
+own target size, focus indicator, hover/pressed/disabled states, and hidden
+loading text when applicable.
+
+Use it for overlay close buttons and matching feature controls. Do not use it
+for actions whose meaning is not universally understood without visible text;
+those should continue using `Button` with an icon and label.
+
+Do not add arbitrary size, color, or class props. Add a compact variant only if
+it still satisfies target-size and accessibility requirements and has multiple
+real consumers.
+
+**Verification**
+
+- Test the required accessible name, click, disabled, loading, and danger
+  states.
+- Verify keyboard focus and 44x44 phone targets.
+- Search for raw icon-only buttons and review each remaining instance.
+
+## Issue 15: Decouple generic-looking components from application state and transport
+
+**Problem and evidence**
+
+Several components have neutral filenames but hidden application dependencies:
+
+- `ProtectedMedia.svelte` imports the application API client and rewrites the
+  hard-coded `/api/app/v1` prefix before loading blobs;
+- `ConnectionBadge.svelte` reads the global connection store directly;
+- `DisplaySettings.svelte` reads and mutates the global display-preference
+  store; and
+- `ErrorNotice.svelte` accepts the application `FormError` model rather than a
+  presentation contract.
+
+These dependencies make otherwise reusable presentation difficult to test and
+cause the shared UI layer to own transport or application state.
+
+**Proposed change**
+
+Separate each application connector from its visual primitive:
+
+- a media presentation component receives a usable URL/blob or an explicit
+  loader callback; endpoint normalization remains in the feature/transport
+  adapter;
+- a generic `StatusBadge` receives label, tone, and optional icon/dot, while a
+  small application connector maps connection state into those props;
+- display settings remain a feature composition over `CheckboxField` or
+  `ToggleSetting`; and
+- form-error mapping happens outside the generic `Alert`, passing message and
+  optional technical-detail content.
+
+For protected media, keep object-URL creation and revocation together in one
+owner if callers still provide blobs. Do not leak authentication tokens into
+ordinary media URLs or weaken protected loading semantics.
+
+Do not ban every store import from every Svelte file. The rule applies to the
+shared UI inventory; feature connectors and application shell components may
+legitimately consume stores.
+
+**Arguments and constraints**
+
+- Preserve protected media authentication, loading, failure states, audio
+  preload/autoplay behavior, and object-URL cleanup.
+- Preserve connection-state wording and non-color status indication.
+- Preserve device-local display preference behavior.
+- Preserve trace-ID disclosure behavior for form errors.
+
+**Verification**
+
+- Test media loading, failure, source changes, cleanup, image alt text, and audio
+  behavior with an injected loader or prepared source.
+- Test status-badge tones independently from the connection store and test the
+  application state mapping separately.
+- Test display-setting persistence through its feature composition.
+- Confirm no shared UI component imports application API clients, feature
+  stores, or application error models after migration.
 
 | Issue | Completed | Reviewed |
 | :---: | :-------: | :------: |
-|   1   |    [x]    |   [x]    |
-|   2   |    [x]    |   [x]    |
-|   3   |    [x]    |   [x]    |
-|   4   |    [x]    |   [x]    |
-|   5   |    [x]    |   [x]    |
-|   6   |    [x]    |   [x]    |
-|   7   |    [x]    |   [x]    |
-|   8   |    [x]    |   [x]    |
-|   9   |    [x]    |   [x]    |
-|  10   |    [x]    |   [x]    |
-|  11   |    [x]    |   [x]    |
-|  12   |    [x]    |   [x]    |
-|  13   |    [x]    |   [x]    |
-|  14   |    [x]    |   [x]    |
+|   1   |    [ ]    |   [ ]    |
+|   2   |    [ ]    |   [ ]    |
+|   3   |    [ ]    |   [ ]    |
+|   4   |    [ ]    |   [ ]    |
+|   5   |    [ ]    |   [ ]    |
+|   6   |    [ ]    |   [ ]    |
+|   7   |    [ ]    |   [ ]    |
+|   8   |    [ ]    |   [ ]    |
+|   9   |    [ ]    |   [ ]    |
+|  10   |    [ ]    |   [ ]    |
+|  11   |    [ ]    |   [ ]    |
+|  12   |    [ ]    |   [ ]    |
+|  13   |    [ ]    |   [ ]    |
+|  14   |    [ ]    |   [ ]    |
+|  15   |    [ ]    |   [ ]    |
 
-When all issues in table are fully completed and reviewed, bump patch version of app.
+When all issues in the table are fully completed and reviewed, bump the patch
+version of the app.
