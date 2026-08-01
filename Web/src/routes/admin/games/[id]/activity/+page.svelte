@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { Activity, CheckCheck, Megaphone } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ActivityItem, AdminAttentionSummary } from '$lib/api/types';
@@ -82,13 +83,12 @@
 	}
 </script>
 
-<header class="page-heading">
-	<p class="eyebrow">Game record</p>
-	<h1>Activity</h1>
-	<p>
-		Announcements and readable game-master actions. Chat and private role information are excluded.
-	</p>
-</header>
+<PageHeading
+	eyebrow="Game record"
+	title="Activity"
+	description="Announcements and readable game-master actions. Chat and private role information are excluded."
+	variant="spacious"
+/>
 
 {#if loading}
 	<p role="status">Loading activity…</p>
@@ -174,24 +174,6 @@
 {/if}
 
 <style>
-	.page-heading {
-		margin-block-end: var(--space-6);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	.activity-grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));

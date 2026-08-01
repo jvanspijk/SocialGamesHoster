@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { UserX, UserCheck } from '@lucide/svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import PendingProfileRequests from '$lib/components/PendingProfileRequests.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
@@ -49,11 +50,12 @@
 	}
 </script>
 
-<header class="page-heading">
-	<p class="eyebrow">Entry and profiles</p>
-	<h1>Approvals</h1>
-	<p>Review new entry requests and manage approved player profiles.</p>
-</header>
+<PageHeading
+	eyebrow="Entry and profiles"
+	title="Approvals"
+	description="Review new entry requests and manage approved player profiles."
+	variant="spacious"
+/>
 
 <PendingProfileRequests onapproved={loadProfiles} />
 
@@ -83,24 +85,6 @@
 {/if}
 
 <style>
-	.page-heading {
-		margin-block-end: var(--space-6);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	section {
 		margin-block-end: var(--space-7);
 	}

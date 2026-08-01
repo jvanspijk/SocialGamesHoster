@@ -17,6 +17,7 @@
 	import DisplaySettings from '$lib/components/DisplaySettings.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { auth } from '$lib/state/auth.svelte';
@@ -163,10 +164,7 @@
 	}
 </script>
 
-<header class="page-heading">
-	<p class="eyebrow">Host configuration</p>
-	<h1>Settings</h1>
-</header>
+<PageHeading eyebrow="Host configuration" title="Settings" />
 
 <div class="settings-layout">
 	<nav aria-label="Settings sections">
@@ -380,24 +378,6 @@
 </Dialog>
 
 <style>
-	.page-heading {
-		margin-block-end: var(--space-5);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	.settings-layout {
 		display: grid;
 		grid-template-columns: 13rem minmax(0, 1fr);

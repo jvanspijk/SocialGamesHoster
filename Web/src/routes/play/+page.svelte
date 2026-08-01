@@ -111,15 +111,6 @@
 		overflow-wrap: anywhere;
 	}
 
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
 	.timer-wrap {
 		display: flex;
 		align-items: center;

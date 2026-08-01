@@ -15,6 +15,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Participant } from '$lib/api/types';
@@ -219,34 +220,35 @@
 </script>
 
 {#if view}
-	<header class="page-heading">
-		<div>
-			<p class="eyebrow">Roster and assignments</p>
-			<h1>Players</h1>
-			<p>
-				{activePlayers.length} active players · {activePlayers.filter((player) => player.roleKey)
-					.length} roles assigned
-			</p>
-		</div>
-		<div class="role-visibility">
-			<div>
-				{#if view.game.rolesVisible}<Eye size={20} />{:else}<EyeOff size={20} />{/if}
-				<span>
-					<strong>{view.game.rolesVisible ? 'Roles available' : 'Roles hidden'}</strong>
-					<small
-						>{assignmentsReady ? 'Assignments ready' : 'Assign every active player first'}</small
+	<PageHeading
+		eyebrow="Roster and assignments"
+		title="Players"
+		description={`${activePlayers.length} active players · ${activePlayers.filter((player) => player.roleKey).length} roles assigned`}
+		variant="compact"
+	>
+		{#snippet actions()}
+			<div class="role-visibility">
+				<div>
+					{#if view.game.rolesVisible}<Eye size={20} />{:else}<EyeOff size={20} />{/if}
+					<span>
+						<strong>{view.game.rolesVisible ? 'Roles available' : 'Roles hidden'}</strong>
+						<small
+							>{assignmentsReady ? 'Assignments ready' : 'Assign every active player first'}</small
+						>
+					</span>
+				</div>
+				{#if view.game.rolesVisible}
+					<Button variant="secondary" onclick={() => (hideRoleConfirmOpen = true)}
+						>Hide roles</Button
 					>
-				</span>
+				{:else}
+					<Button disabled={!assignmentsReady} onclick={() => (roleConfirmOpen = true)}
+						>Make roles available</Button
+					>
+				{/if}
 			</div>
-			{#if view.game.rolesVisible}
-				<Button variant="secondary" onclick={() => (hideRoleConfirmOpen = true)}>Hide roles</Button>
-			{:else}
-				<Button disabled={!assignmentsReady} onclick={() => (roleConfirmOpen = true)}
-					>Make roles available</Button
-				>
-			{/if}
-		</div>
-	</header>
+		{/snippet}
+	</PageHeading>
 
 	<div class="assignment-actions">
 		<Button variant="secondary" loading={busy} onclick={randomize}
@@ -428,28 +430,6 @@
 </Dialog>
 
 <style>
-	.page-heading {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-4);
-		margin-block-end: var(--space-4);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	.role-visibility {
 		display: flex;
 		align-items: center;
@@ -659,11 +639,6 @@
 	}
 
 	@media (max-width: 63.99rem) {
-		.page-heading {
-			align-items: stretch;
-			flex-direction: column;
-		}
-
 		.role-visibility {
 			justify-content: space-between;
 		}

@@ -6,6 +6,7 @@
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import ProtectedMedia from '$lib/components/ProtectedMedia.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
@@ -82,21 +83,23 @@
 </script>
 
 <div class="account-page">
-	<header class="account-heading">
-		<div>
-			<p class="eyebrow">Player account</p>
-			<h1>Profile</h1>
-			<p>Your identity and game history stay outside the current game.</p>
-		</div>
-		<nav aria-label="Account pages">
-			{#if gameState.player}
-				<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a>
-			{:else}
-				<a href={resolve('/')}><ArrowLeft size={18} /> Return to join page</a>
-			{/if}
-			<a href={resolve('/play/settings')}><Settings size={18} /> Settings</a>
-		</nav>
-	</header>
+	<PageHeading
+		eyebrow="Player account"
+		title="Profile"
+		description="Your identity and game history stay outside the current game."
+		variant="flush"
+	>
+		{#snippet actions()}
+			<nav aria-label="Account pages">
+				{#if gameState.player}
+					<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a>
+				{:else}
+					<a href={resolve('/')}><ArrowLeft size={18} /> Return to join page</a>
+				{/if}
+				<a href={resolve('/play/settings')}><Settings size={18} /> Settings</a>
+			</nav>
+		{/snippet}
+	</PageHeading>
 
 	{#if profile}
 		<Panel title="Personal details" variant="focal">
@@ -176,34 +179,13 @@
 		padding: clamp(var(--space-4), 5vw, var(--space-6));
 	}
 
-	.account-heading {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-4);
-	}
-
-	.account-heading h1,
-	.account-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
-	.account-heading nav {
+	nav {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
 
-	.account-heading a {
+	nav a {
 		display: inline-flex;
 		min-height: var(--target-size);
 		align-items: center;
@@ -290,12 +272,5 @@
 
 	.history > article > strong {
 		text-transform: capitalize;
-	}
-
-	@media (max-width: 39.99rem) {
-		.account-heading {
-			align-items: stretch;
-			flex-direction: column;
-		}
 	}
 </style>

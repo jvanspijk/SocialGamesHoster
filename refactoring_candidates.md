@@ -723,7 +723,7 @@ policy rather than a discarded error by habit.
 |   2   |    [x]    |   [x]    |
 |   3   |    [x]    |   [x]    |
 |   4   |    [x]    |   [x]    |
-|   5   |    [ ]    |   [ ]    |
+|   5   |    [x]    |   [x]    |
 |   6   |    [ ]    |   [ ]    |
 |   7   |    [x]    |   [x]    |
 |   8   |    [ ]    |   [ ]    |

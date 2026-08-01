@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { Archive, CheckCircle2, FileUp, Plus, ScrollText, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { RulesetSummary } from '$lib/api/types';
@@ -49,26 +50,30 @@
 	}
 </script>
 
-<header class="page-heading">
-	<div>
-		<p class="eyebrow">Library</p>
-		<h1>Rulesets</h1>
-		<p>Only ready rulesets can be used for new games. Invalid work remains editable.</p>
-	</div>
-	<div class="heading-actions">
-		<input
-			class="sr-only"
-			bind:this={importInput}
-			type="file"
-			accept=".sghrules,application/vnd.socialgameshoster.ruleset+zip"
-			onchange={importRuleset}
-		/>
-		<Button variant="secondary" loading={importing} onclick={() => importInput.click()}>
-			<FileUp size={18} /> Import
-		</Button>
-		<a class="primary-link" href={resolve('/admin/rulesets/new')}><Plus size={18} /> New ruleset</a>
-	</div>
-</header>
+<PageHeading
+	eyebrow="Library"
+	title="Rulesets"
+	description="Only ready rulesets can be used for new games. Invalid work remains editable."
+	variant="spacious"
+>
+	{#snippet actions()}
+		<div class="heading-actions">
+			<input
+				class="sr-only"
+				bind:this={importInput}
+				type="file"
+				accept=".sghrules,application/vnd.socialgameshoster.ruleset+zip"
+				onchange={importRuleset}
+			/>
+			<Button variant="secondary" loading={importing} onclick={() => importInput.click()}>
+				<FileUp size={18} /> Import
+			</Button>
+			<a class="primary-link" href={resolve('/admin/rulesets/new')}
+				><Plus size={18} /> New ruleset</a
+			>
+		</div>
+	{/snippet}
+</PageHeading>
 
 {#if loading}
 	<p role="status">Loading rulesets…</p>
@@ -106,28 +111,6 @@
 {/if}
 
 <style>
-	.page-heading {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-4);
-		margin-block-end: var(--space-6);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	.heading-actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -242,11 +225,6 @@
 	}
 
 	@media (max-width: 47.99rem) {
-		.page-heading {
-			align-items: stretch;
-			flex-direction: column;
-		}
-
 		.heading-actions {
 			display: grid;
 			grid-template-columns: 1fr 1fr;

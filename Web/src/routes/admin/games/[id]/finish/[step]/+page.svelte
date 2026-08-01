@@ -370,15 +370,6 @@
 		margin: 0;
 	}
 
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	nav {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);

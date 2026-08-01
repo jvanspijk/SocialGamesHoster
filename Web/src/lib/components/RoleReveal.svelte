@@ -209,15 +209,6 @@
 		margin-block-end: var(--space-4);
 	}
 
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
 	.conceal-actions {
 		display: grid;
 		width: min(100%, 20rem);

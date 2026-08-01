@@ -8,6 +8,7 @@
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
@@ -113,14 +114,17 @@
 	}
 </script>
 
-<header class="page-heading">
-	<div>
-		<p class="eyebrow">Management</p>
-		<h1>Games</h1>
-		<p>Create a game, resume play, or revisit a finished game.</p>
-	</div>
-	<Button onclick={() => (createOpen = true)}><Plus size={18} /> New game</Button>
-</header>
+<PageHeading
+	eyebrow="Management"
+	title="Games"
+	description="Create a game, resume play, or revisit a finished game."
+>
+	{#snippet actions()}
+		<div class="game-heading-actions">
+			<Button onclick={() => (createOpen = true)}><Plus size={18} /> New game</Button>
+		</div>
+	{/snippet}
+</PageHeading>
 
 <label class="archive-filter">
 	<input type="checkbox" bind:checked={showArchived} />
@@ -240,34 +244,19 @@
 </Dialog>
 
 <style>
-	.page-heading {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-4);
-		margin-block-end: var(--space-5);
-	}
-
-	.page-heading h1,
-	.page-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
 	.archive-filter {
 		display: inline-flex;
 		min-height: var(--target-size);
 		align-items: center;
 		gap: var(--space-2);
 		margin-block-end: var(--space-4);
+	}
+
+	@media (max-width: 47.99rem) {
+		.game-heading-actions,
+		.game-heading-actions :global(button) {
+			width: 100%;
+		}
 	}
 
 	.game-list {
@@ -389,15 +378,6 @@
 	}
 
 	@media (max-width: 47.99rem) {
-		.page-heading {
-			align-items: stretch;
-			flex-direction: column;
-		}
-
-		.page-heading :global(button) {
-			width: 100%;
-		}
-
 		article {
 			grid-template-columns: auto minmax(0, 1fr);
 			align-items: start;

@@ -5,6 +5,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import DisplaySettings from '$lib/components/DisplaySettings.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
 	import { gameState } from '$lib/state/game.svelte';
@@ -22,18 +23,20 @@
 </script>
 
 <div class="account-page">
-	<header class="account-heading">
-		<div>
-			<p class="eyebrow">Player account</p>
-			<h1>Settings</h1>
-			<p>Accessibility and device preferences apply across every game.</p>
-		</div>
-		<nav aria-label="Account pages">
-			{#if gameState.player}<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a
-				>{/if}
-			<a href={resolve('/play/profile')}><UserRound size={18} /> Profile</a>
-		</nav>
-	</header>
+	<PageHeading
+		eyebrow="Player account"
+		title="Settings"
+		description="Accessibility and device preferences apply across every game."
+		variant="flush"
+	>
+		{#snippet actions()}
+			<nav aria-label="Account pages">
+				{#if gameState.player}<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a
+					>{/if}
+				<a href={resolve('/play/profile')}><UserRound size={18} /> Profile</a>
+			</nav>
+		{/snippet}
+	</PageHeading>
 
 	<Panel title="Sound">
 		<button class="setting-row" type="button" onclick={() => sound.toggle()}>
@@ -70,34 +73,13 @@
 		padding: clamp(var(--space-4), 5vw, var(--space-6));
 	}
 
-	.account-heading {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-4);
-	}
-
-	.account-heading h1,
-	.account-heading p {
-		margin: 0;
-	}
-
-	.eyebrow {
-		color: var(--crimson-dark);
-		font-family: var(--font-display);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
-	.account-heading nav {
+	nav {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
 
-	.account-heading a {
+	nav a {
 		display: inline-flex;
 		min-height: var(--target-size);
 		align-items: center;
@@ -137,12 +119,5 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-	}
-
-	@media (max-width: 39.99rem) {
-		.account-heading {
-			align-items: stretch;
-			flex-direction: column;
-		}
 	}
 </style>
