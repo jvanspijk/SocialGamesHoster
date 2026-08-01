@@ -13,7 +13,9 @@
 		Users
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 	import { api, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, MessageSummary, RealtimeEnvelope, Room } from '$lib/api/types';
@@ -345,18 +347,19 @@
 		</label>
 		<div class="conversation-list">
 			{#if loadingRooms}
-				<p class="rail-status" role="status">Loading conversations…</p>
+				<div class="rail-status"><LoadingState label="Loading conversations…" /></div>
 			{:else if filteredRooms.length === 0}
 				<div class="rail-empty">
-					<MessageCircle size={30} />
-					<h2>No conversations</h2>
-					<p>
-						{search
+					<EmptyState
+						title="No conversations"
+						description={search
 							? 'No conversations match your search.'
 							: 'Conversations appear when chat is available.'}
-					</p>
-					{#if newMessage && !search}<button type="button" onclick={newMessage}>New message</button
-						>{/if}
+						actionLabel={newMessage && !search ? 'New message' : undefined}
+						onaction={newMessage && !search ? newMessage : undefined}
+					>
+						{#snippet icon()}<MessageCircle size={30} />{/snippet}
+					</EmptyState>
 				</div>
 			{:else}
 				{#each filteredRooms as room (room.id)}
@@ -420,16 +423,17 @@
 					<button class="older" type="button" onclick={loadEarlier}>Load earlier messages</button>
 				{/if}
 				{#if loadingMessages}
-					<p class="message-status" role="status">Loading messages…</p>
+					<div class="message-status"><LoadingState label="Loading messages…" /></div>
 				{:else if messages.length === 0}
 					<div class="message-empty">
-						<MessageCircle size={36} strokeWidth={1.4} />
-						<h3>No messages yet</h3>
-						<p>
-							{selectedRoom.sendable && !archived
+						<EmptyState
+							title="No messages yet"
+							description={selectedRoom.sendable && !archived
 								? 'Start the conversation.'
 								: 'This conversation is read-only.'}
-						</p>
+						>
+							{#snippet icon()}<MessageCircle size={36} strokeWidth={1.4} />{/snippet}
+						</EmptyState>
 					</div>
 				{:else}
 					{#each messages as message, index (message.id)}
@@ -496,9 +500,12 @@
 			{/if}
 		{:else}
 			<div class="conversation-placeholder">
-				<MessageCircle size={48} strokeWidth={1.3} />
-				<h2>Select a conversation</h2>
-				<p>Choose a conversation from the list.</p>
+				<EmptyState
+					title="Select a conversation"
+					description="Choose a conversation from the list."
+				>
+					{#snippet icon()}<MessageCircle size={48} strokeWidth={1.3} />{/snippet}
+				</EmptyState>
 			</div>
 		{/if}
 	</section>
@@ -676,19 +683,13 @@
 		text-align: center;
 	}
 
-	.rail-empty h2 {
+	.rail-empty :global(.empty-state) {
 		color: var(--paper-light);
-		font-size: 1rem;
 	}
 
-	.rail-empty button {
-		min-height: var(--target-size);
-		border: 0;
-		background: transparent;
-		color: var(--gold-light);
-		cursor: pointer;
-		font-family: var(--font-display);
-		font-weight: 700;
+	.rail-empty :global(.empty-state p),
+	.rail-empty :global(.empty-state .icon) {
+		color: var(--paper-muted);
 	}
 
 	.conversation {
@@ -903,13 +904,6 @@
 
 	.conversation-placeholder {
 		grid-row: 1 / -1;
-	}
-
-	.conversation-placeholder h2,
-	.conversation-placeholder p,
-	.message-empty h3,
-	.message-empty p {
-		margin: 0;
 	}
 
 	.message-status {

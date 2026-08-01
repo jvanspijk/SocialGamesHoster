@@ -9,6 +9,7 @@
 
 <script lang="ts">
 	import Dialog from '$lib/components/Dialog.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 
 	let {
 		open,
@@ -37,7 +38,10 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="empty-state">No players are available for a direct conversation.</p>
+		<EmptyState
+			title="No players available"
+			description="No players are available for a direct conversation."
+		/>
 	{/if}
 </Dialog>
 
@@ -73,12 +77,7 @@
 		color: var(--gold-light);
 	}
 
-	.player-list small,
-	.empty-state {
+	.player-list small {
 		color: var(--ink-soft);
-	}
-
-	.empty-state {
-		margin: 0;
 	}
 </style>

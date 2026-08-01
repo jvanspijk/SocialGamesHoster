@@ -1,10 +1,18 @@
 <script lang="ts">
-	import { CircleCheck, Info, TriangleAlert, X } from '@lucide/svelte';
+	import { onDestroy } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import IconButton from '$lib/components/IconButton.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { toasts, type ToastMessage } from '$lib/state/toasts.svelte';
 
-	const timers = new SvelteMap<string, { started: number; remaining: number; handle: number }>();
+	type Timer = {
+		started: number;
+		remaining: number;
+		handle: number;
+		hovered: boolean;
+		focused: boolean;
+	};
+
+	const timers = new SvelteMap<string, Timer>();
 
 	$effect(() => {
 		for (const toast of toasts.items) {
@@ -18,29 +26,57 @@
 		}
 	});
 
+	onDestroy(() => {
+		for (const timer of timers.values()) window.clearTimeout(timer.handle);
+	});
+
 	function duration(toast: ToastMessage) {
 		return toast.tone === 'error' ? 8_000 : 4_000;
 	}
 
 	function start(toast: ToastMessage, remaining = duration(toast)) {
+		const previous = timers.get(toast.id);
+		if (previous) window.clearTimeout(previous.handle);
 		const handle = window.setTimeout(() => {
 			timers.delete(toast.id);
 			toasts.dismiss(toast.id);
 		}, remaining);
-		timers.set(toast.id, { started: Date.now(), remaining, handle });
+		timers.set(toast.id, {
+			started: Date.now(),
+			remaining,
+			handle,
+			hovered: previous?.hovered ?? false,
+			focused: previous?.focused ?? false
+		});
 	}
 
-	function pause(toast: ToastMessage) {
+	function pause(toast: ToastMessage, interaction: 'hovered' | 'focused') {
 		const timer = timers.get(toast.id);
 		if (!timer) return;
+		if (timer[interaction]) return;
+		const alreadyPaused = timer.hovered || timer.focused;
+		timer[interaction] = true;
+		if (alreadyPaused) return;
 		window.clearTimeout(timer.handle);
 		timer.remaining = Math.max(0, timer.remaining - (Date.now() - timer.started));
 	}
 
-	function resume(toast: ToastMessage) {
+	function resume(toast: ToastMessage, interaction: 'hovered' | 'focused') {
 		const timer = timers.get(toast.id);
-		if (!timer || toast.persistent || timer.remaining <= 0) return;
+		if (!timer || !timer[interaction]) return;
+		timer[interaction] = false;
+		if (timer.hovered || timer.focused || toast.persistent || timer.remaining <= 0) return;
 		start(toast, timer.remaining);
+	}
+
+	function focusOut(toast: ToastMessage, event: FocusEvent) {
+		if (
+			event.currentTarget instanceof HTMLElement &&
+			event.relatedTarget instanceof Node &&
+			event.currentTarget.contains(event.relatedTarget)
+		)
+			return;
+		resume(toast, 'focused');
 	}
 
 	function runAction(toast: ToastMessage) {
@@ -49,39 +85,19 @@
 	}
 </script>
 
-<section class="toast-viewport" aria-label="Notifications" aria-live="polite">
+<section class="toast-viewport" aria-label="Notifications">
 	{#each toasts.items as toast (toast.id)}
-		<article
-			class:error={toast.tone === 'error'}
-			class:success={toast.tone === 'success'}
-			onmouseenter={() => pause(toast)}
-			onmouseleave={() => resume(toast)}
-			onfocusin={() => pause(toast)}
-			onfocusout={() => resume(toast)}
-		>
-			<span class="status-icon" aria-hidden="true">
-				{#if toast.tone === 'error'}
-					<TriangleAlert size={20} />
-				{:else if toast.tone === 'success'}
-					<CircleCheck size={20} />
-				{:else}
-					<Info size={20} />
-				{/if}
-			</span>
-			<p>{toast.message}</p>
-			{#if toast.actionLabel}
-				<button class="action" type="button" onclick={() => runAction(toast)}
-					>{toast.actionLabel}</button
-				>
-			{/if}
-			<IconButton
-				label="Dismiss notification"
-				variant="ghost"
-				onclick={() => toasts.dismiss(toast.id)}
-			>
-				{#snippet icon()}<X size={18} />{/snippet}
-			</IconButton>
-		</article>
+		<Toast
+			tone={toast.tone}
+			message={toast.message}
+			actionLabel={toast.actionLabel}
+			onaction={() => runAction(toast)}
+			ondismiss={() => toasts.dismiss(toast.id)}
+			onmouseenter={() => pause(toast, 'hovered')}
+			onmouseleave={() => resume(toast, 'hovered')}
+			onfocusin={() => pause(toast, 'focused')}
+			onfocusout={(event) => focusOut(toast, event)}
+		/>
 	{/each}
 </section>
 
@@ -97,42 +113,7 @@
 		pointer-events: none;
 	}
 
-	article {
-		display: grid;
-		grid-template-columns: auto 1fr auto auto;
-		align-items: center;
-		gap: var(--space-2);
-		border: 1px solid var(--information);
-		background: var(--ink);
-		box-shadow: var(--shadow);
-		color: var(--paper-light);
-		padding: var(--space-3);
+	:global(.toast-viewport > article) {
 		pointer-events: auto;
-	}
-
-	article.error {
-		border-color: var(--danger);
-	}
-
-	article.success {
-		border-color: var(--success);
-	}
-
-	p {
-		margin: 0;
-	}
-
-	button {
-		min-height: var(--target-size);
-		border: 0;
-		background: transparent;
-		color: inherit;
-		cursor: pointer;
-	}
-
-	.action {
-		color: var(--gold-light);
-		font-family: var(--font-display);
-		font-weight: 700;
 	}
 </style>

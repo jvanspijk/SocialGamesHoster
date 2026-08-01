@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Check, Clock3, RefreshCw, UserCheck, X } from '@lucide/svelte';
+	import { Check, Clock3, UserCheck, X } from '@lucide/svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ProfileRequest } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	let {
 		compact = false,
@@ -119,25 +122,19 @@
 
 {#snippet content()}
 	{#if loading}
-		<p class="status" role="status">Loading requests…</p>
+		<LoadingState label="Loading requests…" />
 	{:else if loadError}
-		<div class="error-state" role="alert">
-			<div>
-				<h3>Requests could not be loaded</h3>
-				<p>{loadError}</p>
-			</div>
-			<Button variant="secondary" onclick={() => void load()}>
-				<RefreshCw size={17} /> Retry
-			</Button>
-		</div>
+		<Alert
+			tone="error"
+			title="Requests could not be loaded"
+			message={loadError}
+			actionLabel="Retry"
+			onaction={() => void load()}
+		/>
 	{:else if requests.length === 0}
-		<div class="empty">
-			<UserCheck size={34} strokeWidth={1.5} />
-			<div>
-				<h3>No pending requests</h3>
-				<p>New profile requests will appear here.</p>
-			</div>
-		</div>
+		<EmptyState title="No pending requests" description="New profile requests will appear here.">
+			{#snippet icon()}<UserCheck size={34} strokeWidth={1.5} />{/snippet}
+		</EmptyState>
 	{:else}
 		<div class="request-list">
 			{#each requests as request (request.id)}
@@ -269,9 +266,7 @@
 		font-size: 0.78rem;
 	}
 
-	.request-list article,
-	.empty,
-	.error-state {
+	.request-list article {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
@@ -325,10 +320,7 @@
 		color: var(--warning-ink);
 	}
 
-	article p,
-	.empty p,
-	.error-state p,
-	.status {
+	article p {
 		color: var(--ink-soft);
 	}
 
@@ -343,27 +335,12 @@
 		gap: var(--space-2);
 	}
 
-	.empty {
-		grid-template-columns: auto 1fr;
-	}
-
-	.error-state {
-		border: 1px solid var(--danger);
-		padding-inline: var(--space-3);
-	}
-
-	.status {
-		padding-block: var(--space-3);
-	}
-
 	@media (max-width: 47.99rem) {
-		.request-list article,
-		.error-state {
+		.request-list article {
 			grid-template-columns: auto minmax(0, 1fr);
 		}
 
-		.actions,
-		.error-state > :global(button) {
+		.actions {
 			grid-column: 1 / -1;
 		}
 
