@@ -2,9 +2,11 @@ package games
 
 import (
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -18,11 +20,18 @@ func listActivity(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	offset, err := decodeOffset(event.Request.URL.Query().Get("cursor"))
-	if err != nil {
-		return httpx.WriteError(event, result.Invalid("activity.invalid_cursor", "The activity cursor is invalid.", nil))
+	filter := "game = {:game}"
+	params := dbx.Params{"game": game.Id}
+	if cursor := event.Request.URL.Query().Get("cursor"); cursor != "" {
+		created, id, err := decodeActivityCursor(cursor)
+		if err != nil {
+			return httpx.WriteError(event, result.Invalid("activity.invalid_cursor", "The activity cursor is invalid.", nil))
+		}
+		filter += " && (created < {:created} || (created = {:created} && id < {:id}))"
+		params["created"] = created
+		params["id"] = id
 	}
-	records, err := event.App.FindRecordsByFilter("game_audit", "game = {:game}", "-created,-id", 51, offset, dbx.Params{"game": game.Id})
+	records, err := event.App.FindRecordsByFilter("game_audit", filter, "-created,-id", 51, 0, params)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -41,10 +50,33 @@ func listActivity(event *core.RequestEvent) error {
 		})
 	}
 	nextCursor := ""
-	if hasMore {
-		nextCursor = encodeOffset(offset + 50)
+	if hasMore && len(records) > 0 {
+		last := records[len(records)-1]
+		nextCursor = encodeActivityCursor(last.GetDateTime("created").Time().UTC(), last.Id)
 	}
 	return event.JSON(http.StatusOK, map[string]any{"items": items, "nextCursor": nextCursor})
+}
+
+type activityCursor struct {
+	Created time.Time `json:"created"`
+	ID      string    `json:"id"`
+}
+
+func encodeActivityCursor(created time.Time, id string) string {
+	data, _ := json.Marshal(activityCursor{Created: created, ID: id})
+	return base64.RawURLEncoding.EncodeToString(data)
+}
+
+func decodeActivityCursor(value string) (time.Time, string, error) {
+	data, err := base64.RawURLEncoding.DecodeString(value)
+	if err != nil {
+		return time.Time{}, "", err
+	}
+	var cursor activityCursor
+	if err := json.Unmarshal(data, &cursor); err != nil || cursor.Created.IsZero() || cursor.ID == "" {
+		return time.Time{}, "", fmt.Errorf("invalid cursor")
+	}
+	return cursor.Created, cursor.ID, nil
 }
 
 func activityLabel(actor, action string) string {
@@ -73,23 +105,4 @@ func activityLabel(actor, action string) string {
 		return ""
 	}
 	return actor + " " + phrase
-}
-
-func encodeOffset(offset int) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(strconv.Itoa(offset)))
-}
-
-func decodeOffset(value string) (int, error) {
-	if value == "" {
-		return 0, nil
-	}
-	decoded, err := base64.RawURLEncoding.DecodeString(value)
-	if err != nil {
-		return 0, err
-	}
-	offset, err := strconv.Atoi(string(decoded))
-	if err != nil || offset < 0 {
-		return 0, strconv.ErrSyntax
-	}
-	return offset, nil
 }
