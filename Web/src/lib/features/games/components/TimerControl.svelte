@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { CircleStop, Pause, Play, Plus, RotateCcw } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import SelectField from '$lib/components/SelectField.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { TimerProjection } from '$lib/api/types';
@@ -20,6 +21,14 @@
 	let durationMinutes = $state(5);
 	let now = $state(Date.now());
 	let busy = $state(false);
+	const durationOptions = [
+		{ value: 1, label: '1 minute' },
+		{ value: 3, label: '3 minutes' },
+		{ value: 5, label: '5 minutes' },
+		{ value: 10, label: '10 minutes' },
+		{ value: 15, label: '15 minutes' },
+		{ value: 30, label: '30 minutes' }
+	];
 
 	onMount(() => {
 		const interval = window.setInterval(() => (now = Date.now()), 250);
@@ -77,17 +86,13 @@
 
 	{#if timer.status === 'inactive'}
 		<div class="timer-start">
-			<label>
-				<span>Duration</span>
-				<select bind:value={durationMinutes}>
-					<option value={1}>1 minute</option>
-					<option value={3}>3 minutes</option>
-					<option value={5}>5 minutes</option>
-					<option value={10}>10 minutes</option>
-					<option value={15}>15 minutes</option>
-					<option value={30}>30 minutes</option>
-				</select>
-			</label>
+			<SelectField
+				label="Duration"
+				name="timer-duration"
+				bind:value={durationMinutes}
+				options={durationOptions}
+				disabled={busy}
+			/>
 			<Button
 				loading={busy}
 				onclick={() => command('start', { durationMs: durationMinutes * 60_000 })}
@@ -179,26 +184,6 @@
 		gap: var(--space-2);
 	}
 
-	label {
-		display: grid;
-		gap: var(--space-1);
-	}
-
-	label span {
-		font-family: var(--font-display);
-		font-size: 0.68rem;
-		font-weight: 700;
-		text-transform: uppercase;
-	}
-
-	select {
-		min-height: var(--target-size);
-		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
-		padding: var(--space-2);
-	}
-
 	@media (max-width: 47.99rem) {
 		section {
 			grid-template-columns: 1fr;
@@ -214,7 +199,7 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
-		.timer-start label {
+		.timer-start :global(label) {
 			grid-column: 1 / -1;
 		}
 

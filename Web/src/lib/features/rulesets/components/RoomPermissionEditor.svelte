@@ -4,6 +4,8 @@
 		RulesetRoomPermission,
 		RulesetSenderDisplay
 	} from '$lib/api/types';
+	import CheckboxField from '$lib/components/CheckboxField.svelte';
+	import SelectField, { type SelectOption } from '$lib/components/SelectField.svelte';
 
 	let {
 		policy = $bindable(),
@@ -22,18 +24,31 @@
 		{ key: 'sendable', text: 'Players can send messages' },
 		{ key: 'gameMasterMaySend', text: 'Game masters can send messages' }
 	];
+	const inheritedOptions: SelectOption<'inherit' | 'yes' | 'no'>[] = [
+		{ value: 'inherit', label: 'Use normal setting' },
+		{ value: 'yes', label: 'Yes' },
+		{ value: 'no', label: 'No' }
+	];
+	const senderOptions: SelectOption<RulesetSenderDisplay | 'inherit'>[] = [
+		{ value: 'inherit', label: 'Use normal setting' },
+		{ value: 'profile_name', label: 'Profile name' },
+		{ value: 'game_alias', label: 'Game alias' },
+		{ value: 'seat_number', label: 'Seat number' },
+		{ value: 'role_label', label: 'Role name' },
+		{ value: 'team_label', label: 'Team name' }
+	];
 
 	function state(key: (typeof labels)[number]['key']) {
 		const value = policy[key];
 		return value === undefined ? 'inherit' : value ? 'yes' : 'no';
 	}
 
-	function setState(key: (typeof labels)[number]['key'], value: string) {
+	function setState(key: (typeof labels)[number]['key'], value: 'inherit' | 'yes' | 'no') {
 		if (value === 'inherit') delete policy[key];
 		else policy[key] = value === 'yes';
 	}
 
-	function setSender(value: string) {
+	function setSender(value: RulesetSenderDisplay | 'inherit') {
 		if (value === 'inherit') delete policy.senderDisplay;
 		else policy.senderDisplay = value as RulesetSenderDisplay;
 	}
@@ -41,36 +56,30 @@
 
 <div class="permission">
 	{#each labels as option (option.key)}
-		<label>
-			<span>{option.text}</span>
-			{#if partial}
-				<select
-					value={state(option.key)}
-					onchange={(event) => setState(option.key, event.currentTarget.value)}
-				>
-					<option value="inherit">Use normal setting</option>
-					<option value="yes">Yes</option>
-					<option value="no">No</option>
-				</select>
-			{:else}
-				<input type="checkbox" bind:checked={policy[option.key]} />
-			{/if}
-		</label>
+		{#if partial}
+			<SelectField
+				label={option.text}
+				name={`permission-${option.key}`}
+				value={state(option.key)}
+				options={inheritedOptions}
+				onchange={(value) => setState(option.key, value)}
+			/>
+		{:else}
+			<CheckboxField
+				label={option.text}
+				name={`permission-${option.key}`}
+				checked={policy[option.key] ?? false}
+				onchange={(checked) => (policy[option.key] = checked)}
+			/>
+		{/if}
 	{/each}
-	<label>
-		<span>Show senders as</span>
-		<select
-			value={policy.senderDisplay ?? (partial ? 'inherit' : 'profile_name')}
-			onchange={(event) => setSender(event.currentTarget.value)}
-		>
-			{#if partial}<option value="inherit">Use normal setting</option>{/if}
-			<option value="profile_name">Profile name</option>
-			<option value="game_alias">Game alias</option>
-			<option value="seat_number">Seat number</option>
-			<option value="role_label">Role name</option>
-			<option value="team_label">Team name</option>
-		</select>
-	</label>
+	<SelectField
+		label="Show senders as"
+		name="permission-sender-display"
+		value={policy.senderDisplay ?? (partial ? 'inherit' : 'profile_name')}
+		options={partial ? senderOptions : senderOptions.slice(1)}
+		onchange={setSender}
+	/>
 </div>
 
 <style>
@@ -80,28 +89,7 @@
 		gap: 0.55rem;
 	}
 
-	label {
-		display: grid;
-		align-content: space-between;
-		gap: 0.3rem;
-		border: 1px solid #c5ad82;
+	:global(label) {
 		background: rgb(255 249 230 / 40%);
-		padding: 0.55rem;
-	}
-
-	label:has(input) {
-		grid-template-columns: 1fr auto;
-		align-items: center;
-	}
-
-	span {
-		font-size: 0.82rem;
-	}
-
-	select {
-		min-height: 40px;
-		border: 1px solid #8d7248;
-		background: var(--paper-light);
-		padding: 0.45rem;
 	}
 </style>

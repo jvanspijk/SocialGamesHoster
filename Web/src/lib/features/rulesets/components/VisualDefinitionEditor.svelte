@@ -1,7 +1,10 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import CheckboxField from '$lib/components/CheckboxField.svelte';
+	import CheckboxGroup from '$lib/components/CheckboxGroup.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import SelectField, { type SelectOption } from '$lib/components/SelectField.svelte';
 	import RoomPermissionEditor from './RoomPermissionEditor.svelte';
 	import SelectorEditor from './SelectorEditor.svelte';
 	import type {
@@ -283,6 +286,18 @@
 	function audioAssets() {
 		return assets.filter((asset) => asset.kind === 'audio');
 	}
+
+	const imageOptions = () => [
+		{ value: '', label: 'No image' },
+		...imageAssets().map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
+	];
+	const senderDisplayOptions: SelectOption<RulesetChatChannel['senderDisplay']>[] = [
+		{ value: 'profile_name', label: 'Profile name' },
+		{ value: 'game_alias', label: 'Game alias' },
+		{ value: 'seat_number', label: 'Seat number' },
+		{ value: 'role_label', label: 'Role name' },
+		{ value: 'team_label', label: 'Team name' }
+	];
 </script>
 
 {#if section === 'teams'}
@@ -316,15 +331,12 @@
 					bind:value={team.description}
 					multiline
 				/>
-				<label>
-					<span>Team image (optional)</span>
-					<select bind:value={team.imageAssetKey}>
-						<option value="">No image</option>
-						{#each imageAssets() as asset (asset.assetKey)}
-							<option value={asset.assetKey}>{asset.assetKey}</option>
-						{/each}
-					</select>
-				</label>
+				<SelectField
+					label="Team image (optional)"
+					name={`team-image-${index}`}
+					bind:value={team.imageAssetKey}
+					options={imageOptions()}
+				/>
 			</article>
 		{:else}
 			<p class="empty">Add at least one team before creating roles.</p>
@@ -394,29 +406,25 @@
 					bind:value={ability.description}
 					multiline
 				/>
-				<label>
-					<span>Ability image (optional)</span>
-					<select bind:value={ability.imageAssetKey}>
-						<option value="">No image</option>
-						{#each imageAssets() as asset (asset.assetKey)}
-							<option value={asset.assetKey}>{asset.assetKey}</option>
-						{/each}
-					</select>
-				</label>
-				<label class="check">
-					<input type="checkbox" bind:checked={ability.canCombineWithOtherAbilities} />
-					May combine with other combinable abilities
-				</label>
+				<SelectField
+					label="Ability image (optional)"
+					name={`ability-image-${index}`}
+					bind:value={ability.imageAssetKey}
+					options={imageOptions()}
+				/>
+				<CheckboxField
+					label="May combine with other combinable abilities"
+					name={`ability-combinable-${index}`}
+					checked={ability.canCombineWithOtherAbilities ?? false}
+					onchange={(checked) => (ability.canCombineWithOtherAbilities = checked)}
+				/>
 				<div class="choice-block">
-					<strong>Playable during phases</strong>
-					<div class="choices">
-						{#each definition.phases as phase (phase.id)}
-							<label>
-								<input type="checkbox" value={phase.id} bind:group={ability.activationPhaseIds} />
-								{phase.name}
-							</label>
-						{/each}
-					</div>
+					<CheckboxGroup
+						label="Playable during phases"
+						name={`ability-phases-${index}`}
+						bind:values={ability.activationPhaseIds}
+						options={definition.phases.map((phase) => ({ value: phase.id, label: phase.name }))}
+					/>
 					{#if definition.phases.length === 0}
 						<p class="hint compact">Add phases before making this ability playable.</p>
 					{/if}
@@ -447,15 +455,16 @@
 				<div class="form-grid thirds">
 					<Field label="Name" name={`role-name-${index}`} bind:value={role.name} required />
 					<Field label="Stable ID" name={`role-id-${index}`} bind:value={role.id} required />
-					<label>
-						<span>Team</span>
-						<select bind:value={role.teamId} required>
-							<option value="">Choose a team</option>
-							{#each definition.teams as team (team.id)}
-								<option value={team.id}>{team.name}</option>
-							{/each}
-						</select>
-					</label>
+					<SelectField
+						label="Team"
+						name={`role-team-${index}`}
+						bind:value={role.teamId}
+						options={[
+							{ value: '', label: 'Choose a team' },
+							...definition.teams.map((team) => ({ value: team.id, label: team.name }))
+						]}
+						required
+					/>
 				</div>
 				<Field
 					label="Description"
@@ -474,37 +483,34 @@
 						<span>Maximum copies</span>
 						<input type="number" min="1" max="30" bind:value={role.maxCopies} />
 					</label>
-					<label>
-						<span>Role image (optional)</span>
-						<select bind:value={role.imageAssetKey}>
-							<option value="">No image</option>
-							{#each imageAssets() as asset (asset.assetKey)}
-								<option value={asset.assetKey}>{asset.assetKey}</option>
-							{/each}
-						</select>
-					</label>
+					<SelectField
+						label="Role image (optional)"
+						name={`role-image-${index}`}
+						bind:value={role.imageAssetKey}
+						options={imageOptions()}
+					/>
 				</div>
 				<div class="choice-block">
-					<strong>Categories</strong>
-					<div class="choices">
-						{#each definition.categories as category (category.id)}
-							<label
-								><input type="checkbox" value={category.id} bind:group={role.categoryIds} />
-								{category.name}</label
-							>
-						{/each}
-					</div>
+					<CheckboxGroup
+						label="Categories"
+						name={`role-categories-${index}`}
+						bind:values={role.categoryIds}
+						options={definition.categories.map((category) => ({
+							value: category.id,
+							label: category.name
+						}))}
+					/>
 				</div>
 				<div class="choice-block">
-					<strong>Abilities</strong>
-					<div class="choices">
-						{#each definition.abilities as ability (ability.id)}
-							<label
-								><input type="checkbox" value={ability.id} bind:group={role.abilityIds} />
-								{ability.name}</label
-							>
-						{/each}
-					</div>
+					<CheckboxGroup
+						label="Abilities"
+						name={`role-abilities-${index}`}
+						bind:values={role.abilityIds}
+						options={definition.abilities.map((ability) => ({
+							value: ability.id,
+							label: ability.name
+						}))}
+					/>
 				</div>
 				<label>
 					<span>Tags (comma-separated)</span>
@@ -553,18 +559,20 @@
 							bind:value={phase.suggestedDurationSeconds}
 						/></label
 					>
-					<label class="check"
-						><input type="checkbox" bind:checked={phase.startsRound} /> Starts a new round</label
-					>
-					<label>
-						<span>Sound when phase starts</span>
-						<select bind:value={phase.audioCueId}>
-							<option value="">No sound</option>
-							{#each definition.audioCues as cue (cue.id)}
-								<option value={cue.id}>{cue.name}</option>
-							{/each}
-						</select>
-					</label>
+					<CheckboxField
+						label="Starts a new round"
+						name={`phase-starts-round-${index}`}
+						bind:checked={phase.startsRound}
+					/>
+					<SelectField
+						label="Sound when phase starts"
+						name={`phase-audio-${index}`}
+						bind:value={phase.audioCueId}
+						options={[
+							{ value: '', label: 'No sound' },
+							...definition.audioCues.map((cue) => ({ value: cue.id, label: cue.name }))
+						]}
+					/>
 				</div>
 			</article>
 		{:else}
@@ -681,36 +689,31 @@
 				</ContentHeader>
 				<div class="form-grid">
 					<Field label="Stable ID" name={`modifier-id-${modifierIndex}`} bind:value={modifier.id} />
-					<label>
-						<span>When this role is present</span>
-						<select bind:value={modifier.whenRolePresent}>
-							<option value="">Choose a role</option>
-							{#each definition.roles as role (role.id)}<option value={role.id}>{role.name}</option
-								>{/each}
-						</select>
-					</label>
+					<SelectField
+						label="When this role is present"
+						name={`modifier-role-${modifierIndex}`}
+						bind:value={modifier.whenRolePresent}
+						options={[
+							{ value: '', label: 'Choose a role' },
+							...definition.roles.map((role) => ({ value: role.id, label: role.name }))
+						]}
+					/>
 				</div>
 				<div class="choice-block">
-					<strong>Also require these roles</strong>
-					<div class="choices">
-						{#each definition.roles as role (role.id)}
-							<label
-								><input type="checkbox" value={role.id} bind:group={modifier.requiresRoleIds} />
-								{role.name}</label
-							>
-						{/each}
-					</div>
+					<CheckboxGroup
+						label="Also require these roles"
+						name={`modifier-required-roles-${modifierIndex}`}
+						bind:values={modifier.requiresRoleIds}
+						options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+					/>
 				</div>
 				<div class="choice-block">
-					<strong>Do not apply with these roles</strong>
-					<div class="choices">
-						{#each definition.roles as role (role.id)}
-							<label
-								><input type="checkbox" value={role.id} bind:group={modifier.excludesRoleIds} />
-								{role.name}</label
-							>
-						{/each}
-					</div>
+					<CheckboxGroup
+						label="Do not apply with these roles"
+						name={`modifier-excluded-roles-${modifierIndex}`}
+						bind:values={modifier.excludesRoleIds}
+						options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+					/>
 				</div>
 				<div class="nested-heading">
 					<ContentHeader density="dense">
@@ -723,18 +726,18 @@
 				</div>
 				{#each modifier.slotAdjustments as adjustment, adjustmentIndex (adjustment)}
 					<div class="inline-row">
-						<label>
-							<span>Slot</span>
-							<select bind:value={adjustment.slotId}>
-								<option value="">Choose a slot</option>
-								{#each definition.compositionBands as band (band.id)}
-									<optgroup label={`${band.minPlayers}–${band.maxPlayers} players`}>
-										{#each band.slots as slot (slot.id)}<option value={slot.id}>{slot.label}</option
-											>{/each}
-									</optgroup>
-								{/each}
-							</select>
-						</label>
+						<SelectField
+							label="Slot"
+							name={`modifier-slot-${modifierIndex}-${adjustmentIndex}`}
+							bind:value={adjustment.slotId}
+							options={[
+								{ value: '', label: 'Choose a slot' },
+								...definition.compositionBands.map((band) => ({
+									label: `${band.minPlayers}–${band.maxPlayers} players`,
+									options: band.slots.map((slot) => ({ value: slot.id, label: slot.label }))
+								}))
+							]}
+						/>
 						<label
 							><span>Change count by</span><input
 								type="number"
@@ -785,18 +788,17 @@
 					/>
 				</div>
 				<div class="choice-block">
-					<strong>Reveal</strong>
-					<div class="choices">
-						<label
-							><input type="checkbox" value="identity" bind:group={rule.reveal} /> Player identity</label
-						>
-						<label><input type="checkbox" value="role" bind:group={rule.reveal} /> Role</label>
-						<label><input type="checkbox" value="team" bind:group={rule.reveal} /> Team</label>
-						<label
-							><input type="checkbox" value="elimination_state" bind:group={rule.reveal} />
-							Elimination state</label
-						>
-					</div>
+					<CheckboxGroup
+						label="Reveal"
+						name={`knowledge-reveal-${index}`}
+						bind:values={rule.reveal}
+						options={[
+							{ value: 'identity', label: 'Player identity' },
+							{ value: 'role', label: 'Role' },
+							{ value: 'team', label: 'Team' },
+							{ value: 'elimination_state', label: 'Elimination state' }
+						]}
+					/>
 				</div>
 			</article>
 		{:else}
@@ -904,84 +906,73 @@
 						help="Used to preserve this channel in saved games."
 						required
 					/>
-					<label>
-						<span>Allowed messages</span>
-						<select bind:value={channel.messageRestriction}>
-							<option value="normal_text">Normal text and emoji</option>
-							<option value="emoji_only">Emoji only</option>
-						</select>
-					</label>
-					<label>
-						<span>Show senders as</span>
-						<select bind:value={channel.senderDisplay}>
-							<option value="profile_name">Profile name</option>
-							<option value="game_alias">Game alias</option>
-							<option value="seat_number">Seat number</option>
-							<option value="role_label">Role name</option>
-							<option value="team_label">Team name</option>
-						</select>
-					</label>
+					<SelectField
+						label="Allowed messages"
+						name={`channel-message-restriction-${channelIndex}`}
+						bind:value={channel.messageRestriction}
+						options={[
+							{ value: 'normal_text', label: 'Normal text and emoji' },
+							{ value: 'emoji_only', label: 'Emoji only' }
+						]}
+					/>
+					<SelectField
+						label="Show senders as"
+						name={`channel-sender-display-${channelIndex}`}
+						bind:value={channel.senderDisplay}
+						options={senderDisplayOptions}
+					/>
 				</div>
 				<div class="form-grid thirds">
-					<label class="check">
-						<input type="checkbox" bind:checked={channel.visible} />
-						Players can normally see this channel
-					</label>
-					<label class="check">
-						<input type="checkbox" bind:checked={channel.sendable} />
-						Allowed senders can normally post
-					</label>
-					<label class="check">
-						<input type="checkbox" bind:checked={channel.gameMasterMaySend} />
-						Game masters can post
-					</label>
+					<CheckboxField
+						label="Players can normally see this channel"
+						name={`channel-visible-${channelIndex}`}
+						bind:checked={channel.visible}
+					/>
+					<CheckboxField
+						label="Allowed senders can normally post"
+						name={`channel-sendable-${channelIndex}`}
+						bind:checked={channel.sendable}
+					/>
+					<CheckboxField
+						label="Game masters can post"
+						name={`channel-gm-sendable-${channelIndex}`}
+						bind:checked={channel.gameMasterMaySend}
+					/>
 				</div>
 				<div class="audience-grid">
 					<div class="choice-block">
-						<strong>Readers by team</strong>
 						<p class="hint compact">No reader selections means every player.</p>
-						<div class="choices">
-							{#each definition.teams as team (team.id)}
-								<label>
-									<input type="checkbox" value={team.id} bind:group={channel.readerTeamIds} />
-									{team.name}
-								</label>
-							{/each}
-						</div>
+						<CheckboxGroup
+							label="Readers by team"
+							name={`channel-reader-teams-${channelIndex}`}
+							bind:values={channel.readerTeamIds}
+							options={definition.teams.map((team) => ({ value: team.id, label: team.name }))}
+						/>
 					</div>
 					<div class="choice-block">
-						<strong>Readers by role</strong>
-						<div class="choices">
-							{#each definition.roles as role (role.id)}
-								<label>
-									<input type="checkbox" value={role.id} bind:group={channel.readerRoleIds} />
-									{role.name}
-								</label>
-							{/each}
-						</div>
+						<CheckboxGroup
+							label="Readers by role"
+							name={`channel-reader-roles-${channelIndex}`}
+							bind:values={channel.readerRoleIds}
+							options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+						/>
 					</div>
 					<div class="choice-block">
-						<strong>Senders by team</strong>
 						<p class="hint compact">No sender selections means every reader.</p>
-						<div class="choices">
-							{#each definition.teams as team (team.id)}
-								<label>
-									<input type="checkbox" value={team.id} bind:group={channel.senderTeamIds} />
-									{team.name}
-								</label>
-							{/each}
-						</div>
+						<CheckboxGroup
+							label="Senders by team"
+							name={`channel-sender-teams-${channelIndex}`}
+							bind:values={channel.senderTeamIds}
+							options={definition.teams.map((team) => ({ value: team.id, label: team.name }))}
+						/>
 					</div>
 					<div class="choice-block">
-						<strong>Senders by role</strong>
-						<div class="choices">
-							{#each definition.roles as role (role.id)}
-								<label>
-									<input type="checkbox" value={role.id} bind:group={channel.senderRoleIds} />
-									{role.name}
-								</label>
-							{/each}
-						</div>
+						<CheckboxGroup
+							label="Senders by role"
+							name={`channel-sender-roles-${channelIndex}`}
+							bind:values={channel.senderRoleIds}
+							options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+						/>
 					</div>
 				</div>
 				{#if definition.phases.length > 0}
@@ -991,42 +982,30 @@
 							{#each definition.phases as phase (phase.id)}
 								<div>
 									<b>{phase.name}</b>
-									<label>
-										<span>Visibility</span>
-										<select
-											aria-label={`${channel.name} visibility during ${phase.name}`}
-											value={phaseChannelState(channel, phase.id, 'visible')}
-											onchange={(event) =>
-												setPhaseChannelState(
-													channel,
-													phase.id,
-													'visible',
-													event.currentTarget.value
-												)}
-										>
-											<option value="inherit">Use normal setting</option>
-											<option value="yes">Visible</option>
-											<option value="no">Hidden</option>
-										</select>
-									</label>
-									<label>
-										<span>Posting</span>
-										<select
-											aria-label={`${channel.name} posting during ${phase.name}`}
-											value={phaseChannelState(channel, phase.id, 'sendable')}
-											onchange={(event) =>
-												setPhaseChannelState(
-													channel,
-													phase.id,
-													'sendable',
-													event.currentTarget.value
-												)}
-										>
-											<option value="inherit">Use normal setting</option>
-											<option value="yes">Allowed</option>
-											<option value="no">Read-only</option>
-										</select>
-									</label>
+									<SelectField
+										label="Visibility"
+										name={`channel-visibility-${channelIndex}-${phase.id}`}
+										accessibleLabel={`${channel.name} visibility during ${phase.name}`}
+										value={phaseChannelState(channel, phase.id, 'visible')}
+										options={[
+											{ value: 'inherit', label: 'Use normal setting' },
+											{ value: 'yes', label: 'Visible' },
+											{ value: 'no', label: 'Hidden' }
+										]}
+										onchange={(value) => setPhaseChannelState(channel, phase.id, 'visible', value)}
+									/>
+									<SelectField
+										label="Posting"
+										name={`channel-posting-${channelIndex}-${phase.id}`}
+										accessibleLabel={`${channel.name} posting during ${phase.name}`}
+										value={phaseChannelState(channel, phase.id, 'sendable')}
+										options={[
+											{ value: 'inherit', label: 'Use normal setting' },
+											{ value: 'yes', label: 'Allowed' },
+											{ value: 'no', label: 'Read-only' }
+										]}
+										onchange={(value) => setPhaseChannelState(channel, phase.id, 'sendable', value)}
+									/>
 								</div>
 							{/each}
 						</div>
@@ -1164,20 +1143,18 @@
 						<span>Achievement points</span>
 						<input type="number" min="0" max="10000" bind:value={achievement.points} />
 					</label>
-					<label class="check">
-						<input type="checkbox" bind:checked={achievement.hiddenUntilGameCompleted} />
-						Hide from players until the game ends
-					</label>
+					<CheckboxField
+						label="Hide from players until the game ends"
+						name={`achievement-hidden-${index}`}
+						bind:checked={achievement.hiddenUntilGameCompleted}
+					/>
 				</div>
-				<label>
-					<span>Badge image (optional)</span>
-					<select bind:value={achievement.imageAssetKey}>
-						<option value="">No image</option>
-						{#each imageAssets() as asset (asset.assetKey)}
-							<option value={asset.assetKey}>{asset.assetKey}</option>
-						{/each}
-					</select>
-				</label>
+				<SelectField
+					label="Badge image (optional)"
+					name={`achievement-image-${index}`}
+					bind:value={achievement.imageAssetKey}
+					options={imageOptions()}
+				/>
 			</article>
 		{:else}
 			<p class="empty">No achievements in this ruleset.</p>
@@ -1206,24 +1183,26 @@
 				<div class="form-grid">
 					<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required />
 					<Field label="Stable ID" name={`cue-id-${index}`} bind:value={cue.id} required />
-					<label>
-						<span>Audio file</span>
-						<select bind:value={cue.assetKey}>
-							<option value="">Choose uploaded audio</option>
-							{#each audioAssets() as asset (asset.assetKey)}
-								<option value={asset.assetKey}>{asset.assetKey}</option>
-							{/each}
-						</select>
-					</label>
-					<label>
-						<span>Normal audience</span>
-						<select bind:value={cue.defaultAudience}>
-							<option value="all">All players</option>
-							<option value="game_masters">Game masters</option>
-							<option value="team">A selected team</option>
-							<option value="player">A selected player</option>
-						</select>
-					</label>
+					<SelectField
+						label="Audio file"
+						name={`cue-audio-file-${index}`}
+						bind:value={cue.assetKey}
+						options={[
+							{ value: '', label: 'Choose uploaded audio' },
+							...audioAssets().map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
+						]}
+					/>
+					<SelectField
+						label="Normal audience"
+						name={`cue-audience-${index}`}
+						bind:value={cue.defaultAudience}
+						options={[
+							{ value: 'all', label: 'All players' },
+							{ value: 'game_masters', label: 'Game masters' },
+							{ value: 'team', label: 'A selected team' },
+							{ value: 'player', label: 'A selected player' }
+						]}
+					/>
 				</div>
 				{#if cue.defaultAudience === 'team' || cue.defaultAudience === 'player'}
 					<p class="hint">
@@ -1295,35 +1274,12 @@
 		text-transform: uppercase;
 	}
 
-	input:not([type='checkbox']),
-	select {
+	input:not([type='checkbox']) {
 		width: 100%;
 		min-height: 44px;
 		border: 1px solid #8d7248;
 		background: var(--paper-light);
 		padding: 0.55rem;
-	}
-
-	.check {
-		display: flex;
-		min-height: 44px;
-		align-items: center;
-		gap: 0.5rem;
-		border: 1px solid #b89b6d;
-		padding: 0.55rem;
-	}
-
-	.choices {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.45rem 0.9rem;
-		margin-top: 0.35rem;
-	}
-
-	.choices label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
 	}
 
 	.remove,

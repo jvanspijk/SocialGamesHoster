@@ -10,7 +10,8 @@
 		multiline = false,
 		help = '',
 		error = '',
-		disabled = false
+		disabled = false,
+		onchange
 	}: {
 		label: string;
 		name: string;
@@ -23,6 +24,7 @@
 		help?: string;
 		error?: string;
 		disabled?: boolean;
+		onchange?: (value: string) => void;
 	} = $props();
 
 	const inputId = $derived(`field-${name}`);
@@ -44,6 +46,7 @@
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={help || error ? descriptionId : undefined}
 			rows="4"
+			onchange={(event) => onchange?.((event.currentTarget as HTMLTextAreaElement).value)}
 		></textarea>
 	{:else}
 		<input
@@ -55,6 +58,7 @@
 			{required}
 			{disabled}
 			{autocomplete}
+			onchange={(event) => onchange?.((event.currentTarget as HTMLInputElement).value)}
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={help || error ? descriptionId : undefined}
 		/>
