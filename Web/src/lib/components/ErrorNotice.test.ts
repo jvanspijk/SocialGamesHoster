@@ -5,11 +5,7 @@ import ErrorNotice from './ErrorNotice.svelte';
 describe('ErrorNotice', () => {
 	it('shows actionable form guidance without technical details for expected input errors', () => {
 		render(ErrorNotice, {
-			error: {
-				kind: 'validation',
-				message: 'Please correct the highlighted details.',
-				fieldErrors: { displayName: 'Enter a valid profile name.' }
-			}
+			props: { message: 'Please correct the highlighted details.' }
 		});
 
 		expect(screen.getByRole('alert')).toHaveAttribute('aria-live', 'assertive');
@@ -20,12 +16,7 @@ describe('ErrorNotice', () => {
 
 	it('keeps technical details optional and separate from the recovery message', async () => {
 		render(ErrorNotice, {
-			error: {
-				kind: 'application',
-				message: 'The profile could not be saved.',
-				fieldErrors: {},
-				traceId: 'trace-123'
-			}
+			props: { message: 'The profile could not be saved.', traceId: 'trace-123' }
 		});
 
 		expect(screen.getByText('Technical details')).toBeVisible();

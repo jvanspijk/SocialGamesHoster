@@ -189,7 +189,7 @@
 	close={() => (createOpen = false)}
 >
 	<form id="new-game-form" class="dialog-form" onsubmit={createGame}>
-		<ErrorNotice error={formError} />
+		<ErrorNotice message={formError?.message} traceId={formError?.traceId} />
 		<Field
 			label="Game name"
 			name="game-name"

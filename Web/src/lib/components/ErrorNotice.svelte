@@ -1,17 +1,16 @@
 <script lang="ts">
 	import Alert from './Alert.svelte';
-	import type { FormError } from '$lib/forms/errors';
 
-	let { error }: { error: FormError | null } = $props();
+	let { message, traceId }: { message?: string; traceId?: string } = $props();
 </script>
 
-{#if error}
+{#if message}
 	<section class="form-error">
-		<Alert tone="error" message={error.message} />
-		{#if error.traceId}
+		<Alert tone="error" {message} />
+		{#if traceId}
 			<details>
 				<summary>Technical details</summary>
-				Trace ID: <code>{error.traceId}</code>
+				Trace ID: <code>{traceId}</code>
 			</details>
 		{/if}
 	</section>

@@ -826,7 +826,7 @@ legitimately consume stores.
 |  12   |    [ ]    |   [ ]    |
 |  13   |    [x]    |   [x]    |
 |  14   |    [x]    |   [x]    |
-|  15   |    [ ]    |   [ ]    |
+|  15   |    [x]    |   [x]    |
 
 When all issues in the table are fully completed and reviewed, bump the patch
 version of the app.

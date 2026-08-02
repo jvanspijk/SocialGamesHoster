@@ -114,7 +114,7 @@
 					</div>
 					<div><strong>{profile.displayName}</strong><span>Player profile</span></div>
 				</div>
-				<ErrorNotice error={saveError} />
+				<ErrorNotice message={saveError?.message} traceId={saveError?.traceId} />
 				<Field
 					label="Display name"
 					name="display-name"

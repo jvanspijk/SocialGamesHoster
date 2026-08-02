@@ -477,7 +477,7 @@
 		</div>
 	</header>
 
-	<ErrorNotice {error} />
+	<ErrorNotice message={error?.message} traceId={error?.traceId} />
 	{#if report}
 		<div class:valid={!report.errors.length} class="report card">
 			<strong

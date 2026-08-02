@@ -201,7 +201,7 @@
 		</div>
 		<form class="card stack" onsubmit={createOwner}>
 			<Crown size={34} aria-hidden="true" />
-			<ErrorNotice {error} />
+			<ErrorNotice message={error?.message} traceId={error?.traceId} />
 			<Field
 				label="Username"
 				name="username"
@@ -281,7 +281,7 @@
 							This request is no longer available.
 						{/if}
 					</p>
-					<ErrorNotice {error} />
+					<ErrorNotice message={error?.message} traceId={error?.traceId} />
 					<Button variant="secondary" onclick={startOver}>Use another name</Button>
 				</div>
 			{:else}
@@ -289,7 +289,7 @@
 					<ScrollText size={34} aria-hidden="true" />
 					<h2>Enter your profile name</h2>
 					<p class="muted">Sign in to an existing profile or create a new one.</p>
-					<ErrorNotice {error} />
+					<ErrorNotice message={error?.message} traceId={error?.traceId} />
 					<Field
 						label="Profile name"
 						name="displayName"
