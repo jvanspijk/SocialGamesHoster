@@ -32,13 +32,17 @@
 	let closing = $state(false);
 	let closeRequested = false;
 	let closeTimer: ReturnType<typeof setTimeout> | undefined;
+	let returnFocus: HTMLElement | null = null;
 
 	$effect(() => {
 		if (!dialog) return;
 
 		if (open) {
 			if (closing) cancelClose();
-			else if (!dialog.open) dialog.showModal();
+			else if (!dialog.open) {
+				returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+				dialog.showModal();
+			}
 		} else if (dialog.open && !closing) {
 			beginClose();
 		}
@@ -81,6 +85,11 @@
 
 		cancelClose();
 		dialog.close();
+		const target = returnFocus;
+		returnFocus = null;
+		if (target?.isConnected && !target.hasAttribute('disabled')) {
+			target.focus({ preventScroll: true });
+		}
 	}
 
 	function handleTransitionEnd(event: TransitionEvent) {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import SelectionDialog from '$lib/components/SelectionDialog.svelte';
 	import ChatApp from './ChatApp.svelte';
-	import DirectMessageChooser from './DirectMessageChooser.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 
 	let { roomId = '' }: { roomId?: string } = $props();
@@ -13,11 +13,14 @@
 			.filter((player) => !['kicked', 'left'].includes(player.status))
 			.map((player) => {
 				const displayLabel = player.gameAlias || player.displayNameSnapshot;
+				const supportingLabel = `Seat ${player.seatNumber}`;
+				const avatarText = displayLabel.slice(0, 1).toUpperCase();
 				return {
 					id: player.id,
-					displayLabel,
-					supportingLabel: `Seat ${player.seatNumber}`,
-					avatarText: displayLabel.slice(0, 1).toUpperCase()
+					label: displayLabel,
+					accessibleLabel: `${displayLabel}, ${supportingLabel}`,
+					supportingLabel,
+					leadingText: avatarText
 				};
 			}) ?? []
 	);
@@ -53,10 +56,15 @@
 	/>
 {/if}
 
-<DirectMessageChooser
+<SelectionDialog
 	open={newMessageOpen}
+	title="New message"
 	description="Choose a player to open their direct conversation."
 	close={() => (newMessageOpen = false)}
+	emptyState={{
+		title: 'No players available',
+		description: 'No players are available for a direct conversation.'
+	}}
 	entries={recipients}
-	onchoose={choosePlayer}
+	onselect={choosePlayer}
 />
