@@ -119,4 +119,30 @@ describe('PendingProfileRequests', () => {
 		});
 		expect(toasts.items.some((toast) => toast.message.includes('already decided'))).toBe(true);
 	});
+
+	it('retries an initial loading failure', async () => {
+		mocks.api
+			.mockRejectedValueOnce(new Error('Network unavailable'))
+			.mockResolvedValueOnce([newRequest]);
+		render(PendingProfileRequests);
+
+		expect(await screen.findByText('Requests could not be loaded')).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+		expect(await screen.findByText('Alice')).toBeInTheDocument();
+		expect(mocks.api).toHaveBeenCalledTimes(2);
+	});
+
+	it('refreshes requests when a live update arrives', async () => {
+		mocks.api.mockResolvedValueOnce([newRequest]).mockResolvedValueOnce([recoveryRequest]);
+		render(PendingProfileRequests);
+
+		await screen.findByText('Alice');
+		await waitFor(() => expect(mocks.subscribe).toHaveBeenCalledOnce());
+		const refresh = mocks.subscribe.mock.calls[0][1] as () => Promise<void>;
+		await refresh();
+
+		expect(await screen.findByText('Bob')).toBeInTheDocument();
+		expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+	});
 });

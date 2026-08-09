@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
-	import type { Snippet } from 'svelte';
+	import { onDestroy, type Snippet } from 'svelte';
 	import ContentHeader from './ContentHeader.svelte';
 	import IconButton from './IconButton.svelte';
 
@@ -81,7 +81,7 @@
 	}
 
 	function finishClose() {
-		if (!closing || !dialog.open) return;
+		if (!closing || !dialog?.open) return;
 
 		cancelClose();
 		dialog.close();
@@ -102,6 +102,8 @@
 		if (open && !closeRequested) close();
 		closeRequested = false;
 	}
+
+	onDestroy(cancelClose);
 </script>
 
 <dialog
