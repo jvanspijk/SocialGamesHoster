@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { CircleStop, Pause, Play, Plus, RotateCcw } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
+	import Countdown from '$lib/components/ui/Countdown.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { TimerProjection } from '$lib/api/types';
 	import { toasts } from '$lib/state/toasts.svelte';
+	import { countdownStatus, timerStatusLabel } from './timerPresentation';
 
 	let {
 		gameId,
@@ -19,7 +20,6 @@
 	} = $props();
 
 	let durationMinutes = $state(5);
-	let now = $state(Date.now());
 	let busy = $state(false);
 	const durationOptions = [
 		{ value: 1, label: '1 minute' },
@@ -29,35 +29,6 @@
 		{ value: 15, label: '15 minutes' },
 		{ value: 30, label: '30 minutes' }
 	];
-
-	onMount(() => {
-		const interval = window.setInterval(() => (now = Date.now()), 250);
-		return () => window.clearInterval(interval);
-	});
-
-	const remaining = $derived.by(() => {
-		if (timer.status === 'running' && timer.endsAt) {
-			return Math.max(0, new Date(timer.endsAt).getTime() - now);
-		}
-		return timer.remainingMs;
-	});
-	const display = $derived(
-		`${Math.floor(remaining / 60_000)
-			.toString()
-			.padStart(2, '0')}:${Math.floor((remaining % 60_000) / 1000)
-			.toString()
-			.padStart(2, '0')}`
-	);
-	const statusText = $derived(
-		(
-			{
-				inactive: 'No timer set',
-				running: 'Timer running',
-				paused: 'Timer paused',
-				completed: 'Timer completed'
-			} as const
-		)[timer.status]
-	);
 
 	async function command(
 		path: 'start' | 'pause' | 'resume' | 'adjust' | 'stop',
@@ -78,10 +49,15 @@
 	}
 </script>
 
-<section class:completed={timer.status === 'completed'} aria-label="Game timer">
+<section aria-label="Game timer">
 	<div class="timer-readout">
-		<p>{statusText}</p>
-		<strong aria-label={`${Math.ceil(remaining / 1000)} seconds remaining`}>{display}</strong>
+		<Countdown
+			variant="readout"
+			status={countdownStatus(timer.status)}
+			statusLabel={timerStatusLabel(timer.status)}
+			remainingMs={timer.remainingMs}
+			endsAt={timer.endsAt}
+		/>
 	</div>
 
 	{#if timer.status === 'inactive'}
@@ -154,25 +130,6 @@
 		grid-template-columns: minmax(10rem, 1fr) minmax(16rem, auto);
 		align-items: center;
 		gap: var(--space-4);
-	}
-
-	.timer-readout p {
-		margin: 0;
-		color: var(--ink-soft);
-	}
-
-	.timer-readout strong {
-		display: block;
-		color: var(--ink);
-		font-family: var(--font-display);
-		font-size: clamp(2.6rem, 9vw, 5rem);
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.06em;
-		line-height: 1;
-	}
-
-	.completed .timer-readout strong {
-		color: var(--danger);
 	}
 
 	.timer-start,
