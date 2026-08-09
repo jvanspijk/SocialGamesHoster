@@ -5,8 +5,8 @@
 The installed product is one console-free Windows x64 executable. Go embeds the
 content-hashed output of the static Svelte SPA. PocketBase provides the HTTP
 router, SQLite-backed collections, file storage, authentication, logging,
-backups, and one SSE connection per browser. There is no runtime Node.js,
-.NET, PostgreSQL, Docker, nginx, or internet dependency.
+backups, and one SSE connection per browser. There are no external runtime
+dependencies.
 
 ```text
 phone / browser

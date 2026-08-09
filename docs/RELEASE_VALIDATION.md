@@ -23,7 +23,7 @@ Required outcomes:
 - PocketBase remains pinned exactly;
 - the Windows GUI-subsystem build succeeds with `CGO_ENABLED=0`;
 - `SocialGamesHoster.exe`, one setup executable, and `SHA256SUMS.txt` exist;
-- no `.NET`, SignalR, PostgreSQL, Docker, or Node runtime files are packaged.
+- no external runtime files are packaged.
 
 ## Signing and reputation
 
@@ -71,8 +71,8 @@ master, inactive game master, owner, and disabled profile:
 
 ## Optional clean Windows VM matrix
 
-Use supported Windows 10 x64 and Windows 11 x64 VMs with no Go, Node.js, .NET
-runtime, PostgreSQL, Docker, or Inno Setup installed.
+Use supported Windows 10 x64 and Windows 11 x64 VMs without development tools
+or application runtime dependencies installed.
 
 - install and optionally launch;
 - confirm the inbound rule is TCP, selected port, Private profile only;

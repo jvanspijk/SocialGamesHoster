@@ -9,8 +9,6 @@ Guidance for coding assistants working in this repository.
 - The application is a trusted-private-LAN party game host for Windows 10/11 x64.
 - Runtime: one console-free Go executable with PocketBase, SQLite, migrations,
   static Svelte assets, tray controls, and no external runtime dependencies.
-- Do not reintroduce the legacy .NET, PostgreSQL, SignalR, Node-server, Docker, or
-  generated-client architecture.
 
 ## Repository layout
 
@@ -19,7 +17,7 @@ Guidance for coding assistants working in this repository.
 - `Web/`: Svelte 5 static SPA and its contract/browser tests.
 - `packaging/windows/`: Inno Setup installer.
 - `scripts/`: dependency, development, test, and release-build scripts.
-- `docs/`: architecture, user, troubleshooting, parity, and release guidance.
+- `docs/`: architecture, user, troubleshooting, and release guidance.
 - `docs/functional-tests/`: manual, real-world UI checks that cannot be covered
   meaningfully by programmatic or Playwright tests.
 

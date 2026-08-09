@@ -2,8 +2,7 @@
 
 Social Games Hoster is a local-first party game host for Windows 10 and 11. One
 computer runs the application; players join from phones and laptops on the same
-trusted private network. Internet access, cloud accounts, Docker, PostgreSQL,
-.NET, and Node.js are not required at runtime.
+trusted private network. Internet access and cloud accounts are not required at runtime.
 
 The application is a single Go executable containing:
 
