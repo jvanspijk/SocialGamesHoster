@@ -1,7 +1,6 @@
 package games
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -40,15 +39,7 @@ func findGame(event *core.RequestEvent) (*core.Record, error) {
 }
 
 func snapshot(record *core.Record) (rulesets.DefinitionV1, error) {
-	data, err := json.Marshal(record.Get("ruleset_snapshot"))
-	if err != nil {
-		return rulesets.DefinitionV1{}, err
-	}
-	var definition rulesets.DefinitionV1
-	if err := json.Unmarshal(data, &definition); err != nil {
-		return rulesets.DefinitionV1{}, err
-	}
-	return definition, nil
+	return rulesets.DecodeSnapshot(record.Get("ruleset_snapshot"))
 }
 
 func projectGame(record *core.Record) map[string]any {

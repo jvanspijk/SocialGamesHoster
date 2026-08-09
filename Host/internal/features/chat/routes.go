@@ -521,13 +521,7 @@ func roomMessageRestriction(definition rulesets.DefinitionV1, room *core.Record)
 }
 
 func definitionFromGame(game *core.Record) (rulesets.DefinitionV1, error) {
-	data, err := json.Marshal(game.Get("ruleset_snapshot"))
-	if err != nil {
-		return rulesets.DefinitionV1{}, err
-	}
-	var definition rulesets.DefinitionV1
-	err = json.Unmarshal(data, &definition)
-	return definition, err
+	return rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
 }
 
 func playerSenderLabel(app core.App, resolved access, profile *core.Record) (string, error) {

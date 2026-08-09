@@ -380,9 +380,8 @@ func playerMayReadVersionAsset(app core.App, profileID, versionID, assetKey stri
 }
 
 func isPrivateRoleAsset(game *core.Record, assetKey string) bool {
-	var definition DefinitionV1
-	data, err := json.Marshal(game.Get("ruleset_snapshot"))
-	if err != nil || json.Unmarshal(data, &definition) != nil {
+	definition, err := DecodeSnapshot(game.Get("ruleset_snapshot"))
+	if err != nil {
 		return true
 	}
 	for _, role := range definition.Roles {

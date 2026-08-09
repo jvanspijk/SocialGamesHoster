@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -871,12 +870,8 @@ func projectAdminProfile(record *core.Record) map[string]any {
 }
 
 func historicalNames(game *core.Record, roleKey string) (string, string) {
-	data, err := json.Marshal(game.Get("ruleset_snapshot"))
+	definition, err := rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
 	if err != nil {
-		return "", ""
-	}
-	var definition rulesets.DefinitionV1
-	if json.Unmarshal(data, &definition) != nil {
 		return "", ""
 	}
 	roleName := ""

@@ -19,6 +19,23 @@ func TestSelectorUsesOrWithinAndAcrossFields(t *testing.T) {
 	}
 }
 
+func TestDecodeSnapshot(t *testing.T) {
+	want := testDefinition()
+	got, err := DecodeSnapshot(want)
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("decoded definition = %#v, error = %v", got, err)
+	}
+	got, err = DecodeSnapshot(map[string]any{"schemaVersion": 1})
+	if err != nil || got.SchemaVersion != 1 {
+		t.Fatalf("decoded stored snapshot = %#v, error = %v", got, err)
+	}
+	for _, snapshot := range []any{make(chan int), map[string]any{"schemaVersion": "one"}} {
+		if _, err := DecodeSnapshot(snapshot); err == nil {
+			t.Fatal("expected decoding error")
+		}
+	}
+}
+
 func TestRandomAssignmentIsDeterministicAndRespectsLocks(t *testing.T) {
 	def := testDefinition()
 	participants := []string{"a", "b", "c", "d"}

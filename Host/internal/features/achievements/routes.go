@@ -1,7 +1,6 @@
 package achievements
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -133,13 +132,7 @@ func revoke(event *core.RequestEvent) error {
 }
 
 func definitionFromGame(game *core.Record) (rulesets.DefinitionV1, error) {
-	data, err := json.Marshal(game.Get("ruleset_snapshot"))
-	if err != nil {
-		return rulesets.DefinitionV1{}, err
-	}
-	var definition rulesets.DefinitionV1
-	err = json.Unmarshal(data, &definition)
-	return definition, err
+	return rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
 }
 
 func projectAward(record *core.Record, includeNote bool) map[string]any {

@@ -1,7 +1,6 @@
 package abilities
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -297,12 +296,8 @@ func activationContext(app core.App, gameID, profileID string) (*core.Record, *c
 	if len(participants) != 1 {
 		return nil, nil, rulesets.DefinitionV1{}, result.Forbidden("ability.forbidden", "Abilities are not available to this player.")
 	}
-	var definition rulesets.DefinitionV1
-	data, err := json.Marshal(game.Get("ruleset_snapshot"))
+	definition, err := rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
 	if err != nil {
-		return nil, nil, rulesets.DefinitionV1{}, result.Internal(err)
-	}
-	if err := json.Unmarshal(data, &definition); err != nil {
 		return nil, nil, rulesets.DefinitionV1{}, result.Internal(err)
 	}
 	return game, participants[0], definition, nil
