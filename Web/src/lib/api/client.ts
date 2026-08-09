@@ -35,6 +35,7 @@ export async function api<T>(path: string, init: ApiOptions = {}): Promise<T> {
 		});
 	} catch (caught) {
 		if (caught instanceof ClientResponseError) {
+			if (caught.status === 401) pb.authStore.clear();
 			const data = caught.data as Partial<AppErrorBody>;
 			throw new AppApiError(
 				{
@@ -88,6 +89,7 @@ export async function fetchBlob(path: string, method = 'GET'): Promise<Blob> {
 		headers: { Authorization: pb.authStore.token }
 	});
 	if (!response.ok) {
+		if (response.status === 401) pb.authStore.clear();
 		let body: Partial<AppErrorBody> = {};
 		try {
 			body = (await response.json()) as Partial<AppErrorBody>;

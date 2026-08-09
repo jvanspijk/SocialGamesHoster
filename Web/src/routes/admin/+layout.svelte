@@ -9,6 +9,7 @@
 	import IconButton from '$lib/components/IconButton.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { fieldErrorOrSummary, toFormError, type FormError } from '$lib/forms/errors';
 	import type { AuthResponse } from '$lib/api/types';
@@ -19,6 +20,16 @@
 	let credentials = $state({ username: '', password: '' });
 	let busy = $state(false);
 	let loginError = $state<FormError | null>(null);
+	let recoveryAvailable = $state(false);
+	let recoveryOpen = $state(false);
+	let recovery = $state({
+		username: '',
+		displayName: '',
+		password: '',
+		trustedLanAcknowledged: false,
+		confirmation: ''
+	});
+	let recoveryError = $state<FormError | null>(null);
 
 	const liveRoute = $derived(
 		/^\/admin\/games\/[^/]+\/(overview|players|chat|activity|finish|summary)/.test(
@@ -47,7 +58,17 @@
 			auth.clear();
 			toasts.info('Sign in with a game-master account.');
 		}
+		void loadRecoveryAvailability();
 	});
+
+	async function loadRecoveryAvailability() {
+		try {
+			const status = await api<{ ownerRecoveryAvailable: boolean }>('/setup/status');
+			recoveryAvailable = status.ownerRecoveryAvailable;
+		} catch {
+			recoveryAvailable = false;
+		}
+	}
 
 	async function login(event: SubmitEvent) {
 		event.preventDefault();
@@ -72,6 +93,25 @@
 		} finally {
 			auth.clear();
 			await goto(resolve('/'));
+		}
+	}
+
+	async function recoverOwnership(event: SubmitEvent) {
+		event.preventDefault();
+		busy = true;
+		recoveryError = null;
+		try {
+			const response = await api<AuthResponse>('/setup/owner-recovery', {
+				method: 'POST',
+				...jsonBody(recovery)
+			});
+			auth.clear();
+			auth.save(response);
+			recoveryOpen = false;
+		} catch (caught) {
+			recoveryError = toFormError(caught, 'Ownership could not be recovered.');
+		} finally {
+			busy = false;
 		}
 	}
 </script>
@@ -102,6 +142,11 @@
 				/>
 				<Button type="submit" loading={busy}>Sign in</Button>
 			</form>
+			{#if recoveryAvailable}
+				<Button variant="ghost" onclick={() => (recoveryOpen = true)}
+					>Recover local ownership</Button
+				>
+			{/if}
 			<a href={resolve('/')}>Return to join page</a>
 		</section>
 	</main>
@@ -124,6 +169,57 @@
 		</main>
 	</div>
 {/if}
+
+<Dialog
+	open={recoveryOpen}
+	title="Recover local ownership"
+	description="This replaces obsolete owner accounts on this computer. A recovery backup is created before any change."
+	close={() => (recoveryOpen = false)}
+>
+	<form id="owner-recovery-form" onsubmit={recoverOwnership}>
+		<Field
+			label="New owner username"
+			name="recovery-username"
+			bind:value={recovery.username}
+			required
+		/>
+		<Field
+			label="New owner display name"
+			name="recovery-display-name"
+			bind:value={recovery.displayName}
+			required
+		/>
+		<Field
+			label="New owner password"
+			name="recovery-password"
+			type="password"
+			bind:value={recovery.password}
+			autocomplete="new-password"
+			required
+		/>
+		<label
+			><input type="checkbox" bind:checked={recovery.trustedLanAcknowledged} required /> I understand
+			and trust this local network.</label
+		>
+		<Field
+			label="Type &quot;RECOVER OWNERSHIP&quot; to confirm"
+			name="recovery-confirmation"
+			bind:value={recovery.confirmation}
+			required
+		/>
+		{#if recoveryError}<p class="field-error" role="alert">{recoveryError.message}</p>{/if}
+	</form>
+	{#snippet actions()}
+		<Button variant="ghost" onclick={() => (recoveryOpen = false)}>Cancel</Button>
+		<Button
+			variant="danger"
+			loading={busy}
+			onclick={() =>
+				(document.getElementById('owner-recovery-form') as HTMLFormElement)?.requestSubmit()}
+			>Recover ownership</Button
+		>
+	{/snippet}
+</Dialog>
 
 <style>
 	.login-page {
@@ -163,6 +259,11 @@
 
 	form :global(button) {
 		width: 100%;
+	}
+
+	.field-error {
+		color: var(--danger);
+		margin: 0;
 	}
 
 	.management-shell {
