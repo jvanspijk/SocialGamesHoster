@@ -3,10 +3,11 @@ module github.com/jvanspijk/SocialGamesHoster
 go 1.26.5
 
 require (
-	github.com/gogpu/systray v0.1.2
+	github.com/gogpu/systray v0.2.8
 	github.com/pocketbase/dbx v1.12.0
-	github.com/pocketbase/pocketbase v0.39.9
+	github.com/pocketbase/pocketbase v0.39.10
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	golang.org/x/image v0.44.0
 	golang.org/x/sys v0.47.0
 	golang.org/x/text v0.40.0
 )
@@ -20,7 +21,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/ganigeorgiev/fexpr v0.6.0 // indirect
-	github.com/go-webgpu/goffi v0.6.0 // indirect
+	github.com/go-webgpu/goffi v0.6.3 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -34,12 +35,11 @@ require (
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
-	golang.org/x/image v0.44.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	modernc.org/libc v1.74.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.54.0 // indirect
+	modernc.org/sqlite v1.55.0 // indirect
 )
