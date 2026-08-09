@@ -1,14 +1,7 @@
 import type { RulesetSelector } from '$lib/api/types';
 
 export type DefinitionEditorSection =
-	| 'teams'
-	| 'roles'
-	| 'phases'
-	| 'composition'
-	| 'knowledge'
-	| 'chat'
-	| 'achievements'
-	| 'audio';
+	'teams' | 'roles' | 'phases' | 'composition' | 'knowledge' | 'chat' | 'achievements' | 'audio';
 
 export type AssetOption = { assetKey: string; kind: 'image' | 'audio' };
 

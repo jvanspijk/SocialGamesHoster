@@ -364,11 +364,7 @@ export interface RulesetCompositionModifier {
 }
 
 export type RulesetSenderDisplay =
-	| 'profile_name'
-	| 'game_alias'
-	| 'seat_number'
-	| 'role_label'
-	| 'team_label';
+	'profile_name' | 'game_alias' | 'seat_number' | 'role_label' | 'team_label';
 
 export interface RulesetRoomPermission {
 	visible: boolean;

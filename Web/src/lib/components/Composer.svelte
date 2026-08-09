@@ -50,8 +50,7 @@
 		rows="1"
 		{placeholder}
 		{disabled}
-		onkeydown={handleKeydown}
-	></textarea>
+		onkeydown={handleKeydown}></textarea>
 	<Button type="submit" loading={sending} disabled={disabled || !value.trim()}>
 		<Send size={18} /> Send
 	</Button>
