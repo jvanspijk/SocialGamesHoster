@@ -16,4 +16,18 @@ describe('VisualDefinitionEditor', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
 		expect(screen.getByText('Role slot')).toBeVisible();
 	});
+
+	it.each([
+		['teams', 'Teams'],
+		['roles', 'Abilities'],
+		['phases', 'Phases'],
+		['knowledge', 'Starting knowledge'],
+		['chat', 'Normal chat settings'],
+		['achievements', 'Achievements'],
+		['audio', 'Audio cues']
+	] as const)('dispatches the %s section to its feature-local editor', (section, heading) => {
+		render(VisualDefinitionEditorHarness, { props: { section } });
+
+		expect(screen.getByRole('heading', { name: heading })).toBeVisible();
+	});
 });

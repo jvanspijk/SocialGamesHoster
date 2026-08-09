@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
 	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
+	import type { DefinitionEditorSection } from '$lib/features/rulesets/components/definition-editor';
+
+	let { section = 'composition' }: { section?: DefinitionEditorSection } = $props();
 
 	let definition = $state<RulesetDefinition>({
 		schemaVersion: 1,
@@ -35,4 +38,4 @@
 	});
 </script>
 
-<VisualDefinitionEditor bind:definition section="composition" assets={[]} />
+<VisualDefinitionEditor bind:definition {section} assets={[]} />
