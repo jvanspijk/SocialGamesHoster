@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/application/pagination"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -350,30 +350,24 @@ func listMessages(event *core.RequestEvent) error {
 		params["left"] = resolved.Membership.GetDateTime("left_at").Time().UTC()
 	}
 	if cursor := event.Request.URL.Query().Get("cursor"); cursor != "" {
-		created, id, err := decodeCursor(cursor)
+		position, err := pagination.Decode(cursor)
 		if err != nil {
 			return httpx.WriteError(event, result.Invalid("chat.invalid_cursor", "The message cursor is invalid.", nil))
 		}
-		filter += " && (created < {:created} || (created = {:created} && id < {:id}))"
-		params["created"] = created
-		params["id"] = id
+		filter += " && " + pagination.DescendingCreatedIDPredicate
+		params["created"] = position.Created
+		params["id"] = position.ID
 	}
-	records, err := event.App.FindRecordsByFilter("chat_messages", filter, "-created,-id", 51, 0, params)
+	records, err := event.App.FindRecordsByFilter("chat_messages", filter, pagination.DescendingCreatedIDSort, pagination.QueryLimit, 0, params)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	hasMore := len(records) > 50
-	if hasMore {
-		records = records[:50]
-	}
+	records, nextCursor := pagination.Window(records, func(record *core.Record) pagination.Cursor {
+		return pagination.Cursor{Created: record.GetDateTime("created").Time().UTC(), ID: record.Id}
+	})
 	messages := make([]map[string]any, len(records))
 	for index, record := range records {
 		messages[index] = projectMessage(record, event.Auth, resolved.IsGM)
-	}
-	nextCursor := ""
-	if hasMore && len(records) > 0 {
-		last := records[len(records)-1]
-		nextCursor = encodeCursor(last.GetDateTime("created").Time().UTC(), last.Id)
 	}
 	return event.JSON(http.StatusOK, map[string]any{"items": messages, "nextCursor": nextCursor})
 }
@@ -704,26 +698,4 @@ func ensureChatMembership(app core.App, roomID, participantID string) error {
 	record.Set("participant", participantID)
 	record.Set("joined_at", time.Now().UTC())
 	return app.Save(record)
-}
-
-type messageCursor struct {
-	Created time.Time `json:"created"`
-	ID      string    `json:"id"`
-}
-
-func encodeCursor(created time.Time, id string) string {
-	data, _ := json.Marshal(messageCursor{Created: created, ID: id})
-	return base64.RawURLEncoding.EncodeToString(data)
-}
-
-func decodeCursor(value string) (time.Time, string, error) {
-	data, err := base64.RawURLEncoding.DecodeString(value)
-	if err != nil {
-		return time.Time{}, "", err
-	}
-	var cursor messageCursor
-	if err := json.Unmarshal(data, &cursor); err != nil || cursor.Created.IsZero() || cursor.ID == "" {
-		return time.Time{}, "", fmt.Errorf("invalid cursor")
-	}
-	return cursor.Created, cursor.ID, nil
 }
