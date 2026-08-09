@@ -646,11 +646,6 @@ func mp3Duration(content []byte) (int64, error) {
 	return samples * 1000 / int64(sampleRate), nil
 }
 
-func assetMetadata(kind string, content []byte) (map[string]any, error) {
-	_, metadata, err := inspectAsset(kind, content)
-	return metadata, err
-}
-
 func validateDeclaredAsset(kind, mimeType string, content []byte) (string, map[string]any, error) {
 	detected, metadata, err := inspectAsset(kind, content)
 	if err != nil {

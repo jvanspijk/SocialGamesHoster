@@ -910,10 +910,6 @@ func projectVersion(record *core.Record) map[string]any {
 	}
 }
 
-func writeValidationError(event *core.RequestEvent, report ValidationReport) error {
-	return httpx.WriteError(event, validationAppError(report))
-}
-
 func validationAppError(report ValidationReport) result.AppError {
 	fields := result.FieldErrors{}
 	for _, issue := range report.Errors {

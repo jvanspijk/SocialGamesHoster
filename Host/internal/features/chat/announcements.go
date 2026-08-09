@@ -492,21 +492,6 @@ func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bo
 	return err == nil && len(receipts) == 1
 }
 
-func latestMessageCursor(app core.App, roomID string) any {
-	messages, err := app.FindRecordsByFilter(
-		"chat_messages",
-		"room = {:room} && message_kind != 'announcement'",
-		"-created,-id",
-		1,
-		0,
-		dbx.Params{"room": roomID},
-	)
-	if err != nil || len(messages) == 0 {
-		return nil
-	}
-	return map[string]any{"createdAt": recordDateValue(messages[0], "created"), "id": messages[0].Id}
-}
-
 func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue, itemID string) {
 	payload, err := resolveAudioCuePayload(app, game, cue)
 	if err != nil || payload == nil {
@@ -527,36 +512,6 @@ func containsControlCharacter(value string) bool {
 		}
 	}
 	return false
-}
-
-func validateCueAudience(app core.App, game *core.Record, definition rulesets.DefinitionV1, audience, targetID string) *result.AppError {
-	switch audience {
-	case "all", "game_masters":
-		if targetID != "" {
-			value := result.Invalid("audio.invalid_audience", "This audience does not accept a target.", nil)
-			return &value
-		}
-	case "team":
-		found := false
-		for _, team := range definition.Teams {
-			found = found || team.ID == targetID
-		}
-		if !found {
-			value := result.Invalid("audio.invalid_target", "Choose a team from this ruleset.", nil)
-			return &value
-		}
-	case "player":
-		participant, err := app.FindRecordById("participants", targetID)
-		if err != nil || participant.GetString("game") != game.Id ||
-			!gamepolicy.IsCurrentMember(gamepolicy.ParticipantStatus(participant.GetString("status"))) {
-			value := result.Invalid("audio.invalid_target", "Choose a player in this game.", nil)
-			return &value
-		}
-	default:
-		value := result.Invalid("audio.invalid_audience", "Choose who should hear the sound cue.", nil)
-		return &value
-	}
-	return nil
 }
 
 func PublishAudioCue(app core.App, game *core.Record, definition rulesets.DefinitionV1, cue rulesets.AudioCue, audience, targetID string) {

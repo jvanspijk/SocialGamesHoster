@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -734,12 +732,4 @@ func decodeCursor(value string) (time.Time, string, error) {
 		return time.Time{}, "", fmt.Errorf("invalid cursor")
 	}
 	return cursor.Created, cursor.ID, nil
-}
-
-func queryInt(values url.Values, key string, fallback int) int {
-	value, err := strconv.Atoi(values.Get(key))
-	if err != nil {
-		return fallback
-	}
-	return value
 }

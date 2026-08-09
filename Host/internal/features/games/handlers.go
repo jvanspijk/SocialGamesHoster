@@ -1,9 +1,6 @@
 package games
 
 import (
-	"crypto/rand"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -560,28 +557,6 @@ func playerView(event *core.RequestEvent) error {
 	})
 }
 
-func uniqueJoinCode(app core.App) (string, error) {
-	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-	for range 20 {
-		var bytes [6]byte
-		if _, err := rand.Read(bytes[:]); err != nil {
-			return "", err
-		}
-		for index := range bytes {
-			bytes[index] = alphabet[int(bytes[index])%len(alphabet)]
-		}
-		code := string(bytes[:])
-		records, err := app.FindRecordsByFilter("games", "join_code = {:code}", "", 1, 0, dbx.Params{"code": code})
-		if err != nil {
-			return "", err
-		}
-		if len(records) == 0 {
-			return code, nil
-		}
-	}
-	return "", fmt.Errorf("could not generate a unique join code")
-}
-
 func nextSeat(participants []*core.Record) int {
 	maximum := 0
 	for _, participant := range participants {
@@ -739,12 +714,4 @@ func selectorMatches(role rulesets.Role, selector rulesets.Selector) bool {
 		}
 	}
 	return len(selector.Tags) == 0
-}
-
-func decodeSnapshot(record *core.Record, target any) error {
-	data, err := json.Marshal(record.Get("ruleset_snapshot"))
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, target)
 }
