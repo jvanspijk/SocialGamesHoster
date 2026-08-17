@@ -64,7 +64,7 @@
 	let definition = $state<RulesetDefinition>(structuredClone(blank));
 	let report = $state<Report>({ errors: [], warnings: [] });
 	let savedDefinition = $state('');
-	let dirty = $state(false);
+	let dirty = $derived(savedDefinition !== '' && JSON.stringify(definition) !== savedDefinition);
 	let saving = $state(false);
 	let actionsOpen = $state(false);
 	let deleteOpen = $state(false);
@@ -83,10 +83,6 @@
 		};
 		window.addEventListener('beforeunload', warnBeforeLeaving);
 		return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
-	});
-
-	$effect(() => {
-		dirty = savedDefinition !== '' && JSON.stringify(definition) !== savedDefinition;
 	});
 
 	async function load() {

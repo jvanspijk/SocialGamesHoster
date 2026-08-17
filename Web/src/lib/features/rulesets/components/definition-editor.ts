@@ -6,7 +6,7 @@ export type DefinitionEditorSection =
 export type AssetOption = { assetKey: string; kind: 'image' | 'audio' };
 
 export function nextID(prefix: string, used: string[]) {
-	let candidate = '';
+	let candidate: string;
 	do {
 		candidate = `${prefix}_${crypto.randomUUID()}`;
 	} while (used.includes(candidate));
