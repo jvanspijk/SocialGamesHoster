@@ -41,7 +41,6 @@
 			</ContentHeader>
 			<div class="form-grid thirds">
 				<Field label="Name" name={`phase-name-${index}`} bind:value={phase.name} required />
-				<Field label="Stable ID" name={`phase-id-${index}`} bind:value={phase.id} required />
 				<label><span>Order</span><input type="number" min="1" bind:value={phase.order} /></label>
 			</div>
 			<Field

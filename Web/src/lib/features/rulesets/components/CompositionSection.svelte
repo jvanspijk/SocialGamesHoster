@@ -68,12 +68,7 @@
 					>{/snippet}
 			</ContentHeader>
 			<div class="form-grid thirds">
-				<Field
-					label="Stable ID"
-					name={`band-id-${bandIndex}`}
-					bind:value={band.id}
-					required
-				/><label
+				<label
 					><span>Minimum players</span><input
 						type="number"
 						min="1"
@@ -111,10 +106,6 @@
 							label="Label"
 							name={`slot-label-${bandIndex}-${slotIndex}`}
 							bind:value={slot.label}
-						/><Field
-							label="Stable ID"
-							name={`slot-id-${bandIndex}-${slotIndex}`}
-							bind:value={slot.id}
 						/><label
 							><span>Number of players</span><input
 								type="number"
@@ -149,17 +140,13 @@
 	{#each definition.compositionModifiers as modifier, modifierIndex (modifier.id)}
 		<article class="item-card">
 			<ContentHeader density="dense"
-				>{#snippet title()}<h3>{modifier.id}</h3>{/snippet}{#snippet actions()}<button
+				>{#snippet title()}<h3>Conditional change</h3>{/snippet}{#snippet actions()}<button
 						class="remove"
 						onclick={() => removeAt(definition.compositionModifiers, modifierIndex)}>Remove</button
 					>{/snippet}</ContentHeader
 			>
 			<div class="form-grid">
-				<Field
-					label="Stable ID"
-					name={`modifier-id-${modifierIndex}`}
-					bind:value={modifier.id}
-				/><SelectField
+				<SelectField
 					label="When this role is present"
 					name={`modifier-role-${modifierIndex}`}
 					bind:value={modifier.whenRolePresent}

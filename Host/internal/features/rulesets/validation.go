@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var stableIDPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+var stableIDPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,63}$`)
 
 type ValidationIssue struct {
 	Path    string `json:"path"`
@@ -48,6 +48,12 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 	categoryIDs := validateIDs("categories", categoryIDValues(def.Categories), addError)
 	abilityIDs := validateIDs("abilities", abilityIDValues(def.Abilities), addError)
 	roleIDs := validateIDs("roles", roleIDValues(def.Roles), addError)
+	if len(def.Teams) == 0 {
+		addError("teams", "teams.required", "Add at least one team.")
+	}
+	if len(def.Roles) == 0 {
+		addError("roles", "roles.required", "Add at least one role.")
+	}
 	phaseIDs := validateIDs("phases", phaseIDValues(def.Phases), addError)
 	achievementIDs := validateIDs("achievements", achievementIDValues(def.Achievements), addError)
 	audioCueIDs := validateIDs("audioCues", audioCueIDValues(def.AudioCues), addError)
@@ -62,7 +68,7 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 			return
 		}
 		if _, ok := assetKeys[key]; !ok {
-			addError(path, "asset.unknown", fmt.Sprintf("Unknown asset key %q.", key))
+			addError(path, "asset.unknown", "Choose an existing asset.")
 		}
 	}
 	checkAsset("metadata.coverAssetKey", def.Metadata.CoverAssetKey)
@@ -76,14 +82,14 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 				addError(
 					fmt.Sprintf("abilities[%d].activationPhaseIds[%d]", i, phaseIndex),
 					"reference.unknown",
-					fmt.Sprintf("Unknown phase %q.", phaseID),
+					"Choose an existing phase.",
 				)
 			}
 		}
 	}
 	for assetKey, accessibility := range def.AssetAccessibility {
 		if _, ok := assetKeys[assetKey]; !ok {
-			addError("assetAccessibility."+assetKey, "reference.unknown", fmt.Sprintf("Unknown asset %q.", assetKey))
+			addError("assetAccessibility."+assetKey, "reference.unknown", "Choose an existing asset.")
 		}
 		description := strings.TrimSpace(accessibility.Description)
 		if description == "" || len([]rune(description)) > 1000 {
@@ -97,12 +103,12 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 		}
 		for _, id := range role.CategoryIDs {
 			if _, ok := categoryIDs[id]; !ok {
-				addError(path+".categoryIds", "reference.unknown", fmt.Sprintf("Unknown category %q.", id))
+				addError(path+".categoryIds", "reference.unknown", "Choose an existing category.")
 			}
 		}
 		for _, id := range role.AbilityIDs {
 			if _, ok := abilityIDs[id]; !ok {
-				addError(path+".abilityIds", "reference.unknown", fmt.Sprintf("Unknown ability %q.", id))
+				addError(path+".abilityIds", "reference.unknown", "Choose an existing ability.")
 			}
 		}
 		if role.MaxCopies < 1 || role.MaxCopies > 30 {
@@ -185,7 +191,7 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 		}
 		for _, id := range append(slices.Clone(modifier.RequiresRoleIDs), modifier.ExcludesRoleIDs...) {
 			if _, ok := roleIDs[id]; !ok {
-				addError(path, "reference.unknown", fmt.Sprintf("Modifier references unknown role %q.", id))
+				addError(path, "reference.unknown", "Choose an existing role.")
 			}
 		}
 		for adjustmentIndex, adjustment := range modifier.SlotAdjustments {
@@ -197,16 +203,16 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 
 	for teamID := range def.Chat.DefaultPolicy.Teams {
 		if _, ok := teamIDs[teamID]; !ok {
-			addError("chat.defaultPolicy.teams", "reference.unknown", fmt.Sprintf("Chat policy references unknown team %q.", teamID))
+			addError("chat.defaultPolicy.teams", "reference.unknown", "Choose an existing team.")
 		}
 	}
 	for phaseID, override := range def.Chat.PhaseOverrides {
 		if _, ok := phaseIDs[phaseID]; !ok {
-			addError("chat.phaseOverrides", "reference.unknown", fmt.Sprintf("Chat policy references unknown phase %q.", phaseID))
+			addError("chat.phaseOverrides", "reference.unknown", "Choose an existing phase.")
 		}
 		for teamID := range override.Teams {
 			if _, ok := teamIDs[teamID]; !ok {
-				addError("chat.phaseOverrides."+phaseID, "reference.unknown", fmt.Sprintf("Chat policy references unknown team %q.", teamID))
+				addError("chat.phaseOverrides."+phaseID, "reference.unknown", "Choose an existing team.")
 			}
 		}
 	}
@@ -228,12 +234,12 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 		validateChatAudienceReferences(path+".senders", channel.SenderRoleIDs, channel.SenderTeamIDs, roleIDs, teamIDs, addError)
 		for phaseID := range channel.PhaseOverrides {
 			if _, ok := phaseIDs[phaseID]; !ok {
-				addError(path+".phaseOverrides", "reference.unknown", fmt.Sprintf("Chat channel references unknown phase %q.", phaseID))
+				addError(path+".phaseOverrides", "reference.unknown", "Choose an existing phase.")
 			}
 		}
 		for _, role := range def.Roles {
 			if ChatChannelAudienceMatches(channel, role, true) && !ChatChannelAudienceMatches(channel, role, false) {
-				addError(path+".senders", "chat.sender_cannot_read", fmt.Sprintf("Role %q can send but cannot read this channel.", role.ID))
+				addError(path+".senders", "chat.sender_cannot_read", fmt.Sprintf("%s can send but cannot read this channel.", role.Name))
 				break
 			}
 		}
@@ -262,12 +268,12 @@ func validateChatAudienceReferences(
 ) {
 	for _, id := range roleValues {
 		if _, ok := roleIDs[id]; !ok {
-			addError(path+".roleIds", "reference.unknown", fmt.Sprintf("Unknown role %q.", id))
+			addError(path+".roleIds", "reference.unknown", "Choose an existing role.")
 		}
 	}
 	for _, id := range teamValues {
 		if _, ok := teamIDs[id]; !ok {
-			addError(path+".teamIds", "reference.unknown", fmt.Sprintf("Unknown team %q.", id))
+			addError(path+".teamIds", "reference.unknown", "Choose an existing team.")
 		}
 	}
 }
@@ -277,10 +283,10 @@ func validateIDs(path string, values []string, addError func(string, string, str
 	for i, value := range values {
 		itemPath := fmt.Sprintf("%s[%d].id", path, i)
 		if !stableIDPattern.MatchString(value) {
-			addError(itemPath, "id.invalid", "ID must start with a lowercase letter and contain only lowercase letters, numbers, underscores, or hyphens.")
+			addError(itemPath, "id.invalid", "This item cannot be used. Create it again.")
 		}
 		if _, exists := result[value]; exists {
-			addError(itemPath, "id.duplicate", fmt.Sprintf("Duplicate ID %q.", value))
+			addError(itemPath, "id.duplicate", "Two items conflict. Create one of them again.")
 		}
 		result[value] = struct{}{}
 	}
@@ -290,17 +296,17 @@ func validateIDs(path string, values []string, addError func(string, string, str
 func validateSelector(path string, selector Selector, roleIDs, teamIDs, categoryIDs map[string]struct{}, roles []Role, addError func(string, string, string)) {
 	for _, id := range selector.RoleIDs {
 		if _, ok := roleIDs[id]; !ok {
-			addError(path+".roleIds", "reference.unknown", fmt.Sprintf("Unknown role %q.", id))
+			addError(path+".roleIds", "reference.unknown", "Choose an existing role.")
 		}
 	}
 	for _, id := range selector.TeamIDs {
 		if _, ok := teamIDs[id]; !ok {
-			addError(path+".teamIds", "reference.unknown", fmt.Sprintf("Unknown team %q.", id))
+			addError(path+".teamIds", "reference.unknown", "Choose an existing team.")
 		}
 	}
 	for _, id := range selector.CategoryIDs {
 		if _, ok := categoryIDs[id]; !ok {
-			addError(path+".categoryIds", "reference.unknown", fmt.Sprintf("Unknown category %q.", id))
+			addError(path+".categoryIds", "reference.unknown", "Choose an existing category.")
 		}
 	}
 	if len(MatchingRoles(roles, selector)) == 0 {

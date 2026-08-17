@@ -90,6 +90,27 @@ func TestInitialMigrationUp(t *testing.T) {
 	if games.Fields.GetByName("ability_phase_instance") == nil {
 		t.Fatal("ability phase instance field is missing")
 	}
+	rulesets, err := app.FindCollectionByNameOrId("rulesets")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rulesets.Fields.GetByName("latest_saved_version") == nil {
+		t.Fatal("latest saved ruleset relation is missing")
+	}
+	rulesetVersions, err := app.FindCollectionByNameOrId("ruleset_versions")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rulesetVersions.Fields.GetByName("validation_report") == nil {
+		t.Fatal("ruleset validation report field is missing")
+	}
+	rulesetAssets, err := app.FindCollectionByNameOrId("ruleset_assets")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rulesetAssets.Fields.GetByName("display_name") == nil {
+		t.Fatal("ruleset asset display name field is missing")
+	}
 	participants, err := app.FindCollectionByNameOrId("participants")
 	if err != nil {
 		t.Fatal(err)

@@ -23,13 +23,11 @@
 	let createOpen = $state(false);
 	let deleteTarget = $state<Game | null>(null);
 	let busy = $state(false);
-	let form = $state({ name: '', rulesetVersionId: '' });
+	let form = $state({ name: '', rulesetId: '' });
 	let formError = $state<FormError | null>(null);
 
 	const visibleGames = $derived(games.filter((game) => showArchived || game.status !== 'archived'));
-	const readyRulesets = $derived(
-		rulesets.filter((ruleset) => ruleset.latestPublishedVersion && !ruleset.archived)
-	);
+	const readyRulesets = $derived(rulesets.filter((ruleset) => ruleset.status === 'valid'));
 
 	onMount(load);
 
@@ -40,7 +38,7 @@
 				api<Game[]>('/games'),
 				api<RulesetSummary[]>('/rulesets')
 			]);
-			form.rulesetVersionId ||= readyRulesets[0]?.latestPublishedVersion ?? '';
+			form.rulesetId ||= readyRulesets[0]?.id ?? '';
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Games could not be loaded.'), {
 				actionLabel: 'Retry',
@@ -200,17 +198,16 @@
 		<label>
 			<span>Ruleset</span>
 			<select
-				bind:value={form.rulesetVersionId}
-				aria-invalid={fieldError(formError, 'rulesetVersionId') ? 'true' : undefined}
+				bind:value={form.rulesetId}
+				aria-invalid={fieldError(formError, 'rulesetId') ? 'true' : undefined}
 				required
 			>
 				<option value="" disabled>Choose a ruleset</option>
 				{#each readyRulesets as ruleset (ruleset.id)}
-					<option value={ruleset.latestPublishedVersion}>{ruleset.name}</option>
+					<option value={ruleset.id}>{ruleset.name}</option>
 				{/each}
 			</select>
-			{#if fieldError(formError, 'rulesetVersionId')}<small
-					>{fieldError(formError, 'rulesetVersionId')}</small
+			{#if fieldError(formError, 'rulesetId')}<small>{fieldError(formError, 'rulesetId')}</small
 				>{/if}
 			{#if readyRulesets.length === 0}
 				<small>No ready rulesets. Save a valid ruleset first.</small>

@@ -159,12 +159,6 @@
 					name={`channel-name-${channelIndex}`}
 					bind:value={channel.name}
 					required
-				/><Field
-					label="Stable ID"
-					name={`channel-id-${channelIndex}`}
-					bind:value={channel.id}
-					help="Used to preserve this channel in saved games."
-					required
 				/><SelectField
 					label="Allowed messages"
 					name={`channel-message-restriction-${channelIndex}`}

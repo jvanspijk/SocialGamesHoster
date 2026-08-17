@@ -52,11 +52,6 @@
 					name={`achievement-name-${index}`}
 					bind:value={achievement.name}
 					required
-				/><Field
-					label="Stable ID"
-					name={`achievement-id-${index}`}
-					bind:value={achievement.id}
-					required
 				/>
 			</div>
 			<Field

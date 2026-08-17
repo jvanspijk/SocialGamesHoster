@@ -1,6 +1,8 @@
 package rulesets
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,8 +26,11 @@ import (
 var auditRecord = applicationaudit.Record
 
 type createRequest struct {
-	Slug       string       `json:"slug"`
-	Definition DefinitionV1 `json:"definition"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	MinPlayers      int    `json:"minPlayers"`
+	MaxPlayers      int    `json:"maxPlayers"`
+	SourceRulesetID string `json:"sourceRulesetId"`
 }
 
 type updateVersionRequest struct {
@@ -45,20 +50,13 @@ func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group.POST("/rulesets", createRuleset)
 	group.GET("/rulesets/{id}", getRuleset)
 	group.DELETE("/rulesets/{id}", deleteRuleset)
-	group.POST("/rulesets/{id}/draft", createDraft)
 	group.POST("/rulesets/{id}/save", saveRuleset)
-	group.POST("/rulesets/{id}/archive", archiveRuleset)
 	group.POST("/rulesets/import", func(event *core.RequestEvent) error {
 		return importBundle(event, applicationVersion)
 	})
-	group.PATCH("/ruleset-versions/{id}", updateVersion)
-	group.POST("/ruleset-versions/{id}/validate", validateVersion)
-	group.POST("/ruleset-versions/{id}/publish", publishVersion)
-	group.POST("/ruleset-versions/{id}/duplicate", duplicateVersion)
-	group.GET("/ruleset-versions/{id}/export", func(event *core.RequestEvent) error {
-		return exportBundle(event, applicationVersion)
+	group.GET("/rulesets/{id}/export", func(event *core.RequestEvent) error {
+		return exportLatestSavedBundle(event, applicationVersion)
 	})
-	registerAssetRoutes(group)
 	registerAssetPreviewRoute(event)
 }
 
@@ -69,9 +67,22 @@ func listRulesets(event *core.RequestEvent) error {
 	}
 	response := make([]map[string]any, len(records))
 	for i, record := range records {
-		response[i] = projectRuleset(record)
+		if record.GetBool("archived") {
+			continue
+		}
+		saved, findErr := latestSavedVersion(event.App, record)
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+		response[i] = projectRulesetWithStatus(record, validationReportFromRecord(saved))
 	}
-	return event.JSON(http.StatusOK, response)
+	visible := response[:0]
+	for _, item := range response {
+		if item != nil {
+			visible = append(visible, item)
+		}
+	}
+	return event.JSON(http.StatusOK, visible)
 }
 
 func createRuleset(event *core.RequestEvent) error {
@@ -79,19 +90,66 @@ func createRuleset(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("ruleset.invalid", "The ruleset could not be read.", nil))
 	}
-	request.Slug = strings.ToLower(strings.TrimSpace(request.Slug))
-	if !stableIDPattern.MatchString(request.Slug) {
-		return httpx.WriteError(event, result.Invalid("ruleset.invalid_slug", "Use a short lowercase slug containing letters, numbers, hyphens, or underscores.", nil))
+	request.Name = strings.TrimSpace(request.Name)
+	if len([]rune(request.Name)) < 1 || len([]rune(request.Name)) > 120 {
+		return httpx.WriteError(event, result.Invalid("ruleset.invalid_name", "Enter a ruleset name between 1 and 120 characters.", nil))
+	}
+	if request.MinPlayers < 1 || request.MaxPlayers > 30 || request.MinPlayers > request.MaxPlayers {
+		return httpx.WriteError(event, result.Invalid("ruleset.invalid_players", "Choose a player range between 1 and 30.", nil))
+	}
+	definition := blankDefinition(request.Name, request.Description, request.MinPlayers, request.MaxPlayers)
+	preparedAssets := []preparedVersionAsset(nil)
+	if request.SourceRulesetID != "" {
+		source, findErr := event.App.FindRecordById("rulesets", request.SourceRulesetID)
+		if findErr != nil || source.GetBool("archived") {
+			return httpx.WriteError(event, result.Invalid("ruleset.invalid_source", "Choose an existing ruleset to duplicate.", nil))
+		}
+		sourceVersion, findErr := latestSavedVersion(event.App, source)
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+		definition, findErr = definitionFromRecord(sourceVersion)
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+		definition.Metadata.Name = request.Name
+		definition.Metadata.Description = request.Description
+		definition.Metadata.MinPlayers = request.MinPlayers
+		definition.Metadata.MaxPlayers = request.MaxPlayers
+		preparedAssets, findErr = prepareVersionAssets(event.App, sourceVersion.Id)
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+	}
+	slug, err := generatedSlug(event.App, request.Name)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
 	}
 	var rulesetRecord *core.Record
 	var versionRecord *core.Record
-	err := event.App.RunInTransaction(func(txApp core.App) error {
+	assetKeys := make(map[string]struct{}, len(preparedAssets))
+	for _, asset := range preparedAssets {
+		assetKeys[asset.key] = struct{}{}
+	}
+	report := Validate(definition, assetKeys)
+	err = event.App.RunInTransaction(func(txApp core.App) error {
 		var err error
-		rulesetRecord, versionRecord, err = createDraftRecords(txApp, request.Slug, request.Definition, event.Auth.Id, nil)
+		rulesetRecord, versionRecord, err = createDraftRecords(txApp, slug, definition, event.Auth.Id, nil)
 		if err != nil {
 			return err
 		}
-		return auditRecord(txApp, event.Auth, "", "ruleset.created", "ruleset", rulesetRecord.Id, map[string]any{"slug": request.Slug}, event.Get(httpx.TraceIDKey))
+		versionRecord.Set("validation_report", report)
+		if err := txApp.Save(versionRecord); err != nil {
+			return err
+		}
+		if err := stagePreparedVersionAssets(txApp, versionRecord.Id, preparedAssets); err != nil {
+			return err
+		}
+		rulesetRecord.Set("latest_saved_version", versionRecord.Id)
+		if err := txApp.Save(rulesetRecord); err != nil {
+			return err
+		}
+		return nil
 	})
 	if err != nil {
 		// Duplicate slugs are the only expected create failure; audit/storage
@@ -101,28 +159,50 @@ func createRuleset(event *core.RequestEvent) error {
 		}
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	return event.JSON(http.StatusCreated, map[string]any{
-		"ruleset": projectRuleset(rulesetRecord),
-		"draft":   projectVersion(versionRecord),
-	})
+	if err := uploadStagedVersionAssets(event.App, versionRecord.Id, preparedAssets); err != nil {
+		_ = deleteStagedDraft(event.App, versionRecord.Id)
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	if err := event.App.RunInTransaction(func(tx core.App) error {
+		if err := markVersionAssetsReady(tx, versionRecord.Id); err != nil {
+			return err
+		}
+		current, err := tx.FindRecordById("rulesets", rulesetRecord.Id)
+		if err != nil {
+			return err
+		}
+		if report.Valid() {
+			current.Set("latest_published_version", versionRecord.Id)
+		}
+		if err := tx.Save(current); err != nil {
+			return err
+		}
+		return auditRecord(tx, event.Auth, "", "ruleset.created", "ruleset", current.Id, nil, event.Get(httpx.TraceIDKey))
+	}); err != nil {
+		_ = deleteStagedDraft(event.App, versionRecord.Id)
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	return event.JSON(http.StatusCreated, projectRulesetWithStatus(rulesetRecord, report))
 }
 
 func getRuleset(event *core.RequestEvent) error {
 	record, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
-	if err != nil {
+	if err != nil || record.GetBool("archived") {
 		return rulesetNotFound(event)
 	}
-	versions, err := event.App.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset}", "-version_number", 100, 0, dbx.Params{"ruleset": record.Id})
+	saved, err := latestSavedVersion(event.App, record)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	projectedVersions := make([]map[string]any, len(versions))
-	for i, version := range versions {
-		projectedVersions[i] = projectVersion(version)
+	definition, err := definitionFromRecord(saved)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
 	}
+	report := validationReportFromRecord(saved)
 	return event.JSON(http.StatusOK, map[string]any{
-		"ruleset":  projectRuleset(record),
-		"versions": projectedVersions,
+		"ruleset":    projectRulesetWithStatus(record, report),
+		"definition": definition,
+		"validation": report,
 	})
 }
 
@@ -152,7 +232,7 @@ type saveRulesetRequest struct {
 
 func saveRuleset(event *core.RequestEvent) error {
 	logical, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
-	if err != nil {
+	if err != nil || logical.GetBool("archived") {
 		return rulesetNotFound(event)
 	}
 	var request saveRulesetRequest
@@ -161,7 +241,17 @@ func saveRuleset(event *core.RequestEvent) error {
 	}
 	// File reads are deliberately outside the short SQLite transaction. The
 	// prepared files are in memory; only their record saves occur in the tx.
-	preparedAssets, err := prepareVersionAssets(event.App, logical.GetString("latest_published_version"))
+	assetSourceID := logical.GetString("latest_published_version")
+	if assetSourceID == "" {
+		published, findErr := event.App.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset} && state = 'published'", "-version_number", 1, 0, dbx.Params{"ruleset": logical.Id})
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+		if len(published) > 0 {
+			assetSourceID = published[0].Id
+		}
+	}
+	preparedAssets, err := prepareVersionAssets(event.App, assetSourceID)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -231,10 +321,13 @@ func saveRuleset(event *core.RequestEvent) error {
 			}
 		}
 		report = Validate(request.Definition, assetKeys)
+		saved.Set("validation_report", report)
 		currentLogical.Set("name", request.Definition.Metadata.Name)
+		currentLogical.Set("latest_saved_version", saved.Id)
 		if !report.Valid() {
-			if !createdSuccessor {
-				currentLogical.Set("latest_published_version", "")
+			currentLogical.Set("latest_published_version", "")
+			if err := tx.Save(saved); err != nil {
+				return err
 			}
 			if err := tx.Save(currentLogical); err != nil {
 				return err
@@ -632,7 +725,21 @@ func deleteRuleset(event *core.RequestEvent) error {
 			return httpx.WriteError(event, result.Internal(err))
 		}
 		if count > 0 {
-			return httpx.WriteError(event, result.Conflict("ruleset.in_use", "Archive this ruleset instead; one or more games use it."))
+			if err := event.App.RunInTransaction(func(tx core.App) error {
+				current, err := tx.FindRecordById("rulesets", logical.Id)
+				if err != nil {
+					return err
+				}
+				current.Set("archived", true)
+				current.Set("latest_published_version", "")
+				if err := tx.Save(current); err != nil {
+					return err
+				}
+				return auditRecord(tx, event.Auth, "", "ruleset.deleted", "ruleset", current.Id, nil, event.Get(httpx.TraceIDKey))
+			}); err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			return event.NoContent(http.StatusNoContent)
 		}
 	}
 	assetsToClean := []*core.Record{}
@@ -683,7 +790,7 @@ func deleteRuleset(event *core.RequestEvent) error {
 		if err := txApp.Delete(logical); err != nil {
 			return err
 		}
-		return auditRecord(txApp, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id, map[string]any{"slug": logical.GetString("slug")}, event.Get(httpx.TraceIDKey))
+		return auditRecord(txApp, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id, nil, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -726,7 +833,14 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		event.App.Logger().Warn("ruleset bundle validation failed", "error", err)
 		return httpx.WriteError(event, result.Invalid("bundle.invalid", err.Error(), nil))
 	}
-	slug := importSlug(imported.Manifest.Name, imported.Manifest.RulesetChecksum)
+	definition, err := normalizeDefinitionIdentifiers(imported.Definition)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	slug, err := generatedSlug(event.App, imported.Manifest.Name)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	preparedAssets := make([]preparedVersionAsset, 0, len(imported.Manifest.Assets))
 	for _, manifestAsset := range imported.Manifest.Assets {
 		content := imported.Assets[manifestAsset.AssetKey]
@@ -740,6 +854,11 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		}
 		preparedAssets = append(preparedAssets, preparedVersionAsset{key: manifestAsset.AssetKey, kind: manifestAsset.Kind, file: file, mimeType: mimeType, checksum: manifestAsset.Checksum, metadata: metadata})
 	}
+	assetKeys := make(map[string]struct{}, len(preparedAssets))
+	for _, asset := range preparedAssets {
+		assetKeys[asset.key] = struct{}{}
+	}
+	report := Validate(definition, assetKeys)
 	var logical, draft *core.Record
 	err = event.App.RunInTransaction(func(txApp core.App) error {
 		source := map[string]any{
@@ -749,7 +868,7 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 			"importedByVersion":        applicationVersion,
 		}
 		var err error
-		logical, draft, err = createDraftRecords(txApp, slug, imported.Definition, event.Auth.Id, source)
+		logical, draft, err = createDraftRecords(txApp, slug, definition, event.Auth.Id, source)
 		if err != nil {
 			return err
 		}
@@ -766,12 +885,31 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		if err := markVersionAssetsReady(tx, draft.Id); err != nil {
 			return err
 		}
+		currentDraft, err := tx.FindRecordById("ruleset_versions", draft.Id)
+		if err != nil {
+			return err
+		}
+		currentDraft.Set("validation_report", report)
+		if err := tx.Save(currentDraft); err != nil {
+			return err
+		}
+		currentLogical, err := tx.FindRecordById("rulesets", logical.Id)
+		if err != nil {
+			return err
+		}
+		currentLogical.Set("latest_saved_version", draft.Id)
+		if report.Valid() {
+			currentLogical.Set("latest_published_version", draft.Id)
+		}
+		if err := tx.Save(currentLogical); err != nil {
+			return err
+		}
 		return auditRecord(tx, event.Auth, "", "ruleset.imported", "ruleset", logical.Id, map[string]any{"sourceVersion": imported.Manifest.SourceVersionNumber}, event.Get(httpx.TraceIDKey))
 	}); err != nil {
 		_ = deleteStagedDraft(event.App, draft.Id)
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	return event.JSON(http.StatusCreated, map[string]any{"ruleset": projectRuleset(logical), "draft": projectVersion(draft)})
+	return event.JSON(http.StatusCreated, projectRulesetWithStatus(logical, report))
 }
 
 func exportBundle(event *core.RequestEvent, applicationVersion string) error {
@@ -779,6 +917,22 @@ func exportBundle(event *core.RequestEvent, applicationVersion string) error {
 	if err != nil {
 		return versionNotFound(event)
 	}
+	return exportBundleRecord(event, applicationVersion, version)
+}
+
+func exportLatestSavedBundle(event *core.RequestEvent, applicationVersion string) error {
+	logical, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
+	if err != nil || logical.GetBool("archived") {
+		return rulesetNotFound(event)
+	}
+	version, err := latestSavedVersion(event.App, logical)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	return exportBundleRecord(event, applicationVersion, version)
+}
+
+func exportBundleRecord(event *core.RequestEvent, applicationVersion string, version *core.Record) error {
 	definition, err := definitionFromRecord(version)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -888,11 +1042,150 @@ func versionAssetKeys(app core.App, versionID string) (map[string]struct{}, erro
 
 func projectRuleset(record *core.Record) map[string]any {
 	return map[string]any{
-		"id":                     record.Id,
-		"slug":                   record.GetString("slug"),
-		"name":                   record.GetString("name"),
-		"archived":               record.GetBool("archived"),
-		"latestPublishedVersion": record.GetString("latest_published_version"),
+		"id":   record.Id,
+		"name": record.GetString("name"),
+	}
+}
+
+func projectRulesetWithStatus(record *core.Record, report ValidationReport) map[string]any {
+	status := "valid"
+	if !report.Valid() {
+		status = "invalid"
+	}
+	return map[string]any{
+		"id":         record.Id,
+		"name":       record.GetString("name"),
+		"status":     status,
+		"issueCount": len(report.Errors),
+	}
+}
+
+func latestSavedVersion(app core.App, logical *core.Record) (*core.Record, error) {
+	if id := logical.GetString("latest_saved_version"); id != "" {
+		return app.FindRecordById("ruleset_versions", id)
+	}
+	versions, err := app.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset}", "-version_number", 1, 0, dbx.Params{"ruleset": logical.Id})
+	if err != nil || len(versions) == 0 {
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("ruleset has no saved definition")
+	}
+	return versions[0], nil
+}
+
+func validationReportFromRecord(record *core.Record) ValidationReport {
+	var report ValidationReport
+	if err := record.UnmarshalJSONField("validation_report", &report); err == nil && (len(report.Errors) > 0 || len(report.Warnings) > 0) {
+		return report
+	}
+	return ValidationReport{}
+}
+
+func blankDefinition(name, description string, minPlayers, maxPlayers int) DefinitionV1 {
+	return DefinitionV1{
+		SchemaVersion: 1,
+		Metadata:      Metadata{Name: name, Description: description, MinPlayers: minPlayers, MaxPlayers: maxPlayers},
+		Teams:         []Team{}, Categories: []Category{}, Abilities: []Ability{}, Roles: []Role{}, Phases: []Phase{},
+		KnowledgeRules: []KnowledgeRule{}, CompositionBands: []CompositionBand{}, CompositionModifiers: []CompositionModifier{},
+		Chat:         ChatPolicy{DefaultPolicy: ChatPolicyDefaults{Teams: map[string]RoomPermission{}}, PhaseOverrides: map[string]ChatPolicyOverride{}, Channels: []ChatChannel{}},
+		Achievements: []Achievement{}, AudioCues: []AudioCue{}, AssetAccessibility: map[string]AssetAccessibility{},
+	}
+}
+
+func normalizeDefinitionIdentifiers(definition DefinitionV1) (DefinitionV1, error) {
+	assign := func(prefix string, value *string) error {
+		if *value != "" {
+			return nil
+		}
+		generated, err := newOpaqueID(prefix)
+		if err != nil {
+			return err
+		}
+		*value = generated
+		return nil
+	}
+	for index := range definition.Teams {
+		if err := assign("team", &definition.Teams[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Categories {
+		if err := assign("category", &definition.Categories[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Abilities {
+		if err := assign("ability", &definition.Abilities[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Roles {
+		if err := assign("role", &definition.Roles[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Phases {
+		if err := assign("phase", &definition.Phases[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for bandIndex := range definition.CompositionBands {
+		if err := assign("band", &definition.CompositionBands[bandIndex].ID); err != nil {
+			return definition, err
+		}
+		for slotIndex := range definition.CompositionBands[bandIndex].Slots {
+			if err := assign("slot", &definition.CompositionBands[bandIndex].Slots[slotIndex].ID); err != nil {
+				return definition, err
+			}
+		}
+	}
+	for index := range definition.CompositionModifiers {
+		if err := assign("modifier", &definition.CompositionModifiers[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Chat.Channels {
+		if err := assign("channel", &definition.Chat.Channels[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.Achievements {
+		if err := assign("achievement", &definition.Achievements[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	for index := range definition.AudioCues {
+		if err := assign("audio", &definition.AudioCues[index].ID); err != nil {
+			return definition, err
+		}
+	}
+	return definition, nil
+}
+
+func newOpaqueID(prefix string) (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	encoded := hex.EncodeToString(bytes)
+	return prefix + "_" + encoded[0:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:], nil
+}
+
+func generatedSlug(app core.App, name string) (string, error) {
+	base := strings.TrimSuffix(importSlug(name, ""), "-"+checksum([]byte(""))[:6])
+	for suffix := 0; ; suffix++ {
+		candidate := base
+		if suffix > 0 {
+			candidate = fmt.Sprintf("%s-%d", base, suffix+1)
+		}
+		count, err := app.CountRecords("rulesets", dbx.HashExp{"slug": candidate})
+		if err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return candidate, nil
+		}
 	}
 }
 

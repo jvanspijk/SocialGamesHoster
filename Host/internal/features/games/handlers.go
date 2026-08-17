@@ -19,8 +19,8 @@ import (
 )
 
 type createGameRequest struct {
-	Name             string `json:"name"`
-	RulesetVersionID string `json:"rulesetVersionId"`
+	Name      string `json:"name"`
+	RulesetID string `json:"rulesetId"`
 }
 
 func listGames(event *core.RequestEvent) error {
@@ -44,13 +44,14 @@ func createGame(event *core.RequestEvent) error {
 	if len([]rune(request.Name)) < 1 || len([]rune(request.Name)) > 120 {
 		return httpx.WriteError(event, result.Invalid("game.invalid_name", "Enter a game name between 1 and 120 characters.", nil))
 	}
-	version, err := event.App.FindRecordById("ruleset_versions", request.RulesetVersionID)
-	if err != nil || version.GetString("state") != "published" {
-		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose a ready ruleset.", nil))
+	logical, err := event.App.FindRecordById("rulesets", request.RulesetID)
+	if err != nil || logical.GetBool("archived") {
+		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose a valid ruleset.", nil))
 	}
-	logical, err := event.App.FindRecordById("rulesets", version.GetString("ruleset"))
-	if err != nil || logical.GetString("latest_published_version") != version.Id {
-		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose the current ready version of a ruleset.", nil))
+	versionID := logical.GetString("latest_published_version")
+	version, err := event.App.FindRecordById("ruleset_versions", versionID)
+	if err != nil || versionID == "" {
+		return httpx.WriteError(event, result.Invalid("game.invalid_ruleset", "Choose a valid ruleset.", nil))
 	}
 	collection, err := event.App.FindCollectionByNameOrId("games")
 	if err != nil {

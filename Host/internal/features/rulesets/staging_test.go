@@ -249,8 +249,22 @@ func TestSaveRulesetInvalidSuccessorStaysUnselectable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updated.GetString("latest_published_version") != source.Id {
-		t.Fatalf("invalid successor changed published pointer: %q", updated.GetString("latest_published_version"))
+	if updated.GetString("latest_published_version") != "" {
+		t.Fatalf("invalid successor remained available for new games: %q", updated.GetString("latest_published_version"))
+	}
+	if updated.GetString("latest_saved_version") == "" {
+		t.Fatal("invalid successor was not recorded as the latest saved ruleset")
+	}
+	latestSaved, err := app.FindRecordById("ruleset_versions", updated.GetString("latest_saved_version"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var savedReport ValidationReport
+	if err := latestSaved.UnmarshalJSONField("validation_report", &savedReport); err != nil {
+		t.Fatal(err)
+	}
+	if savedReport.Valid() {
+		t.Fatal("invalid successor did not persist its validation report")
 	}
 	drafts, err := app.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset} && state = 'draft'", "", 10, 0, map[string]any{"ruleset": logical.Id})
 	if err != nil || len(drafts) != 1 {

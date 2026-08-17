@@ -294,13 +294,14 @@ func draftVersion(app core.App, id string, requireDraft bool) (*core.Record, err
 
 func projectAsset(record *core.Record) map[string]any {
 	return map[string]any{
-		"id":       record.Id,
-		"assetKey": record.GetString("asset_key"),
-		"kind":     record.GetString("kind"),
-		"mimeType": record.GetString("mime_type"),
-		"checksum": record.GetString("checksum"),
-		"metadata": record.Get("metadata"),
-		"preview":  "/api/app/v1/ruleset-assets/" + record.Id,
+		"id":          record.Id,
+		"displayName": record.GetString("display_name"),
+		"assetKey":    record.GetString("asset_key"),
+		"kind":        record.GetString("kind"),
+		"mimeType":    record.GetString("mime_type"),
+		"checksum":    record.GetString("checksum"),
+		"metadata":    record.Get("metadata"),
+		"preview":     "/api/app/v1/ruleset-assets/" + record.Id,
 	}
 }
 

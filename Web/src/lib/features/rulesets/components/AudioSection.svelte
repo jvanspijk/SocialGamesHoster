@@ -44,7 +44,6 @@
 			</ContentHeader>
 			<div class="form-grid">
 				<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required />
-				<Field label="Stable ID" name={`cue-id-${index}`} bind:value={cue.id} required />
 				<SelectField
 					label="Audio file"
 					name={`cue-audio-file-${index}`}

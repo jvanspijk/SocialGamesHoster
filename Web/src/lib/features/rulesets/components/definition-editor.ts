@@ -6,12 +6,10 @@ export type DefinitionEditorSection =
 export type AssetOption = { assetKey: string; kind: 'image' | 'audio' };
 
 export function nextID(prefix: string, used: string[]) {
-	let number = used.length + 1;
-	let candidate = `${prefix}_${number}`;
-	while (used.includes(candidate)) {
-		number += 1;
-		candidate = `${prefix}_${number}`;
-	}
+	let candidate = '';
+	do {
+		candidate = `${prefix}_${crypto.randomUUID()}`;
+	} while (used.includes(candidate));
 	return candidate;
 }
 

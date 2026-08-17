@@ -210,6 +210,33 @@ func TestCustomChatChannelEmptySenderAudienceMeansEveryReader(t *testing.T) {
 	}
 }
 
+func TestNormalizeDefinitionIdentifiersPreservesImportedValuesAndFillsMissingValues(t *testing.T) {
+	definition := DefinitionV1{
+		Teams:            []Team{{ID: "existing_team"}, {}},
+		Roles:            []Role{{}},
+		CompositionBands: []CompositionBand{{Slots: []CompositionSlot{{}}}},
+		Chat:             ChatPolicy{Channels: []ChatChannel{{}}},
+	}
+	normalized, err := normalizeDefinitionIdentifiers(definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if normalized.Teams[0].ID != "existing_team" {
+		t.Fatalf("imported identifier changed: %q", normalized.Teams[0].ID)
+	}
+	for _, value := range []string{
+		normalized.Teams[1].ID,
+		normalized.Roles[0].ID,
+		normalized.CompositionBands[0].ID,
+		normalized.CompositionBands[0].Slots[0].ID,
+		normalized.Chat.Channels[0].ID,
+	} {
+		if !stableIDPattern.MatchString(value) {
+			t.Fatalf("generated identifier is not valid: %q", value)
+		}
+	}
+}
+
 func testDefinition() DefinitionV1 {
 	return DefinitionV1{
 		SchemaVersion: 1,

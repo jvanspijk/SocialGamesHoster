@@ -56,13 +56,6 @@
 			</ContentHeader>
 			<div class="form-grid">
 				<Field label="Name" name={`team-name-${index}`} bind:value={team.name} required />
-				<Field
-					label="Stable ID"
-					name={`team-id-${index}`}
-					bind:value={team.id}
-					help="Used when other rules refer to this team."
-					required
-				/>
 			</div>
 			<Field
 				label="Description"
@@ -101,7 +94,6 @@
 			</ContentHeader>
 			<div class="form-grid">
 				<Field label="Name" name={`category-name-${index}`} bind:value={category.name} required />
-				<Field label="Stable ID" name={`category-id-${index}`} bind:value={category.id} required />
 			</div>
 			<Field
 				label="Description"

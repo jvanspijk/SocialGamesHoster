@@ -70,12 +70,7 @@
 					>{/snippet}
 			</ContentHeader>
 			<div class="form-grid">
-				<Field
-					label="Name"
-					name={`ability-name-${index}`}
-					bind:value={ability.name}
-					required
-				/><Field label="Stable ID" name={`ability-id-${index}`} bind:value={ability.id} required />
+				<Field label="Name" name={`ability-name-${index}`} bind:value={ability.name} required />
 			</div>
 			<Field
 				label="Description"
@@ -128,10 +123,10 @@
 					>{/snippet}
 			</ContentHeader>
 			<div class="form-grid thirds">
-				<Field label="Name" name={`role-name-${index}`} bind:value={role.name} required /><Field
-					label="Stable ID"
-					name={`role-id-${index}`}
-					bind:value={role.id}
+				<Field
+					label="Name"
+					name={`role-name-${index}`}
+					bind:value={role.name}
 					required
 				/><SelectField
 					label="Team"

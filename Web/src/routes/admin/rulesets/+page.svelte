@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { Archive, CheckCircle2, FileUp, Plus, ScrollText, TriangleAlert } from '@lucide/svelte';
-	import Button from '$lib/components/Button.svelte';
+	import { CheckCircle2, Plus, ScrollText, TriangleAlert } from '@lucide/svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
@@ -11,8 +10,6 @@
 
 	let rulesets = $state<RulesetSummary[]>([]);
 	let loading = $state(true);
-	let importing = $state(false);
-	let importInput: HTMLInputElement;
 
 	onMount(load);
 
@@ -29,25 +26,6 @@
 			loading = false;
 		}
 	}
-
-	async function importRuleset() {
-		const file = importInput.files?.[0];
-		if (!file) return;
-		importing = true;
-		try {
-			const created = await api<{ ruleset: RulesetSummary }>('/rulesets/import', {
-				method: 'POST',
-				body: file
-			});
-			rulesets = [created.ruleset, ...rulesets];
-			toasts.success('Ruleset imported.');
-		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The ruleset could not be imported.'));
-		} finally {
-			importing = false;
-			importInput.value = '';
-		}
-	}
 </script>
 
 <PageHeading
@@ -58,18 +36,8 @@
 >
 	{#snippet actions()}
 		<div class="heading-actions">
-			<input
-				class="sr-only"
-				bind:this={importInput}
-				type="file"
-				accept=".sghrules,application/vnd.socialgameshoster.ruleset+zip"
-				onchange={importRuleset}
-			/>
-			<Button variant="secondary" loading={importing} onclick={() => importInput.click()}>
-				<FileUp size={18} /> Import
-			</Button>
 			<a class="primary-link" href={resolve('/admin/rulesets/new')}
-				><Plus size={18} /> New ruleset</a
+				><Plus size={18} /> Create ruleset</a
 			>
 		</div>
 	{/snippet}
@@ -81,27 +49,24 @@
 	<section class="empty">
 		<ScrollText size={42} strokeWidth={1.5} />
 		<h2>No rulesets yet</h2>
-		<p>Create a ruleset or import an existing bundle.</p>
-		<a class="primary-link" href={resolve('/admin/rulesets/new')}>New ruleset</a>
+		<p>Create a ruleset from scratch, a copy, or a bundle.</p>
+		<a class="primary-link" href={resolve('/admin/rulesets/new')}>Create ruleset</a>
 	</section>
 {:else}
 	<div class="ruleset-grid">
 		{#each rulesets as ruleset (ruleset.id)}
-			<a
-				class:archived={ruleset.archived}
-				href={resolve(`/admin/rulesets/${ruleset.id}/edit/metadata`)}
-			>
+			<a href={resolve(`/admin/rulesets/${ruleset.id}/edit/metadata`)}>
 				<div class="cover" aria-hidden="true">
 					<span>{ruleset.name.slice(0, 1).toUpperCase()}</span>
 				</div>
 				<div class="copy">
 					<h2>{ruleset.name}</h2>
-					{#if ruleset.archived}
-						<p class="status archived-status"><Archive size={16} /> Archived</p>
-					{:else if ruleset.latestPublishedVersion}
-						<p class="status ready"><CheckCircle2 size={16} /> Ready</p>
+					{#if ruleset.status === 'valid'}
+						<p class="status ready"><CheckCircle2 size={16} /> Valid</p>
 					{:else}
-						<p class="status invalid"><TriangleAlert size={16} /> Invalid</p>
+						<p class="status invalid">
+							<TriangleAlert size={16} /> Invalid · {ruleset.issueCount} issues
+						</p>
 					{/if}
 					<p class="hint">Open editor</p>
 				</div>
@@ -160,10 +125,6 @@
 		transform: translateY(-2px);
 	}
 
-	.ruleset-grid > a.archived {
-		opacity: 0.7;
-	}
-
 	.cover {
 		display: grid;
 		place-items: center;
@@ -208,7 +169,6 @@
 		color: var(--danger);
 	}
 
-	.archived-status,
 	.hint {
 		color: var(--ink-soft);
 	}

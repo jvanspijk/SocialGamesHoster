@@ -256,10 +256,9 @@ export interface GameSummary {
 
 export interface RulesetSummary {
 	id: string;
-	slug: string;
 	name: string;
-	archived: boolean;
-	latestPublishedVersion: string;
+	status: 'valid' | 'invalid';
+	issueCount: number;
 }
 
 export interface RulesetDefinition {
