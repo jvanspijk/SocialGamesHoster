@@ -1,0 +1,3 @@
+- Hover over field to get description (tooltip)
+- Expose a JSON format to give to an LLM or advanced user. So that users can be like: "Hey ChatGPT, this is what I want ... Here's the JSON format ... Can you make the ruleset definition for me?". Maybe with a small description of where users need to be for things not possible by editing a JSON directly (such as media uploads).
+	- Important: the terminology should be user-facing, not LLM-facing. Users **can** use it to feed to an LLM, but it doesn't have to state that.
