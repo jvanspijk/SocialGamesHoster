@@ -31,6 +31,8 @@ specific scenario that is relevant, and only when real-device, Windows, LAN, or
 multi-person validation is useful. Do not run any functional test merely
 because a feature or fix changed.
 
+For every change under `Web/`, run `npm run check` from `Web/` before handing off the work.
+
 `./scripts/Test.ps1` runs:
 
 - `go test ./Host/...` and `go vet ./Host/...`;
