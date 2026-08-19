@@ -55,11 +55,13 @@ Push-Location $webRoot
 try {
     Install-FrontendDependencies -WebRoot $webRoot
     if (-not $SkipTests) {
-        npm run check
+        npm run check:types
         Assert-NativeSuccess "Frontend type checks"
         npm run test:unit
         Assert-NativeSuccess "Frontend contract tests"
-        npm run lint
+        npm run format:check
+        Assert-NativeSuccess "Frontend formatting check"
+        npm run lint:eslint
         Assert-NativeSuccess "Frontend lint"
     }
     npm run build

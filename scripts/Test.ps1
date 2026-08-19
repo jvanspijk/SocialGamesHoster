@@ -54,7 +54,7 @@ finally {
 Push-Location (Join-Path $projectRoot "Web")
 try {
     Install-FrontendDependencies -WebRoot (Get-Location).Path
-    Invoke-Check "Frontend type checks" { npm run check }
+    Invoke-Check "Frontend type checks" { npm run check:types }
     Invoke-Check "Frontend contract tests" { npm run test:unit }
     Invoke-Check "Frontend formatting check" { npm run format:check } 'Run `npm run format` from the Web directory, commit the resulting files, then rerun the check.'
     Invoke-Check "Frontend ESLint check" { npm run lint:eslint } 'Run `npm run lint:eslint` from the Web directory and fix the reported lint errors.'

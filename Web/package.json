@@ -8,6 +8,7 @@
 		"preview": "vite preview --port 9091 --host 0.0.0.0",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "npm run format && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && eslint .",
+		"check:types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest run --configLoader runner",
 		"test:e2e": "node e2e/run-playwright.mjs",
