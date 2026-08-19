@@ -300,3 +300,68 @@ func TestSaveRulesetInvalidSuccessorStaysUnselectable(t *testing.T) {
 		t.Fatalf("resaved asset not public: %#v %v", readyAssets, err)
 	}
 }
+
+func TestValidateRulesetWorkingCopyDoesNotPersist(t *testing.T) {
+	app := testutil.NewPocketBaseApp(t)
+	masters, _ := app.FindCollectionByNameOrId("game_masters")
+	master := core.NewRecord(masters)
+	master.Set("username", "validation-host")
+	master.Set("display_name", "Validation host")
+	master.Set("active", true)
+	master.SetPassword("secret-password")
+	if err := app.Save(master); err != nil {
+		t.Fatal(err)
+	}
+	rulesets, _ := app.FindCollectionByNameOrId("rulesets")
+	logical := core.NewRecord(rulesets)
+	logical.Set("slug", "validation-working-copy")
+	logical.Set("name", "Saved name")
+	logical.Set("created_by", master.Id)
+	if err := app.Save(logical); err != nil {
+		t.Fatal(err)
+	}
+	versions, _ := app.FindCollectionByNameOrId("ruleset_versions")
+	source := core.NewRecord(versions)
+	source.Set("ruleset", logical.Id)
+	source.Set("version_number", 1)
+	source.Set("state", "published")
+	source.Set("schema_version", 1)
+	source.Set("definition", testDefinition())
+	source.Set("created_by", master.Id)
+	if err := app.Save(source); err != nil {
+		t.Fatal(err)
+	}
+	logical.Set("latest_saved_version", source.Id)
+	logical.Set("latest_published_version", source.Id)
+	if err := app.Save(logical); err != nil {
+		t.Fatal(err)
+	}
+	working := testDefinition()
+	working.Teams = nil
+	body, _ := json.Marshal(saveRulesetRequest{Definition: working})
+	request := httptest.NewRequest(http.MethodPost, "/api/app/v1/rulesets/"+logical.Id+"/validate", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	request.SetPathValue("id", logical.Id)
+	recorder := httptest.NewRecorder()
+	event := &core.RequestEvent{App: app, Auth: master}
+	event.Request = request
+	event.Response = recorder
+	if err := validateRuleset(event); err != nil {
+		t.Fatal(err)
+	}
+	var report ValidationReport
+	if err := json.Unmarshal(recorder.Body.Bytes(), &report); err != nil {
+		t.Fatal(err)
+	}
+	if report.Valid() {
+		t.Fatal("working-copy validation did not report the missing team")
+	}
+	allVersions, err := app.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset}", "", 10, 0, map[string]any{"ruleset": logical.Id})
+	if err != nil || len(allVersions) != 1 {
+		t.Fatalf("validation persisted a revision: %d %v", len(allVersions), err)
+	}
+	persisted, err := definitionFromRecord(allVersions[0])
+	if err != nil || persisted.Metadata.Name != testDefinition().Metadata.Name || len(persisted.Teams) == 0 {
+		t.Fatalf("saved definition changed during validation: %+v %v", persisted, err)
+	}
+}

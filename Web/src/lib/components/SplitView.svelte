@@ -4,15 +4,17 @@
 	let {
 		rail,
 		detail,
-		detailOpen = false
+		detailOpen = false,
+		compact = false
 	}: {
 		rail: Snippet;
 		detail: Snippet;
 		detailOpen?: boolean;
+		compact?: boolean;
 	} = $props();
 </script>
 
-<div class="split-view" class:detail-open={detailOpen}>
+<div class="split-view" class:detail-open={detailOpen} class:compact>
 	<div class="rail">{@render rail()}</div>
 	<section class="detail">{@render detail()}</section>
 </div>
@@ -35,6 +37,18 @@
 		min-height: 0;
 	}
 
+	.compact {
+		height: auto;
+		min-height: 28rem;
+		max-height: min(46rem, calc(100dvh - 12rem));
+		grid-template-columns: minmax(13rem, 0.32fr) minmax(0, 1fr);
+	}
+
+	.compact .rail,
+	.compact .detail {
+		overflow: auto;
+	}
+
 	.rail {
 		border-inline-end: 1px solid var(--gold-dark);
 	}
@@ -50,6 +64,12 @@
 			min-height: 0;
 			grid-template-columns: 1fr;
 			border-inline: 0;
+		}
+
+		.split-view.compact {
+			height: auto;
+			min-height: 28rem;
+			max-height: none;
 		}
 
 		.rail,

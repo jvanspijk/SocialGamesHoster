@@ -50,6 +50,7 @@ func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group.POST("/rulesets", createRuleset)
 	group.GET("/rulesets/{id}", getRuleset)
 	group.DELETE("/rulesets/{id}", deleteRuleset)
+	group.POST("/rulesets/{id}/validate", validateRuleset)
 	group.POST("/rulesets/{id}/save", saveRuleset)
 	group.POST("/rulesets/import", func(event *core.RequestEvent) error {
 		return importBundle(event, applicationVersion)
@@ -228,6 +229,29 @@ func updateVersion(event *core.RequestEvent) error {
 
 type saveRulesetRequest struct {
 	Definition DefinitionV1 `json:"definition"`
+}
+
+// validateRuleset evaluates an editor working copy without changing the saved
+// ruleset. Assets are resolved from the latest saved revision until edit
+// sessions provide a staged effective asset set in Stage 3.
+func validateRuleset(event *core.RequestEvent) error {
+	logical, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
+	if err != nil || logical.GetBool("archived") {
+		return rulesetNotFound(event)
+	}
+	var request saveRulesetRequest
+	if err := event.BindBody(&request); err != nil {
+		return httpx.WriteError(event, result.Invalid("ruleset.invalid", "The ruleset definition could not be read.", nil))
+	}
+	saved, err := latestSavedVersion(event.App, logical)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	assetKeys, err := versionAssetKeys(event.App, saved.Id)
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
+	return event.JSON(http.StatusOK, Validate(request.Definition, assetKeys))
 }
 
 func saveRuleset(event *core.RequestEvent) error {

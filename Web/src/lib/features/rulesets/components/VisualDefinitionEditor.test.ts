@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import VisualDefinitionEditorHarness from '../../../../test/VisualDefinitionEditorHarness.svelte';
 
 describe('VisualDefinitionEditor', () => {
@@ -14,7 +14,36 @@ describe('VisualDefinitionEditor', () => {
 		expect(roleSlots).toHaveClass('dense', 'has-actions');
 		expect(slotChanges).toHaveClass('dense', 'has-actions');
 		await fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
-		expect(screen.getByText('Role slot')).toBeVisible();
+		expect(screen.getByText('Role slot', { selector: 'strong' })).toBeVisible();
+	});
+
+	it('navigates from composition reference warnings to the affected modifier', async () => {
+		const onnavigate = vi.fn();
+		render(VisualDefinitionEditorHarness, { props: { onnavigate } });
+
+		const inlineWarning = screen.getByText(/^Used by/);
+		await fireEvent.click(
+			within(inlineWarning).getByRole('button', { name: 'Conditional change 1' })
+		);
+		expect(onnavigate).toHaveBeenLastCalledWith('composition', 'modifier-1');
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Delete 3–8 players' }));
+		await fireEvent.click(
+			within(screen.getByRole('dialog')).getByRole('button', { name: 'Conditional change 1' })
+		);
+		expect(onnavigate).toHaveBeenLastCalledWith('composition', 'modifier-1');
+	});
+
+	it('renders focus targets that match nested issue destinations', () => {
+		render(VisualDefinitionEditorHarness);
+		expect(document.querySelector('[name="slot-count-0-0"]')).toBeInTheDocument();
+		expect(document.querySelector('#field-slot-selector-0-0')).toBeInTheDocument();
+		cleanup();
+
+		render(VisualDefinitionEditorHarness, { props: { section: 'knowledge' } });
+		expect(document.querySelector('#field-knowledge-viewer-0')).toBeInTheDocument();
+		expect(document.querySelector('[name="knowledge-viewer-0-tags"]')).toBeInTheDocument();
+		expect(document.querySelector('[name="knowledge-reveal-0"]')).toBeInTheDocument();
 	});
 
 	it.each([

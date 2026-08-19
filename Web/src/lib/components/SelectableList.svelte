@@ -18,12 +18,14 @@
 	let {
 		entries,
 		onselect,
+		onkeydown,
 		selectedId = '',
 		variant = 'compact',
 		leading
 	}: {
 		entries: readonly SelectableListEntry[];
 		onselect: (entryId: string) => void;
+		onkeydown?: (event: KeyboardEvent) => void;
 		selectedId?: string;
 		variant?: 'compact' | 'rich';
 		leading?: Snippet<[entry: SelectableListEntry]>;
@@ -33,6 +35,8 @@
 <div class="selectable-list" class:rich={variant === 'rich'}>
 	{#each entries as entry (entry.id)}
 		<button
+			data-entry-id={entry.id}
+			{onkeydown}
 			type="button"
 			class:selected={selectedId === entry.id}
 			class:unread={entry.unread}

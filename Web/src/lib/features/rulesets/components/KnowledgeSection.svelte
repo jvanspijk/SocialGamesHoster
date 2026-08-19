@@ -38,6 +38,7 @@
 					teams={definition.teams}
 					categories={definition.categories}
 					label="Who receives the knowledge?"
+					namePrefix={`knowledge-viewer-${index}`}
 				/>
 				<SelectorEditor
 					selector={rule.target}
@@ -45,6 +46,7 @@
 					teams={definition.teams}
 					categories={definition.categories}
 					label="Who do they learn about?"
+					namePrefix={`knowledge-target-${index}`}
 				/>
 			</div>
 			<div class="choice-block">

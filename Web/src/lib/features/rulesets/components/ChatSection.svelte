@@ -5,16 +5,26 @@
 		RulesetPartialRoomPermission,
 		RulesetRoomPermission
 	} from '$lib/api/types';
-	import Button from '$lib/components/Button.svelte';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import CheckboxGroup from '$lib/components/CheckboxGroup.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField, { type SelectOption } from '$lib/components/SelectField.svelte';
-	import { nextID, removeAt } from './definition-editor';
+	import CollectionEditor from './CollectionEditor.svelte';
+	import { duplicateByID, moveByID, nextID } from './definition-editor';
 	import RoomPermissionEditor from './RoomPermissionEditor.svelte';
 
-	let { definition = $bindable() }: { definition: RulesetDefinition } = $props();
+	let {
+		definition = $bindable(),
+		selectedItems
+	}: { definition: RulesetDefinition; selectedItems: Record<string, string> } = $props();
+	const channelEntries = $derived(
+		definition.chat.channels.map((channel) => ({
+			id: channel.id,
+			label: channel.name || 'Unnamed channel',
+			supportingLabel: channel.messageRestriction === 'emoji_only' ? 'Emoji only' : 'Text and emoji'
+		}))
+	);
 	const defaultRoomKinds: Array<{ key: 'general' | 'playerDm'; title: string }> = [
 		{ key: 'general', title: 'General room' },
 		{ key: 'playerDm', title: 'Private player messages' }
@@ -42,7 +52,7 @@
 	}
 	function addCustomChannel() {
 		definition.chat.channels ??= [];
-		definition.chat.channels.push({
+		const channel: RulesetChatChannel = {
 			id: nextID(
 				'channel',
 				definition.chat.channels.map((item) => item.id)
@@ -58,7 +68,9 @@
 			gameMasterMaySend: true,
 			senderDisplay: 'game_alias',
 			phaseOverrides: {}
-		});
+		};
+		definition.chat.channels.push(channel);
+		selectedItems.channels = channel.id;
 	}
 	function phaseChannelState(
 		channel: RulesetChatChannel,
@@ -132,27 +144,28 @@
 	{/each}
 </div>
 
-<div class="subsection">
-	<ContentHeader
-		density="dense"
-		description="Create role- or team-specific conversations, including emoji-only channels."
-		>{#snippet title()}<h2>Custom channels</h2>{/snippet}{#snippet actions()}<Button
-				variant="secondary"
-				onclick={addCustomChannel}>Add channel</Button
-			>{/snippet}</ContentHeader
-	>
-</div>
-<div class="cards">
-	{#each definition.chat.channels ?? [] as channel, channelIndex (channel.id)}
-		<article class="item-card">
-			<ContentHeader density="dense"
-				>{#snippet title()}<h3>
-						{channel.name || 'Unnamed channel'}
-					</h3>{/snippet}{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.chat.channels, channelIndex)}>Remove channel</button
-					>{/snippet}</ContentHeader
-			>
+<CollectionEditor
+	title="Custom channels"
+	description="Create optional role- or team-specific conversations, including emoji-only channels."
+	entries={channelEntries}
+	selectedId={selectedItems.channels ?? ''}
+	onselect={(id) => (selectedItems.channels = id)}
+	onadd={addCustomChannel}
+	onduplicate={(id) => {
+		const item = duplicateByID(definition.chat.channels, id, 'channel');
+		if (item) selectedItems.channels = item.id;
+	}}
+	onmove={(id, direction) => moveByID(definition.chat.channels, id, direction)}
+	onremove={(id) =>
+		definition.chat.channels.splice(
+			definition.chat.channels.findIndex((item) => item.id === id),
+			1
+		)}
+>
+	{#snippet editor(id)}{@const channelIndex = definition.chat.channels.findIndex(
+			(item) => item.id === id
+		)}{@const channel = definition.chat.channels[channelIndex]}{#if channel}
+			<h3>{channel.name || 'Unnamed channel'}</h3>
 			<div class="form-grid">
 				<Field
 					label="Channel name"
@@ -255,9 +268,8 @@
 							</div>{/each}
 					</div>
 				</div>{/if}
-		</article>
-	{:else}<p class="empty">No custom chat channels in this ruleset.</p>{/each}
-</div>
+		{/if}{/snippet}
+</CollectionEditor>
 
 <div class="subsection">
 	<ContentHeader

@@ -8,13 +8,15 @@
 		roles,
 		teams,
 		categories,
-		label = 'Who matches?'
+		label = 'Who matches?',
+		namePrefix = 'selector'
 	}: {
 		selector: RulesetSelector;
 		roles: RulesetRole[];
 		teams: RulesetTeam[];
 		categories: RulesetCategory[];
 		label?: string;
+		namePrefix?: string;
 	} = $props();
 
 	function splitTags(value: string) {
@@ -25,13 +27,13 @@
 	}
 </script>
 
-<fieldset class="selector">
+<fieldset class="selector" id={`field-${namePrefix}`} tabindex="-1">
 	<legend>{label}</legend>
 	<p class="muted">Leave every choice empty to include all roles.</p>
 	{#if teams.length}
 		<CheckboxGroup
 			label="Teams"
-			name="selector-teams"
+			name={`${namePrefix}-teams`}
 			bind:values={selector.teamIds}
 			options={teams.map((team) => ({ value: team.id, label: team.name }))}
 		/>
@@ -39,7 +41,7 @@
 	{#if categories.length}
 		<CheckboxGroup
 			label="Categories"
-			name="selector-categories"
+			name={`${namePrefix}-categories`}
 			bind:values={selector.categoryIds}
 			options={categories.map((category) => ({ value: category.id, label: category.name }))}
 		/>
@@ -47,14 +49,14 @@
 	{#if roles.length}
 		<CheckboxGroup
 			label="Specific roles"
-			name="selector-roles"
+			name={`${namePrefix}-roles`}
 			bind:values={selector.roleIds}
 			options={roles.map((role) => ({ value: role.id, label: role.name }))}
 		/>
 	{/if}
 	<Field
 		label="Tags (comma-separated)"
-		name="selector-tags"
+		name={`${namePrefix}-tags`}
 		value={selector.tags.join(', ')}
 		onchange={splitTags}
 		placeholder="investigative, unique"

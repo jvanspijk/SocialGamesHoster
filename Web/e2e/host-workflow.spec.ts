@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('owner can create a ruleset', async ({ page }) => {
+	test.setTimeout(60_000);
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Set up the host' })).toBeVisible();
 
@@ -13,16 +14,34 @@ test('owner can create a ruleset', async ({ page }) => {
 	await expect(page.getByRole('navigation', { name: 'Management' })).toBeVisible();
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'Rulesets' })).toBeVisible();
-	await page.getByRole('link', { name: 'New ruleset' }).first().click();
+	await page.getByRole('link', { name: 'Create ruleset' }).first().click();
 
-	await expect(page.getByRole('heading', { name: 'Overview and limits' })).toBeVisible();
-	await page.getByLabel('Stable slug').fill('party-test');
-	await page.getByLabel('Name').fill('Party Test');
-	await page.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.getByRole('heading', { name: 'Create ruleset' })).toBeVisible();
+	await page.getByLabel('Ruleset name').fill('Party Test');
+	await page.getByRole('button', { name: 'Create ruleset' }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/metadata$/);
 
+	await page.getByRole('textbox', { name: /^Name$/ }).fill('Recovered Party Test');
+	await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible();
+	await page.waitForTimeout(600);
 	await page.reload();
-	await expect(page.getByLabel('Name')).toHaveValue('Party Test');
+	await expect(page.getByRole('textbox', { name: /^Name$/ })).toHaveValue('Recovered Party Test');
+	await expect(page.getByText('Recovered changes', { exact: true })).toBeVisible();
+
+	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
+	const leaveDialog = page.getByRole('dialog', { name: 'Leave with unsaved changes?' });
+	await expect(leaveDialog).toBeVisible();
+	await leaveDialog.getByRole('button', { name: 'Keep editing' }).click();
+	await expect(page.getByRole('textbox', { name: /^Name$/ })).toHaveValue('Recovered Party Test');
+	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
+	await leaveDialog.getByRole('button', { name: 'Save and leave' }).click();
+	await expect(page).toHaveURL(/\/admin\/rulesets$/);
+	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
+	await page.getByLabel('Description').fill('Discard this change');
+	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
+	await leaveDialog.getByRole('button', { name: 'Discard and leave' }).click();
+	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
+	await expect(page.getByLabel('Description')).toHaveValue('');
 
 	const actions = page.getByRole('button', { name: 'Actions', exact: true });
 	await actions.click();
@@ -60,7 +79,7 @@ test('owner can create a ruleset', async ({ page }) => {
 	await expect(sections).toBeFocused();
 
 	await sections.click();
-	await sheet.getByRole('button', { name: 'Role setup', exact: true }).click();
+	await sheet.getByRole('button', { name: /^Player setup/ }).click();
 	await page.getByRole('button', { name: 'Add band', exact: true }).click();
 
 	const roleSlots = page

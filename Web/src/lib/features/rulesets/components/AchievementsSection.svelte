@@ -1,87 +1,107 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
-	import Button from '$lib/components/Button.svelte';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
-	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
-	import { nextID, removeAt, type AssetOption } from './definition-editor';
-
+	import CollectionEditor from './CollectionEditor.svelte';
+	import { duplicateByID, moveByID, nextID, type AssetOption } from './definition-editor';
 	let {
 		definition = $bindable(),
-		assets
-	}: { definition: RulesetDefinition; assets: AssetOption[] } = $props();
+		assets,
+		selectedItems
+	}: {
+		definition: RulesetDefinition;
+		assets: AssetOption[];
+		selectedItems: Record<string, string>;
+	} = $props();
+	const entries = $derived(
+		definition.achievements.map((item) => ({
+			id: item.id,
+			label: item.name || 'Unnamed achievement',
+			supportingLabel: `${item.points} points`
+		}))
+	);
 	const imageOptions = () => [
 		{ value: '', label: 'No image' },
 		...assets
 			.filter((asset) => asset.kind === 'image')
 			.map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
 	];
-	function addAchievement() {
-		definition.achievements.push({
+	function add() {
+		const item = {
 			id: nextID(
 				'achievement',
-				definition.achievements.map((item) => item.id)
+				definition.achievements.map((value) => value.id)
 			),
 			name: 'New achievement',
 			description: '',
 			points: 0,
 			hiddenUntilGameCompleted: false
-		});
+		};
+		definition.achievements.push(item);
+		selectedItems.achievements = item.id;
 	}
 </script>
 
-<ContentHeader density="dense" description="Awards a game master can give after a game.">
-	{#snippet title()}<h2>Achievements</h2>{/snippet}
-	{#snippet actions()}<Button variant="secondary" onclick={addAchievement}>Add achievement</Button
-		>{/snippet}
-</ContentHeader>
-<div class="cards">
-	{#each definition.achievements as achievement, index (achievement.id)}
-		<article class="item-card">
-			<ContentHeader density="dense">
-				{#snippet title()}<h3>{achievement.name || 'Unnamed achievement'}</h3>{/snippet}
-				{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.achievements, index)}>Remove</button
-					>{/snippet}
-			</ContentHeader>
-			<div class="form-grid">
-				<Field
-					label="Name"
-					name={`achievement-name-${index}`}
-					bind:value={achievement.name}
-					required
-				/>
-			</div>
+<CollectionEditor
+	title="Achievements"
+	description="Optional awards a game master can give after a game."
+	{entries}
+	selectedId={selectedItems.achievements ?? ''}
+	onselect={(id) => (selectedItems.achievements = id)}
+	onadd={add}
+	onduplicate={(id) => {
+		const item = duplicateByID(definition.achievements, id, 'achievement');
+		if (item) selectedItems.achievements = item.id;
+	}}
+	onmove={(id, direction) => moveByID(definition.achievements, id, direction)}
+	onremove={(id) =>
+		definition.achievements.splice(
+			definition.achievements.findIndex((item) => item.id === id),
+			1
+		)}
+>
+	{#snippet editor(id)}{@const index = definition.achievements.findIndex(
+			(item) => item.id === id
+		)}{@const item = definition.achievements[index]}{#if item}<h3>
+				{item.name || 'Unnamed achievement'}
+			</h3>
 			<Field
+				label="Name"
+				name={`achievement-name-${index}`}
+				bind:value={item.name}
+				required
+			/><Field
 				label="Description"
 				name={`achievement-description-${index}`}
-				bind:value={achievement.description}
+				bind:value={item.description}
 				multiline
 			/>
 			<div class="form-grid">
 				<label
 					><span>Achievement points</span><input
+						name={`achievement-points-${index}`}
 						type="number"
 						min="0"
 						max="10000"
-						bind:value={achievement.points}
+						bind:value={item.points}
 					/></label
 				><CheckboxField
 					label="Hide from players until the game ends"
 					name={`achievement-hidden-${index}`}
-					bind:checked={achievement.hiddenUntilGameCompleted}
+					bind:checked={item.hiddenUntilGameCompleted}
 				/>
 			</div>
 			<SelectField
 				label="Badge image (optional)"
 				name={`achievement-image-${index}`}
-				bind:value={achievement.imageAssetKey}
+				bind:value={item.imageAssetKey}
 				options={imageOptions()}
-			/>
-		</article>
-	{:else}
-		<p class="empty">No achievements in this ruleset.</p>
-	{/each}
-</div>
+			/>{/if}{/snippet}
+</CollectionEditor>
+
+<style>
+	h3 {
+		margin: 0;
+	}
+</style>

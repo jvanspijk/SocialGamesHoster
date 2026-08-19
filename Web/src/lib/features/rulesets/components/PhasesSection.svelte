@@ -1,47 +1,82 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
-	import Button from '$lib/components/Button.svelte';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
-	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
-	import { nextID, removeAt } from './definition-editor';
-
-	let { definition = $bindable() }: { definition: RulesetDefinition } = $props();
-
-	function addPhase() {
-		const order = Math.max(0, ...definition.phases.map((item) => item.order)) + 1;
-		definition.phases.push({
+	import type { EditorSection } from '../editor-state';
+	import CollectionEditor from './CollectionEditor.svelte';
+	import { duplicateByID, incomingReferences, moveByID, nextID } from './definition-editor';
+	let {
+		definition = $bindable(),
+		selectedItems,
+		onnavigate
+	}: {
+		definition: RulesetDefinition;
+		selectedItems: Record<string, string>;
+		onnavigate: (section: EditorSection, itemId?: string) => void;
+	} = $props();
+	const entries = $derived(
+		definition.phases.map((phase) => ({
+			id: phase.id,
+			label: phase.name || 'Unnamed phase',
+			supportingLabel: `Order ${phase.order}`
+		}))
+	);
+	function add() {
+		const item = {
 			id: nextID(
 				'phase',
-				definition.phases.map((item) => item.id)
+				definition.phases.map((value) => value.id)
 			),
 			name: 'New phase',
 			description: '',
-			order,
+			order: Math.max(0, ...definition.phases.map((value) => value.order)) + 1,
 			startsRound: false,
 			suggestedDurationSeconds: 0
-		});
+		};
+		definition.phases.push(item);
+		selectedItems.phases = item.id;
+	}
+	function movePhase(id: string, direction: -1 | 1) {
+		moveByID(definition.phases, id, direction);
+		definition.phases.forEach((phase, index) => (phase.order = index + 1));
 	}
 </script>
 
-<ContentHeader density="dense" description="The ordered steps a game master advances through.">
-	{#snippet title()}<h2>Phases</h2>{/snippet}
-	{#snippet actions()}<Button variant="secondary" onclick={addPhase}>Add phase</Button>{/snippet}
-</ContentHeader>
-<div class="cards">
-	{#each definition.phases as phase, index (phase.id)}
-		<article class="item-card">
-			<ContentHeader density="dense">
-				{#snippet title()}<h3>{phase.order}. {phase.name || 'Unnamed phase'}</h3>{/snippet}
-				{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.phases, index)}>Remove</button
-					>{/snippet}
-			</ContentHeader>
+<CollectionEditor
+	title="Phases"
+	description="Optional ordered steps a game master can advance through."
+	{entries}
+	selectedId={selectedItems.phases ?? ''}
+	onselect={(id) => (selectedItems.phases = id)}
+	onadd={add}
+	onduplicate={(id) => {
+		const item = duplicateByID(definition.phases, id, 'phase');
+		if (item) {
+			item.order = Math.max(...definition.phases.map((value) => value.order)) + 1;
+			selectedItems.phases = item.id;
+		}
+	}}
+	onmove={movePhase}
+	onremove={(id) =>
+		definition.phases.splice(
+			definition.phases.findIndex((item) => item.id === id),
+			1
+		)}
+	usages={(id) =>
+		incomingReferences(definition, 'phase', id).map((usage) => ({
+			label: usage.label,
+			navigate: () => onnavigate(usage.section, usage.itemId)
+		}))}
+	emptyDescription="Game flow is optional. Add a phase if the game follows an ordered sequence."
+>
+	{#snippet editor(id)}{@const index = definition.phases.findIndex(
+			(item) => item.id === id
+		)}{@const phase = definition.phases[index]}{#if phase}<h3>{phase.name || 'Unnamed phase'}</h3>
 			<div class="form-grid thirds">
-				<Field label="Name" name={`phase-name-${index}`} bind:value={phase.name} required />
-				<label><span>Order</span><input type="number" min="1" bind:value={phase.order} /></label>
+				<Field label="Name" name={`phase-name-${index}`} bind:value={phase.name} required /><label
+					><span>Order</span><input type="number" min="1" bind:value={phase.order} /></label
+				>
 			</div>
 			<Field
 				label="Instructions"
@@ -52,17 +87,16 @@
 			<div class="form-grid thirds">
 				<label
 					><span>Suggested seconds</span><input
+						name={`phase-seconds-${index}`}
 						type="number"
 						min="0"
 						bind:value={phase.suggestedDurationSeconds}
 					/></label
-				>
-				<CheckboxField
+				><CheckboxField
 					label="Starts a new round"
 					name={`phase-starts-round-${index}`}
 					bind:checked={phase.startsRound}
-				/>
-				<SelectField
+				/><SelectField
 					label="Sound when phase starts"
 					name={`phase-audio-${index}`}
 					bind:value={phase.audioCueId}
@@ -71,9 +105,11 @@
 						...definition.audioCues.map((cue) => ({ value: cue.id, label: cue.name }))
 					]}
 				/>
-			</div>
-		</article>
-	{:else}
-		<p class="empty">Add the phases used to run this game.</p>
-	{/each}
-</div>
+			</div>{/if}{/snippet}
+</CollectionEditor>
+
+<style>
+	h3 {
+		margin: 0;
+	}
+</style>

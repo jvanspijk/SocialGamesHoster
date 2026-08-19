@@ -1,50 +1,80 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
-	import Button from '$lib/components/Button.svelte';
-	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
-	import { nextID, removeAt, type AssetOption } from './definition-editor';
-
+	import type { EditorSection } from '../editor-state';
+	import CollectionEditor from './CollectionEditor.svelte';
+	import {
+		duplicateByID,
+		incomingReferences,
+		moveByID,
+		nextID,
+		type AssetOption
+	} from './definition-editor';
 	let {
 		definition = $bindable(),
-		assets
-	}: { definition: RulesetDefinition; assets: AssetOption[] } = $props();
+		assets,
+		selectedItems,
+		onnavigate
+	}: {
+		definition: RulesetDefinition;
+		assets: AssetOption[];
+		selectedItems: Record<string, string>;
+		onnavigate: (section: EditorSection, itemId?: string) => void;
+	} = $props();
 	const audioAssets = () => assets.filter((asset) => asset.kind === 'audio');
-	function addAudioCue() {
-		definition.audioCues.push({
+	const entries = $derived(
+		definition.audioCues.map((item) => ({
+			id: item.id,
+			label: item.name || 'Unnamed audio cue',
+			supportingLabel:
+				item.defaultAudience === 'all' ? 'All players' : item.defaultAudience.replace('_', ' ')
+		}))
+	);
+	function add() {
+		const item = {
 			id: nextID(
 				'cue',
-				definition.audioCues.map((item) => item.id)
+				definition.audioCues.map((value) => value.id)
 			),
 			name: 'New audio cue',
 			assetKey: audioAssets()[0]?.assetKey ?? '',
-			defaultAudience: 'all'
-		});
+			defaultAudience: 'all' as const
+		};
+		definition.audioCues.push(item);
+		selectedItems.audioCues = item.id;
 	}
 </script>
 
-<ContentHeader
-	density="dense"
-	description="Named sounds a game master or phase can play for selected listeners."
+<CollectionEditor
+	title="Audio cues"
+	description="Optional named sounds for selected listeners."
+	{entries}
+	selectedId={selectedItems.audioCues ?? ''}
+	onselect={(id) => (selectedItems.audioCues = id)}
+	onadd={add}
+	onduplicate={(id) => {
+		const item = duplicateByID(definition.audioCues, id, 'cue');
+		if (item) selectedItems.audioCues = item.id;
+	}}
+	onmove={(id, direction) => moveByID(definition.audioCues, id, direction)}
+	onremove={(id) =>
+		definition.audioCues.splice(
+			definition.audioCues.findIndex((item) => item.id === id),
+			1
+		)}
+	usages={(id) =>
+		incomingReferences(definition, 'audioCue', id).map((usage) => ({
+			label: usage.label,
+			navigate: () => onnavigate(usage.section, usage.itemId)
+		}))}
+	emptyDescription="Upload support arrives in the Media stage. Add a cue when an audio file is available."
 >
-	{#snippet title()}<h2>Audio cues</h2>{/snippet}
-	{#snippet actions()}<Button variant="secondary" onclick={addAudioCue}>Add audio cue</Button
-		>{/snippet}
-</ContentHeader>
-<div class="cards">
-	{#each definition.audioCues as cue, index (cue.id)}
-		<article class="item-card">
-			<ContentHeader density="dense">
-				{#snippet title()}<h3>{cue.name || 'Unnamed cue'}</h3>{/snippet}
-				{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.audioCues, index)}>Remove</button
-					>{/snippet}
-			</ContentHeader>
+	{#snippet editor(id)}{@const index = definition.audioCues.findIndex(
+			(item) => item.id === id
+		)}{@const cue = definition.audioCues[index]}{#if cue}<h3>{cue.name || 'Unnamed audio cue'}</h3>
 			<div class="form-grid">
-				<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required />
-				<SelectField
+				<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required /><SelectField
 					label="Audio file"
 					name={`cue-audio-file-${index}`}
 					bind:value={cue.assetKey}
@@ -52,8 +82,7 @@
 						{ value: '', label: 'Choose uploaded audio' },
 						...audioAssets().map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
 					]}
-				/>
-				<SelectField
+				/><SelectField
 					label="Normal audience"
 					name={`cue-audience-${index}`}
 					bind:value={cue.defaultAudience}
@@ -66,11 +95,12 @@
 				/>
 			</div>
 			{#if cue.defaultAudience === 'team' || cue.defaultAudience === 'player'}<p class="hint">
-					This cue needs a team or player chosen when a game master plays it. It cannot be used as
-					an automatic phase sound.
-				</p>{/if}
-		</article>
-	{:else}
-		<p class="empty">Upload an audio file, then add a cue that uses it.</p>
-	{/each}
-</div>
+					Choose the target when playing this cue. It cannot start automatically with a phase.
+				</p>{/if}{/if}{/snippet}
+</CollectionEditor>
+
+<style>
+	h3 {
+		margin: 0;
+	}
+</style>

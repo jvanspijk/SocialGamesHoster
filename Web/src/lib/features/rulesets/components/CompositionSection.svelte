@@ -1,75 +1,154 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
-	import Button from '$lib/components/Button.svelte';
 	import CheckboxGroup from '$lib/components/CheckboxGroup.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
-	import { blankSelector, nextID, removeAt } from './definition-editor';
+	import type { EditorSection } from '../editor-state';
+	import CollectionEditor from './CollectionEditor.svelte';
+	import {
+		blankSelector,
+		duplicateByID,
+		incomingReferences,
+		moveByID,
+		nextID
+	} from './definition-editor';
 	import SelectorEditor from './SelectorEditor.svelte';
-
-	let { definition = $bindable() }: { definition: RulesetDefinition } = $props();
+	let {
+		definition = $bindable(),
+		selectedItems,
+		onnavigate
+	}: {
+		definition: RulesetDefinition;
+		selectedItems: Record<string, string>;
+		onnavigate: (section: EditorSection, itemId?: string) => void;
+	} = $props();
+	const bandEntries = $derived(
+		definition.compositionBands.map((band) => ({
+			id: band.id,
+			label: `${band.minPlayers}–${band.maxPlayers} players`,
+			supportingLabel: `${band.slots.length} slots`
+		}))
+	);
+	const modifierEntries = $derived(
+		definition.compositionModifiers.map((modifier, index) => ({
+			id: modifier.id,
+			label: `Conditional change ${index + 1}`,
+			supportingLabel:
+				definition.roles.find((role) => role.id === modifier.whenRolePresent)?.name ??
+				'Choose a role'
+		}))
+	);
 	function addBand() {
-		definition.compositionBands.push({
+		const item = {
 			id: nextID(
 				'band',
-				definition.compositionBands.map((item) => item.id)
+				definition.compositionBands.map((value) => value.id)
 			),
 			minPlayers: definition.metadata.minPlayers,
 			maxPlayers: definition.metadata.maxPlayers,
 			slots: []
-		});
+		};
+		definition.compositionBands.push(item);
+		selectedItems.compositionBands = item.id;
 	}
-	function addSlot(bandIndex: number) {
-		const band = definition.compositionBands[bandIndex];
-		const used = definition.compositionBands.flatMap((item) => item.slots.map((slot) => slot.id));
+	function duplicateBand(id: string) {
+		const source = definition.compositionBands.find((item) => item.id === id);
+		if (!source) return;
+		const item = JSON.parse(JSON.stringify(source)) as typeof source;
+		item.id = nextID(
+			'band',
+			definition.compositionBands.map((value) => value.id)
+		);
+		const used = definition.compositionBands.flatMap((band) => band.slots.map((slot) => slot.id));
+		item.slots.forEach((slot) => {
+			slot.id = nextID('slot', used);
+			used.push(slot.id);
+		});
+		definition.compositionBands.splice(definition.compositionBands.indexOf(source) + 1, 0, item);
+		selectedItems.compositionBands = item.id;
+	}
+	function addSlot(bandId: string) {
+		const band = definition.compositionBands.find((item) => item.id === bandId);
+		if (!band) return;
 		band.slots.push({
-			id: nextID('slot', used),
+			id: nextID(
+				'slot',
+				definition.compositionBands.flatMap((item) => item.slots.map((slot) => slot.id))
+			),
 			label: 'Role slot',
 			count: 1,
 			selector: blankSelector()
 		});
 	}
 	function addModifier() {
-		definition.compositionModifiers.push({
+		const item = {
 			id: nextID(
 				'modifier',
-				definition.compositionModifiers.map((item) => item.id)
+				definition.compositionModifiers.map((value) => value.id)
 			),
 			whenRolePresent: definition.roles[0]?.id ?? '',
 			slotAdjustments: [],
 			requiresRoleIds: [],
 			excludesRoleIds: []
-		});
+		};
+		definition.compositionModifiers.push(item);
+		selectedItems.compositionModifiers = item.id;
 	}
-	function addAdjustment(modifierIndex: number) {
-		definition.compositionModifiers[modifierIndex].slotAdjustments.push({
-			slotId: definition.compositionBands[0]?.slots[0]?.id ?? '',
-			delta: 1
-		});
+	function addAdjustment(id: string) {
+		definition.compositionModifiers
+			.find((item) => item.id === id)
+			?.slotAdjustments.push({
+				slotId: definition.compositionBands[0]?.slots[0]?.id ?? '',
+				delta: 1
+			});
+	}
+	function bandUsages(id: string) {
+		const band = definition.compositionBands.find((item) => item.id === id);
+		const usages = (band?.slots ?? []).flatMap((slot) =>
+			incomingReferences(definition, 'slot', slot.id)
+		);
+		return Array.from(
+			new Map(
+				usages.map((usage) => [
+					`${usage.section}:${usage.itemId ?? usage.label}`,
+					{
+						label: usage.label,
+						navigate: () => onnavigate(usage.section, usage.itemId)
+					}
+				])
+			).values()
+		);
 	}
 </script>
 
-<ContentHeader
-	density="dense"
-	description="Define how many slots are filled for every supported party size."
+<CollectionEditor
+	title="Player-count bands"
+	description="Define how roles are filled for every supported party size."
+	entries={bandEntries}
+	selectedId={selectedItems.compositionBands ?? ''}
+	onselect={(id) => (selectedItems.compositionBands = id)}
+	onadd={addBand}
+	addLabel="Add band"
+	onduplicate={duplicateBand}
+	onmove={(id, direction) => moveByID(definition.compositionBands, id, direction)}
+	onremove={(id) =>
+		definition.compositionBands.splice(
+			definition.compositionBands.findIndex((item) => item.id === id),
+			1
+		)}
+	usages={bandUsages}
+	emptyDescription="Add a player-count band covering the supported player range."
 >
-	{#snippet title()}<h2>Player-count bands</h2>{/snippet}
-	{#snippet actions()}<Button variant="secondary" onclick={addBand}>Add band</Button>{/snippet}
-</ContentHeader>
-<div class="cards">
-	{#each definition.compositionBands as band, bandIndex (band.id)}
-		<article class="item-card">
-			<ContentHeader density="dense">
-				{#snippet title()}<h3>{band.minPlayers}–{band.maxPlayers} players</h3>{/snippet}
-				{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.compositionBands, bandIndex)}>Remove</button
-					>{/snippet}
-			</ContentHeader>
+	{#snippet editor(id)}{@const index = definition.compositionBands.findIndex(
+			(item) => item.id === id
+		)}{@const band = definition.compositionBands[index]}{#if band}<h3>
+				{band.minPlayers}–{band.maxPlayers} players
+			</h3>
 			<div class="form-grid thirds">
 				<label
 					><span>Minimum players</span><input
+						name={`band-min-${index}`}
 						type="number"
 						min="1"
 						max="30"
@@ -77,6 +156,7 @@
 					/></label
 				><label
 					><span>Maximum players</span><input
+						name={`band-max-${index}`}
 						type="number"
 						min="1"
 						max="30"
@@ -84,30 +164,36 @@
 					/></label
 				>
 			</div>
-			<div class="nested-heading">
-				<ContentHeader density="dense"
-					>{#snippet title()}<strong>Role slots</strong>{/snippet}{#snippet actions()}<button
-							class="add-small"
-							onclick={() => addSlot(bandIndex)}>Add slot</button
-						>{/snippet}</ContentHeader
-				>
-			</div>
-			{#each band.slots as slot, slotIndex (slot.id)}
-				<div class="nested">
+			<ContentHeader density="dense"
+				>{#snippet title()}<strong>Role slots</strong>{/snippet}{#snippet actions()}<button
+						class="add-small"
+						onclick={() => addSlot(id)}>Add slot</button
+					>{/snippet}</ContentHeader
+			>{#each band.slots as slot, slotIndex (slot.id)}<div class="nested">
 					<ContentHeader density="dense"
 						>{#snippet title()}<strong>{slot.label || 'Unnamed slot'}</strong
-							>{/snippet}{#snippet actions()}<button
-								class="remove"
-								onclick={() => removeAt(band.slots, slotIndex)}>Remove</button
-							>{/snippet}</ContentHeader
+							>{/snippet}{#snippet actions()}{@const references = incomingReferences(
+								definition,
+								'slot',
+								slot.id
+							)}{#if references.length}<span class="hint compact"
+									>Used by
+									{#each references as usage, usageIndex (usage.label + usageIndex)}<button
+											class="usage"
+											onclick={() => onnavigate(usage.section, usage.itemId)}>{usage.label}</button
+										>{/each}</span
+								>{:else}<button class="remove" onclick={() => band.slots.splice(slotIndex, 1)}
+									>Remove</button
+								>{/if}{/snippet}</ContentHeader
 					>
 					<div class="form-grid thirds">
 						<Field
 							label="Label"
-							name={`slot-label-${bandIndex}-${slotIndex}`}
+							name={`slot-label-${index}-${slotIndex}`}
 							bind:value={slot.label}
 						/><label
 							><span>Number of players</span><input
+								name={`slot-count-${index}-${slotIndex}`}
 								type="number"
 								min="0"
 								max="30"
@@ -121,70 +207,66 @@
 						teams={definition.teams}
 						categories={definition.categories}
 						label="Roles allowed in this slot"
+						namePrefix={`slot-selector-${index}-${slotIndex}`}
 					/>
-				</div>
-			{/each}
-		</article>
-	{/each}
-</div>
+				</div>{:else}<p class="hint">
+					Add a slot and choose which roles can fill it.
+				</p>{/each}{/if}{/snippet}
+</CollectionEditor>
 
-<div class="subsection">
-	<ContentHeader density="dense" description="Adjust slots when a particular role appears."
-		>{#snippet title()}<h2>Conditional changes</h2>{/snippet}{#snippet actions()}<Button
-				variant="secondary"
-				onclick={addModifier}>Add condition</Button
-			>{/snippet}</ContentHeader
-	>
-</div>
-<div class="cards">
-	{#each definition.compositionModifiers as modifier, modifierIndex (modifier.id)}
-		<article class="item-card">
-			<ContentHeader density="dense"
-				>{#snippet title()}<h3>Conditional change</h3>{/snippet}{#snippet actions()}<button
-						class="remove"
-						onclick={() => removeAt(definition.compositionModifiers, modifierIndex)}>Remove</button
+<CollectionEditor
+	title="Conditional changes"
+	description="Optionally adjust slots when a particular role appears."
+	entries={modifierEntries}
+	selectedId={selectedItems.compositionModifiers ?? ''}
+	onselect={(id) => (selectedItems.compositionModifiers = id)}
+	onadd={addModifier}
+	addLabel="Add condition"
+	onduplicate={(id) => {
+		const item = duplicateByID(definition.compositionModifiers, id, 'modifier');
+		if (item) selectedItems.compositionModifiers = item.id;
+	}}
+	onmove={(id, direction) => moveByID(definition.compositionModifiers, id, direction)}
+	onremove={(id) =>
+		definition.compositionModifiers.splice(
+			definition.compositionModifiers.findIndex((item) => item.id === id),
+			1
+		)}
+>
+	{#snippet editor(id)}{@const index = definition.compositionModifiers.findIndex(
+			(item) => item.id === id
+		)}{@const modifier = definition.compositionModifiers[index]}{#if modifier}<h3>
+				Conditional change {index + 1}
+			</h3>
+			<SelectField
+				label="When this role is present"
+				name={`modifier-role-${index}`}
+				bind:value={modifier.whenRolePresent}
+				options={[
+					{ value: '', label: 'Choose a role' },
+					...definition.roles.map((role) => ({ value: role.id, label: role.name }))
+				]}
+			/><CheckboxGroup
+				label="Also require these roles"
+				name={`modifier-required-roles-${index}`}
+				bind:values={modifier.requiresRoleIds}
+				options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+			/><CheckboxGroup
+				label="Do not apply with these roles"
+				name={`modifier-excluded-roles-${index}`}
+				bind:values={modifier.excludesRoleIds}
+				options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
+			/><ContentHeader density="dense"
+				>{#snippet title()}<strong>Slot changes</strong>{/snippet}{#snippet actions()}<button
+						class="add-small"
+						onclick={() => addAdjustment(id)}>Add change</button
 					>{/snippet}</ContentHeader
-			>
-			<div class="form-grid">
-				<SelectField
-					label="When this role is present"
-					name={`modifier-role-${modifierIndex}`}
-					bind:value={modifier.whenRolePresent}
-					options={[
-						{ value: '', label: 'Choose a role' },
-						...definition.roles.map((role) => ({ value: role.id, label: role.name }))
-					]}
-				/>
-			</div>
-			<div class="choice-block">
-				<CheckboxGroup
-					label="Also require these roles"
-					name={`modifier-required-roles-${modifierIndex}`}
-					bind:values={modifier.requiresRoleIds}
-					options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
-				/>
-			</div>
-			<div class="choice-block">
-				<CheckboxGroup
-					label="Do not apply with these roles"
-					name={`modifier-excluded-roles-${modifierIndex}`}
-					bind:values={modifier.excludesRoleIds}
-					options={definition.roles.map((role) => ({ value: role.id, label: role.name }))}
-				/>
-			</div>
-			<div class="nested-heading">
-				<ContentHeader density="dense"
-					>{#snippet title()}<strong>Slot changes</strong>{/snippet}{#snippet actions()}<button
-							class="add-small"
-							onclick={() => addAdjustment(modifierIndex)}>Add change</button
-						>{/snippet}</ContentHeader
+			>{#each modifier.slotAdjustments as adjustment, adjustmentIndex (adjustment)}<div
+					class="inline-row"
 				>
-			</div>
-			{#each modifier.slotAdjustments as adjustment, adjustmentIndex (adjustment)}
-				<div class="inline-row">
 					<SelectField
 						label="Slot"
-						name={`modifier-slot-${modifierIndex}-${adjustmentIndex}`}
+						name={`modifier-slot-${index}-${adjustmentIndex}`}
 						bind:value={adjustment.slotId}
 						options={[
 							{ value: '', label: 'Choose a slot' },
@@ -200,10 +282,21 @@
 						/></label
 					><button
 						class="remove"
-						onclick={() => removeAt(modifier.slotAdjustments, adjustmentIndex)}>Remove</button
+						onclick={() => modifier.slotAdjustments.splice(adjustmentIndex, 1)}>Remove</button
 					>
-				</div>
-			{/each}
-		</article>
-	{/each}
-</div>
+				</div>{/each}{/if}{/snippet}
+</CollectionEditor>
+
+<style>
+	h3 {
+		margin: 0;
+	}
+	.usage {
+		border: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+		padding: 0 0 0 var(--space-1);
+		text-decoration: underline;
+	}
+</style>
