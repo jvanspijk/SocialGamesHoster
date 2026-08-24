@@ -413,6 +413,7 @@ func adminView(event *core.RequestEvent) error {
 	for _, asset := range assetRecords {
 		projectedAssets = append(projectedAssets, map[string]any{
 			"id": asset.Id, "assetKey": asset.GetString("asset_key"), "kind": asset.GetString("kind"),
+			"displayName": asset.GetString("display_name"), "accessibilityText": asset.GetString("accessibility_text"),
 		})
 	}
 	awards, _ := event.App.FindRecordsByFilter("achievement_awards", "game = {:game}", "-created", 500, 0, dbx.Params{"game": game.Id})
@@ -535,6 +536,7 @@ func playerView(event *core.RequestEvent) error {
 		}
 		assets = append(assets, map[string]any{
 			"id": asset.Id, "assetKey": asset.GetString("asset_key"), "kind": asset.GetString("kind"),
+			"displayName": asset.GetString("display_name"), "accessibilityText": asset.GetString("accessibility_text"),
 			"checksum": asset.GetString("checksum"), "preview": "/api/app/v1/ruleset-assets/" + asset.Id,
 		})
 	}

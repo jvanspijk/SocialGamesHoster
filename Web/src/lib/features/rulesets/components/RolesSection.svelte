@@ -12,25 +12,23 @@
 		incomingReferences,
 		moveByID,
 		nextID,
-		type AssetOption
+		type AssetOption,
+		type MediaActions
 	} from './definition-editor';
+	import MediaField from './MediaField.svelte';
 	let {
 		definition = $bindable(),
 		assets,
+		media,
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
+		media: MediaActions;
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
-	const images = () => [
-		{ value: '', label: 'No image' },
-		...assets
-			.filter((asset) => asset.kind === 'image')
-			.map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
-	];
 	const abilityEntries = $derived(
 		definition.abilities.map((item) => ({
 			id: item.id,
@@ -120,11 +118,13 @@
 				name={`ability-description-${index}`}
 				bind:value={ability.description}
 				multiline
-			/><SelectField
-				label="Ability image (optional)"
+			/><MediaField
+				label="Ability image"
+				kind="image"
 				name={`ability-image-${index}`}
 				bind:value={ability.imageAssetKey}
-				options={images()}
+				{assets}
+				{media}
 			/><CheckboxField
 				label="May combine with other combinable abilities"
 				name={`ability-combinable-${index}`}
@@ -206,13 +206,16 @@
 							max="30"
 							bind:value={role.maxCopies}
 						/></label
-					><SelectField
-						label="Role image (optional)"
-						name={`role-image-${index}`}
-						bind:value={role.imageAssetKey}
-						options={images()}
-					/>
+					>
 				</div>
+				<MediaField
+					label="Role image"
+					kind="image"
+					name={`role-image-${index}`}
+					bind:value={role.imageAssetKey}
+					{assets}
+					{media}
+				/>
 				<CheckboxGroup
 					label="Categories"
 					name={`role-categories-${index}`}

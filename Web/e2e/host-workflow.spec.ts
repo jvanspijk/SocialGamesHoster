@@ -27,6 +27,21 @@ test('owner can create a ruleset', async ({ page }) => {
 	await page.reload();
 	await expect(page.getByRole('textbox', { name: /^Name$/ })).toHaveValue('Recovered Party Test');
 	await expect(page.getByText('Recovered changes', { exact: true })).toBeVisible();
+	await page.getByRole('textbox', { name: /Media name/ }).fill('Party cover');
+	await page
+		.getByRole('textbox', { name: /Image description/ })
+		.fill('Friends gathered for a game');
+	await page.locator('input[type="file"]').setInputFiles({
+		name: 'party-cover.png',
+		mimeType: 'image/png',
+		buffer: Buffer.from(
+			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL0WQAAAABJRU5ErkJggg==',
+			'base64'
+		)
+	});
+	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
+		'Party cover'
+	);
 
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	const leaveDialog = page.getByRole('dialog', { name: 'Leave with unsaved changes?' });
@@ -37,11 +52,24 @@ test('owner can create a ruleset', async ({ page }) => {
 	await leaveDialog.getByRole('button', { name: 'Save and leave' }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await page.getByLabel('Description').fill('Discard this change');
+	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
+		'Party cover'
+	);
+	await page.getByLabel('Description', { exact: true }).fill('Discard this change');
+	const discardPattern = '**/api/app/v1/rulesets/*/edit-session/*';
+	await page.route(discardPattern, async (route) => {
+		if (route.request().method() === 'DELETE') await route.abort();
+		else await route.continue();
+	});
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	await leaveDialog.getByRole('button', { name: 'Discard and leave' }).click();
+	await expect(page).toHaveURL(/\/admin\/rulesets$/);
+	await expect(
+		page.getByText(/The local working copy was discarded\. Host cleanup could not be confirmed/)
+	).toBeVisible();
+	await page.unroute(discardPattern);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await expect(page.getByLabel('Description')).toHaveValue('');
+	await expect(page.getByLabel('Description', { exact: true })).toHaveValue('');
 
 	const actions = page.getByRole('button', { name: 'Actions', exact: true });
 	await actions.click();

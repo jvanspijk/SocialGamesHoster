@@ -15,10 +15,12 @@ export type ValidationIssue = { path: string; code?: string; message: string };
 export type ValidationReport = { errors: ValidationIssue[]; warnings: ValidationIssue[] };
 export type SectionState = 'Not started' | 'In progress' | 'Complete' | 'Needs attention';
 export type RecoveryRecord = {
-	version: 1;
+	version: 1 | 2;
 	definition: RulesetDefinition;
 	section: EditorSection;
 	selectedItems: Record<string, string>;
+	sessionId?: string;
+	stagedAssetNames?: string[];
 	timestamp: string;
 };
 
@@ -78,7 +80,7 @@ export function recoveryKey(rulesetId: string) {
 }
 
 export function serializeRecovery(record: Omit<RecoveryRecord, 'version' | 'timestamp'>): string {
-	return JSON.stringify({ ...record, version: 1, timestamp: new Date().toISOString() });
+	return JSON.stringify({ ...record, version: 2, timestamp: new Date().toISOString() });
 }
 
 export function parseRecovery(value: string | null): RecoveryRecord | null {
@@ -86,7 +88,7 @@ export function parseRecovery(value: string | null): RecoveryRecord | null {
 	try {
 		const parsed = JSON.parse(value) as RecoveryRecord;
 		if (
-			parsed.version !== 1 ||
+			(parsed.version !== 1 && parsed.version !== 2) ||
 			!parsed.definition ||
 			!isEditorSection(parsed.section) ||
 			typeof parsed.timestamp !== 'string' ||

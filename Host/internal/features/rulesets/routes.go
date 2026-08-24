@@ -38,12 +38,15 @@ type updateVersionRequest struct {
 }
 
 type preparedVersionAsset struct {
-	key, kind, mimeType, checksum string
-	metadata                      any
-	file                          *filesystem.File
+	key, kind, displayName, accessibilityText, mimeType, checksum string
+	metadata                                                      any
+	file                                                          *filesystem.File
 }
 
 func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
+	if err := cleanupExpiredEditSessions(event.App, time.Now().UTC()); err != nil {
+		event.App.Logger().Error("expired ruleset edit session cleanup failed", "error", err)
+	}
 	group := event.Router.Group("/api/app/v1")
 	group.BindFunc(actorauth.RequireGameMaster)
 	group.GET("/rulesets", listRulesets)
@@ -58,6 +61,7 @@ func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group.GET("/rulesets/{id}/export", func(event *core.RequestEvent) error {
 		return exportLatestSavedBundle(event, applicationVersion)
 	})
+	registerEditSessionRoutes(group)
 	registerAssetPreviewRoute(event)
 }
 
@@ -229,6 +233,7 @@ func updateVersion(event *core.RequestEvent) error {
 
 type saveRulesetRequest struct {
 	Definition DefinitionV1 `json:"definition"`
+	SessionID  string       `json:"sessionId,omitempty"`
 }
 
 // validateRuleset evaluates an editor working copy without changing the saved
@@ -243,13 +248,39 @@ func validateRuleset(event *core.RequestEvent) error {
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("ruleset.invalid", "The ruleset definition could not be read.", nil))
 	}
-	saved, err := latestSavedVersion(event.App, logical)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	assetKeys, err := versionAssetKeys(event.App, saved.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
+	assetKeys := map[string]struct{}{}
+	if request.SessionID != "" {
+		event.Request.SetPathValue("sessionId", request.SessionID)
+		session, sessionErr := ownedEditSession(event)
+		if sessionErr != nil {
+			return httpx.WriteErrorFrom(event, sessionErr)
+		}
+		assets, sessionErr := effectiveSessionAssets(event.App, session)
+		if sessionErr != nil {
+			return httpx.WriteError(event, result.Internal(sessionErr))
+		}
+		for key := range assets {
+			assetKeys[key] = struct{}{}
+		}
+		request.Definition.AssetAccessibility = map[string]AssetAccessibility{}
+		for key, asset := range assets {
+			if asset.accessibilityText != "" {
+				request.Definition.AssetAccessibility[key] = AssetAccessibility{Description: asset.accessibilityText}
+			}
+		}
+		touchEditSession(session, time.Now().UTC())
+		if err := event.App.Save(session); err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
+	} else {
+		saved, findErr := latestSavedVersion(event.App, logical)
+		if findErr != nil {
+			return httpx.WriteError(event, result.Internal(findErr))
+		}
+		assetKeys, err = versionAssetKeys(event.App, saved.Id)
+		if err != nil {
+			return httpx.WriteError(event, result.Internal(err))
+		}
 	}
 	return event.JSON(http.StatusOK, Validate(request.Definition, assetKeys))
 }
@@ -262,6 +293,9 @@ func saveRuleset(event *core.RequestEvent) error {
 	var request saveRulesetRequest
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("ruleset.invalid", "The ruleset definition could not be read.", nil))
+	}
+	if request.SessionID != "" {
+		return saveRulesetEditSession(event, logical, request)
 	}
 	// File reads are deliberately outside the short SQLite transaction. The
 	// prepared files are in memory; only their record saves occur in the tx.
@@ -628,7 +662,7 @@ func prepareVersionAssets(app core.App, sourceVersionID string) ([]preparedVersi
 		if err != nil {
 			return nil, err
 		}
-		prepared = append(prepared, preparedVersionAsset{key: source.GetString("asset_key"), kind: source.GetString("kind"), file: clonedFile, mimeType: source.GetString("mime_type"), checksum: source.GetString("checksum"), metadata: source.Get("metadata")})
+		prepared = append(prepared, preparedVersionAsset{key: source.GetString("asset_key"), kind: source.GetString("kind"), displayName: source.GetString("display_name"), accessibilityText: source.GetString("accessibility_text"), file: clonedFile, mimeType: source.GetString("mime_type"), checksum: source.GetString("checksum"), metadata: source.Get("metadata")})
 	}
 	return prepared, nil
 }
@@ -646,6 +680,8 @@ func stagePreparedVersionAssets(app core.App, targetVersionID string, prepared [
 		target.Set("ruleset_version", targetVersionID)
 		target.Set("asset_key", asset.key)
 		target.Set("kind", asset.kind)
+		target.Set("display_name", asset.displayName)
+		target.Set("accessibility_text", asset.accessibilityText)
 		target.Set("storage_state", "staging")
 		target.Set("mime_type", asset.mimeType)
 		target.Set("checksum", asset.checksum)
@@ -739,6 +775,10 @@ func deleteRuleset(event *core.RequestEvent) error {
 	if err != nil {
 		return rulesetNotFound(event)
 	}
+	sessions, err := event.App.FindAllRecords("ruleset_edit_sessions", dbx.HashExp{"ruleset": logical.Id})
+	if err != nil {
+		return httpx.WriteError(event, result.Internal(err))
+	}
 	versions, err := event.App.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset}", "", 100, 0, dbx.Params{"ruleset": logical.Id})
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -762,6 +802,11 @@ func deleteRuleset(event *core.RequestEvent) error {
 				return auditRecord(tx, event.Auth, "", "ruleset.deleted", "ruleset", current.Id, nil, event.Get(httpx.TraceIDKey))
 			}); err != nil {
 				return httpx.WriteError(event, result.Internal(err))
+			}
+			for _, session := range sessions {
+				if err := deleteEditSession(event.App, session); err != nil {
+					event.App.Logger().Error("archived ruleset edit session cleanup failed", "sessionId", session.Id, "error", err)
+				}
 			}
 			return event.NoContent(http.StatusNoContent)
 		}
@@ -798,6 +843,16 @@ func deleteRuleset(event *core.RequestEvent) error {
 		}
 	}
 	err = event.App.RunInTransaction(func(txApp core.App) error {
+		// Audit first so an unavailable audit sink cannot destroy retryable edit
+		// sessions. All following record deletions roll back together.
+		if err := auditRecord(txApp, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id, nil, event.Get(httpx.TraceIDKey)); err != nil {
+			return err
+		}
+		for _, session := range sessions {
+			if err := deleteEditSession(txApp, session); err != nil {
+				return err
+			}
+		}
 		logical, err := txApp.FindRecordById("rulesets", logical.Id)
 		if err != nil {
 			return err
@@ -814,7 +869,7 @@ func deleteRuleset(event *core.RequestEvent) error {
 		if err := txApp.Delete(logical); err != nil {
 			return err
 		}
-		return auditRecord(txApp, event.Auth, "", "ruleset.deleted", "ruleset", logical.Id, nil, event.Get(httpx.TraceIDKey))
+		return nil
 	})
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -855,7 +910,7 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 	imported, err := ReadBundle(data)
 	if err != nil {
 		event.App.Logger().Warn("ruleset bundle validation failed", "error", err)
-		return httpx.WriteError(event, result.Invalid("bundle.invalid", err.Error(), nil))
+		return httpx.WriteError(event, result.Invalid("bundle.invalid", "The ruleset bundle could not be imported. Check that it is a supported, complete bundle.", nil))
 	}
 	definition, err := normalizeDefinitionIdentifiers(imported.Definition)
 	if err != nil {
@@ -866,6 +921,9 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	preparedAssets := make([]preparedVersionAsset, 0, len(imported.Manifest.Assets))
+	if definition.AssetAccessibility == nil {
+		definition.AssetAccessibility = map[string]AssetAccessibility{}
+	}
 	for _, manifestAsset := range imported.Manifest.Assets {
 		content := imported.Assets[manifestAsset.AssetKey]
 		file, err := filesystem.NewFileFromBytes(content, path.Base(manifestAsset.Path))
@@ -876,7 +934,10 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		if err != nil {
 			return httpx.WriteError(event, result.Internal(err))
 		}
-		preparedAssets = append(preparedAssets, preparedVersionAsset{key: manifestAsset.AssetKey, kind: manifestAsset.Kind, file: file, mimeType: mimeType, checksum: manifestAsset.Checksum, metadata: metadata})
+		preparedAssets = append(preparedAssets, preparedVersionAsset{key: manifestAsset.AssetKey, kind: manifestAsset.Kind, displayName: manifestAsset.DisplayName, accessibilityText: manifestAsset.AccessibilityText, file: file, mimeType: mimeType, checksum: manifestAsset.Checksum, metadata: metadata})
+		if manifestAsset.AccessibilityText != "" {
+			definition.AssetAccessibility[manifestAsset.AssetKey] = AssetAccessibility{Description: manifestAsset.AccessibilityText}
+		}
 	}
 	assetKeys := make(map[string]struct{}, len(preparedAssets))
 	for _, asset := range preparedAssets {
@@ -997,10 +1058,12 @@ func exportBundleRecord(event *core.RequestEvent, applicationVersion string, ver
 		}
 		assetPath := "assets/" + filename
 		manifest.Assets = append(manifest.Assets, BundleAssetManifest{
-			Path:     assetPath,
-			AssetKey: asset.GetString("asset_key"),
-			Kind:     asset.GetString("kind"),
-			MIMEType: asset.GetString("mime_type"),
+			Path:              assetPath,
+			AssetKey:          asset.GetString("asset_key"),
+			Kind:              asset.GetString("kind"),
+			MIMEType:          asset.GetString("mime_type"),
+			DisplayName:       asset.GetString("display_name"),
+			AccessibilityText: asset.GetString("accessibility_text"),
 		})
 		assets[asset.GetString("asset_key")] = content
 	}

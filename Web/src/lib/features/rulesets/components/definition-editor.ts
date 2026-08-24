@@ -1,10 +1,22 @@
-import type { RulesetDefinition, RulesetSelector } from '$lib/api/types';
+import type { RulesetAsset, RulesetDefinition, RulesetSelector } from '$lib/api/types';
 import type { EditorSection } from '../editor-state';
 
 export type DefinitionEditorSection =
 	'teams' | 'roles' | 'phases' | 'composition' | 'knowledge' | 'chat' | 'achievements' | 'audio';
 
-export type AssetOption = { assetKey: string; kind: 'image' | 'audio' };
+export type AssetOption = RulesetAsset;
+
+export type MediaActions = {
+	upload: (
+		file: File,
+		kind: 'image' | 'audio',
+		displayName: string,
+		accessibilityText: string,
+		replaceAssetKey?: string
+	) => Promise<RulesetAsset>;
+	update: (assetKey: string, displayName: string, accessibilityText: string) => Promise<void>;
+	remove: (assetKey: string) => Promise<void>;
+};
 
 export function nextID(prefix: string, used: string[]) {
 	let candidate: string;
@@ -47,6 +59,41 @@ export function blankSelector(): RulesetSelector {
 }
 
 export type Usage = { label: string; section: EditorSection; itemId?: string };
+
+export function assetUsages(definition: RulesetDefinition, key: string): Usage[] {
+	const usages: Usage[] = [];
+	if (definition.metadata.coverAssetKey === key)
+		usages.push({ label: 'Ruleset cover', section: 'metadata' });
+	for (const team of definition.teams)
+		if (team.imageAssetKey === key)
+			usages.push({ label: `Team · ${team.name}`, section: 'teams', itemId: team.id });
+	for (const role of definition.roles)
+		if (role.imageAssetKey === key)
+			usages.push({ label: `Role · ${role.name}`, section: 'roles', itemId: role.id });
+	for (const ability of definition.abilities)
+		if (ability.imageAssetKey === key)
+			usages.push({ label: `Ability · ${ability.name}`, section: 'roles', itemId: ability.id });
+	for (const achievement of definition.achievements)
+		if (achievement.imageAssetKey === key)
+			usages.push({
+				label: `Achievement · ${achievement.name}`,
+				section: 'achievements',
+				itemId: achievement.id
+			});
+	for (const cue of definition.audioCues) {
+		if (cue.assetKey !== key) continue;
+		const phases = definition.phases.filter((phase) => phase.audioCueId === cue.id);
+		if (!phases.length)
+			usages.push({ label: `Audio cue · ${cue.name}`, section: 'audio', itemId: cue.id });
+		for (const phase of phases)
+			usages.push({
+				label: `Audio cue · ${cue.name} → Phase · ${phase.name}`,
+				section: 'phases',
+				itemId: phase.id
+			});
+	}
+	return usages;
+}
 
 export function incomingReferences(
 	definition: RulesetDefinition,

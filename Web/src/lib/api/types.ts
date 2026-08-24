@@ -179,6 +179,8 @@ export interface PlayerGameView {
 		kind: 'image' | 'audio';
 		checksum: string;
 		preview: string;
+		displayName: string;
+		accessibilityText: string;
 	}>;
 	party: Array<{
 		id: string;
@@ -216,7 +218,13 @@ export interface AdminGameView {
 		detail?: Record<string, unknown>;
 		createdAt: string;
 	}>;
-	assets: Array<{ id: string; assetKey: string; kind: 'image' | 'audio' }>;
+	assets: Array<{
+		id: string;
+		assetKey: string;
+		kind: 'image' | 'audio';
+		displayName: string;
+		accessibilityText: string;
+	}>;
 	abilityProgress: {
 		phaseKey: string;
 		roundNumber: number;
@@ -259,6 +267,32 @@ export interface RulesetSummary {
 	name: string;
 	status: 'valid' | 'invalid';
 	issueCount: number;
+}
+
+export interface RulesetEditSession {
+	id: string;
+	baseVersionId: string;
+	expiresAt: string;
+	hasChanges: boolean;
+}
+
+export interface RulesetAssetUsage {
+	label: string;
+	section: string;
+	itemId?: string;
+}
+
+export interface RulesetAsset {
+	assetKey: string;
+	displayName: string;
+	accessibilityText: string;
+	kind: 'image' | 'audio';
+	mimeType: string;
+	checksum: string;
+	metadata: { width?: number; height?: number; durationSeconds?: number };
+	preview: string;
+	staged: boolean;
+	usages: RulesetAssetUsage[];
 }
 
 export interface RulesetDefinition {

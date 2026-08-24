@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	BundleFormatVersion = 1
+	BundleFormatVersion = 2
 	MaxBundleSize       = 25 << 20
 	MaxBundleFiles      = 100
 	MaxRulesetJSONSize  = 2 << 20
@@ -33,12 +33,14 @@ type BundleManifest struct {
 }
 
 type BundleAssetManifest struct {
-	Path     string `json:"path"`
-	AssetKey string `json:"assetKey"`
-	Kind     string `json:"kind"`
-	MIMEType string `json:"mimeType"`
-	ByteSize int64  `json:"byteSize"`
-	Checksum string `json:"checksum"`
+	Path              string `json:"path"`
+	AssetKey          string `json:"assetKey"`
+	Kind              string `json:"kind"`
+	MIMEType          string `json:"mimeType"`
+	DisplayName       string `json:"displayName,omitempty"`
+	AccessibilityText string `json:"accessibilityText,omitempty"`
+	ByteSize          int64  `json:"byteSize"`
+	Checksum          string `json:"checksum"`
 }
 
 type ImportedBundle struct {
@@ -103,7 +105,7 @@ func ReadBundle(data []byte) (ImportedBundle, error) {
 	if err := decodeStrictJSON(manifestBytes, &manifest); err != nil {
 		return ImportedBundle{}, fmt.Errorf("invalid manifest.json: %w", err)
 	}
-	if manifest.FormatVersion != BundleFormatVersion {
+	if manifest.FormatVersion != 1 && manifest.FormatVersion != BundleFormatVersion {
 		return ImportedBundle{}, fmt.Errorf("unsupported bundle format version %d", manifest.FormatVersion)
 	}
 	if checksum(rulesetBytes) != strings.ToLower(manifest.RulesetChecksum) {
@@ -112,7 +114,12 @@ func ReadBundle(data []byte) (ImportedBundle, error) {
 
 	declared := map[string]BundleAssetManifest{}
 	assetKeys := map[string]struct{}{}
-	for _, asset := range manifest.Assets {
+	for index := range manifest.Assets {
+		asset := manifest.Assets[index]
+		if strings.TrimSpace(asset.DisplayName) == "" {
+			asset.DisplayName = path.Base(asset.Path)
+			manifest.Assets[index].DisplayName = asset.DisplayName
+		}
 		if !strings.HasPrefix(asset.Path, "assets/") {
 			return ImportedBundle{}, fmt.Errorf("asset %q is outside the assets directory", asset.Path)
 		}
@@ -148,11 +155,6 @@ func ReadBundle(data []byte) (ImportedBundle, error) {
 	if err := decodeStrictJSON(rulesetBytes, &definition); err != nil {
 		return ImportedBundle{}, fmt.Errorf("invalid ruleset.json: %w", err)
 	}
-	report := Validate(definition, assetKeys)
-	if !report.Valid() {
-		return ImportedBundle{}, fmt.Errorf("ruleset validation failed: %s", report.Errors[0].Message)
-	}
-
 	assets := make(map[string][]byte, len(manifest.Assets))
 	for _, asset := range manifest.Assets {
 		assets[asset.AssetKey] = files[asset.Path]

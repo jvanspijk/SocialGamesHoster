@@ -9,16 +9,20 @@
 		incomingReferences,
 		moveByID,
 		nextID,
-		type AssetOption
+		type AssetOption,
+		type MediaActions
 	} from './definition-editor';
+	import MediaField from './MediaField.svelte';
 	let {
 		definition = $bindable(),
 		assets,
+		media,
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
+		media: MediaActions;
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -68,21 +72,13 @@
 			label: usage.label,
 			navigate: () => onnavigate(usage.section, usage.itemId)
 		}))}
-	emptyDescription="Upload support arrives in the Media stage. Add a cue when an audio file is available."
+	emptyDescription="Add a named sound for phases or game-master playback."
 >
 	{#snippet editor(id)}{@const index = definition.audioCues.findIndex(
 			(item) => item.id === id
 		)}{@const cue = definition.audioCues[index]}{#if cue}<h3>{cue.name || 'Unnamed audio cue'}</h3>
 			<div class="form-grid">
 				<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required /><SelectField
-					label="Audio file"
-					name={`cue-audio-file-${index}`}
-					bind:value={cue.assetKey}
-					options={[
-						{ value: '', label: 'Choose uploaded audio' },
-						...audioAssets().map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
-					]}
-				/><SelectField
 					label="Normal audience"
 					name={`cue-audience-${index}`}
 					bind:value={cue.defaultAudience}
@@ -94,6 +90,14 @@
 					]}
 				/>
 			</div>
+			<MediaField
+				label="Audio file"
+				kind="audio"
+				name={`cue-audio-file-${index}`}
+				bind:value={cue.assetKey}
+				assets={audioAssets()}
+				{media}
+			/>
 			{#if cue.defaultAudience === 'team' || cue.defaultAudience === 'player'}<p class="hint">
 					Choose the target when playing this cue. It cannot start automatically with a phase.
 				</p>{/if}{/if}{/snippet}

@@ -2,16 +2,24 @@
 	import type { RulesetDefinition } from '$lib/api/types';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import Field from '$lib/components/Field.svelte';
-	import SelectField from '$lib/components/SelectField.svelte';
 	import CollectionEditor from './CollectionEditor.svelte';
-	import { duplicateByID, moveByID, nextID, type AssetOption } from './definition-editor';
+	import {
+		duplicateByID,
+		moveByID,
+		nextID,
+		type AssetOption,
+		type MediaActions
+	} from './definition-editor';
+	import MediaField from './MediaField.svelte';
 	let {
 		definition = $bindable(),
 		assets,
+		media,
 		selectedItems
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
+		media: MediaActions;
 		selectedItems: Record<string, string>;
 	} = $props();
 	const entries = $derived(
@@ -21,12 +29,6 @@
 			supportingLabel: `${item.points} points`
 		}))
 	);
-	const imageOptions = () => [
-		{ value: '', label: 'No image' },
-		...assets
-			.filter((asset) => asset.kind === 'image')
-			.map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
-	];
 	function add() {
 		const item = {
 			id: nextID(
@@ -92,11 +94,13 @@
 					bind:checked={item.hiddenUntilGameCompleted}
 				/>
 			</div>
-			<SelectField
-				label="Badge image (optional)"
+			<MediaField
+				label="Badge image"
+				kind="image"
 				name={`achievement-image-${index}`}
 				bind:value={item.imageAssetKey}
-				options={imageOptions()}
+				{assets}
+				{media}
 			/>{/if}{/snippet}
 </CollectionEditor>
 

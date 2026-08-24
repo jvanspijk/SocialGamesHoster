@@ -5,16 +5,60 @@
 	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
-	import { duplicateByID, incomingReferences, moveByID, nextID } from './definition-editor';
+	import {
+		duplicateByID,
+		incomingReferences,
+		moveByID,
+		nextID,
+		type MediaActions
+	} from './definition-editor';
 	let {
 		definition = $bindable(),
+		media,
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
+		media: MediaActions;
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
+	let soundName = $state('New sound');
+	let soundAlternative = $state('');
+	let addingSound = $state(false);
+	let soundError = $state('');
+
+	async function addSound(phaseIndex: number, event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		addingSound = true;
+		soundError = '';
+		try {
+			const asset = await media.upload(
+				file,
+				'audio',
+				soundName.trim() || file.name,
+				soundAlternative.trim()
+			);
+			const cue = {
+				id: nextID(
+					'cue',
+					definition.audioCues.map((item) => item.id)
+				),
+				name: soundName.trim() || file.name,
+				assetKey: asset.assetKey,
+				defaultAudience: 'all' as const
+			};
+			definition.audioCues.push(cue);
+			definition.phases[phaseIndex].audioCueId = cue.id;
+		} catch (caught) {
+			soundError = caught instanceof Error ? caught.message : 'The sound could not be added.';
+		} finally {
+			addingSound = false;
+			input.value = '';
+		}
+	}
 	const entries = $derived(
 		definition.phases.map((phase) => ({
 			id: phase.id,
@@ -105,11 +149,49 @@
 						...definition.audioCues.map((cue) => ({ value: cue.id, label: cue.name }))
 					]}
 				/>
-			</div>{/if}{/snippet}
+			</div>
+			<section class="add-sound" aria-labelledby={`add-sound-${index}`}>
+				<h4 id={`add-sound-${index}`}>Add sound</h4>
+				<p>Upload audio and create a cue for this phase without leaving Game flow.</p>
+				<div class="form-grid">
+					<Field label="Sound name" name={`phase-sound-name-${index}`} bind:value={soundName} />
+					<Field
+						label="Audio alternative"
+						name={`phase-sound-alternative-${index}`}
+						bind:value={soundAlternative}
+					/>
+				</div>
+				<label class="file-label"
+					><span>{addingSound ? 'Adding sound…' : 'Choose audio file'}</span><input
+						type="file"
+						accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav"
+						disabled={addingSound}
+						onchange={(event) => addSound(index, event)}
+					/></label
+				>
+				{#if soundError}<p class="error" role="alert">{soundError}</p>{/if}
+			</section>
+		{/if}{/snippet}
 </CollectionEditor>
 
 <style>
 	h3 {
 		margin: 0;
+	}
+	.add-sound {
+		display: grid;
+		gap: var(--space-2);
+		border-top: var(--border-subtle);
+		padding-top: var(--space-3);
+	}
+	.add-sound h4,
+	.add-sound p {
+		margin: 0;
+	}
+	.file-label input {
+		padding: var(--space-2);
+	}
+	.error {
+		color: var(--danger);
 	}
 </style>

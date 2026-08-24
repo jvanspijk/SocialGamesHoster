@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
 	import Field from '$lib/components/Field.svelte';
-	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
@@ -9,26 +8,24 @@
 		incomingReferences,
 		moveByID,
 		nextID,
-		type AssetOption
+		type AssetOption,
+		type MediaActions
 	} from './definition-editor';
+	import MediaField from './MediaField.svelte';
 
 	let {
 		definition = $bindable(),
 		assets,
+		media,
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
+		media: MediaActions;
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
-	const imageOptions = () => [
-		{ value: '', label: 'No image' },
-		...assets
-			.filter((asset) => asset.kind === 'image')
-			.map((asset) => ({ value: asset.assetKey, label: asset.assetKey }))
-	];
 	const teamEntries = $derived(
 		definition.teams.map((item) => ({
 			id: item.id,
@@ -100,11 +97,13 @@
 				name={`team-description-${index}`}
 				bind:value={team.description}
 				multiline
-			/><SelectField
-				label="Team image (optional)"
+			/><MediaField
+				label="Team image"
+				kind="image"
 				name={`team-image-${index}`}
 				bind:value={team.imageAssetKey}
-				options={imageOptions()}
+				{assets}
+				{media}
 			/>{/if}
 	{/snippet}
 </CollectionEditor>

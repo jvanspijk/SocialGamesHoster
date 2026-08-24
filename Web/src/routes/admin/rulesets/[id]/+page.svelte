@@ -10,6 +10,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
+	import MediaField from '$lib/features/rulesets/components/MediaField.svelte';
 	import {
 		copyDefinition,
 		humanIssueLocation,
@@ -30,7 +31,12 @@
 	} from '$lib/features/rulesets/editor-state';
 	import { api, download, jsonBody } from '$lib/api/client';
 	import { toFormError, type FormError } from '$lib/forms/errors';
-	import type { RulesetDefinition, RulesetSummary } from '$lib/api/types';
+	import type {
+		RulesetAsset,
+		RulesetDefinition,
+		RulesetEditSession,
+		RulesetSummary
+	} from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
@@ -78,6 +84,10 @@
 	let savedDefinition = $state<RulesetDefinition>(structuredClone(blank));
 	let report = $state<ValidationReport>({ errors: [], warnings: [] });
 	let selectedItems = $state<Record<string, string>>({});
+	let editSession = $state<RulesetEditSession | null>(null);
+	let assets = $state<RulesetAsset[]>([]);
+	let mediaDirty = $state(false);
+	let reuploadNames = $state<string[]>([]);
 	let loaded = $state(false);
 	let recovered = $state(false);
 	let saving = $state(false);
@@ -94,9 +104,15 @@
 	let announcement = $state('');
 	let validationSequence = 0;
 	const dirty = $derived.by(
-		() => loaded && normalizedDefinition(definition) !== normalizedDefinition(savedDefinition)
+		() =>
+			loaded &&
+			(normalizedDefinition(definition) !== normalizedDefinition(savedDefinition) || mediaDirty)
 	);
-	const states = $derived.by(() => sectionStates(definition, report));
+	const states = $derived.by(() => {
+		const values = sectionStates(definition, report);
+		if (assets.length && values.audio === 'Not started') values.audio = 'Complete';
+		return values;
+	});
 	const issueCounts = $derived(
 		Object.fromEntries(
 			sections.map((item) => [
@@ -150,6 +166,10 @@
 		const snapshot = normalizedDefinition(definition);
 		const activeSection = section;
 		const itemState = JSON.stringify(selectedItems);
+		const activeSessionId = editSession?.id;
+		const stagedAssetNames = assets
+			.filter((asset) => asset.staged)
+			.map((asset) => asset.displayName);
 		const timer = setTimeout(() => {
 			if (dirty)
 				localStorage.setItem(
@@ -157,7 +177,9 @@
 					serializeRecovery({
 						definition: copyDefinition(definition),
 						section: activeSection,
-						selectedItems: JSON.parse(itemState)
+						selectedItems: JSON.parse(itemState),
+						sessionId: activeSessionId,
+						stagedAssetNames
 					})
 				);
 			else localStorage.removeItem(recoveryKey(page.params.id ?? ''));
@@ -172,15 +194,31 @@
 	async function load() {
 		try {
 			const detail = await api<Detail>(`/rulesets/${page.params.id}`);
+			const opened = await api<RulesetEditSession>(`/rulesets/${page.params.id}/edit-session`, {
+				method: 'POST'
+			});
+			editSession = opened;
+			assets = await api<RulesetAsset[]>(
+				`/rulesets/${page.params.id}/edit-session/${opened.id}/assets`
+			);
+			mediaDirty = opened.hasChanges;
 			ruleset = detail.ruleset;
 			savedDefinition = copyDefinition(detail.definition);
 			definition = copyDefinition(detail.definition);
 			report = normalizeReport(detail.validation);
 			const restored = parseRecovery(localStorage.getItem(recoveryKey(page.params.id ?? '')));
+			if (
+				restored?.sessionId &&
+				restored.sessionId !== opened.id &&
+				restored.stagedAssetNames?.length
+			) {
+				reuploadNames = restored.stagedAssetNames;
+			}
 			const requested = page.params.section;
 			if (
 				restored &&
-				normalizedDefinition(restored.definition) !== normalizedDefinition(detail.definition)
+				(normalizedDefinition(restored.definition) !== normalizedDefinition(detail.definition) ||
+					(restored.sessionId === opened.id && opened.hasChanges))
 			) {
 				definition = copyDefinition(restored.definition);
 				selectedItems = { ...restored.selectedItems };
@@ -200,7 +238,7 @@
 		try {
 			const next = await api<ValidationReport>(`/rulesets/${page.params.id}/validate`, {
 				method: 'POST',
-				...jsonBody({ definition: JSON.parse(snapshot) })
+				...jsonBody({ definition: JSON.parse(snapshot), sessionId: editSession?.id })
 			});
 			if (sequence === validationSequence) report = normalizeReport(next);
 		} catch {
@@ -225,9 +263,7 @@
 			return definition.achievements.length
 				? `${definition.achievements.length} achievements`
 				: 'Not configured';
-		return definition.audioCues.length
-			? `${definition.audioCues.length} audio cues`
-			: 'Not configured';
+		return assets.length ? `${assets.length} media items` : 'Not configured';
 	}
 
 	function selectSection(next: EditorSection, itemId?: string) {
@@ -288,7 +324,7 @@
 		try {
 			const saved = await api<{ validation: ValidationReport; availability: 'ready' | 'invalid' }>(
 				`/rulesets/${page.params.id}/save`,
-				{ method: 'POST', ...jsonBody({ definition }) }
+				{ method: 'POST', ...jsonBody({ definition, sessionId: editSession?.id }) }
 			);
 			report = normalizeReport(saved.validation);
 			savedDefinition = copyDefinition(definition);
@@ -309,10 +345,74 @@
 	}
 
 	async function discardAndLeave() {
+		if (editSession) {
+			try {
+				await api(`/rulesets/${page.params.id}/edit-session/${editSession.id}`, {
+					method: 'DELETE'
+				});
+			} catch {
+				toasts.info(
+					'The local working copy was discarded. Host cleanup could not be confirmed; staged media will expire automatically.'
+				);
+			}
+		}
 		localStorage.removeItem(recoveryKey(page.params.id ?? ''));
 		bypassNavigation = true;
 		await goto(resolve((pendingPath || '/admin/rulesets') as '/admin/rulesets'));
 	}
+
+	async function refreshAssets() {
+		if (!editSession) return;
+		assets = await api<RulesetAsset[]>(
+			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets`
+		);
+	}
+
+	async function uploadMedia(
+		file: File,
+		kind: 'image' | 'audio',
+		displayName: string,
+		accessibilityText: string,
+		replaceAssetKey?: string
+	) {
+		if (!editSession) throw new Error('The media editing session is not ready.');
+		const body = new FormData();
+		body.set('file', file);
+		body.set('kind', kind);
+		body.set('displayName', displayName);
+		body.set('accessibilityText', accessibilityText);
+		body.set('mode', replaceAssetKey ? 'replace' : 'add');
+		if (replaceAssetKey) body.set('assetKey', replaceAssetKey);
+		const asset = await api<RulesetAsset>(
+			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets`,
+			{ method: 'POST', body }
+		);
+		mediaDirty = true;
+		await refreshAssets();
+		return assets.find((item) => item.assetKey === asset.assetKey) ?? asset;
+	}
+
+	async function updateMedia(assetKey: string, displayName: string, accessibilityText: string) {
+		if (!editSession) throw new Error('The media editing session is not ready.');
+		await api(
+			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets/${encodeURIComponent(assetKey)}`,
+			{ method: 'PATCH', ...jsonBody({ displayName, accessibilityText }) }
+		);
+		mediaDirty = true;
+		await refreshAssets();
+	}
+
+	async function removeMedia(assetKey: string) {
+		if (!editSession) throw new Error('The media editing session is not ready.');
+		await api(
+			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets/${encodeURIComponent(assetKey)}`,
+			{ method: 'DELETE', ...jsonBody({ definition }) }
+		);
+		mediaDirty = true;
+		await refreshAssets();
+	}
+
+	const media = { upload: uploadMedia, update: updateMedia, remove: removeMedia };
 	async function remove() {
 		if (!ruleset) return;
 		try {
@@ -344,6 +444,12 @@
 		</div>
 	</header>
 	<ErrorNotice message={error?.message} traceId={error?.traceId} />
+	{#if reuploadNames.length}
+		<section class="reupload-warning" role="status">
+			<strong>Some recovered media files must be uploaded again.</strong>
+			<p>{reuploadNames.join(', ')}</p>
+		</section>
+	{/if}
 	<div class="mobile-tools">
 		<Button variant="secondary" onclick={() => (sectionMenuOpen = true)}
 			><Menu size={18} /> Sections</Button
@@ -417,10 +523,20 @@
 							required
 						/></label
 					>
-				</div>{:else if loaded}<VisualDefinitionEditor
+				</div>
+				<MediaField
+					label="Ruleset cover"
+					kind="image"
+					name="ruleset-cover"
+					bind:value={definition.metadata.coverAssetKey}
+					{assets}
+					{media}
+				/>
+			{:else if loaded}<VisualDefinitionEditor
 					bind:definition
 					section={section === 'metadata' ? 'teams' : section}
-					assets={[]}
+					{assets}
+					{media}
 					{selectedItems}
 					onnavigate={selectSection}
 				/>{/if}
@@ -538,6 +654,14 @@
 <style>
 	.editor {
 		max-width: 100rem;
+	}
+	.reupload-warning {
+		border: 1px solid var(--warning);
+		background: var(--paper-deep);
+		padding: var(--space-3);
+	}
+	.reupload-warning p {
+		margin: var(--space-1) 0 0;
 	}
 	header {
 		display: grid;

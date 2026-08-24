@@ -61,7 +61,7 @@ describe('ruleset editor state', () => {
 			selectedItems: { roles: 'role_a' }
 		});
 		expect(parseRecovery(encoded)).toMatchObject({
-			version: 1,
+			version: 2,
 			section: 'roles',
 			selectedItems: { roles: 'role_a' },
 			timestamp: '2026-08-19T12:00:00.000Z'

@@ -56,6 +56,20 @@
 		assetAccessibility: {}
 	});
 	let selectedItems = $state<Record<string, string>>({ compositionBands: 'band-1' });
+	const media = {
+		upload: async () => {
+			throw new Error('Media upload is not available in this harness.');
+		},
+		update: async () => {},
+		remove: async () => {}
+	};
 </script>
 
-<VisualDefinitionEditor bind:definition {section} assets={[]} {selectedItems} {onnavigate} />
+<VisualDefinitionEditor
+	bind:definition
+	{section}
+	assets={[]}
+	{media}
+	{selectedItems}
+	{onnavigate}
+/>
