@@ -2,6 +2,7 @@
 	import type { RulesetDefinition } from '$lib/api/types';
 	import Field from '$lib/components/Field.svelte';
 	import type { EditorSection } from '../editor-state';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
 		duplicateByID,
@@ -17,12 +18,14 @@
 		definition = $bindable(),
 		assets,
 		media,
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -86,6 +89,9 @@
 			1
 		)}
 	usages={(id) => navigation('team', id)}
+	validationPath="teams"
+	itemPath={(id) => `teams[${definition.teams.findIndex((item) => item.id === id)}]`}
+	{issues}
 	emptyDescription="Add a team before creating roles."
 >
 	{#snippet editor(id)}{@const index = definition.teams.findIndex(
@@ -126,6 +132,9 @@
 			1
 		)}
 	usages={(id) => navigation('category', id)}
+	validationPath="categories"
+	itemPath={(id) => `categories[${definition.categories.findIndex((item) => item.id === id)}]`}
+	{issues}
 	emptyDescription="Categories are optional. Add one to group similar roles."
 >
 	{#snippet editor(id)}{@const index = definition.categories.findIndex(

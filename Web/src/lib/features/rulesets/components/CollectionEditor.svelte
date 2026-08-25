@@ -9,6 +9,8 @@
 	import SearchField from '$lib/components/SearchField.svelte';
 	import SelectableList from '$lib/components/SelectableList.svelte';
 	import SplitView from '$lib/components/SplitView.svelte';
+	import type { ValidationIssue } from '../editor-state';
+	import InlineValidationMessages from './InlineValidationMessages.svelte';
 
 	export type CollectionEntry = { id: string; label: string; supportingLabel?: string };
 	export type ReferenceUsage = { label: string; navigate?: () => void };
@@ -27,6 +29,9 @@
 		addLabel = `Add ${title.toLocaleLowerCase()}`,
 		emptyTitle = `No ${title.toLocaleLowerCase()}`,
 		emptyDescription = `Add the first ${title.toLocaleLowerCase()} to get started.`,
+		issues = [],
+		validationPath,
+		itemPath,
 		editor
 	}: {
 		title: string;
@@ -42,6 +47,9 @@
 		addLabel?: string;
 		emptyTitle?: string;
 		emptyDescription?: string;
+		issues?: ValidationIssue[];
+		validationPath?: string;
+		itemPath?: (id: string) => string;
 		editor: Snippet<[id: string]>;
 	} = $props();
 
@@ -99,6 +107,7 @@
 					><Plus size={16} /> {addLabel}</Button
 				>{/if}{/snippet}
 	</ContentHeader>
+	{#if validationPath}<InlineValidationMessages {issues} path={validationPath} />{/if}
 	{#if entries.length === 0}
 		<EmptyState
 			title={emptyTitle}
@@ -128,6 +137,7 @@
 			{/snippet}
 			{#snippet detail()}
 				{#if selected}
+					{#if itemPath}<InlineValidationMessages {issues} path={itemPath(selected.id)} />{/if}
 					<div class="detail-toolbar" aria-label={`${selected.label} actions`}>
 						<IconButton
 							label={`Move ${selected.label} up`}

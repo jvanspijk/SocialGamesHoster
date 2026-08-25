@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
+	import type { ValidationIssue } from '../editor-state';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import CollectionEditor from './CollectionEditor.svelte';
@@ -15,11 +16,13 @@
 		definition = $bindable(),
 		assets,
 		media,
+		issues = [],
 		selectedItems
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 	} = $props();
 	const entries = $derived(
@@ -62,6 +65,9 @@
 			definition.achievements.findIndex((item) => item.id === id),
 			1
 		)}
+	validationPath="achievements"
+	itemPath={(id) => `achievements[${definition.achievements.findIndex((item) => item.id === id)}]`}
+	{issues}
 >
 	{#snippet editor(id)}{@const index = definition.achievements.findIndex(
 			(item) => item.id === id

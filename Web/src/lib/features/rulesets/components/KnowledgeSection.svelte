@@ -3,10 +3,15 @@
 	import Button from '$lib/components/Button.svelte';
 	import CheckboxGroup from '$lib/components/CheckboxGroup.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
+	import type { ValidationIssue } from '../editor-state';
 	import { blankSelector, removeAt } from './definition-editor';
+	import InlineValidationMessages from './InlineValidationMessages.svelte';
 	import SelectorEditor from './SelectorEditor.svelte';
 
-	let { definition = $bindable() }: { definition: RulesetDefinition } = $props();
+	let {
+		definition = $bindable(),
+		issues = []
+	}: { definition: RulesetDefinition; issues?: ValidationIssue[] } = $props();
 	function addKnowledge() {
 		definition.knowledgeRules.push({
 			viewer: blankSelector(),
@@ -31,6 +36,7 @@
 						onclick={() => removeAt(definition.knowledgeRules, index)}>Remove</button
 					>{/snippet}
 			</ContentHeader>
+			<InlineValidationMessages {issues} path={`knowledgeRules[${index}]`} />
 			<div class="selector-grid">
 				<SelectorEditor
 					selector={rule.viewer}

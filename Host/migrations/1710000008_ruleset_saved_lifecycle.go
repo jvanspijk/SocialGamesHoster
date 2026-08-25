@@ -6,6 +6,8 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 	pbmigrations "github.com/pocketbase/pocketbase/migrations"
+
+	domainrulesets "github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/rulesets"
 )
 
 func init() {
@@ -76,14 +78,14 @@ func init() {
 			}
 			assetKeys := map[string]struct{}{}
 			for _, asset := range mustFindAll(app, "ruleset_assets") {
-				if asset.GetString("ruleset_version") == latest.Id && asset.GetString("storage_state") != "staging" {
+				if asset.GetString("ruleset_version") == latest.Id && asset.GetString("storage_state") == "ready" {
 					assetKeys[asset.GetString("asset_key")] = struct{}{}
 				}
 			}
 			logicalRecord.Set("latest_saved_version", latest.Id)
-			report := migrationValidation(definition, assetKeys, latest.GetString("state") == "draft")
+			report := domainrulesets.Validate(definition, assetKeys)
 			latest.Set("validation_report", report)
-			if errors, ok := report["errors"].([]map[string]string); ok && len(errors) > 0 {
+			if !report.Valid() {
 				logicalRecord.Set("latest_published_version", "")
 			}
 			if err := app.Save(latest); err != nil {
@@ -123,31 +125,8 @@ func mustFindAll(app core.App, collection string) []*core.Record {
 	return records
 }
 
-func decodeMigrationDefinition(record *core.Record) (map[string]any, error) {
-	var definition map[string]any
+func decodeMigrationDefinition(record *core.Record) (domainrulesets.DefinitionV1, error) {
+	var definition domainrulesets.DefinitionV1
 	err := record.UnmarshalJSONField("definition", &definition)
 	return definition, err
-}
-
-func migrationValidation(definition map[string]any, assetKeys map[string]struct{}, requiresConfirmation bool) map[string]any {
-	issues := make([]map[string]string, 0)
-	metadata, _ := definition["metadata"].(map[string]any)
-	name, _ := metadata["name"].(string)
-	if strings.TrimSpace(name) == "" {
-		issues = append(issues, map[string]string{"path": "metadata.name", "code": "required", "message": "Name is required."})
-	}
-	for _, required := range []string{"teams", "roles"} {
-		items, _ := definition[required].([]any)
-		if len(items) == 0 {
-			issues = append(issues, map[string]string{"path": required, "code": required + ".required", "message": "Add at least one " + strings.TrimSuffix(required, "s") + "."})
-		}
-	}
-	// Historic editable records may have been changed without passing a full
-	// validation gate. They are deliberately kept unavailable until one explicit
-	// Save evaluates them with the current domain validator.
-	if requiresConfirmation {
-		issues = append(issues, map[string]string{"path": "metadata", "code": "ruleset.revalidate", "message": "Open and save this ruleset to confirm it is ready."})
-	}
-	_ = assetKeys
-	return map[string]any{"errors": issues, "warnings": []any{}}
 }

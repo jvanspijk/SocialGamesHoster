@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RulesetDefinition } from '$lib/api/types';
 import {
 	humanIssueLocation,
+	itemTargetForIssue,
 	issueControlName,
 	nextRequiredSection,
 	normalizedDefinition,
@@ -117,5 +118,25 @@ describe('ruleset editor state', () => {
 		['chat.channels[2].senders', 'channel-sender-roles-2']
 	])('maps nested validation path %s to control %s', (path, control) => {
 		expect(issueControlName(path)).toBe(control);
+	});
+
+	it.each([
+		['categories[0].name', 'categories', 'category_a'],
+		['abilities[0].name', 'abilities', 'ability_a'],
+		['compositionModifiers[0].whenRolePresent', 'compositionModifiers', 'condition_alpha']
+	])('finds the correct collection item for %s', (path, key, id) => {
+		const value = definition();
+		value.categories = [{ id: 'category_a', name: 'Support', description: '' }];
+		value.abilities = [{ id: 'ability_a', name: 'Inspect', description: '' }];
+		value.compositionModifiers = [
+			{
+				id: 'condition_alpha',
+				whenRolePresent: 'role_a',
+				slotAdjustments: [],
+				requiresRoleIds: [],
+				excludesRoleIds: []
+			}
+		];
+		expect(itemTargetForIssue(value, { path, message: 'Fix this.' })).toEqual({ key, id });
 	});
 });

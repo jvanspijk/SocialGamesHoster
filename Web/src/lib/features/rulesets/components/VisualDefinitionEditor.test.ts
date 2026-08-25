@@ -46,6 +46,21 @@ describe('VisualDefinitionEditor', () => {
 		expect(document.querySelector('[name="knowledge-reveal-0"]')).toBeInTheDocument();
 	});
 
+	it('renders a validation message with the affected collection item', () => {
+		render(VisualDefinitionEditorHarness, {
+			props: {
+				issues: [
+					{
+						path: 'compositionBands[0].slots[0].selector',
+						message: 'Choose at least one matching role.'
+					}
+				]
+			}
+		});
+
+		expect(screen.getByText('Choose at least one matching role.')).toBeVisible();
+	});
+
 	it.each([
 		['teams', 'Teams'],
 		['roles', 'Abilities'],

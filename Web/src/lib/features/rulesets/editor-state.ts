@@ -13,6 +13,7 @@ export type EditorSection =
 
 export type ValidationIssue = { path: string; code?: string; message: string };
 export type ValidationReport = { errors: ValidationIssue[]; warnings: ValidationIssue[] };
+export type IssueItemTarget = { id: string; key: string };
 export type SectionState = 'Not started' | 'In progress' | 'Complete' | 'Needs attention';
 export type RecoveryRecord = {
 	version: 1 | 2;
@@ -210,6 +211,25 @@ export function itemNameForIssue(
 	if (match[1] === 'compositionModifiers') return `Conditional change ${index + 1}`;
 	const collection = definition[match[1] as keyof RulesetDefinition] as Array<{ name?: string }>;
 	return collection?.[index]?.name;
+}
+
+export function itemTargetForIssue(
+	definition: RulesetDefinition,
+	issue: ValidationIssue
+): IssueItemTarget | undefined {
+	const match =
+		/^(teams|categories|abilities|roles|phases|compositionBands|compositionModifiers|achievements|audioCues|chat\.channels)\[(\d+)\]/.exec(
+			issue.path
+		);
+	if (!match) return undefined;
+	const index = Number(match[2]);
+	const collection = match[1];
+	if (collection === 'chat.channels') {
+		const channel = definition.chat.channels[index];
+		return channel ? { id: channel.id, key: 'channels' } : undefined;
+	}
+	const items = definition[collection as keyof RulesetDefinition] as Array<{ id: string }>;
+	return items[index] ? { id: items[index].id, key: collection } : undefined;
 }
 
 export function humanIssueLocation(

@@ -5,6 +5,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
 		blankSelector,
@@ -16,10 +17,12 @@
 	import SelectorEditor from './SelectorEditor.svelte';
 	let {
 		definition = $bindable(),
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -138,6 +141,10 @@
 			1
 		)}
 	usages={bandUsages}
+	validationPath="compositionBands"
+	itemPath={(id) =>
+		`compositionBands[${definition.compositionBands.findIndex((item) => item.id === id)}]`}
+	{issues}
 	emptyDescription="Add a player-count band covering the supported player range."
 >
 	{#snippet editor(id)}{@const index = definition.compositionBands.findIndex(
@@ -232,6 +239,10 @@
 			definition.compositionModifiers.findIndex((item) => item.id === id),
 			1
 		)}
+	validationPath="compositionModifiers"
+	itemPath={(id) =>
+		`compositionModifiers[${definition.compositionModifiers.findIndex((item) => item.id === id)}]`}
+	{issues}
 >
 	{#snippet editor(id)}{@const index = definition.compositionModifiers.findIndex(
 			(item) => item.id === id

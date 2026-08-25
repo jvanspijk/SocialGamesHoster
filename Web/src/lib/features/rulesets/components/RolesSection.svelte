@@ -6,6 +6,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
 		duplicateByID,
@@ -20,12 +21,14 @@
 		definition = $bindable(),
 		assets,
 		media,
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -107,6 +110,9 @@
 			1
 		)}
 	usages={(id) => refs('ability', id)}
+	validationPath="abilities"
+	itemPath={(id) => `abilities[${definition.abilities.findIndex((item) => item.id === id)}]`}
+	{issues}
 >
 	{#snippet editor(id)}{@const index = definition.abilities.findIndex(
 			(item) => item.id === id
@@ -164,6 +170,9 @@
 				1
 			)}
 		usages={(id) => refs('role', id)}
+		validationPath="roles"
+		itemPath={(id) => `roles[${definition.roles.findIndex((item) => item.id === id)}]`}
+		{issues}
 		emptyDescription="Add the first role players can receive."
 	>
 		{#snippet editor(id)}{@const index = definition.roles.findIndex(

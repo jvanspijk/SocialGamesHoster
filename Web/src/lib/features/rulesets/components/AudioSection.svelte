@@ -3,6 +3,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
 		duplicateByID,
@@ -17,12 +18,14 @@
 		definition = $bindable(),
 		assets,
 		media,
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -72,6 +75,9 @@
 			label: usage.label,
 			navigate: () => onnavigate(usage.section, usage.itemId)
 		}))}
+	validationPath="audioCues"
+	itemPath={(id) => `audioCues[${definition.audioCues.findIndex((item) => item.id === id)}]`}
+	{issues}
 	emptyDescription="Add a named sound for phases or game-master playback."
 >
 	{#snippet editor(id)}{@const index = definition.audioCues.findIndex(

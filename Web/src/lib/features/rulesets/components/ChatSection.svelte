@@ -10,14 +10,21 @@
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField, { type SelectOption } from '$lib/components/SelectField.svelte';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import { duplicateByID, moveByID, nextID } from './definition-editor';
+	import InlineValidationMessages from './InlineValidationMessages.svelte';
 	import RoomPermissionEditor from './RoomPermissionEditor.svelte';
 
 	let {
 		definition = $bindable(),
+		issues = [],
 		selectedItems
-	}: { definition: RulesetDefinition; selectedItems: Record<string, string> } = $props();
+	}: {
+		definition: RulesetDefinition;
+		issues?: ValidationIssue[];
+		selectedItems: Record<string, string>;
+	} = $props();
 	const channelEntries = $derived(
 		definition.chat.channels.map((channel) => ({
 			id: channel.id,
@@ -109,6 +116,7 @@
 <ContentHeader density="dense" description="These settings apply unless a phase changes them."
 	>{#snippet title()}<h2>Normal chat settings</h2>{/snippet}</ContentHeader
 >
+<InlineValidationMessages {issues} path="chat" />
 <div class="cards">
 	{#each defaultRoomKinds as room (room.key)}
 		{@const policy = definition.chat.defaultPolicy[room.key]}
@@ -161,6 +169,10 @@
 			definition.chat.channels.findIndex((item) => item.id === id),
 			1
 		)}
+	validationPath="chat.channels"
+	itemPath={(id) =>
+		`chat.channels[${definition.chat.channels.findIndex((item) => item.id === id)}]`}
+	{issues}
 >
 	{#snippet editor(id)}{@const channelIndex = definition.chat.channels.findIndex(
 			(item) => item.id === id

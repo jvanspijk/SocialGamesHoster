@@ -4,6 +4,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
 	import type { EditorSection } from '../editor-state';
+	import type { ValidationIssue } from '../editor-state';
 	import CollectionEditor from './CollectionEditor.svelte';
 	import {
 		duplicateByID,
@@ -15,11 +16,13 @@
 	let {
 		definition = $bindable(),
 		media,
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -112,6 +115,9 @@
 			label: usage.label,
 			navigate: () => onnavigate(usage.section, usage.itemId)
 		}))}
+	validationPath="phases"
+	itemPath={(id) => `phases[${definition.phases.findIndex((item) => item.id === id)}]`}
+	{issues}
 	emptyDescription="Game flow is optional. Add a phase if the game follows an ordered sequence."
 >
 	{#snippet editor(id)}{@const index = definition.phases.findIndex(

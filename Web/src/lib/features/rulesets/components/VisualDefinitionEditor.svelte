@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RulesetDefinition } from '$lib/api/types';
+	import type { ValidationIssue } from '../editor-state';
 	import type { EditorSection } from '../editor-state';
 	import AchievementsSection from './AchievementsSection.svelte';
 	import ChatSection from './ChatSection.svelte';
@@ -17,6 +18,7 @@
 		section,
 		assets,
 		media,
+		issues = [],
 		selectedItems,
 		onnavigate
 	}: {
@@ -24,6 +26,7 @@
 		section: DefinitionEditorSection;
 		assets: AssetOption[];
 		media: MediaActions;
+		issues?: ValidationIssue[];
 		selectedItems: Record<string, string>;
 		onnavigate: (section: EditorSection, itemId?: string) => void;
 	} = $props();
@@ -31,20 +34,20 @@
 
 <DefinitionEditorLayout>
 	{#if section === 'teams'}
-		<TeamsSection bind:definition {assets} {media} {selectedItems} {onnavigate} />
+		<TeamsSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
 	{:else if section === 'roles'}
-		<RolesSection bind:definition {assets} {media} {selectedItems} {onnavigate} />
+		<RolesSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
 	{:else if section === 'phases'}
-		<PhasesSection bind:definition {media} {selectedItems} {onnavigate} />
+		<PhasesSection bind:definition {media} {issues} {selectedItems} {onnavigate} />
 	{:else if section === 'composition'}
-		<CompositionSection bind:definition {selectedItems} {onnavigate} />
+		<CompositionSection bind:definition {issues} {selectedItems} {onnavigate} />
 	{:else if section === 'knowledge'}
-		<KnowledgeSection bind:definition />
+		<KnowledgeSection bind:definition {issues} />
 	{:else if section === 'chat'}
-		<ChatSection bind:definition {selectedItems} />
+		<ChatSection bind:definition {issues} {selectedItems} />
 	{:else if section === 'achievements'}
-		<AchievementsSection bind:definition {assets} {media} {selectedItems} />
+		<AchievementsSection bind:definition {assets} {media} {issues} {selectedItems} />
 	{:else}
-		<MediaSection bind:definition {assets} {media} {selectedItems} {onnavigate} />
+		<MediaSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
 	{/if}
 </DefinitionEditorLayout>

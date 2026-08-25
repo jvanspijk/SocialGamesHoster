@@ -10,6 +10,7 @@
 	import Field from '$lib/components/Field.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
+	import InlineValidationMessages from '$lib/features/rulesets/components/InlineValidationMessages.svelte';
 	import MediaField from '$lib/features/rulesets/components/MediaField.svelte';
 	import RulesetPreview from '$lib/features/rulesets/components/RulesetPreview.svelte';
 	import {
@@ -17,6 +18,7 @@
 		humanIssueLocation,
 		isEditorSection,
 		issueControlName,
+		itemTargetForIssue,
 		itemNameForIssue,
 		nextRequiredSection,
 		normalizeReport,
@@ -328,19 +330,27 @@
 		return assets.length ? `${assets.length} media items` : 'Not configured';
 	}
 
-	function selectSection(next: EditorSection, itemId?: string) {
+	function selectSection(next: EditorSection, itemId?: string, itemKey?: string) {
 		section = next;
 		if (itemId) {
-			const key: Partial<Record<EditorSection, string>> = {
-				teams: 'teams',
-				roles: 'roles',
-				phases: 'phases',
-				composition: itemId.startsWith('modifier') ? 'compositionModifiers' : 'compositionBands',
-				chat: 'channels',
-				achievements: 'achievements',
-				audio: 'audioCues'
-			};
-			if (key[next]) selectedItems[key[next]!] = itemId;
+			const key =
+				itemKey ??
+				(
+					{
+						teams: definition.categories.some((item) => item.id === itemId)
+							? 'categories'
+							: 'teams',
+						roles: definition.abilities.some((item) => item.id === itemId) ? 'abilities' : 'roles',
+						phases: 'phases',
+						composition: definition.compositionModifiers.some((item) => item.id === itemId)
+							? 'compositionModifiers'
+							: 'compositionBands',
+						chat: 'channels',
+						achievements: 'achievements',
+						audio: 'audioCues'
+					} as Partial<Record<EditorSection, string>>
+				)[next];
+			if (key) selectedItems[key] = itemId;
 		}
 		sectionMenuOpen = false;
 		readinessOpen = false;
@@ -354,19 +364,8 @@
 	async function goToIssue(issue: ValidationIssue) {
 		const next = sectionForPath(issue.path);
 		const item = itemNameForIssue(definition, issue);
-		const index = Number(/\[(\d+)\]/.exec(issue.path)?.[1] ?? -1);
-		const collections: Partial<Record<EditorSection, Array<{ id: string }>>> = {
-			teams: issue.path.startsWith('categories') ? definition.categories : definition.teams,
-			roles: issue.path.startsWith('abilities') ? definition.abilities : definition.roles,
-			phases: definition.phases,
-			composition: issue.path.startsWith('compositionModifiers')
-				? definition.compositionModifiers
-				: definition.compositionBands,
-			chat: definition.chat.channels,
-			achievements: definition.achievements,
-			audio: definition.audioCues
-		};
-		selectSection(next, index >= 0 ? collections[next]?.[index]?.id : undefined);
+		const target = itemTargetForIssue(definition, issue);
+		selectSection(next, target?.id, target?.key);
 		await tick();
 		await tick();
 		const control = issueControlName(issue.path);
@@ -606,11 +605,13 @@
 					{assets}
 					{media}
 				/>
+				<InlineValidationMessages issues={report.errors} path="metadata" />
 			{:else if loaded}<VisualDefinitionEditor
 					bind:definition
 					section={section === 'metadata' ? 'teams' : section}
 					{assets}
 					{media}
+					issues={report.errors}
 					{selectedItems}
 					onnavigate={selectSection}
 				/>{/if}

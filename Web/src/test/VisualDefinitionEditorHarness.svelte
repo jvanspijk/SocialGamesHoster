@@ -2,12 +2,15 @@
 	import type { RulesetDefinition } from '$lib/api/types';
 	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
 	import type { DefinitionEditorSection } from '$lib/features/rulesets/components/definition-editor';
+	import type { ValidationIssue } from '$lib/features/rulesets/editor-state';
 
 	let {
 		section = 'composition',
+		issues = [],
 		onnavigate = () => {}
 	}: {
 		section?: DefinitionEditorSection;
+		issues?: ValidationIssue[];
 		onnavigate?: (section: string, itemId?: string) => void;
 	} = $props();
 
@@ -70,6 +73,7 @@
 	{section}
 	assets={[]}
 	{media}
+	{issues}
 	{selectedItems}
 	{onnavigate}
 />
