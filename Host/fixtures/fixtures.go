@@ -84,6 +84,12 @@ func Seed(app core.App, gameMasterID string) error {
 			asset.Set("ruleset_version", version.Id)
 			asset.Set("asset_key", manifestAsset.AssetKey)
 			asset.Set("kind", manifestAsset.Kind)
+			asset.Set("display_name", manifestAsset.DisplayName)
+			accessibilityText := manifestAsset.AccessibilityText
+			if accessibilityText == "" {
+				accessibilityText = imported.Definition.AssetAccessibility[manifestAsset.AssetKey].Description
+			}
+			asset.Set("accessibility_text", accessibilityText)
 			asset.Set("file", file)
 			asset.Set("mime_type", manifestAsset.MIMEType)
 			asset.Set("checksum", manifestAsset.Checksum)
@@ -94,6 +100,7 @@ func Seed(app core.App, gameMasterID string) error {
 			}
 		}
 		logical.Set("latest_published_version", version.Id)
+		logical.Set("latest_saved_version", version.Id)
 		if err := app.Save(logical); err != nil {
 			return err
 		}

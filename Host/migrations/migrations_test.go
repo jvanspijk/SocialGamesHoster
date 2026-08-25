@@ -53,6 +53,7 @@ func TestInitialMigrationUp(t *testing.T) {
 		"chat_messages",
 		"attention_items",
 		"attention_receipts",
+		"announcement_attachments",
 		"ability_choices",
 		"achievement_awards",
 		"game_audit",
@@ -89,6 +90,15 @@ func TestInitialMigrationUp(t *testing.T) {
 	}
 	if games.Fields.GetByName("ability_phase_instance") == nil {
 		t.Fatal("ability phase instance field is missing")
+	}
+	attachments, err := app.FindCollectionByNameOrId("announcement_attachments")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"game", "announcement", "creator", "kind", "file", "mime_type", "checksum", "storage_state"} {
+		if attachments.Fields.GetByName(field) == nil {
+			t.Fatalf("announcement attachment field %q is missing", field)
+		}
 	}
 	rulesets, err := app.FindCollectionByNameOrId("rulesets")
 	if err != nil {

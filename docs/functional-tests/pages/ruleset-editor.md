@@ -8,21 +8,22 @@
 
 ## Background
 
-Given a game master has a draft ruleset open in the ruleset editor
+Given a game master has a working ruleset open in the ruleset editor
 And a representative image and audio cue are available for the game
 And a physical iPhone or Android phone is available on the same private LAN
 
 ## Scenario: Use uploaded media in a real player browser
 
-When the game master adds the image and audio cue to the draft
-And validates, saves, and publishes the ruleset
-And creates or opens a game using the published version
+When the game master adds the image and audio cue to the working ruleset
+And previews the role card, phase flow, and media
+And saves the ruleset as Valid
+And creates or opens a game using the saved ruleset
 And a player opens the game on the physical phone
 Then the image displays at a usable size without breaking the player layout
 And the audio cue can play after the player explicitly enables sound
 And the player can still read and operate the page while the media is present
 
-## Scenario: Verify the published media on a second mobile browser
+## Scenario: Verify the saved media on a second mobile browser
 
 When the same game is opened on a second physical mobile browser
 Then the image and cue are available without relying on the game master's browser cache

@@ -35,7 +35,7 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 	}
 
 	if def.SchemaVersion != 1 {
-		addError("schemaVersion", "schema.unsupported", "Schema version must be 1.")
+		addError("schemaVersion", "schema.unsupported", "This ruleset format is not supported.")
 	}
 	if strings.TrimSpace(def.Metadata.Name) == "" {
 		addError("metadata.name", "required", "Name is required.")

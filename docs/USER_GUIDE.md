@@ -17,7 +17,7 @@ game audit; accounts should not be shared.
 
 ## Prepare a game
 
-1. Open **Host → Games** and create a draft from a published ruleset.
+1. Open **Host → Games** and create a game from a valid saved ruleset.
 2. Select **Open lobby**. Only one game can be live.
 3. Show the phone QR from the Installation page or tray. The link contains only
    the private IP address and port, never an account secret.
@@ -37,7 +37,7 @@ chat, outcome, and achievement controls.
 - Players see only their own role and allowed knowledge.
 - The persisted timer continues correctly across sleep or restart.
 - Announcements and game-master direct messages are always available.
-- General, team, and player rooms follow the published ruleset and current
+- General, team, and player rooms follow the game's saved ruleset and current
   phase. Private/team rooms disclose that game masters can read them.
 - Anonymous display affects player projections only; game masters retain the
   attributed sender.
@@ -54,15 +54,20 @@ can still see and revoke hidden awards from the Live Table.
 
 ## Rulesets
 
-The creator covers metadata, teams, categories, abilities, roles, phases,
-knowledge, composition bands/modifiers, chat policy, achievements, audio cues,
-and image/audio assets. Stable keys use lowercase letters, numbers, hyphens, or
-underscores.
+The guided creator covers basics, teams, roles and abilities, player setup,
+game flow, information rules, chat, rewards, and image/audio media. Work is
+stored only when you choose **Save**; local recovery can restore unsaved browser
+changes after an interruption.
 
-Validate before publishing. Published versions and their assets are immutable;
-create a new draft version to make changes. `.sghrules` exports include
-checksums, provenance, the definition, and declared assets. Imports always
-create a separate reviewable draft and never overwrite an existing ruleset.
+A saved ruleset is marked **Valid** or **Invalid**. Valid rulesets can be chosen
+for new games. Invalid rulesets remain editable but are unavailable for new
+games until their blocking issues are fixed and saved. Use **Preview** to check
+role cards, phase flow, player setup, chat availability, and media in context.
+Use **Edit**, **Save**, and **Delete ruleset** to manage the library.
+
+`.sghrules` exports include checksums, provenance, the definition, and declared
+media. Imports create a separate saved ruleset and never overwrite an existing
+one.
 
 ## Profiles
 

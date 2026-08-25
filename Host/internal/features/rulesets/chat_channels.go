@@ -55,3 +55,27 @@ func ChatChannelPolicy(channel ChatChannel, phaseID string) (RoomPermission, *Pa
 	override := PartialRoomPermission{Visible: phase.Visible, Readable: phase.Visible, Sendable: phase.Sendable}
 	return base, &override
 }
+
+// ApplyRoomOverride is shared by live chat and the authoring preview so both
+// resolve phase-specific permissions identically.
+func ApplyRoomOverride(base RoomPermission, override *PartialRoomPermission) RoomPermission {
+	if override == nil {
+		return base
+	}
+	if override.Visible != nil {
+		base.Visible = *override.Visible
+	}
+	if override.Readable != nil {
+		base.Readable = *override.Readable
+	}
+	if override.Sendable != nil {
+		base.Sendable = *override.Sendable
+	}
+	if override.GameMasterMaySend != nil {
+		base.GameMasterMaySend = *override.GameMasterMaySend
+	}
+	if override.SenderDisplay != nil {
+		base.SenderDisplay = *override.SenderDisplay
+	}
+	return base
+}

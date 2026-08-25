@@ -14,24 +14,7 @@ type RoomState struct {
 }
 
 func EffectivePolicy(base rulesets.RoomPermission, override *rulesets.PartialRoomPermission, participant ParticipantState, room RoomState) rulesets.RoomPermission {
-	effective := base
-	if override != nil {
-		if override.Visible != nil {
-			effective.Visible = *override.Visible
-		}
-		if override.Readable != nil {
-			effective.Readable = *override.Readable
-		}
-		if override.Sendable != nil {
-			effective.Sendable = *override.Sendable
-		}
-		if override.GameMasterMaySend != nil {
-			effective.GameMasterMaySend = *override.GameMasterMaySend
-		}
-		if override.SenderDisplay != nil {
-			effective.SenderDisplay = *override.SenderDisplay
-		}
-	}
+	effective := rulesets.ApplyRoomOverride(base, override)
 	if !participant.IsMember {
 		effective.Visible = false
 		effective.Readable = participant.HistoricalRead

@@ -166,6 +166,8 @@ func limitRequestBody(event *core.RequestEvent) {
 	switch {
 	case path == "/api/app/v1/rulesets/import":
 		limit = 26 << 20
+	case strings.HasSuffix(path, "/announcements"):
+		limit = 8 << 20
 	case strings.Contains(path, "/assets"), strings.HasSuffix(path, "/avatar"):
 		limit = 6 << 20
 	}

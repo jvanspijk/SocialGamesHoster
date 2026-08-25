@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
@@ -85,6 +88,11 @@ type announcementRequest struct {
 	AudioAlternative string `json:"audioAlternative"`
 }
 
+type preparedAnnouncementAttachment struct {
+	kind, mimeType, checksum string
+	file                     *filesystem.File
+}
+
 func createAnnouncement(event *core.RequestEvent) error {
 	game, err := findAnnouncementGame(event)
 	if err != nil {
@@ -93,9 +101,9 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if game.GetString("status") != string(gamepolicy.GameLobby) && game.GetString("status") != string(gamepolicy.GameRunning) && game.GetString("status") != string(gamepolicy.GamePaused) {
 		return httpx.WriteError(event, result.Conflict("chat.read_only", "Announcements are only available during a live game."))
 	}
-	var request announcementRequest
-	if err := event.BindBody(&request); err != nil {
-		return httpx.WriteError(event, result.Invalid("attention.invalid_announcement", "Enter an announcement of at most 1000 characters.", nil))
+	request, imageUpload, audioUpload, err := readAnnouncementRequest(event)
+	if err != nil {
+		return httpx.WriteErrorFrom(event, err)
 	}
 	request.Content = strings.TrimSpace(request.Content)
 	if len([]rune(request.Content)) > 1000 || request.Content == "" || containsControlCharacter(request.Content) {
@@ -105,15 +113,22 @@ func createAnnouncement(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	request.ImageDescription, err = validateAnnouncementAsset(
-		event.App, game, definition, request.ImageAssetKey, "image", request.ImageDescription,
-	)
+	if request.ImageAssetKey != "" && imageUpload != nil || request.AudioAssetKey != "" && audioUpload != nil {
+		return httpx.WriteError(event, result.Invalid("attention.mixed_media_source", "Choose existing media or upload a new file for each attachment, not both.", nil))
+	}
+	if imageUpload != nil {
+		request.ImageDescription, err = validateUploadedAccessibility("image", request.ImageDescription)
+	} else {
+		request.ImageDescription, err = validateAnnouncementAsset(event.App, game, definition, request.ImageAssetKey, "image", request.ImageDescription)
+	}
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
-	request.AudioAlternative, err = validateAnnouncementAsset(
-		event.App, game, definition, request.AudioAssetKey, "audio", request.AudioAlternative,
-	)
+	if audioUpload != nil {
+		request.AudioAlternative, err = validateUploadedAccessibility("audio", request.AudioAlternative)
+	} else {
+		request.AudioAlternative, err = validateAnnouncementAsset(event.App, game, definition, request.AudioAssetKey, "audio", request.AudioAlternative)
+	}
 	if err != nil {
 		return httpx.WriteErrorFrom(event, err)
 	}
@@ -127,6 +142,18 @@ func createAnnouncement(event *core.RequestEvent) error {
 		}
 		if cue == nil {
 			return httpx.WriteError(event, result.Invalid("audio.invalid_cue", "That sound cue is not part of this game.", nil))
+		}
+	}
+
+	staged, err := stageAnnouncementAttachments(event, game, imageUpload, audioUpload)
+	if err != nil {
+		return httpx.WriteErrorFrom(event, err)
+	}
+	cleanupStaged := func() {
+		for _, attachment := range staged {
+			if deleteErr := event.App.Delete(attachment); deleteErr != nil {
+				event.App.Logger().Error("staged announcement attachment cleanup failed", "attachmentId", attachment.Id, "error", deleteErr)
+			}
 		}
 	}
 
@@ -155,8 +182,22 @@ func createAnnouncement(event *core.RequestEvent) error {
 		item.Set("image_description", request.ImageDescription)
 		item.Set("audio_asset_key", request.AudioAssetKey)
 		item.Set("audio_alternative", request.AudioAlternative)
+		for _, attachment := range staged {
+			item.Set(attachment.GetString("kind")+"_attachment", attachment.Id)
+		}
 		if saveErr := tx.Save(item); saveErr != nil {
 			return saveErr
+		}
+		for _, attachment := range staged {
+			current, findErr := tx.FindRecordById("announcement_attachments", attachment.Id)
+			if findErr != nil {
+				return findErr
+			}
+			current.Set("announcement", item.Id)
+			current.Set("storage_state", "ready")
+			if saveErr := tx.Save(current); saveErr != nil {
+				return saveErr
+			}
 		}
 		receiptCollection, collectionErr := tx.FindCollectionByNameOrId("attention_receipts")
 		if collectionErr != nil {
@@ -174,6 +215,7 @@ func createAnnouncement(event *core.RequestEvent) error {
 			map[string]any{"cueKey": request.CueKey, "audience": request.Audience, "targetId": request.TargetID, "recipientTotal": len(recipients)}, event.Get(httpx.TraceIDKey))
 	})
 	if err != nil {
+		cleanupStaged()
 		return httpx.WriteErrorFrom(event, err)
 	}
 
@@ -192,6 +234,107 @@ func createAnnouncement(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	return event.JSON(http.StatusCreated, summary)
+}
+
+func readAnnouncementRequest(event *core.RequestEvent) (announcementRequest, *preparedAnnouncementAttachment, *preparedAnnouncementAttachment, error) {
+	var request announcementRequest
+	if !strings.HasPrefix(strings.ToLower(event.Request.Header.Get("Content-Type")), "multipart/form-data") {
+		if err := event.BindBody(&request); err != nil {
+			return request, nil, nil, result.Invalid("attention.invalid_announcement", "Enter an announcement of at most 1000 characters.", nil)
+		}
+		return request, nil, nil, nil
+	}
+	request = announcementRequest{
+		Content: event.Request.FormValue("content"), CueKey: event.Request.FormValue("cueKey"),
+		Audience: event.Request.FormValue("audience"), TargetID: event.Request.FormValue("targetId"),
+		ImageAssetKey: event.Request.FormValue("imageAssetKey"), ImageDescription: event.Request.FormValue("imageDescription"),
+		AudioAssetKey: event.Request.FormValue("audioAssetKey"), AudioAlternative: event.Request.FormValue("audioAlternative"),
+	}
+	image, err := prepareAnnouncementAttachment(event, "image", "imageFile")
+	if err != nil {
+		return request, nil, nil, err
+	}
+	audio, err := prepareAnnouncementAttachment(event, "audio", "audioFile")
+	return request, image, audio, err
+}
+
+func prepareAnnouncementAttachment(event *core.RequestEvent, kind, field string) (*preparedAnnouncementAttachment, error) {
+	if event.Request.MultipartForm == nil || len(event.Request.MultipartForm.File[field]) == 0 {
+		return nil, nil
+	}
+	files, err := event.FindUploadedFiles(field)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, nil
+	}
+	if len(files) != 1 {
+		return nil, result.Invalid("attention.invalid_media", "Choose one "+kind+" file.", nil)
+	}
+	uploaded := files[0]
+	limit := rulesets.MediaUploadLimit(kind)
+	if uploaded.Size <= 0 || uploaded.Size > limit {
+		return nil, result.Invalid("attention.media_too_large", "The uploaded "+kind+" exceeds its size limit.", nil)
+	}
+	stream, err := uploaded.Reader.Open()
+	if err != nil {
+		return nil, err
+	}
+	content, readErr := io.ReadAll(io.LimitReader(stream, limit+1))
+	closeErr := stream.Close()
+	if readErr != nil || closeErr != nil || int64(len(content)) > limit {
+		return nil, result.Invalid("attention.invalid_media", "The uploaded "+kind+" could not be read safely.", nil)
+	}
+	mimeType, err := rulesets.InspectMediaUpload(kind, content)
+	if err != nil {
+		return nil, result.Invalid("attention.invalid_media", err.Error(), nil)
+	}
+	digest := sha256.Sum256(content)
+	return &preparedAnnouncementAttachment{kind: kind, mimeType: mimeType, checksum: hex.EncodeToString(digest[:]), file: uploaded}, nil
+}
+
+func stageAnnouncementAttachments(event *core.RequestEvent, game *core.Record, prepared ...*preparedAnnouncementAttachment) ([]*core.Record, error) {
+	collection, err := event.App.FindCollectionByNameOrId("announcement_attachments")
+	if err != nil {
+		return nil, err
+	}
+	staged := make([]*core.Record, 0, len(prepared))
+	for _, item := range prepared {
+		if item == nil {
+			continue
+		}
+		record := core.NewRecord(collection)
+		record.Set("game", game.Id)
+		record.Set("creator", event.Auth.Id)
+		record.Set("kind", item.kind)
+		record.Set("file", item.file)
+		record.Set("mime_type", item.mimeType)
+		record.Set("checksum", item.checksum)
+		record.Set("storage_state", "staging")
+		if err := event.App.Save(record); err != nil {
+			for _, previous := range staged {
+				_ = event.App.Delete(previous)
+			}
+			return nil, err
+		}
+		staged = append(staged, record)
+	}
+	return staged, nil
+}
+
+func validateUploadedAccessibility(kind, value string) (string, error) {
+	value = strings.TrimSpace(value)
+	limit := 500
+	label := "image description"
+	if kind == "audio" {
+		limit = 1000
+		label = "audio alternative"
+	}
+	if value == "" || len([]rune(value)) > limit || containsControlCharacter(value) {
+		return "", result.Invalid("attention.accessibility_required", "Provide an accessible "+label+" for the attachment.", nil)
+	}
+	return value, nil
 }
 
 func acknowledgeAnnouncement(event *core.RequestEvent) error {
@@ -373,10 +516,10 @@ func projectAdminAttentionSummary(app core.App, item *core.Record) (map[string]a
 
 func projectAnnouncementMedia(item *core.Record, projected map[string]any) {
 	base := "/api/app/v1/games/" + item.GetString("game") + "/announcements/" + item.Id + "/media/"
-	if item.GetString("image_asset_key") != "" {
+	if item.GetString("image_asset_key") != "" || item.GetString("image_attachment") != "" {
 		projected["image"] = map[string]any{"url": base + "image", "description": item.GetString("image_description")}
 	}
-	if item.GetString("audio_asset_key") != "" {
+	if item.GetString("audio_asset_key") != "" || item.GetString("audio_attachment") != "" {
 		projected["audio"] = map[string]any{"url": base + "audio", "alternative": item.GetString("audio_alternative")}
 	}
 }
@@ -434,30 +577,41 @@ func announcementMedia(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Forbidden("attention.forbidden", "This announcement attachment is not available."))
 	}
 	kind := event.Request.PathValue("kind")
-	field := ""
+	assetField := ""
+	attachmentField := ""
 	if kind == "image" {
-		field = "image_asset_key"
+		assetField = "image_asset_key"
+		attachmentField = "image_attachment"
 	} else if kind == "audio" {
-		field = "audio_asset_key"
+		assetField = "audio_asset_key"
+		attachmentField = "audio_attachment"
 	} else {
 		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
 	}
-	assetKey := item.GetString(field)
-	if assetKey == "" {
-		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+	var asset *core.Record
+	if attachmentID := item.GetString(attachmentField); attachmentID != "" {
+		asset, err = event.App.FindRecordById("announcement_attachments", attachmentID)
+		if err != nil || asset.GetString("announcement") != item.Id || asset.GetString("game") != game.Id || asset.GetString("kind") != kind || asset.GetString("storage_state") != "ready" {
+			return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+		}
+	} else {
+		assetKey := item.GetString(assetField)
+		if assetKey == "" {
+			return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+		}
+		assets, findErr := event.App.FindRecordsByFilter(
+			"ruleset_assets",
+			"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind} && storage_state = 'ready'",
+			"",
+			1,
+			0,
+			dbx.Params{"version": game.GetString("ruleset_version"), "key": assetKey, "kind": kind},
+		)
+		if findErr != nil || len(assets) != 1 {
+			return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
+		}
+		asset = assets[0]
 	}
-	assets, err := event.App.FindRecordsByFilter(
-		"ruleset_assets",
-		"ruleset_version = {:version} && asset_key = {:key} && kind = {:kind} && storage_state = 'ready'",
-		"",
-		1,
-		0,
-		dbx.Params{"version": game.GetString("ruleset_version"), "key": assetKey, "kind": kind},
-	)
-	if err != nil || len(assets) != 1 {
-		return httpx.WriteError(event, result.AppError{Code: "attention.media_not_found", Message: "Announcement attachment not found.", Status: http.StatusNotFound})
-	}
-	asset := assets[0]
 	fsys, err := event.App.NewFilesystem()
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -468,8 +622,9 @@ func announcementMedia(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	defer reader.Close()
-	content, err := io.ReadAll(io.LimitReader(reader, (5<<20)+1))
-	if err != nil || len(content) > 5<<20 {
+	limit := rulesets.MediaUploadLimit(kind)
+	content, err := io.ReadAll(io.LimitReader(reader, limit+1))
+	if err != nil || int64(len(content)) > limit {
 		return httpx.WriteError(event, result.Internal(errors.New("announcement media exceeds limit")))
 	}
 	event.Response.Header().Set("Cache-Control", "private, no-store")

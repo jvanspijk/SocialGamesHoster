@@ -10,7 +10,7 @@
 
 Given a game master is signed in on the Windows host computer
 And at least two physical phones are approved and joined to an open lobby
-And a published ruleset with a phase and an optional sound cue is available
+And a valid saved ruleset with a phase and an optional sound cue is available
 
 ## Scenario: Coordinate a live game across real devices
 
@@ -37,6 +37,15 @@ And another player has not enabled sound
 When the game master sends an announcement with a sound cue targeted to the enabled player
 Then the enabled player's phone plays the cue after the user gesture that enabled sound
 And the other player sees the announcement but does not hear the cue
+
+## Scenario: Deliver one-off announcement media privately
+
+Given one player is the only selected recipient
+When the game master uploads an image and audio file in the announcement composer
+And provides an image description and audio alternative
+Then the selected player's phone displays and plays the attachments
+And another signed-in player's phone cannot open either attachment URL
+And the uploaded files do not appear in the ruleset Media section or a later announcement
 
 ## Scenario: Restore a backup from the owner page
 

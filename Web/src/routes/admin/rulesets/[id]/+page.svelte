@@ -3,7 +3,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ArrowLeft, ListChecks, Menu, MoreHorizontal, Save, Trash2 } from '@lucide/svelte';
+	import { ArrowLeft, Eye, ListChecks, Menu, MoreHorizontal, Save, Trash2 } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
@@ -11,6 +11,7 @@
 	import Sheet from '$lib/components/Sheet.svelte';
 	import VisualDefinitionEditor from '$lib/features/rulesets/components/VisualDefinitionEditor.svelte';
 	import MediaField from '$lib/features/rulesets/components/MediaField.svelte';
+	import RulesetPreview from '$lib/features/rulesets/components/RulesetPreview.svelte';
 	import {
 		copyDefinition,
 		humanIssueLocation,
@@ -35,6 +36,9 @@
 		RulesetAsset,
 		RulesetDefinition,
 		RulesetEditSession,
+		RulesetPreviewMode,
+		RulesetPreviewRequest,
+		RulesetPreviewResponse,
 		RulesetSummary
 	} from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
@@ -98,6 +102,9 @@
 	let leaveOpen = $state(false);
 	let sectionMenuOpen = $state(false);
 	let readinessOpen = $state(false);
+	let previewOpen = $state(false);
+	let previewResults = $state<Partial<Record<RulesetPreviewMode, RulesetPreviewResponse>>>({});
+	let previewSource = '';
 	let pendingPath = $state('');
 	let bypassNavigation = false;
 	let error = $state<FormError | null>(null);
@@ -137,6 +144,56 @@
 							? 'Saved · Valid'
 							: 'Saved · Invalid'
 	);
+	const previewGuidance = $derived.by(() => {
+		const guidance: Array<{
+			mode: RulesetPreviewMode;
+			message: string;
+			action?: string;
+			section?: EditorSection;
+		}> = [];
+		const composition = previewResults.composition;
+		if (composition) {
+			guidance.push({
+				mode: 'composition',
+				message: composition.message ?? 'Player setup preview completed.',
+				action: composition.feasible ? undefined : 'Adjust player setup',
+				section: composition.feasible ? undefined : 'composition'
+			});
+		}
+		const chat = previewResults.chat;
+		if (chat?.rooms) {
+			const readable = chat.rooms.filter((room) => room.readable).length;
+			const sendable = chat.rooms.filter((room) => room.sendable).length;
+			guidance.push({
+				mode: 'chat',
+				message: `${chat.audience} can read ${readable} and post in ${sendable} of ${chat.rooms.length} chat spaces during ${chat.phase}.`,
+				action: sendable === 0 ? 'Review chat permissions' : undefined,
+				section: sendable === 0 ? 'chat' : undefined
+			});
+		}
+		const media = previewResults.media;
+		if (media?.media) {
+			const count = media.contexts?.length ?? 0;
+			guidance.push({
+				mode: 'media',
+				message: count
+					? `${media.media.displayName} was checked in ${count} ${count === 1 ? 'game context' : 'game contexts'}.`
+					: `${media.media.displayName} is not currently used in the ruleset.`,
+				action: count === 0 ? 'Review media' : undefined,
+				section: count === 0 ? 'audio' : undefined
+			});
+		}
+		const phases = previewResults.phases;
+		if (phases?.empty) {
+			guidance.push({
+				mode: 'phases',
+				message: phases.message ?? 'No game flow is configured.',
+				action: 'Add game flow',
+				section: 'phases'
+			});
+		}
+		return guidance;
+	});
 
 	onMount(() => {
 		if (!auth.isGameMaster) {
@@ -164,6 +221,11 @@
 	$effect(() => {
 		if (!loaded) return;
 		const snapshot = normalizedDefinition(definition);
+		const currentPreviewSource = `${snapshot}:${JSON.stringify(assets.map((asset) => [asset.assetKey, asset.checksum]))}`;
+		if (previewSource && previewSource !== currentPreviewSource) {
+			previewResults = {};
+			previewSource = '';
+		}
 		const activeSection = section;
 		const itemState = JSON.stringify(selectedItems);
 		const activeSessionId = editSession?.id;
@@ -427,6 +489,16 @@
 	async function exportRuleset() {
 		await download(`/rulesets/${page.params.id}/export`, `${ruleset?.name || 'ruleset'}.sghrules`);
 	}
+	async function loadPreview(request: RulesetPreviewRequest) {
+		return api<RulesetPreviewResponse>(`/rulesets/${page.params.id}/preview`, {
+			method: 'POST',
+			...jsonBody({ ...request, definition, sessionId: editSession?.id })
+		});
+	}
+	function recordPreviewResult(response: RulesetPreviewResponse) {
+		previewSource = `${normalizedDefinition(definition)}:${JSON.stringify(assets.map((asset) => [asset.assetKey, asset.checksum]))}`;
+		previewResults = { ...previewResults, [response.mode]: response };
+	}
 </script>
 
 <div class="editor stack">
@@ -437,7 +509,9 @@
 			<h1>{definition.metadata.name || 'Ruleset'}</h1>
 		</div>
 		<div class="actions">
-			<Button loading={saving} onclick={() => save()}><Save size={17} /> Save</Button><Button
+			<Button variant="secondary" onclick={() => (previewOpen = true)}
+				><Eye size={17} /> Preview</Button
+			><Button loading={saving} onclick={() => save()}><Save size={17} /> Save</Button><Button
 				variant="ghost"
 				onclick={() => (actionsOpen = true)}><MoreHorizontal size={20} /> Actions</Button
 			>
@@ -479,7 +553,7 @@
 					></button
 				>{/each}
 		</nav>
-		<main class="panel stack">
+		<section class="panel stack" aria-label="Ruleset editor section">
 			{#if !loaded}<p role="status">Loading ruleset…</p>
 			{:else if sectionIssues.length}<section
 					class="inline-issues"
@@ -540,7 +614,7 @@
 					{selectedItems}
 					onnavigate={selectSection}
 				/>{/if}
-		</main>
+		</section>
 		<aside class="readiness">{@render readiness()}</aside>
 	</div>
 </div>
@@ -598,6 +672,19 @@
 		{#if definition.phases.length === 0}<h3>Optional recommendation</h3>
 			<p>Game flow is not configured. Add phases if the game master follows an ordered sequence.</p>
 		{/if}
+		{#if previewGuidance.length}<h3>Preview checks</h3>
+			<ul class="preview-guidance">
+				{#each previewGuidance as item (item.mode)}<li>
+						<span>{item.message}</span>
+						{#if item.action && item.section}<button onclick={() => selectSection(item.section!)}
+								>{item.action}</button
+							>{/if}
+					</li>{/each}
+			</ul>
+		{/if}
+		<Button variant="secondary" onclick={() => (previewOpen = true)}
+			>Test the working ruleset</Button
+		>
 	</div>{/snippet}
 
 <Sheet open={sectionMenuOpen} title="Ruleset sections" close={() => (sectionMenuOpen = false)}
@@ -614,6 +701,15 @@
 <Sheet open={readinessOpen} title="Ruleset readiness" close={() => (readinessOpen = false)}
 	>{@render readiness()}</Sheet
 >
+<RulesetPreview
+	open={previewOpen}
+	close={() => (previewOpen = false)}
+	{definition}
+	{assets}
+	{dirty}
+	{loadPreview}
+	onresult={recordPreviewResult}
+/>
 <Dialog
 	open={leaveOpen}
 	title="Leave with unsaved changes?"

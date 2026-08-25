@@ -271,7 +271,6 @@ export interface RulesetSummary {
 
 export interface RulesetEditSession {
 	id: string;
-	baseVersionId: string;
 	expiresAt: string;
 	hasChanges: boolean;
 }
@@ -293,6 +292,67 @@ export interface RulesetAsset {
 	preview: string;
 	staged: boolean;
 	usages: RulesetAssetUsage[];
+}
+
+export type RulesetPreviewMode = 'role' | 'phases' | 'composition' | 'chat' | 'media';
+
+export interface RulesetPreviewRequest {
+	mode: RulesetPreviewMode;
+	roleId?: string;
+	phaseId?: string;
+	playerCount?: number;
+	assetKey?: string;
+}
+
+export interface RulesetPreviewMedia {
+	displayName: string;
+	accessibilityText: string;
+	kind: 'image' | 'audio';
+	preview: string;
+	metadata?: { width?: number; height?: number; durationMs?: number };
+}
+
+export interface RulesetPreviewResponse {
+	mode: RulesetPreviewMode;
+	empty?: boolean;
+	message?: string;
+	media?: RulesetPreviewMedia;
+	role?: {
+		name: string;
+		description: string;
+		teamName: string;
+		winCondition: string;
+		abilities: Array<{ name: string; description: string }>;
+	};
+	phases?: Array<{
+		name: string;
+		description: string;
+		startsRound: boolean;
+		suggestedDurationSeconds: number;
+		selected: boolean;
+		sound?: string;
+		media?: RulesetPreviewMedia;
+	}>;
+	playerCount?: number;
+	feasible?: boolean;
+	roles?: Array<{ name: string; teamName: string; count: number }>;
+	audience?: string;
+	phase?: string;
+	rooms?: Array<{
+		name: string;
+		kind: string;
+		visible: boolean;
+		readable: boolean;
+		sendable: boolean;
+		messageRestriction: 'normal_text' | 'emoji_only';
+	}>;
+	contexts?: Array<{
+		kind: 'cover' | 'team' | 'role' | 'ability' | 'achievement' | 'phase' | 'audio_cue';
+		label: string;
+		title: string;
+		description?: string;
+		detail?: string;
+	}>;
 }
 
 export interface RulesetDefinition {

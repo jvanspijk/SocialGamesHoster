@@ -147,6 +147,15 @@ func ClearGameSession(app core.App, gameID string) error {
 		return err
 	}
 	for _, item := range items {
+		attachments, err := app.FindRecordsByFilter("announcement_attachments", "announcement = {:item}", "", 10, 0, dbx.Params{"item": item.Id})
+		if err != nil {
+			return err
+		}
+		for _, attachment := range attachments {
+			if err := app.Delete(attachment); err != nil {
+				return err
+			}
+		}
 		receipts, err := app.FindRecordsByFilter("attention_receipts", "attention_item = {:item}", "", 10000, 0, dbx.Params{"item": item.Id})
 		if err != nil {
 			return err

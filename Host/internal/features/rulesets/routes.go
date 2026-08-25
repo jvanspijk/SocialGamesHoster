@@ -33,10 +33,6 @@ type createRequest struct {
 	SourceRulesetID string `json:"sourceRulesetId"`
 }
 
-type updateVersionRequest struct {
-	Definition DefinitionV1 `json:"definition"`
-}
-
 type preparedVersionAsset struct {
 	key, kind, displayName, accessibilityText, mimeType, checksum string
 	metadata                                                      any
@@ -54,6 +50,7 @@ func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group.GET("/rulesets/{id}", getRuleset)
 	group.DELETE("/rulesets/{id}", deleteRuleset)
 	group.POST("/rulesets/{id}/validate", validateRuleset)
+	group.POST("/rulesets/{id}/preview", previewRuleset)
 	group.POST("/rulesets/{id}/save", saveRuleset)
 	group.POST("/rulesets/import", func(event *core.RequestEvent) error {
 		return importBundle(event, applicationVersion)
@@ -209,26 +206,6 @@ func getRuleset(event *core.RequestEvent) error {
 		"definition": definition,
 		"validation": report,
 	})
-}
-
-func updateVersion(event *core.RequestEvent) error {
-	record, err := event.App.FindRecordById("ruleset_versions", event.Request.PathValue("id"))
-	if err != nil {
-		return versionNotFound(event)
-	}
-	if record.GetString("state") != "draft" {
-		return httpx.WriteError(event, result.Conflict("ruleset.published_immutable", "Published ruleset versions cannot be changed."))
-	}
-	var request updateVersionRequest
-	if err := event.BindBody(&request); err != nil {
-		return httpx.WriteError(event, result.Invalid("ruleset.invalid", "The ruleset definition could not be read.", nil))
-	}
-	record.Set("definition", request.Definition)
-	record.Set("definition_checksum", "")
-	if err := event.App.Save(record); err != nil {
-		return httpx.WriteError(event, result.Invalid("ruleset.save_failed", "The draft could not be saved.", nil))
-	}
-	return event.JSON(http.StatusOK, projectVersion(record))
 }
 
 type saveRulesetRequest struct {
@@ -471,162 +448,9 @@ func saveRuleset(event *core.RequestEvent) error {
 		}
 	}
 	return event.JSON(http.StatusOK, map[string]any{
-		"version":      projectVersion(saved),
 		"validation":   report,
 		"availability": availability,
 	})
-}
-
-func validateVersion(event *core.RequestEvent) error {
-	record, err := event.App.FindRecordById("ruleset_versions", event.Request.PathValue("id"))
-	if err != nil {
-		return versionNotFound(event)
-	}
-	definition, err := definitionFromRecord(record)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	assetKeys, err := versionAssetKeys(event.App, record.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	return event.JSON(http.StatusOK, Validate(definition, assetKeys))
-}
-
-func publishVersion(event *core.RequestEvent) error {
-	versionID := event.Request.PathValue("id")
-	var published *core.Record
-	err := event.App.RunInTransaction(func(txApp core.App) error {
-		record, err := txApp.FindRecordById("ruleset_versions", versionID)
-		if err != nil {
-			return result.AppError{Code: "ruleset_version.not_found", Message: "Ruleset version not found.", Status: http.StatusNotFound}
-		}
-		if record.GetString("state") != "draft" {
-			return result.AppError{Code: "ruleset.published_immutable", Message: "This version is already published.", Status: http.StatusConflict}
-		}
-		definition, err := definitionFromRecord(record)
-		if err != nil {
-			return err
-		}
-		assetKeys, err := versionAssetKeys(txApp, record.Id)
-		if err != nil {
-			return err
-		}
-		report := Validate(definition, assetKeys)
-		if !report.Valid() {
-			return validationAppError(report)
-		}
-		canonical, err := json.Marshal(definition)
-		if err != nil {
-			return err
-		}
-		record.Set("state", "published")
-		record.Set("definition_checksum", checksum(canonical))
-		record.Set("published_by", event.Auth.Id)
-		record.Set("published_at", time.Now().UTC())
-		if err := txApp.Save(record); err != nil {
-			return err
-		}
-		logical, err := txApp.FindRecordById("rulesets", record.GetString("ruleset"))
-		if err != nil {
-			return err
-		}
-		logical.Set("name", definition.Metadata.Name)
-		logical.Set("latest_published_version", record.Id)
-		if err := txApp.Save(logical); err != nil {
-			return err
-		}
-		published = record
-		return auditRecord(txApp, event.Auth, "", "ruleset.published", "ruleset_version", published.Id, map[string]any{"rulesetId": published.GetString("ruleset")}, event.Get(httpx.TraceIDKey))
-	})
-	if err != nil {
-		return httpx.WriteErrorFrom(event, err)
-	}
-	return event.JSON(http.StatusOK, projectVersion(published))
-}
-
-func createDraft(event *core.RequestEvent) error {
-	logical, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
-	if err != nil {
-		return rulesetNotFound(event)
-	}
-	existing, err := event.App.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset} && state = 'draft'", "", 1, 0, dbx.Params{"ruleset": logical.Id})
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	if len(existing) > 0 {
-		return event.JSON(http.StatusOK, projectVersion(existing[0]))
-	}
-	sourceID := logical.GetString("latest_published_version")
-	if sourceID == "" {
-		return httpx.WriteError(event, result.Conflict("ruleset.no_published_version", "Publish the first draft before creating a successor."))
-	}
-	source, err := event.App.FindRecordById("ruleset_versions", sourceID)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	definition, err := definitionFromRecord(source)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	preparedAssets, err := prepareVersionAssets(event.App, source.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	var draft *core.Record
-	created := false
-	if err := event.App.RunInTransaction(func(tx core.App) error {
-		current, err := tx.FindRecordById("rulesets", logical.Id)
-		if err != nil {
-			return err
-		}
-		existing, err := tx.FindRecordsByFilter("ruleset_versions", "ruleset = {:ruleset} && state = 'draft'", "", 1, 0, dbx.Params{"ruleset": current.Id})
-		if err != nil {
-			return err
-		}
-		if len(existing) > 0 {
-			draft = existing[0]
-			return nil
-		}
-		collection, err := tx.FindCollectionByNameOrId("ruleset_versions")
-		if err != nil {
-			return err
-		}
-		draft = core.NewRecord(collection)
-		draft.Set("ruleset", current.Id)
-		draft.Set("version_number", source.GetInt("version_number")+1)
-		draft.Set("state", "draft")
-		draft.Set("schema_version", 1)
-		draft.Set("definition", definition)
-		draft.Set("created_by", event.Auth.Id)
-		if err := tx.Save(draft); err != nil {
-			return err
-		}
-		created = true
-		if err := stagePreparedVersionAssets(tx, draft.Id, preparedAssets); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	if !created {
-		return event.JSON(http.StatusOK, projectVersion(draft))
-	}
-	if err := uploadStagedVersionAssets(event.App, draft.Id, preparedAssets); err != nil {
-		_ = deleteStagedDraft(event.App, draft.Id)
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	if err := event.App.RunInTransaction(func(tx core.App) error {
-		if err := markVersionAssetsReady(tx, draft.Id); err != nil {
-			return err
-		}
-		return auditRecord(tx, event.Auth, "", "ruleset.draft_created", "ruleset_version", draft.Id, map[string]any{"rulesetId": logical.Id}, event.Get(httpx.TraceIDKey))
-	}); err != nil {
-		_ = deleteStagedDraft(event.App, draft.Id)
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	return event.JSON(http.StatusCreated, projectVersion(draft))
 }
 
 func prepareVersionAssets(app core.App, sourceVersionID string) ([]preparedVersionAsset, error) {
@@ -753,23 +577,6 @@ func discardStagedSuccessor(app core.App, rulesetID, versionID, previousPublishe
 	return app.Save(logical)
 }
 
-func archiveRuleset(event *core.RequestEvent) error {
-	record, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
-	if err != nil {
-		return rulesetNotFound(event)
-	}
-	record.Set("archived", true)
-	if err := event.App.RunInTransaction(func(tx core.App) error {
-		if err := tx.Save(record); err != nil {
-			return err
-		}
-		return auditRecord(tx, event.Auth, "", "ruleset.archived", "ruleset", record.Id, nil, event.Get(httpx.TraceIDKey))
-	}); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	return event.JSON(http.StatusOK, projectRuleset(record))
-}
-
 func deleteRuleset(event *core.RequestEvent) error {
 	logical, err := event.App.FindRecordById("rulesets", event.Request.PathValue("id"))
 	if err != nil {
@@ -877,31 +684,6 @@ func deleteRuleset(event *core.RequestEvent) error {
 	return event.NoContent(http.StatusNoContent)
 }
 
-func duplicateVersion(event *core.RequestEvent) error {
-	source, err := event.App.FindRecordById("ruleset_versions", event.Request.PathValue("id"))
-	if err != nil {
-		return versionNotFound(event)
-	}
-	definition, err := definitionFromRecord(source)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	slug := importSlug(definition.Metadata.Name, source.Id)
-	var logical, draft *core.Record
-	err = event.App.RunInTransaction(func(txApp core.App) error {
-		var err error
-		logical, draft, err = createDraftRecords(txApp, slug, definition, event.Auth.Id, map[string]any{"duplicatedFrom": source.Id})
-		if err != nil {
-			return err
-		}
-		return auditRecord(txApp, event.Auth, "", "ruleset.duplicated", "ruleset", logical.Id, map[string]any{"sourceVersionId": source.Id}, event.Get(httpx.TraceIDKey))
-	})
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	return event.JSON(http.StatusCreated, map[string]any{"ruleset": projectRuleset(logical), "draft": projectVersion(draft)})
-}
-
 func importBundle(event *core.RequestEvent, applicationVersion string) error {
 	data, err := io.ReadAll(io.LimitReader(event.Request.Body, MaxBundleSize+1))
 	if err != nil || len(data) > MaxBundleSize {
@@ -995,14 +777,6 @@ func importBundle(event *core.RequestEvent, applicationVersion string) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	return event.JSON(http.StatusCreated, projectRulesetWithStatus(logical, report))
-}
-
-func exportBundle(event *core.RequestEvent, applicationVersion string) error {
-	version, err := event.App.FindRecordById("ruleset_versions", event.Request.PathValue("id"))
-	if err != nil {
-		return versionNotFound(event)
-	}
-	return exportBundleRecord(event, applicationVersion, version)
 }
 
 func exportLatestSavedBundle(event *core.RequestEvent, applicationVersion string) error {
@@ -1125,13 +899,6 @@ func versionAssetKeys(app core.App, versionID string) (map[string]struct{}, erro
 		keys[record.GetString("asset_key")] = struct{}{}
 	}
 	return keys, nil
-}
-
-func projectRuleset(record *core.Record) map[string]any {
-	return map[string]any{
-		"id":   record.Id,
-		"name": record.GetString("name"),
-	}
 }
 
 func projectRulesetWithStatus(record *core.Record, report ValidationReport) map[string]any {
@@ -1276,20 +1043,6 @@ func generatedSlug(app core.App, name string) (string, error) {
 	}
 }
 
-func projectVersion(record *core.Record) map[string]any {
-	definition, _ := definitionFromRecord(record)
-	return map[string]any{
-		"id":                 record.Id,
-		"rulesetId":          record.GetString("ruleset"),
-		"versionNumber":      record.GetInt("version_number"),
-		"state":              record.GetString("state"),
-		"schemaVersion":      record.GetInt("schema_version"),
-		"definition":         definition,
-		"definitionChecksum": record.GetString("definition_checksum"),
-		"publishedAt":        record.GetDateTime("published_at").Time().UTC(),
-	}
-}
-
 func validationAppError(report ValidationReport) result.AppError {
 	fields := result.FieldErrors{}
 	for _, issue := range report.Errors {
@@ -1321,8 +1074,4 @@ func importSlug(name, unique string) string {
 
 func rulesetNotFound(event *core.RequestEvent) error {
 	return httpx.WriteError(event, result.AppError{Code: "ruleset.not_found", Message: "Ruleset not found.", Status: http.StatusNotFound})
-}
-
-func versionNotFound(event *core.RequestEvent) error {
-	return httpx.WriteError(event, result.AppError{Code: "ruleset_version.not_found", Message: "Ruleset version not found.", Status: http.StatusNotFound})
 }

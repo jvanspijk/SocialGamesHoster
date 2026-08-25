@@ -20,6 +20,8 @@ Required outcomes:
 - Svelte type checking, ESLint, Prettier, static build, and high-severity npm
   production-dependency audit pass;
 - the focused setup, ruleset persistence, and mobile-layout browser journey passes;
+- the ruleset workflow's keyboard, landmark/name/status, visible-focus, 320 px,
+  200% zoom, large-text, high-contrast, and reduced-motion browser checks pass;
 - PocketBase remains pinned exactly;
 - the Windows GUI-subsystem build succeeds with `CGO_ENABLED=0`;
 - `SocialGamesHoster.exe`, one setup executable, and `SHA256SUMS.txt` exist;
@@ -91,12 +93,13 @@ At iPhone Safari and common Android viewport sizes:
 
 1. request/approve a new profile and recover it on another browser;
 2. edit biography/accent/avatar;
-3. create, validate, publish, export, and re-import a ruleset with image/audio;
+3. create, preview, save as Valid, export, and re-import a ruleset with image/audio;
 4. create/open a game and join 30 profiles;
 5. manually assign, randomize, start, and verify private role/knowledge;
 6. exercise phase and every timer transition, including sleep/restart;
-7. exercise announcements, GM DMs, general/team/player rooms, locks, anonymity,
-   moderation, deletion, unread behavior, and sound opt-in;
+7. exercise announcements with saved and one-off media, GM DMs,
+   general/team/player rooms, locks, anonymity, moderation, deletion, unread
+   behavior, recipient-only attachment reads, and sound opt-in;
 8. eliminate/reinstate, enter outcomes, award/revoke achievements;
 9. review/archive and verify public stats/private history;
 10. create/restore a backup and collect a redacted support bundle.
@@ -116,18 +119,18 @@ Reference minimum: two logical CPU cores, 4 GB RAM, low-end SSD/eMMC, Windows
 10/11 x64. Record date, CPU, RAM, storage, Windows build, browser, commit, and
 application version.
 
-| Gate | Target | Recorded result |
-|---|---:|---:|
-| Host ready/dashboard request | < 2 s | deferred field measurement |
-| Idle working set | < 75 MB | deferred field measurement |
-| Idle CPU after settle | < 1% | deferred field measurement |
-| 30-player working set | < 150 MB | deferred field measurement |
-| Uncached LAN interactive | < 1 s | deferred field measurement |
-| Cached navigation | < 300 ms | deferred field measurement |
-| Commit-to-event p95 | < 200 ms | deferred field measurement |
-| Database lock errors | 0 | deferred field measurement |
-| Installer size | < 50 MB | produced and checked by build |
-| Installed executable/assets | < 80 MB | produced and checked by build |
+| Gate                         |   Target |               Recorded result |
+| ---------------------------- | -------: | ----------------------------: |
+| Host ready/dashboard request |    < 2 s |    deferred field measurement |
+| Idle working set             |  < 75 MB |    deferred field measurement |
+| Idle CPU after settle        |     < 1% |    deferred field measurement |
+| 30-player working set        | < 150 MB |    deferred field measurement |
+| Uncached LAN interactive     |    < 1 s |    deferred field measurement |
+| Cached navigation            | < 300 ms |    deferred field measurement |
+| Commit-to-event p95          | < 200 ms |    deferred field measurement |
+| Database lock errors         |        0 |    deferred field measurement |
+| Installer size               |  < 50 MB | produced and checked by build |
+| Installed executable/assets  |  < 80 MB | produced and checked by build |
 
 These measurements are not blockers for a friends-only release. Record them
 with future release notes when a suitable VM, physical phone, or full party is

@@ -34,8 +34,12 @@
 	let announcementTarget = $state('');
 	let announcementImage = $state('');
 	let announcementImageDescription = $state('');
+	let announcementImageSource = $state<'none' | 'ruleset' | 'upload'>('none');
+	let announcementImageFile = $state<File | null>(null);
 	let announcementAudio = $state('');
 	let announcementAudioAlternative = $state('');
+	let announcementAudioSource = $state<'none' | 'ruleset' | 'upload'>('none');
+	let announcementAudioFile = $state<File | null>(null);
 	let timer = $state<TimerProjection>({
 		status: 'inactive',
 		totalMs: 0,
@@ -71,6 +75,24 @@
 		if (view?.game.joiningOpen && !joinUrl) {
 			void api<{ joinUrl: string }>('/setup/status').then((status) => (joinUrl = status.joinUrl));
 		}
+	});
+
+	$effect(() => {
+		if (announcementImageSource === 'none') {
+			announcementImage = '';
+			announcementImageFile = null;
+			announcementImageDescription = '';
+		} else if (announcementImageSource === 'ruleset') announcementImageFile = null;
+		else announcementImage = '';
+	});
+
+	$effect(() => {
+		if (announcementAudioSource === 'none') {
+			announcementAudio = '';
+			announcementAudioFile = null;
+			announcementAudioAlternative = '';
+		} else if (announcementAudioSource === 'ruleset') announcementAudioFile = null;
+		else announcementAudio = '';
 	});
 
 	async function gameCommand(path: string, success: string) {
@@ -136,25 +158,41 @@
 		if (!view) return;
 		busy = true;
 		try {
+			const uploaded = announcementImageSource === 'upload' || announcementAudioSource === 'upload';
+			const request = {
+				content: announcementMessage,
+				audience: announcementAudience,
+				targetId: announcementAudience === 'all' ? '' : announcementTarget,
+				imageAssetKey: announcementImageSource === 'ruleset' ? announcementImage : '',
+				imageDescription: announcementImageDescription,
+				audioAssetKey: announcementAudioSource === 'ruleset' ? announcementAudio : '',
+				audioAlternative: announcementAudioAlternative
+			};
+			let body: ReturnType<typeof jsonBody> | { body: FormData } = jsonBody(request);
+			if (uploaded) {
+				const form = new FormData();
+				for (const [key, value] of Object.entries(request)) form.set(key, value);
+				if (announcementImageSource === 'upload' && announcementImageFile)
+					form.set('imageFile', announcementImageFile);
+				if (announcementAudioSource === 'upload' && announcementAudioFile)
+					form.set('audioFile', announcementAudioFile);
+				body = { body: form };
+			}
 			await api(`/games/${view.game.id}/announcements`, {
 				method: 'POST',
-				...jsonBody({
-					content: announcementMessage,
-					audience: announcementAudience,
-					targetId: announcementAudience === 'all' ? '' : announcementTarget,
-					imageAssetKey: announcementImage,
-					imageDescription: announcementImageDescription,
-					audioAssetKey: announcementAudio,
-					audioAlternative: announcementAudioAlternative
-				})
+				...body
 			});
 			announcementMessage = '';
 			announcementAudience = 'all';
 			announcementTarget = '';
 			announcementImage = '';
 			announcementImageDescription = '';
+			announcementImageSource = 'none';
+			announcementImageFile = null;
 			announcementAudio = '';
 			announcementAudioAlternative = '';
+			announcementAudioSource = 'none';
+			announcementAudioFile = null;
 			announcementOpen = false;
 			toasts.success('Announcement sent.');
 		} catch (caught) {
@@ -455,21 +493,52 @@
 				</select>
 			</label>
 		{/if}
-		<label>
-			<span>Image (optional)</span>
-			<select
-				bind:value={announcementImage}
-				onchange={() =>
-					(announcementImageDescription =
-						view?.ruleset.assetAccessibility?.[announcementImage]?.description ?? '')}
-			>
-				<option value="">No image</option>
-				{#each imageAssets as asset (asset.id)}
-					<option value={asset.assetKey}>{asset.assetKey}</option>
-				{/each}
-			</select>
-		</label>
-		{#if announcementImage}
+		<fieldset>
+			<legend>Image (optional)</legend>
+			<div class="source-options">
+				<label
+					><input type="radio" bind:group={announcementImageSource} value="none" /> No image</label
+				>
+				<label
+					><input type="radio" bind:group={announcementImageSource} value="ruleset" /> Choose from ruleset</label
+				>
+				<label
+					><input type="radio" bind:group={announcementImageSource} value="upload" /> Upload for this
+					announcement</label
+				>
+			</div>
+			{#if announcementImageSource === 'ruleset'}
+				<label>
+					<span>Ruleset image</span>
+					<select
+						bind:value={announcementImage}
+						required
+						onchange={() =>
+							(announcementImageDescription =
+								imageAssets.find((asset) => asset.assetKey === announcementImage)
+									?.accessibilityText ?? '')}
+					>
+						<option value="">Choose an image</option>
+						{#each imageAssets as asset (asset.id)}
+							<option value={asset.assetKey}>{asset.displayName}</option>
+						{/each}
+					</select>
+				</label>
+			{:else if announcementImageSource === 'upload'}
+				<label>
+					<span>Image file</span>
+					<input
+						type="file"
+						accept="image/jpeg,image/png,image/webp"
+						required
+						onchange={(event) =>
+							(announcementImageFile =
+								(event.currentTarget as HTMLInputElement).files?.[0] ?? null)}
+					/>
+				</label>
+			{/if}
+		</fieldset>
+		{#if announcementImageSource !== 'none'}
 			<Field
 				label="Image description"
 				name="announcement-image-description"
@@ -478,21 +547,52 @@
 				required
 			/>
 		{/if}
-		<label>
-			<span>Audio (optional)</span>
-			<select
-				bind:value={announcementAudio}
-				onchange={() =>
-					(announcementAudioAlternative =
-						view?.ruleset.assetAccessibility?.[announcementAudio]?.description ?? '')}
-			>
-				<option value="">No audio</option>
-				{#each audioAssets as asset (asset.id)}
-					<option value={asset.assetKey}>{asset.assetKey}</option>
-				{/each}
-			</select>
-		</label>
-		{#if announcementAudio}
+		<fieldset>
+			<legend>Audio (optional)</legend>
+			<div class="source-options">
+				<label
+					><input type="radio" bind:group={announcementAudioSource} value="none" /> No audio</label
+				>
+				<label
+					><input type="radio" bind:group={announcementAudioSource} value="ruleset" /> Choose from ruleset</label
+				>
+				<label
+					><input type="radio" bind:group={announcementAudioSource} value="upload" /> Upload for this
+					announcement</label
+				>
+			</div>
+			{#if announcementAudioSource === 'ruleset'}
+				<label>
+					<span>Ruleset audio</span>
+					<select
+						bind:value={announcementAudio}
+						required
+						onchange={() =>
+							(announcementAudioAlternative =
+								audioAssets.find((asset) => asset.assetKey === announcementAudio)
+									?.accessibilityText ?? '')}
+					>
+						<option value="">Choose audio</option>
+						{#each audioAssets as asset (asset.id)}
+							<option value={asset.assetKey}>{asset.displayName}</option>
+						{/each}
+					</select>
+				</label>
+			{:else if announcementAudioSource === 'upload'}
+				<label>
+					<span>Audio file</span>
+					<input
+						type="file"
+						accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav"
+						required
+						onchange={(event) =>
+							(announcementAudioFile =
+								(event.currentTarget as HTMLInputElement).files?.[0] ?? null)}
+					/>
+				</label>
+			{/if}
+		</fieldset>
+		{#if announcementAudioSource !== 'none'}
 			<Field
 				label="Audio alternative"
 				name="announcement-audio-alternative"
@@ -686,6 +786,44 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		text-transform: uppercase;
+	}
+
+	fieldset {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		border: var(--border-subtle);
+		padding: var(--space-3);
+	}
+
+	fieldset legend,
+	fieldset > label > span {
+		font-family: var(--font-display);
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	fieldset > label {
+		display: grid;
+		gap: var(--space-1);
+	}
+
+	.source-options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-4);
+	}
+
+	.source-options label {
+		display: flex;
+		min-height: var(--target-size);
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	input[type='file'] {
+		max-width: 100%;
 	}
 
 	.ability-results {

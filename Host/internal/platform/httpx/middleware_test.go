@@ -1,11 +1,29 @@
 package httpx
 
 import (
+	"bytes"
+	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/pocketbase/pocketbase/core"
 )
+
+func TestAnnouncementRequestBodyAllowsPrivateImageAndAudioUploads(t *testing.T) {
+	content := bytes.Repeat([]byte{1}, 7<<20)
+	request := httptest.NewRequest(http.MethodPost, "/api/app/v1/games/game/announcements", bytes.NewReader(content))
+	event := &core.RequestEvent{}
+	event.Request = request
+	event.Response = httptest.NewRecorder()
+	limitRequestBody(event)
+	read, err := io.ReadAll(event.Request.Body)
+	if err != nil || len(read) != len(content) {
+		t.Fatalf("announcement body read %d bytes: %v", len(read), err)
+	}
+}
 
 func TestValidHostAllowsOnlyLoopbackAndPrivateAddresses(t *testing.T) {
 	t.Parallel()

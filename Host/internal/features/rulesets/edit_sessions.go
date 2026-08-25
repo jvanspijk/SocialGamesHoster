@@ -357,7 +357,7 @@ func touchEditSession(session *core.Record, now time.Time) {
 }
 
 func projectEditSession(session *core.Record) map[string]any {
-	return map[string]any{"id": session.Id, "baseVersionId": session.GetString("base_version"), "expiresAt": session.GetDateTime("expires_at").Time().UTC()}
+	return map[string]any{"id": session.Id, "expiresAt": session.GetDateTime("expires_at").Time().UTC()}
 }
 
 func upsertAssetChange(app core.App, session *core.Record, key string) (*core.Record, error) {
