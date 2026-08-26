@@ -172,9 +172,9 @@
 				>
 			</div>
 			<ContentHeader density="dense"
-				>{#snippet title()}<strong>Role slots</strong>{/snippet}{#snippet actions()}<button
+				>{#snippet title()}<strong>Role groups</strong>{/snippet}{#snippet actions()}<button
 						class="add-small"
-						onclick={() => addSlot(id)}>Add slot</button
+						onclick={() => addSlot(id)}>Add role group</button
 					>{/snippet}</ContentHeader
 			>{#each band.slots as slot, slotIndex (slot.id)}<div class="nested">
 					<ContentHeader density="dense"
@@ -213,7 +213,7 @@
 						roles={definition.roles}
 						teams={definition.teams}
 						categories={definition.categories}
-						label="Roles allowed in this slot"
+						label="Roles allowed in this group"
 						namePrefix={`slot-selector-${index}-${slotIndex}`}
 					/>
 				</div>{:else}<p class="hint">
@@ -250,7 +250,7 @@
 				Conditional change {index + 1}
 			</h3>
 			<SelectField
-				label="When this role is present"
+				label="When this role is included"
 				name={`modifier-role-${index}`}
 				bind:value={modifier.whenRolePresent}
 				options={[
@@ -287,7 +287,7 @@
 							}))
 						]}
 					/><label
-						><span>Change count by</span><input
+						><span>Change player count by</span><input
 							type="number"
 							bind:value={adjustment.delta}
 						/></label

@@ -8,12 +8,12 @@ describe('VisualDefinitionEditor', () => {
 	it('uses dense content headers for nested composition titles and actions', async () => {
 		render(VisualDefinitionEditorHarness);
 
-		const roleSlots = screen.getByText('Role slots').closest('.content-header');
+		const roleSlots = screen.getByText('Role groups').closest('.content-header');
 		const slotChanges = screen.getByText('Slot changes').closest('.content-header');
 
 		expect(roleSlots).toHaveClass('dense', 'has-actions');
 		expect(slotChanges).toHaveClass('dense', 'has-actions');
-		await fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Add role group' }));
 		expect(screen.getByText('Role slot', { selector: 'strong' })).toBeVisible();
 	});
 
@@ -66,9 +66,9 @@ describe('VisualDefinitionEditor', () => {
 		['roles', 'Abilities'],
 		['phases', 'Phases'],
 		['knowledge', 'Starting knowledge'],
-		['chat', 'Normal chat settings'],
+		['chat', 'Default chat settings'],
 		['achievements', 'Achievements'],
-		['audio', 'Audio cues']
+		['audio', 'Sounds']
 	] as const)('dispatches the %s section to its feature-local editor', (section, heading) => {
 		render(VisualDefinitionEditorHarness, { props: { section } });
 

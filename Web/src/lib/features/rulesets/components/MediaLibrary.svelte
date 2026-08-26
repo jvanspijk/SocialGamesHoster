@@ -143,7 +143,7 @@
 					</p>
 					<Field label="Display name" name="asset-display-name" bind:value={displayName} required />
 					<Field
-						label={selected.kind === 'image' ? 'Image description' : 'Audio alternative'}
+						label={selected.kind === 'image' ? 'Image description' : 'Accessibility description'}
 						name="asset-accessibility"
 						bind:value={accessibilityText}
 						multiline

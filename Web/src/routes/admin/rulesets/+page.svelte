@@ -62,10 +62,10 @@
 				<div class="copy">
 					<h2>{ruleset.name}</h2>
 					{#if ruleset.status === 'valid'}
-						<p class="status ready"><CheckCircle2 size={16} /> Valid</p>
+						<p class="status ready"><CheckCircle2 size={16} /> Ready to use</p>
 					{:else}
 						<p class="status invalid">
-							<TriangleAlert size={16} /> Invalid · {ruleset.issueCount} issues
+							<TriangleAlert size={16} /> Needs attention · {ruleset.issueCount} issues
 						</p>
 					{/if}
 					<p class="hint">Open editor</p>

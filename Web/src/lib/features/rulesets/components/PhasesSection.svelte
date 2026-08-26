@@ -162,7 +162,7 @@
 				<div class="form-grid">
 					<Field label="Sound name" name={`phase-sound-name-${index}`} bind:value={soundName} />
 					<Field
-						label="Audio alternative"
+						label="Accessibility description"
 						name={`phase-sound-alternative-${index}`}
 						bind:value={soundAlternative}
 					/>

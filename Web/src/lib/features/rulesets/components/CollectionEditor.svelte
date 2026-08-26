@@ -191,7 +191,7 @@
 						>{:else}{usage.label}{/if}
 				</li>{/each}
 		</ul>
-	{:else}<p>The item will be removed from this working copy.</p>{/if}
+	{:else}<p>The item will be removed from your unsaved changes.</p>{/if}
 	{#snippet actions()}<Button variant="ghost" onclick={() => (deleteOpen = false)}>Keep item</Button
 		>{#if !incoming.length}<Button variant="danger" onclick={confirmDelete}>Delete</Button
 			>{/if}{/snippet}

@@ -91,7 +91,7 @@
 		>
 	{:else if sourceKind === 'import'}
 		<label class="source-select"
-			><span>Ruleset bundle</span><input
+			><span>Ruleset file</span><input
 				bind:this={importInput}
 				type="file"
 				accept=".sghrules,application/vnd.socialgameshoster.ruleset+zip"

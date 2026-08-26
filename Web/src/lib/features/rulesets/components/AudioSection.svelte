@@ -33,7 +33,7 @@
 	const entries = $derived(
 		definition.audioCues.map((item) => ({
 			id: item.id,
-			label: item.name || 'Unnamed audio cue',
+			label: item.name || 'Unnamed sound',
 			supportingLabel:
 				item.defaultAudience === 'all' ? 'All players' : item.defaultAudience.replace('_', ' ')
 		}))
@@ -54,7 +54,7 @@
 </script>
 
 <CollectionEditor
-	title="Audio cues"
+	title="Sounds"
 	description="Optional named sounds for selected listeners."
 	{entries}
 	selectedId={selectedItems.audioCues ?? ''}
@@ -82,7 +82,7 @@
 >
 	{#snippet editor(id)}{@const index = definition.audioCues.findIndex(
 			(item) => item.id === id
-		)}{@const cue = definition.audioCues[index]}{#if cue}<h3>{cue.name || 'Unnamed audio cue'}</h3>
+		)}{@const cue = definition.audioCues[index]}{#if cue}<h3>{cue.name || 'Unnamed sound'}</h3>
 			<div class="form-grid">
 				<Field label="Name" name={`cue-name-${index}`} bind:value={cue.name} required /><SelectField
 					label="Normal audience"

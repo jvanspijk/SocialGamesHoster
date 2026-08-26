@@ -50,7 +50,7 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await page.waitForTimeout(600);
 	await page.reload();
 	await expect(page.getByRole('textbox', { name: /^Name$/ })).toHaveValue('Recovered Party Test');
-	await expect(page.getByText('Recovered changes', { exact: true })).toBeVisible();
+	await expect(page.getByText('Unsaved changes restored', { exact: true })).toBeVisible();
 	await page.getByRole('textbox', { name: /Media name/ }).fill('Party cover');
 	await page
 		.getByRole('textbox', { name: /Image description/ })
@@ -89,7 +89,9 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await leaveDialog.getByRole('button', { name: 'Discard and leave' }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await expect(
-		page.getByText(/The local working copy was discarded\. Host cleanup could not be confirmed/)
+		page.getByText(
+			/Your unsaved changes were discarded\. Some uploaded media could not be cleaned up and will expire automatically\./
+		)
 	).toBeVisible();
 	await page.unroute(discardPattern);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
@@ -148,13 +150,13 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 
 	const roleSlots = page
 		.locator('.content-header')
-		.filter({ has: page.getByText('Role slots', { exact: true }) });
+		.filter({ has: page.getByText('Role groups', { exact: true }) });
 	await expect(roleSlots).toBeVisible();
 
 	await page.setViewportSize({ width: 700, height: 844 });
 	await expect(roleSlots).toHaveCSS('flex-direction', 'column');
-	const roleSlotsTitle = roleSlots.getByText('Role slots', { exact: true });
-	const addSlot = roleSlots.getByRole('button', { name: 'Add slot', exact: true });
+	const roleSlotsTitle = roleSlots.getByText('Role groups', { exact: true });
+	const addSlot = roleSlots.getByRole('button', { name: 'Add role group', exact: true });
 	const titleBox = await roleSlotsTitle.boundingBox();
 	const actionBox = await addSlot.boundingBox();
 	expect(titleBox).not.toBeNull();
@@ -179,7 +181,7 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await rolesEditor.getByLabel('Maximum copies').fill('3');
 
 	await sectionRail.getByRole('button', { name: /^Player setup/ }).click();
-	await page.getByRole('button', { name: 'Add slot', exact: true }).click();
+	await page.getByRole('button', { name: 'Add role group', exact: true }).click();
 	await page.getByLabel('Number of players').fill('3');
 
 	await sectionRail.getByRole('button', { name: /^Media/ }).click();

@@ -103,7 +103,7 @@
 	let deleteOpen = $state(false);
 	let leaveOpen = $state(false);
 	let sectionMenuOpen = $state(false);
-	let readinessOpen = $state(false);
+	let overviewOpen = $state(false);
 	let previewOpen = $state(false);
 	let previewResults = $state<Partial<Record<RulesetPreviewMode, RulesetPreviewResponse>>>({});
 	let previewSource = '';
@@ -139,12 +139,12 @@
 			: saveFailed
 				? 'Save failed — retry'
 				: recovered && dirty
-					? 'Recovered changes'
+					? 'Unsaved changes restored'
 					: dirty
 						? 'Unsaved changes'
 						: ruleset?.status === 'valid'
-							? 'Saved · Valid'
-							: 'Saved · Invalid'
+							? 'Saved · Ready to use'
+							: 'Saved · Needs attention'
 	);
 	const previewGuidance = $derived.by(() => {
 		const guidance: Array<{
@@ -353,7 +353,7 @@
 			if (key) selectedItems[key] = itemId;
 		}
 		sectionMenuOpen = false;
-		readinessOpen = false;
+		overviewOpen = false;
 		void goto(resolve(`/admin/rulesets/${page.params.id}/edit/${next}`), {
 			replaceState: true,
 			keepFocus: true,
@@ -392,7 +392,9 @@
 			recovered = false;
 			localStorage.removeItem(recoveryKey(page.params.id ?? ''));
 			toasts.success(
-				saved.availability === 'ready' ? 'Ruleset saved as Valid.' : 'Ruleset saved as Invalid.'
+				saved.availability === 'ready'
+					? 'Ruleset saved and ready to use.'
+					: 'Ruleset saved, but needs attention.'
 			);
 			bypassNavigation = true;
 			await goto(resolve(destination as '/admin/rulesets'));
@@ -413,7 +415,7 @@
 				});
 			} catch {
 				toasts.info(
-					'The local working copy was discarded. Host cleanup could not be confirmed; staged media will expire automatically.'
+					'Your unsaved changes were discarded. Some uploaded media could not be cleaned up and will expire automatically.'
 				);
 			}
 		}
@@ -526,13 +528,13 @@
 	<div class="mobile-tools">
 		<Button variant="secondary" onclick={() => (sectionMenuOpen = true)}
 			><Menu size={18} /> Sections</Button
-		><Button variant="secondary" onclick={() => (readinessOpen = true)}
-			><ListChecks size={18} /> Readiness ({report.errors.length})</Button
+		><Button variant="secondary" onclick={() => (overviewOpen = true)}
+			><ListChecks size={18} /> Overview ({report.errors.length})</Button
 		>
 	</div>
 	<div class="workspace">
 		<nav class="section-rail" aria-label="Ruleset sections">
-			<h2>Required foundation</h2>
+			<h2>Required sections</h2>
 			{#each sections.filter((item) => !item.optional) as item (item.id)}<button
 					class:active={section === item.id}
 					onclick={() => selectSection(item.id)}
@@ -616,13 +618,13 @@
 					onnavigate={selectSection}
 				/>{/if}
 		</section>
-		<aside class="readiness">{@render readiness()}</aside>
+		<aside class="overview">{@render overview()}</aside>
 	</div>
 </div>
 
-{#snippet readiness()}<div class="readiness-content">
-		<p class="eyebrow">Readiness</p>
-		<h2>{report.errors.length ? `${report.errors.length} blocking issues` : 'Ready to save'}</h2>
+{#snippet overview()}<div class="overview-content">
+		<p class="eyebrow">Overview</p>
+		<h2>{report.errors.length ? `${report.errors.length} issues` : 'Ready to save'}</h2>
 		{#if validating}<small>Checking changes…</small>{/if}
 		<dl>
 			<div>
@@ -660,9 +662,7 @@
 				>Add the first role</Button
 			>{:else if definition.compositionBands.length === 0}<Button
 				onclick={() => selectSection('composition')}>Add player setup</Button
-			>{:else}<p>No blocking issues in the working copy.</p>{/if}{#if report.warnings.length}<h3>
-				Warnings
-			</h3>
+			>{:else}<p>Ready to be used in games.</p>{/if}{#if report.warnings.length}<h3>Warnings</h3>
 			<ul>
 				{#each report.warnings as issue (`${issue.path}:${issue.message}`)}<li>
 						<span
@@ -670,9 +670,6 @@
 						><button onclick={() => goToIssue(issue)}>Review</button>
 					</li>{/each}
 			</ul>{/if}
-		{#if definition.phases.length === 0}<h3>Optional recommendation</h3>
-			<p>Game flow is not configured. Add phases if the game master follows an ordered sequence.</p>
-		{/if}
 		{#if previewGuidance.length}<h3>Preview checks</h3>
 			<ul class="preview-guidance">
 				{#each previewGuidance as item (item.mode)}<li>
@@ -684,7 +681,7 @@
 			</ul>
 		{/if}
 		<Button variant="secondary" onclick={() => (previewOpen = true)}
-			>Test the working ruleset</Button
+			>Test the current ruleset</Button
 		>
 	</div>{/snippet}
 
@@ -699,8 +696,8 @@
 			>{/each}
 	</nav></Sheet
 >
-<Sheet open={readinessOpen} title="Ruleset readiness" close={() => (readinessOpen = false)}
-	>{@render readiness()}</Sheet
+<Sheet open={overviewOpen} title="Ruleset overview" close={() => (overviewOpen = false)}
+	>{@render overview()}</Sheet
 >
 <RulesetPreview
 	open={previewOpen}
@@ -714,9 +711,9 @@
 <Dialog
 	open={leaveOpen}
 	title="Leave with unsaved changes?"
-	description="Choose what happens to this working copy."
+	description="Choose what happens to your unsaved changes."
 	close={() => (leaveOpen = false)}
-	><p>Your changes have not been saved to the host.</p>
+	><p>Your changes have not been saved.</p>
 	{#snippet actions()}<Button variant="ghost" onclick={() => (leaveOpen = false)}
 			>Keep editing</Button
 		><Button variant="secondary" onclick={discardAndLeave}>Discard and leave</Button><Button
@@ -726,7 +723,7 @@
 <Dialog
 	open={actionsOpen}
 	title="Ruleset actions"
-	description="Utilities and deletion."
+	description="Other actions, including deletion."
 	close={() => (actionsOpen = false)}
 	><Button variant="secondary" onclick={exportRuleset}>Export ruleset</Button><Button
 		variant="danger"
@@ -829,7 +826,7 @@
 		background: rgb(255 249 230 / 62%);
 		padding: var(--space-4);
 	}
-	.readiness {
+	.overview {
 		position: sticky;
 		top: var(--space-3);
 		max-height: calc(100dvh - var(--space-6));
@@ -838,13 +835,13 @@
 		background: var(--paper-light);
 		padding: var(--space-4);
 	}
-	.readiness-content {
+	.overview-content {
 		display: grid;
 		gap: var(--space-3);
 	}
-	.readiness-content h2,
-	.readiness-content h3,
-	.readiness-content p {
+	.overview-content h2,
+	.overview-content h3,
+	.overview-content p {
 		margin: 0;
 	}
 	.eyebrow {
@@ -852,40 +849,40 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 	}
-	.readiness dl {
+	.overview dl {
 		display: grid;
 		gap: var(--space-1);
 		margin: 0;
 	}
-	.readiness dl div {
+	.overview dl div {
 		display: flex;
 		justify-content: space-between;
 		gap: var(--space-2);
 	}
-	.readiness dt {
+	.overview dt {
 		color: var(--ink-soft);
 	}
-	.readiness dd {
+	.overview dd {
 		margin: 0;
 		font-weight: 700;
 	}
-	.readiness ul {
+	.overview ul {
 		display: grid;
 		gap: var(--space-2);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
-	.readiness li {
+	.overview li {
 		display: grid;
 		gap: var(--space-1);
 		border-block-start: var(--border-subtle);
 		padding-top: var(--space-2);
 	}
-	.readiness li span {
+	.overview li span {
 		display: grid;
 	}
-	.readiness li button,
+	.overview li button,
 	.inline-issues button {
 		width: fit-content;
 		border: 0;
@@ -938,7 +935,7 @@
 			grid-template-columns: 1fr;
 		}
 		.section-rail,
-		.readiness {
+		.overview {
 			display: none;
 		}
 		.mobile-tools {

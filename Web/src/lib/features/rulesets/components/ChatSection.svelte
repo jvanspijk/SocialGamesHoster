@@ -114,7 +114,7 @@
 </script>
 
 <ContentHeader density="dense" description="These settings apply unless a phase changes them."
-	>{#snippet title()}<h2>Normal chat settings</h2>{/snippet}</ContentHeader
+	>{#snippet title()}<h2>Default chat settings</h2>{/snippet}</ContentHeader
 >
 <InlineValidationMessages {issues} path="chat" />
 <div class="cards">
@@ -216,7 +216,7 @@
 			</div>
 			<div class="audience-grid">
 				<div class="choice-block">
-					<p class="hint compact">No reader selections means every player.</p>
+					<p class="hint compact">If no players are selected, everyone can read this channel.</p>
 					<CheckboxGroup
 						label="Readers by team"
 						name={`channel-reader-teams-${channelIndex}`}
@@ -233,7 +233,9 @@
 					/>
 				</div>
 				<div class="choice-block">
-					<p class="hint compact">No sender selections means every reader.</p>
+					<p class="hint compact">
+						If no senders are selected, everyone who can read the channel can post.
+					</p>
 					<CheckboxGroup
 						label="Senders by team"
 						name={`channel-sender-teams-${channelIndex}`}

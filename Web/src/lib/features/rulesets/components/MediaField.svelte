@@ -59,7 +59,7 @@
 
 <section class="media-field" aria-label={label}>
 	<SelectField
-		label={`${label} — Choose existing`}
+		label={`${label} — Choose existing file`}
 		{name}
 		bind:value
 		options={[
@@ -85,7 +85,7 @@
 	<div class="upload-details">
 		<Field label="Media name" name={`${name}-upload-name`} bind:value={displayName} />
 		<Field
-			label={kind === 'image' ? 'Image description' : 'Audio alternative'}
+			label={kind === 'image' ? 'Image description' : 'Accessibility description'}
 			name={`${name}-upload-accessibility`}
 			bind:value={accessibilityText}
 			help="This default is reused wherever the media item is selected."
