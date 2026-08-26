@@ -254,9 +254,7 @@
 		<Button variant="secondary" loading={busy} onclick={randomize}
 			><Dices size={18} /> Randomize roles</Button
 		>
-		<Button loading={busy} disabled={!assignmentsReady} onclick={saveAssignments}
-			><Check size={18} /> Save roles</Button
-		>
+		<Button loading={busy} onclick={saveAssignments}><Check size={18} /> Save roles</Button>
 	</div>
 
 	<div class="player-list" role="list" aria-label="Players">

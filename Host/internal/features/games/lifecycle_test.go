@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 )
@@ -34,6 +35,22 @@ func TestLifecycleRejectsInvalidAndArchivedTransitions(t *testing.T) {
 	}
 	if _, err := ApplyTransition(State{Status: StatusArchived}, ReturnToRunning, now); err == nil {
 		t.Fatal("expected archived transition to fail")
+	}
+}
+
+func TestValidateAssignmentRolesAllowsPartialAssignments(t *testing.T) {
+	definition := rulesets.DefinitionV1{Roles: []rulesets.Role{{ID: "dealer"}}}
+	if appError := validateAssignmentRoles(definition, []rulesets.Assignment{{
+		ParticipantID: "first-player",
+		RoleID:        "dealer",
+	}}); appError != nil {
+		t.Fatalf("partial assignment was rejected: %#v", appError)
+	}
+	if appError := validateAssignmentRoles(definition, []rulesets.Assignment{{
+		ParticipantID: "first-player",
+		RoleID:        "unknown",
+	}}); appError == nil {
+		t.Fatal("unknown role was accepted")
 	}
 }
 

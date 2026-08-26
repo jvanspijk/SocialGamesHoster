@@ -287,6 +287,8 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	const player = await playerContext.newPage();
 	const nonRecipientContext = await browser.newContext();
 	const nonRecipient = await nonRecipientContext.newPage();
+	const roleAssignmentContext = await browser.newContext();
+	const roleAssignmentPlayer = await roleAssignmentContext.newPage();
 	try {
 		await player.goto('/');
 		await player.getByLabel('Profile name').fill('Browser Player');
@@ -341,6 +343,36 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await otherRequest.getByRole('button', { name: 'Approve' }).click();
 		await expect(nonRecipient).toHaveURL(/\/play(?:\/party)?$/);
 		await expect.poll(() => nonRecipientAuthorization).not.toBe('');
+		await page.goto(gameUrl);
+
+		await roleAssignmentPlayer.goto('/');
+		await roleAssignmentPlayer.getByLabel('Profile name').fill('Role Assignment Player');
+		await roleAssignmentPlayer.getByRole('button', { name: 'Request entry' }).click();
+		await expect(
+			roleAssignmentPlayer.getByRole('heading', { name: 'Awaiting approval' })
+		).toBeVisible();
+		await page.getByRole('button', { name: /Entry requests, 1 waiting/ }).click();
+		const roleAssignmentRequest = page
+			.getByRole('article')
+			.filter({ hasText: 'Role Assignment Player' });
+		await expect(roleAssignmentRequest).toBeVisible();
+		await roleAssignmentRequest.getByRole('button', { name: 'Approve' }).click();
+		await expect(roleAssignmentPlayer).toHaveURL(/\/play(?:\/party)?$/);
+		await page.goto(gameUrl);
+
+		await page.getByRole('link', { name: 'Players', exact: true }).click();
+		await page.getByLabel('Role for Browser Player').selectOption({ label: 'Lookout' });
+		await page
+			.getByLabel('Role for Other Browser Player')
+			.selectOption({ label: 'Sonar Operator' });
+		const saveRoles = page.getByRole('button', { name: 'Save roles' });
+		await expect(saveRoles).toBeEnabled();
+		await saveRoles.click();
+		await expect(page.getByText('Role assignments saved.')).toBeVisible();
+		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
+		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
+		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');
+
 		await page.goto(gameUrl);
 
 		await page.getByRole('button', { name: 'New announcement' }).first().click();
@@ -434,5 +466,6 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	} finally {
 		await playerContext.close();
 		await nonRecipientContext.close();
+		await roleAssignmentContext.close();
 	}
 });

@@ -164,10 +164,8 @@ func putAssignments(event *core.RequestEvent) error {
 	if appError := validateAssignmentParticipants(participants, request.Assignments); appError != nil {
 		return httpx.WriteError(event, *appError)
 	}
-	report := rulesets.ValidateAssignments(definition, len(participants), request.Assignments)
-	if !report.Valid() {
-		return httpx.WriteError(event, result.Invalid("game.assignments_invalid", "The assignments do not satisfy the ruleset composition.",
-			result.FieldErrors{"assignments": report.Errors}))
+	if appError := validateAssignmentRoles(definition, request.Assignments); appError != nil {
+		return httpx.WriteError(event, *appError)
 	}
 	if err := saveAssignments(event.App, game, request.Assignments, event.Auth.Id, event.Auth, event.Get(httpx.TraceIDKey)); err != nil {
 		return httpx.WriteError(event, result.Internal(err))
@@ -221,14 +219,24 @@ func validateAssignmentParticipants(participants []*core.Record, assignments []r
 	seen := map[string]bool{}
 	for _, assignment := range assignments {
 		if !allowed[assignment.ParticipantID] || seen[assignment.ParticipantID] {
-			value := result.Invalid("game.assignments_invalid", "Every active participant must be assigned exactly once.", nil)
+			value := result.Invalid("game.assignments_invalid", "Assignments can only target an active player once.", nil)
 			return &value
 		}
 		seen[assignment.ParticipantID] = true
 	}
-	if len(seen) != len(participants) {
-		value := result.Invalid("game.assignments_invalid", "Every active participant must be assigned exactly once.", nil)
-		return &value
+	return nil
+}
+
+func validateAssignmentRoles(definition rulesets.DefinitionV1, assignments []rulesets.Assignment) *result.AppError {
+	roles := make(map[string]bool, len(definition.Roles))
+	for _, role := range definition.Roles {
+		roles[role.ID] = true
+	}
+	for _, assignment := range assignments {
+		if assignment.RoleID != "" && !roles[assignment.RoleID] {
+			value := result.Invalid("game.assignments_invalid", "Choose a role from this game's ruleset.", nil)
+			return &value
+		}
 	}
 	return nil
 }
