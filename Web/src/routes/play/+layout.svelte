@@ -17,9 +17,14 @@
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
-	import type { Game, PlayerGameView } from '$lib/api/types';
+	import type { ChatMessage, Game, PlayerGameView, RealtimeEnvelope } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
-	import { cursorIsAfter, readMarkerStorageKey } from '$lib/state/chatReadMarkers';
+	import {
+		chatReadMarkersChanged,
+		cursorIsAfter,
+		hasUnreadMessages,
+		readMarkers
+	} from '$lib/state/chatReadMarkers';
 	import { gameState } from '$lib/state/game.svelte';
 	import { sound } from '$lib/state/sound.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -30,6 +35,7 @@
 	let liveGame = $state<Game | null>(null);
 	let joiningLobby = $state(false);
 	let acknowledging = $state(false);
+	let hasUnreadChat = $state(false);
 	let unsubscribers: Array<() => void> = [];
 	let unsubscribeLobbyOpened: (() => void) | null = null;
 
@@ -42,19 +48,6 @@
 		if (page.url.pathname.startsWith('/play/party')) return 'party';
 		if (page.url.pathname.startsWith('/play/chat')) return '';
 		return 'game';
-	});
-	const hasUnreadChat = $derived.by(() => {
-		void page.url.pathname;
-		if (!view || typeof localStorage === 'undefined') return false;
-		let markers: Record<string, { id: string; createdAt: string }> = {};
-		try {
-			markers = JSON.parse(
-				localStorage.getItem(readMarkerStorageKey(auth.actor?.id ?? '', view.game.id)) ?? '{}'
-			);
-		} catch {
-			markers = {};
-		}
-		return view.rooms.some((room) => cursorIsAfter(room.latestMessage, markers[room.id]));
 	});
 	const navigation = $derived([
 		{ id: 'game', label: 'Game', href: resolve('/play'), icon: Gamepad2 },
@@ -69,11 +62,18 @@
 		{ id: 'party', label: 'Party', href: resolve('/play/party'), icon: Users }
 	]);
 
+	$effect(() => {
+		void view;
+		refreshUnreadChat();
+	});
+
 	onMount(() => {
 		void initialize();
+		window.addEventListener(chatReadMarkersChanged, refreshUnreadChat);
 		return () => {
 			for (const unsubscribe of unsubscribers) unsubscribe();
 			unsubscribeLobbyOpened?.();
+			window.removeEventListener(chatReadMarkersChanged, refreshUnreadChat);
 		};
 	});
 
@@ -113,8 +113,17 @@
 				gameState.subscribe(`game:${loaded.game.id}:public`, () => gameState.refreshPlayer()),
 				gameState.subscribe(`participant:${loaded.participant.id}:private`, () =>
 					gameState.refreshPlayer()
+				),
+				...loaded.rooms.map((room) =>
+					pb.realtime.subscribe(`room:${room.id}`, (raw) => {
+						const event = raw as unknown as RealtimeEnvelope<ChatMessage>;
+						if (event.kind !== 'chat.message_created') return;
+						const markers = readMarkers(auth.actor?.id ?? '', loaded.game.id);
+						if (cursorIsAfter(event.payload, markers[room.id])) hasUnreadChat = true;
+					})
 				)
 			]);
+			refreshUnreadChat();
 		} catch (caught) {
 			if (!accountRoute) {
 				toasts.error(errorMessage(caught, 'The game could not be loaded.'), {
@@ -126,6 +135,14 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function refreshUnreadChat() {
+		if (!view || typeof localStorage === 'undefined') {
+			hasUnreadChat = false;
+			return;
+		}
+		hasUnreadChat = hasUnreadMessages(view.rooms, readMarkers(auth.actor?.id ?? '', view.game.id));
 	}
 
 	async function subscribeToLobbyOpening() {
