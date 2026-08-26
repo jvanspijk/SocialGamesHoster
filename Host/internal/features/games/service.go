@@ -26,10 +26,6 @@ func findLiveGame(app core.App) (*core.Record, error) {
 	return records[0], nil
 }
 
-func canOpenJoining(status Status) bool {
-	return status == StatusRunning || status == StatusPaused
-}
-
 func findGame(event *core.RequestEvent) (*core.Record, error) {
 	record, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
 	if err != nil {

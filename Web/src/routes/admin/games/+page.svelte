@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Archive, Copy, History, Play, Plus, Trash2 } from '@lucide/svelte';
+	import { DoorOpen, Flag, Plus, Trash2, XCircle } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
@@ -22,6 +22,7 @@
 	let showArchived = $state(false);
 	let createOpen = $state(false);
 	let deleteTarget = $state<Game | null>(null);
+	let cancelTarget = $state<Game | null>(null);
 	let busy = $state(false);
 	let form = $state({ name: '', rulesetId: '' });
 	let formError = $state<FormError | null>(null);
@@ -60,7 +61,7 @@
 				...jsonBody(form)
 			});
 			createOpen = false;
-			toasts.success('Game created.');
+			toasts.success('Game created and lobby opened.');
 			await goto(resolve(`/admin/games/${created.id}/overview`));
 		} catch (caught) {
 			const nextError = toFormError(caught, 'The game could not be created.');
@@ -74,16 +75,43 @@
 		}
 	}
 
-	async function duplicate(game: Game) {
+	async function openLobby(game: Game) {
 		try {
-			const created = await api<Game>(`/games/${game.id}/duplicate`, {
+			const updated = await api<Game>(`/games/${game.id}/open-lobby`, {
 				method: 'POST',
 				...jsonBody({})
 			});
-			games = [created, ...games];
-			toasts.success('Game duplicated.');
+			games = games.map((item) => (item.id === game.id ? { ...item, ...updated } : item));
+			toasts.success('Lobby opened.');
 		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The game could not be duplicated.'));
+			toasts.error(errorMessage(caught, 'The lobby could not be opened.'));
+		}
+	}
+
+	async function cancelGame() {
+		if (!cancelTarget) return;
+		busy = true;
+		try {
+			await api(`/games/${cancelTarget.id}/cancel`, {
+				method: 'POST',
+				...jsonBody({})
+			});
+			games = games.filter((game) => game.id !== cancelTarget?.id);
+			cancelTarget = null;
+			toasts.success('Game cancelled.');
+		} catch (caught) {
+			toasts.error(errorMessage(caught, 'The game could not be cancelled.'));
+		} finally {
+			busy = false;
+		}
+	}
+
+	async function endGame(game: Game) {
+		try {
+			await api(`/games/${game.id}/completion/start`, { method: 'POST', ...jsonBody({}) });
+			await goto(resolve(`/admin/games/${game.id}/finish/outcomes`));
+		} catch (caught) {
+			toasts.error(errorMessage(caught, 'The completion flow could not be started.'));
 		}
 	}
 
@@ -134,49 +162,68 @@
 {:else if visibleGames.length === 0}
 	<Panel variant="focal">
 		<div class="empty">
-			<Play size={38} strokeWidth={1.5} aria-hidden="true" />
+			<DoorOpen size={38} strokeWidth={1.5} aria-hidden="true" />
 			<h2>No games yet</h2>
 			<p>Choose a ready ruleset to prepare your first game.</p>
 			<Button onclick={() => (createOpen = true)}>New game</Button>
 		</div>
 	</Panel>
 {:else}
-	<div class="game-list">
-		{#each visibleGames as game (game.id)}
-			<article>
-				<div class="game-mark" class:archived={game.status === 'archived'} aria-hidden="true">
-					{#if game.status === 'archived'}<Archive size={23} />{:else}<Play size={23} />{/if}
-				</div>
-				<div class="game-copy">
-					<div class="title-line">
-						<h2>{game.name}</h2>
-						<span class:live={['lobby', 'running', 'paused'].includes(game.status)}
-							>{gameStatusLabel(game.status)}</span
-						>
-					</div>
-					<p>
-						{game.startedAt
-							? `Started ${new Date(game.startedAt).toLocaleDateString()}`
-							: 'Not started'}
-					</p>
-				</div>
-				<div class="row-actions">
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-					<a class="open-link" href={openGame(game)}>
-						{#if game.status === 'archived'}<History size={17} /> View summary{:else}<Play
-								size={17}
-							/> Open{/if}
-					</a>
-					<button type="button" onclick={() => duplicate(game)}><Copy size={17} /> Duplicate</button
-					>
-					{#if ['draft', 'archived'].includes(game.status)}
-						<button class="danger" type="button" onclick={() => (deleteTarget = game)}>
-							<Trash2 size={17} /> Delete
-						</button>
-					{/if}
-				</div>
-			</article>
-		{/each}
+	<div class="table-frame">
+		<table>
+			<caption>Games and their current state</caption>
+			<thead>
+				<tr>
+					<th scope="col">Game</th>
+					<th scope="col">Players</th>
+					<th scope="col">Status</th>
+					<th scope="col"><span class="sr-only">Actions</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each visibleGames as game (game.id)}
+					<tr>
+						<th scope="row" data-label="Game">
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+							<a class="game-name" href={openGame(game)}>{game.name}</a>
+						</th>
+						<td data-label="Players">{game.playerCount ?? 0}/{game.maxPlayers ?? '—'}</td>
+						<td data-label="Status">
+							<span
+								class:live={['lobby', 'running', 'paused'].includes(game.status)}
+								class="status"
+							>
+								{gameStatusLabel(game.status)}
+							</span>
+						</td>
+						<td class="row-actions" data-label="Actions">
+							{#if game.status === 'draft'}
+								<button type="button" onclick={() => openLobby(game)}
+									><DoorOpen size={17} /> Open lobby</button
+								>
+							{:else if game.status === 'lobby'}
+								<button class="danger" type="button" onclick={() => (cancelTarget = game)}>
+									<XCircle size={17} /> Cancel game
+								</button>
+							{:else if ['running', 'paused'].includes(game.status)}
+								<button type="button" onclick={() => endGame(game)}
+									><Flag size={17} /> End game</button
+								>
+							{:else if game.status === 'review'}
+								<a href={resolve(`/admin/games/${game.id}/finish/outcomes`)}>Continue finishing</a>
+							{:else if game.status === 'archived'}
+								<a href={resolve(`/admin/games/${game.id}/summary`)}>View summary</a>
+							{/if}
+							{#if ['draft', 'archived'].includes(game.status)}
+								<button class="danger" type="button" onclick={() => (deleteTarget = game)}>
+									<Trash2 size={17} /> Delete
+								</button>
+							{/if}
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	</div>
 {/if}
 
@@ -228,6 +275,19 @@
 </Dialog>
 
 <Dialog
+	open={cancelTarget !== null}
+	title="Cancel game?"
+	description={cancelTarget ? `"${cancelTarget.name}" will be permanently removed.` : ''}
+	close={() => (cancelTarget = null)}
+>
+	<p>The player roster and lobby chat will also be deleted. This action cannot be undone.</p>
+	{#snippet actions()}
+		<Button variant="ghost" onclick={() => (cancelTarget = null)}>Keep game</Button>
+		<Button variant="danger" loading={busy} onclick={cancelGame}>Cancel game</Button>
+	{/snippet}
+</Dialog>
+
+<Dialog
 	open={deleteTarget !== null}
 	title="Delete game?"
 	description={deleteTarget ? `"${deleteTarget.name}" will be permanently deleted.` : ''}
@@ -256,57 +316,61 @@
 		}
 	}
 
-	.game-list {
+	.table-frame {
 		border-block: var(--border-subtle);
 	}
 
-	article {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-4);
-		border-block-end: var(--border-subtle);
-		padding: var(--space-4) 0;
+	table {
+		width: 100%;
+		border-collapse: collapse;
 	}
 
-	article:last-child {
+	caption {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	th,
+	td {
+		border-block-end: var(--border-subtle);
+		padding: var(--space-3) var(--space-2);
+		text-align: left;
+		vertical-align: middle;
+	}
+
+	thead th {
+		color: var(--ink-soft);
+		font-family: var(--font-display);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	tbody tr:last-child > * {
 		border-block-end: 0;
 	}
 
-	.game-mark {
-		display: grid;
-		width: 3rem;
-		height: 3rem;
-		place-items: center;
-		border: 2px double var(--gold);
-		border-radius: 50%;
-		background: var(--crimson-dark);
-		color: var(--paper-light);
+	.game-name {
+		color: var(--ink);
+		font-family: var(--font-display);
+		font-size: 1rem;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.2em;
 	}
 
-	.game-mark.archived {
-		background: var(--ink-soft);
-	}
-
-	.title-line {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	h2,
-	.game-copy p {
-		margin: 0;
-	}
-
-	.title-line span {
+	.status {
+		display: inline-block;
 		border: 1px solid var(--ink-faint);
 		color: var(--ink-soft);
 		font-size: 0.72rem;
 		padding: 0.15rem 0.45rem;
 	}
 
-	.title-line span.live {
+	.status.live {
 		border-color: var(--success);
 		color: var(--success);
 	}
@@ -316,6 +380,7 @@
 		flex-wrap: wrap;
 		justify-content: flex-end;
 		gap: var(--space-1);
+		text-align: right;
 	}
 
 	.row-actions a,
@@ -375,14 +440,64 @@
 	}
 
 	@media (max-width: 47.99rem) {
-		article {
-			grid-template-columns: auto minmax(0, 1fr);
-			align-items: start;
+		.table-frame {
+			border-block-end: 0;
+		}
+
+		table,
+		tbody,
+		tr,
+		th,
+		td {
+			display: block;
+		}
+
+		thead {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+		}
+
+		tbody tr {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: var(--space-2) var(--space-4);
+			border-block-end: var(--border-subtle);
+			padding: var(--space-4) 0;
+		}
+
+		tbody tr > * {
+			border: 0;
+			padding: 0;
+		}
+
+		tbody th {
+			grid-column: 1 / -1;
+		}
+
+		td[data-label]::before {
+			display: block;
+			margin-block-end: var(--space-1);
+			color: var(--ink-soft);
+			content: attr(data-label);
+			font-family: var(--font-display);
+			font-size: 0.65rem;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
 		}
 
 		.row-actions {
+			display: flex;
 			grid-column: 1 / -1;
 			justify-content: flex-start;
+			text-align: left;
+		}
+
+		.row-actions::before {
+			flex-basis: 100%;
 		}
 	}
 </style>

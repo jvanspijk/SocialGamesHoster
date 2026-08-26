@@ -45,6 +45,8 @@ export interface Game {
 	/** @deprecated Join codes are no longer part of reader projections. */
 	joinCode?: string;
 	joiningOpen: boolean;
+	playerCount?: number;
+	maxPlayers?: number;
 	rolesVisible: boolean;
 	roleVisibilityRevision: number;
 	revision: number;

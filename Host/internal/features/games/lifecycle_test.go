@@ -37,29 +37,13 @@ func TestLifecycleRejectsInvalidAndArchivedTransitions(t *testing.T) {
 	}
 }
 
-func TestLifecycleCanCancelLobbyToDraft(t *testing.T) {
-	now := time.Now()
-	state, err := ApplyTransition(State{Status: StatusLobby, Revision: 4}, CancelLobby, now)
+func TestStartingClosesJoining(t *testing.T) {
+	state, err := ApplyTransition(State{Status: StatusLobby, JoiningOpen: true}, Start, time.Now())
 	if err != nil {
-		t.Fatalf("cancel lobby: %v", err)
+		t.Fatal(err)
 	}
-	if state.Status != StatusDraft || state.Revision != 5 {
-		t.Fatalf("unexpected cancelled lobby state: %#v", state)
-	}
-}
-
-func TestCanOpenJoiningOnlyDuringAnActiveGame(t *testing.T) {
-	for status, want := range map[Status]bool{
-		StatusDraft:    false,
-		StatusLobby:    false,
-		StatusRunning:  true,
-		StatusPaused:   true,
-		StatusReview:   false,
-		StatusArchived: false,
-	} {
-		if got := canOpenJoining(status); got != want {
-			t.Errorf("canOpenJoining(%q) = %t, want %t", status, got, want)
-		}
+	if state.JoiningOpen {
+		t.Fatal("starting a game must stop new players from joining")
 	}
 }
 
@@ -71,6 +55,17 @@ func TestArchivedGameDeletionRemainsAnExplicitException(t *testing.T) {
 		if canDeleteGame(status) {
 			t.Fatalf("%q game unexpectedly deletable", status)
 		}
+	}
+}
+
+func TestOnlyAnUnstartedLobbyCanBeCancelled(t *testing.T) {
+	for _, status := range []Status{StatusDraft, StatusRunning, StatusPaused, StatusReview, StatusArchived} {
+		if canCancelGame(status) {
+			t.Fatalf("%q game unexpectedly cancellable", status)
+		}
+	}
+	if !canCancelGame(StatusLobby) {
+		t.Fatal("an unstarted lobby must be cancellable")
 	}
 }
 

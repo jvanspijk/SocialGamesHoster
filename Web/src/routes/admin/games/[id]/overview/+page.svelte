@@ -9,7 +9,8 @@
 		Megaphone,
 		QrCode,
 		ShieldCheck,
-		Users
+		Users,
+		XCircle
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
@@ -26,6 +27,7 @@
 	let announcementOpen = $state(false);
 	let roleConfirmOpen = $state(false);
 	let hideRoleConfirmOpen = $state(false);
+	let cancelConfirmOpen = $state(false);
 	let busy = $state(false);
 	let selectedPhase = $state('');
 	let startSuggestedTimer = $state(true);
@@ -233,6 +235,20 @@
 			busy = false;
 		}
 	}
+
+	async function cancelGame() {
+		if (!view) return;
+		busy = true;
+		try {
+			await api(`/games/${view.game.id}/cancel`, { method: 'POST', ...jsonBody({}) });
+			toasts.success('Game cancelled.');
+			await goto(resolve('/admin/games'));
+		} catch (caught) {
+			toasts.error(errorMessage(caught, 'The game could not be cancelled.'));
+		} finally {
+			busy = false;
+		}
+	}
 </script>
 
 {#if view}
@@ -272,12 +288,8 @@
 					<Button loading={busy} onclick={() => gameCommand('start', 'Game started.')}>
 						<CirclePlay size={19} /> Start game
 					</Button>
-					<Button
-						variant="ghost"
-						disabled={busy}
-						onclick={() => gameCommand('close-joining', 'Lobby cancelled and reset.')}
-					>
-						Cancel &amp; reset
+					<Button variant="ghost" disabled={busy} onclick={() => (cancelConfirmOpen = true)}>
+						<XCircle size={19} /> Cancel game
 					</Button>
 				{:else if view.game.status === 'running'}
 					<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
@@ -305,23 +317,6 @@
 					<a class="primary-link" href={resolve(`/admin/games/${view.game.id}/finish/outcomes`)}>
 						Continue finishing
 					</a>
-				{/if}
-				{#if view.game.joiningOpen && view.game.status !== 'lobby'}
-					<Button
-						variant="ghost"
-						disabled={busy}
-						onclick={() => gameCommand('close-joining', 'Joining closed.')}
-					>
-						Close joining
-					</Button>
-				{:else if ['running', 'paused'].includes(view.game.status)}
-					<Button
-						variant="secondary"
-						disabled={busy}
-						onclick={() => gameCommand('open-joining', 'Joining reopened.')}
-					>
-						Open joining
-					</Button>
 				{/if}
 			</div>
 
@@ -422,6 +417,19 @@
 		</aside>
 	</div>
 {/if}
+
+<Dialog
+	open={cancelConfirmOpen}
+	title="Cancel game?"
+	description={view ? `"${view.game.name}" will be permanently removed.` : ''}
+	close={() => (cancelConfirmOpen = false)}
+>
+	<p>The player roster and lobby chat will also be deleted. This action cannot be undone.</p>
+	{#snippet actions()}
+		<Button variant="ghost" onclick={() => (cancelConfirmOpen = false)}>Keep game</Button>
+		<Button variant="danger" loading={busy} onclick={cancelGame}>Cancel game</Button>
+	{/snippet}
+</Dialog>
 
 <Dialog
 	open={phaseOpen}

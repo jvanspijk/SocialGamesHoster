@@ -23,7 +23,6 @@ type Transition string
 
 const (
 	OpenLobby       Transition = "open_lobby"
-	CancelLobby     Transition = "cancel_lobby"
 	Start           Transition = "start"
 	Pause           Transition = "pause"
 	Resume          Transition = "resume"
@@ -33,10 +32,11 @@ const (
 )
 
 type State struct {
-	Status    Status
-	Revision  int
-	StartedAt *time.Time
-	EndedAt   *time.Time
+	Status      Status
+	JoiningOpen bool
+	Revision    int
+	StartedAt   *time.Time
+	EndedAt     *time.Time
 }
 
 func ApplyTransition(state State, transition Transition, now time.Time) (State, error) {
@@ -46,7 +46,6 @@ func ApplyTransition(state State, transition Transition, now time.Time) (State, 
 
 	allowed := map[Transition][]Status{
 		OpenLobby:       {StatusDraft},
-		CancelLobby:     {StatusLobby},
 		Start:           {StatusLobby},
 		Pause:           {StatusRunning},
 		Resume:          {StatusPaused},
@@ -62,10 +61,10 @@ func ApplyTransition(state State, transition Transition, now time.Time) (State, 
 	switch transition {
 	case OpenLobby:
 		next.Status = StatusLobby
-	case CancelLobby:
-		next.Status = StatusDraft
+		next.JoiningOpen = true
 	case Start:
 		next.Status = StatusRunning
+		next.JoiningOpen = false
 		if next.StartedAt == nil {
 			startedAt := now.UTC()
 			next.StartedAt = &startedAt

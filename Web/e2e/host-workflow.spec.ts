@@ -226,6 +226,22 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await gameDialog.getByLabel('Ruleset').selectOption({ label: 'Recovered Party Test' });
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
+	await expect(page.getByText('Player invitation')).toBeVisible();
+	await page.getByRole('link', { name: 'Back to Games' }).click();
+	await expect(page.getByRole('columnheader', { name: 'Game' })).toBeVisible();
+	await expect(page.getByRole('cell', { name: '0/3' })).toBeVisible();
+	await page.setViewportSize({ width: 390, height: 844 });
+	await expect(page.getByRole('link', { name: 'Recovered Ruleset Game' })).toBeVisible();
+	expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+		true
+	);
+	await page.setViewportSize({ width: 1280, height: 800 });
+	await page.getByRole('link', { name: 'Recovered Ruleset Game' }).click();
+	await page.getByRole('button', { name: 'Cancel game' }).click();
+	const cancelDialog = page.getByRole('dialog', { name: 'Cancel game?' });
+	await cancelDialog.getByRole('button', { name: 'Cancel game', exact: true }).click();
+	await expect(page).toHaveURL(/\/admin\/games$/);
+	await expect(page.getByRole('link', { name: 'Recovered Ruleset Game' })).not.toBeVisible();
 
 	await page.goto('/admin/rulesets');
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
@@ -265,8 +281,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
 	const gameUrl = page.url();
-	await page.getByRole('button', { name: 'Open lobby' }).click();
-	await expect(page.getByText('Lobby opened.')).toBeVisible();
+	await expect(page.getByText('Player invitation')).toBeVisible();
 
 	const playerContext = await browser.newContext();
 	const player = await playerContext.newPage();

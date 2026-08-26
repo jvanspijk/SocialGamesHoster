@@ -16,15 +16,17 @@ import (
 
 func stateFromRecord(record *core.Record) State {
 	return State{
-		Status:    Status(record.GetString("status")),
-		Revision:  record.GetInt("revision"),
-		StartedAt: timePointer(record, "started_at"),
-		EndedAt:   timePointer(record, "ended_at"),
+		Status:      Status(record.GetString("status")),
+		JoiningOpen: record.GetBool("joining_open"),
+		Revision:    record.GetInt("revision"),
+		StartedAt:   timePointer(record, "started_at"),
+		EndedAt:     timePointer(record, "ended_at"),
 	}
 }
 
 func applyState(record *core.Record, state State) {
 	record.Set("status", state.Status)
+	record.Set("joining_open", state.JoiningOpen)
 	record.Set("revision", state.Revision)
 	if state.StartedAt == nil {
 		record.Set("started_at", nil)
