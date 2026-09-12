@@ -31,7 +31,7 @@
 <PageHeading
 	eyebrow="Library"
 	title="Rulesets"
-	description="Only ready rulesets can be used for new games. Invalid work remains editable."
+	description="Manage rulesets or create a new one"
 	variant="spacious"
 >
 	{#snippet actions()}

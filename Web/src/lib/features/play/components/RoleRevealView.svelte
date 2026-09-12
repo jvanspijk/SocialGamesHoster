@@ -53,7 +53,7 @@
 			<div class="unavailable-copy">
 				<Shield size={42} strokeWidth={1.4} aria-hidden="true" />
 				<h1>Role unavailable</h1>
-				<p>The game master has not made roles available.</p>
+				<p>Roles are hidden.</p>
 				<Button variant="secondary" onclick={back}><ArrowLeft size={18} /> Return to game</Button>
 			</div>
 		</Panel>

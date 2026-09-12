@@ -105,7 +105,7 @@
 <Sheet
 	{open}
 	title="Preview ruleset"
-	description="Check the working ruleset in the forms players and game masters will use."
+	description="Preview how this ruleset will appear to players and game masters."
 	{close}
 >
 	<div class="preview-workspace">

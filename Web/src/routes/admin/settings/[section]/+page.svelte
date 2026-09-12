@@ -182,10 +182,10 @@
 			<p role="status">Loading settings…</p>
 		{:else if !auth.isOwner && ['network', 'phone-join', 'game-masters', 'backups'].includes(section)}
 			<Panel title="Owner access required" variant="focal">
-				<p>Only the host owner can change this section.</p>
+				<p>Only the host owner can change these settings.</p>
 			</Panel>
 		{:else if section === 'network' && settings}
-			<Panel title="Network" description="Changes apply after restarting the host.">
+			<Panel title="Network" description="Changes apply after restarting the application.">
 				<div class="form-stack">
 					<label>
 						<span>Port</span>
@@ -212,7 +212,7 @@
 		{:else if section === 'phone-join' && settings}
 			<Panel
 				title="Phone join"
-				description="Players scan this code while connected to the same private network."
+				description="Players must be connected to the same Wi-Fi network to join."
 				variant="focal"
 			>
 				<div class="join-layout">
@@ -250,7 +250,7 @@
 			<div class="section-header">
 				<div>
 					<h2>Backups</h2>
-					<p>Create and restore recoverable host backups.</p>
+					<p>Create a backup for your games, profiles and rulesets.</p>
 				</div>
 				<Button loading={busy} onclick={createBackup}
 					><DatabaseBackup size={17} /> Create backup</Button
@@ -285,7 +285,7 @@
 			<div class="section-header">
 				<div>
 					<h2>Diagnostics</h2>
-					<p>Reader-safe host resource information.</p>
+					<p>View app performance metrics.</p>
 				</div>
 				<Button variant="secondary" onclick={load}><RefreshCw size={17} /> Refresh</Button>
 			</div>
@@ -293,7 +293,7 @@
 		{:else if section === 'display'}
 			<Panel
 				title="Display"
-				description="These preferences apply only on this device."
+				description="These settings apply only on this device."
 				variant="focal"
 			>
 				<DisplayPreferencesSettings />

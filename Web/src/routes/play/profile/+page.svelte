@@ -86,7 +86,7 @@
 	<PageHeading
 		eyebrow="Player account"
 		title="Profile"
-		description="Your identity and game history stay outside the current game."
+		description="Your profile and game history are shared across games."
 		variant="flush"
 	>
 		{#snippet actions()}

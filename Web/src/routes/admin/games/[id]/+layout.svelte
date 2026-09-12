@@ -197,7 +197,7 @@
 
 <Sheet open={requestsOpen} title="Entry requests" close={() => (requestsOpen = false)}>
 	<div class="request-sheet">
-		<p>Approve or reject players waiting to enter without leaving the live game.</p>
+		<p>Approve or reject players waiting to enter.</p>
 		<PendingProfileRequests compact oncountchange={(count) => (pendingRequestCount = count)} />
 		<a href={resolve('/admin/approvals')}>Manage all profiles</a>
 	</div>

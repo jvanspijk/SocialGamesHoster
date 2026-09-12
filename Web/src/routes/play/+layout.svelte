@@ -57,7 +57,7 @@
 			href: resolve('/play/role'),
 			icon: Shield,
 			disabled: !view?.roleAvailable,
-			disabledDescription: 'Role unavailable. The game master has not made roles available.'
+			disabledDescription: 'Roles are hidden.'
 		},
 		{ id: 'party', label: 'Party', href: resolve('/play/party'), icon: Users }
 	]);

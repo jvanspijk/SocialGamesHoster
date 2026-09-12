@@ -104,7 +104,7 @@
 	{#if assets.length === 0}
 		<EmptyState
 			title="No reusable media yet"
-			description="Upload an image or sound from any place where it is used. It will appear here."
+			description="Upload an image or sound to reuse it throughout the ruleset. It will appear here."
 		/>
 	{:else}
 		<div class="master-detail">
@@ -148,7 +148,7 @@
 						bind:value={accessibilityText}
 						multiline
 					/>
-					<Button loading={saving} onclick={saveDetails}>Apply details</Button>
+					<Button loading={saving} onclick={saveDetails}>Save details</Button>
 					<section class="usages" aria-labelledby="asset-usages-title">
 						<h4 id="asset-usages-title">Used by</h4>
 						{#if usages.length}

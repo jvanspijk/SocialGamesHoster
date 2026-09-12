@@ -31,7 +31,7 @@
 	<PageHeading
 		eyebrow="Archived game"
 		title="Game summary"
-		description="This record is permanent and read-only."
+		description="This finished game cannot be changed."
 	>
 		{#snippet actions()}
 			<div class="summary-actions">

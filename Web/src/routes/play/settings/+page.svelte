@@ -45,7 +45,7 @@
 		</button>
 	</Panel>
 
-	<Panel title="Display" description="These preferences are saved on this device.">
+	<Panel title="Display">
 		<DisplayPreferencesSettings />
 	</Panel>
 

@@ -73,9 +73,7 @@
 					<Shield size={23} />
 					<span
 						><strong>{view.roleAvailable ? 'View role' : 'Role unavailable'}</strong><small
-							>{view.roleAvailable
-								? 'Open your private role screen'
-								: 'The game master has not made roles available'}</small
+							>{view.roleAvailable ? 'Open your private role screen' : 'Roles are hidden.'}</small
 						></span
 					>
 				</a>

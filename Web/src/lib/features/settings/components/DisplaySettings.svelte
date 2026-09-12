@@ -15,7 +15,6 @@
 </script>
 
 <div class="display-settings stack">
-	<p>These settings apply only on this device.</p>
 	<ToggleSetting
 		title="Large text"
 		description="Increase the base text size while keeping controls visible."

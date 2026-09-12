@@ -179,7 +179,7 @@
 		<header class="completion-heading">
 			<p class="eyebrow">Finish game</p>
 			<h1>{view.game.name}</h1>
-			<p>Review the record before archiving it permanently.</p>
+			<p>Review the game before archiving it.</p>
 		</header>
 
 		<nav aria-label="Completion steps">
@@ -201,7 +201,7 @@
 				<div class="step-heading">
 					<div>
 						<h2>Outcomes</h2>
-						<p>Outcomes are independent from elimination status.</p>
+						<p>A player can be eliminated and still win.</p>
 					</div>
 					<div class="bulk-actions">
 						<button type="button" onclick={() => setAll('draw')}>Mark all draw</button>
@@ -344,7 +344,7 @@
 <Dialog
 	open={archiveConfirmOpen}
 	title="Finish and archive?"
-	description="The game summary will remain viewable, but the game and chat will become read-only."
+	description="You can still view the summary, but the game and chat can no longer be changed."
 	close={() => (archiveConfirmOpen = false)}
 >
 	<p>Check outcomes and achievements before continuing.</p>

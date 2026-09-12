@@ -86,7 +86,7 @@
 <PageHeading
 	eyebrow="Game record"
 	title="Activity"
-	description="Announcements and readable game-master actions. Chat and private role information are excluded."
+	description="See Game Master activity"
 	variant="spacious"
 />
 
@@ -99,7 +99,7 @@
 				<Megaphone size={23} />
 				<div>
 					<h2>Announcements</h2>
-					<p>Delivery and acknowledgement progress</p>
+					<p>See who received and acknowledged your announcements.</p>
 				</div>
 			</div>
 			{#if announcements.length === 0}
@@ -144,14 +144,14 @@
 			<div class="section-heading">
 				<Activity size={23} />
 				<div>
-					<h2>Game-master activity</h2>
-					<p>Actions that changed the game</p>
+					<h2>Game Master activity</h2>
+					<p>See a log of GM actions</p>
 				</div>
 			</div>
 			{#if actions.length === 0}
 				<div class="empty">
 					<Activity size={32} />
-					<p>No game-master activity yet.</p>
+					<p>No Game Master activity yet.</p>
 				</div>
 			{:else}
 				<div class="timeline">

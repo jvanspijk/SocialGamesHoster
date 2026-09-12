@@ -179,7 +179,7 @@
 	close={() => (deleteOpen = false)}
 >
 	{#if incoming.length}
-		<p>Remove or change these uses first:</p>
+		<p>This item is still used in these places. Remove or replace it first:</p>
 		<ul>
 			{#each incoming as usage (usage.label)}<li>
 					{#if usage.navigate}<button

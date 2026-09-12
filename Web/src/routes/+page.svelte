@@ -301,7 +301,7 @@
 					{#if liveGame}
 						<p class="game-line"><strong>{liveGame.name}</strong> · {liveGame.status}</p>
 					{/if}
-					<Button type="submit" loading={busy}>Request entry</Button>
+					<Button type="submit" loading={busy}>Join game</Button>
 				</form>
 			{/if}
 
