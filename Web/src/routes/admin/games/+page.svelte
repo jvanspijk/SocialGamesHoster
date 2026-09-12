@@ -7,8 +7,11 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
+	import ManagementTable from '$lib/components/ManagementTable.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
+	import SearchField from '$lib/components/SearchField.svelte';
+	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
@@ -20,6 +23,7 @@
 	let rulesets = $state<RulesetSummary[]>([]);
 	let loading = $state(true);
 	let showArchived = $state(false);
+	let search = $state('');
 	let createOpen = $state(false);
 	let deleteTarget = $state<Game | null>(null);
 	let cancelTarget = $state<Game | null>(null);
@@ -27,7 +31,13 @@
 	let form = $state({ name: '', rulesetId: '' });
 	let formError = $state<FormError | null>(null);
 
-	const visibleGames = $derived(games.filter((game) => showArchived || game.status !== 'archived'));
+	const visibleGames = $derived(
+		games.filter(
+			(game) =>
+				(showArchived || game.status !== 'archived') &&
+				game.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+		)
+	);
 	const readyRulesets = $derived(rulesets.filter((ruleset) => ruleset.status === 'valid'));
 
 	onMount(load);
@@ -152,14 +162,9 @@
 	{/snippet}
 </PageHeading>
 
-<label class="archive-filter">
-	<input type="checkbox" bind:checked={showArchived} />
-	Show archived games
-</label>
-
 {#if loading}
 	<p role="status">Loading games…</p>
-{:else if visibleGames.length === 0}
+{:else if games.length === 0}
 	<Panel variant="focal">
 		<div class="empty">
 			<DoorOpen size={38} strokeWidth={1.5} aria-hidden="true" />
@@ -169,70 +174,65 @@
 		</div>
 	</Panel>
 {:else}
-	<div class="table-frame">
-		<table>
-			<caption>Games and their current state</caption>
-			<thead>
-				<tr>
-					<th scope="col">Game</th>
-					<th scope="col">Players</th>
-					<th scope="col">Status</th>
-					<th scope="col"><span class="sr-only">Actions</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each visibleGames as game (game.id)}
-					<tr>
-						<th scope="row" data-label="Game">
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-							<a class="game-name" href={openGame(game)}>{game.name}</a>
-						</th>
-						<td data-label="Players">{game.playerCount ?? 0}/{game.maxPlayers ?? '—'}</td>
-						<td data-label="Status">
-							<span
-								class:live={['lobby', 'running', 'paused'].includes(game.status)}
-								class="status"
-							>
-								{gameStatusLabel(game.status)}
-							</span>
-						</td>
-						<td class="row-actions" data-label="Actions">
-							{#if game.status === 'draft'}
-								<button type="button" onclick={() => openLobby(game)}
-									><DoorOpen size={17} /> Open lobby</button
-								>
-							{:else if game.status === 'lobby'}
-								<button class="danger" type="button" onclick={() => (cancelTarget = game)}>
-									<XCircle size={17} /> Cancel game
-								</button>
-							{:else if ['running', 'paused'].includes(game.status)}
-								<button type="button" onclick={() => endGame(game)}
-									><Flag size={17} /> End game</button
-								>
-							{:else if game.status === 'review'}
-								<a href={resolve(`/admin/games/${game.id}/finish/outcomes`)}>Continue finishing</a>
-							{:else if game.status === 'archived'}
-								<a href={resolve(`/admin/games/${game.id}/summary`)}>View summary</a>
-							{/if}
-							{#if ['draft', 'archived'].includes(game.status)}
-								<button class="danger" type="button" onclick={() => (deleteTarget = game)}>
-									<Trash2 size={17} /> Delete
-								</button>
-							{/if}
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
+	<ManagementTable
+		caption="Games and their current state"
+		columns={[
+			{ label: 'Game' },
+			{ label: 'Players' },
+			{ label: 'Status' },
+			{ label: '', align: 'end' }
+		]}
+		empty={visibleGames.length === 0}
+		emptyMessage={search.trim() ? 'No games match your search.' : 'No games match this filter.'}
+	>
+		{#snippet controls()}
+			<SearchField label="Search games" placeholder="Search games" bind:value={search} />
+			<CheckboxField
+				label="Show archived games"
+				name="show-archived-games"
+				bind:checked={showArchived}
+			/>
+		{/snippet}
+		{#each visibleGames as game (game.id)}
+			<tr>
+				<th scope="row" data-label="Game">
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+					<a class="game-name" href={openGame(game)}>{game.name}</a>
+				</th>
+				<td data-label="Players">{game.playerCount ?? 0}/{game.maxPlayers ?? '—'}</td>
+				<td data-label="Status">
+					<span class:live={['lobby', 'running', 'paused'].includes(game.status)} class="status">
+						{gameStatusLabel(game.status)}
+					</span>
+				</td>
+				<td class="row-actions" data-label="Actions">
+					{#if game.status === 'draft'}
+						<button type="button" onclick={() => openLobby(game)}
+							><DoorOpen size={17} /> Open lobby</button
+						>
+					{:else if game.status === 'lobby'}
+						<button class="danger" type="button" onclick={() => (cancelTarget = game)}>
+							<XCircle size={17} /> Cancel game
+						</button>
+					{:else if ['running', 'paused'].includes(game.status)}
+						<button type="button" onclick={() => endGame(game)}><Flag size={17} /> End game</button>
+					{:else if game.status === 'review'}
+						<a href={resolve(`/admin/games/${game.id}/finish/outcomes`)}>Continue finishing</a>
+					{:else if game.status === 'archived'}
+						<a href={resolve(`/admin/games/${game.id}/summary`)}>View summary</a>
+					{/if}
+					{#if ['draft', 'archived'].includes(game.status)}
+						<button class="danger" type="button" onclick={() => (deleteTarget = game)}>
+							<Trash2 size={17} /> Delete
+						</button>
+					{/if}
+				</td>
+			</tr>
+		{/each}
+	</ManagementTable>
 {/if}
 
-<Dialog
-	open={createOpen}
-	title="New game"
-	description="Choose a ready ruleset. The game keeps its own frozen copy."
-	close={() => (createOpen = false)}
->
+<Dialog open={createOpen} title="New game" close={() => (createOpen = false)}>
 	<form id="new-game-form" class="dialog-form" onsubmit={createGame}>
 		<ErrorNotice message={formError?.message} traceId={formError?.traceId} />
 		<Field
@@ -257,7 +257,7 @@
 			{#if fieldError(formError, 'rulesetId')}<small>{fieldError(formError, 'rulesetId')}</small
 				>{/if}
 			{#if readyRulesets.length === 0}
-				<small>No ready rulesets. Save a valid ruleset first.</small>
+				<small>No ready rulesets yet. Finish setting up a ruleset first.</small>
 			{/if}
 		</label>
 	</form>
@@ -301,14 +301,6 @@
 </Dialog>
 
 <style>
-	.archive-filter {
-		display: inline-flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-2);
-		margin-block-end: var(--space-4);
-	}
-
 	@media (max-width: 47.99rem) {
 		.game-heading-actions,
 		.game-heading-actions :global(button) {
@@ -316,45 +308,11 @@
 		}
 	}
 
-	.table-frame {
-		border-block: var(--border-subtle);
-	}
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	caption {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0 0 0 0);
-		white-space: nowrap;
-	}
-
-	th,
-	td {
-		border-block-end: var(--border-subtle);
-		padding: var(--space-3) var(--space-2);
-		text-align: left;
-		vertical-align: middle;
-	}
-
-	thead th {
-		color: var(--ink-soft);
-		font-family: var(--font-display);
-		font-size: 0.72rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	tbody tr:last-child > * {
-		border-block-end: 0;
-	}
-
 	.game-name {
+		display: inline-flex;
+		min-width: var(--target-size);
+		min-height: var(--target-size);
+		align-items: center;
 		color: var(--ink);
 		font-family: var(--font-display);
 		font-size: 1rem;
@@ -373,34 +331,6 @@
 	.status.live {
 		border-color: var(--success);
 		color: var(--success);
-	}
-
-	.row-actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: var(--space-1);
-		text-align: right;
-	}
-
-	.row-actions a,
-	.row-actions button {
-		display: inline-flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-1);
-		border: 0;
-		background: transparent;
-		color: var(--crimson-dark);
-		cursor: pointer;
-		font-family: var(--font-display);
-		font-size: 0.72rem;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.row-actions .danger {
-		color: var(--danger);
 	}
 
 	.empty {
@@ -437,67 +367,5 @@
 
 	small {
 		color: var(--danger);
-	}
-
-	@media (max-width: 47.99rem) {
-		.table-frame {
-			border-block-end: 0;
-		}
-
-		table,
-		tbody,
-		tr,
-		th,
-		td {
-			display: block;
-		}
-
-		thead {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0 0 0 0);
-		}
-
-		tbody tr {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) auto;
-			gap: var(--space-2) var(--space-4);
-			border-block-end: var(--border-subtle);
-			padding: var(--space-4) 0;
-		}
-
-		tbody tr > * {
-			border: 0;
-			padding: 0;
-		}
-
-		tbody th {
-			grid-column: 1 / -1;
-		}
-
-		td[data-label]::before {
-			display: block;
-			margin-block-end: var(--space-1);
-			color: var(--ink-soft);
-			content: attr(data-label);
-			font-family: var(--font-display);
-			font-size: 0.65rem;
-			font-weight: 700;
-			letter-spacing: 0.08em;
-			text-transform: uppercase;
-		}
-
-		.row-actions {
-			display: flex;
-			grid-column: 1 / -1;
-			justify-content: flex-start;
-			text-align: left;
-		}
-
-		.row-actions::before {
-			flex-basis: 100%;
-		}
 	}
 </style>

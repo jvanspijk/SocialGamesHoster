@@ -1,23 +1,34 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { UserX, UserCheck } from '@lucide/svelte';
+	import CheckboxField from '$lib/components/CheckboxField.svelte';
+	import ManagementTable from '$lib/components/ManagementTable.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
+	import SearchField from '$lib/components/SearchField.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import { api } from '$lib/api/client';
+	import type { Profile } from '$lib/api/types';
 	import { errorMessage } from '$lib/api/errors';
 	import { toasts } from '$lib/state/toasts.svelte';
 
-	type Profile = {
-		id: string;
-		displayName: string;
-		avatar: string;
-		bio: string;
-		accent: string;
-		active: boolean;
-	};
-
 	let profiles = $state<Profile[]>([]);
 	let loading = $state(true);
+	let showDisabledProfiles = $state(false);
+	let search = $state('');
+	let visibleProfiles = $derived(
+		profiles.filter(
+			(profile) =>
+				(showDisabledProfiles || profile.active) &&
+				profile.displayName.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+		)
+	);
+	let emptyProfileMessage = $derived(
+		search.trim()
+			? 'No profiles match your search.'
+			: showDisabledProfiles
+				? 'No profiles.'
+				: 'No active profiles.'
+	);
 
 	onMount(() => {
 		void loadProfiles();
@@ -51,9 +62,9 @@
 </script>
 
 <PageHeading
-	eyebrow="Entry and profiles"
-	title="Approvals"
-	description="Review new entry requests and manage approved player profiles."
+	eyebrow="Management"
+	title="Profiles"
+	description="Approve new profile requests and manage player profiles."
 	variant="spacious"
 />
 
@@ -63,24 +74,48 @@
 	<p role="status">Loading profiles…</p>
 {:else}
 	<section aria-labelledby="profiles-heading">
-		<div class="section-heading">
-			<h2 id="profiles-heading">Approved profiles</h2>
-			<span>{profiles.length}</span>
-		</div>
-		<div class="profile-grid">
-			{#each profiles as profile (profile.id)}
-				<article class:disabled={!profile.active}>
-					<div class="avatar">{profile.displayName.slice(0, 1).toUpperCase()}</div>
-					<div>
-						<h3>{profile.displayName}</h3>
-						<p>{profile.active ? 'Active' : 'Disabled'}</p>
-					</div>
-					<button type="button" onclick={() => setActive(profile, !profile.active)}>
-						{#if profile.active}<UserX size={17} /> Disable{:else}<UserCheck size={17} /> Restore{/if}
-					</button>
-				</article>
+		<h2 id="profiles-heading">Profiles</h2>
+		<ManagementTable
+			caption="Profiles and their current state"
+			columns={[{ label: 'Profile' }, { label: 'Status' }, { label: '', align: 'end' }]}
+			empty={visibleProfiles.length === 0}
+			emptyMessage={emptyProfileMessage}
+		>
+			{#snippet controls()}
+				<SearchField label="Search profiles" placeholder="Search profiles" bind:value={search} />
+				<CheckboxField
+					label="Show disabled profiles"
+					name="show-disabled-profiles"
+					bind:checked={showDisabledProfiles}
+				/>
+			{/snippet}
+			{#each visibleProfiles as profile (profile.id)}
+				<tr>
+					<th scope="row" data-label="Profile">
+						<div class="profile-name">
+							<div class="avatar" aria-hidden="true">
+								{profile.displayName.slice(0, 1).toUpperCase()}
+							</div>
+							{profile.displayName}
+						</div>
+					</th>
+					<td data-label="Status">
+						<span class:disabled={!profile.active} class="status">
+							{profile.active ? 'Active' : 'Disabled'}
+						</span>
+					</td>
+					<td class="row-actions" data-label="Actions">
+						<button
+							class:danger={profile.active}
+							type="button"
+							onclick={() => setActive(profile, !profile.active)}
+						>
+							{#if profile.active}<UserX size={17} /> Disable{:else}<UserCheck size={17} /> Restore{/if}
+						</button>
+					</td>
+				</tr>
 			{/each}
-		</div>
+		</ManagementTable>
 	</section>
 {/if}
 
@@ -89,36 +124,17 @@
 		margin-block-end: var(--space-7);
 	}
 
-	.section-heading {
+	section > h2 {
+		margin-block: 0 var(--space-3);
+	}
+
+	.profile-name {
 		display: flex;
+		min-width: 0;
 		align-items: center;
 		gap: var(--space-2);
-		border-block-end: var(--border-strong);
-		margin-block-end: var(--space-3);
-	}
-
-	.section-heading h2 {
-		margin: 0;
-	}
-
-	.section-heading span {
-		display: grid;
-		min-width: 1.6rem;
-		height: 1.6rem;
-		place-items: center;
-		border-radius: 50%;
-		background: var(--crimson-dark);
-		color: var(--paper-light);
-		font-size: 0.78rem;
-	}
-
-	.profile-grid article {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-3);
-		border-block-end: var(--border-subtle);
-		padding: var(--space-3) 0;
+		font-family: var(--font-display);
+		font-size: 1rem;
 	}
 
 	.avatar {
@@ -134,39 +150,16 @@
 		font-weight: 700;
 	}
 
-	h3,
-	.profile-grid article p {
-		margin: 0;
-	}
-
-	.profile-grid article p {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
-		color: var(--ink-soft);
-	}
-
-	.profile-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
-		gap: 0 var(--space-5);
-	}
-
-	.profile-grid article.disabled {
-		opacity: 0.65;
-	}
-
-	.profile-grid button {
-		display: inline-flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-1);
-		border: 0;
-		background: transparent;
-		color: var(--crimson-dark);
-		cursor: pointer;
-		font-family: var(--font-display);
+	.status {
+		display: inline-block;
+		border: 1px solid var(--success);
+		color: var(--success);
 		font-size: 0.72rem;
-		font-weight: 700;
+		padding: 0.15rem 0.45rem;
+	}
+
+	.status.disabled {
+		border-color: var(--ink-faint);
+		color: var(--ink-soft);
 	}
 </style>

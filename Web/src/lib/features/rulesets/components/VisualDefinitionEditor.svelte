@@ -19,7 +19,7 @@
 		assets,
 		media,
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
@@ -34,20 +34,20 @@
 
 <DefinitionEditorLayout>
 	{#if section === 'teams'}
-		<TeamsSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
+		<TeamsSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'roles'}
-		<RolesSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
+		<RolesSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'phases'}
-		<PhasesSection bind:definition {media} {issues} {selectedItems} {onnavigate} />
+		<PhasesSection bind:definition {media} {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'composition'}
-		<CompositionSection bind:definition {issues} {selectedItems} {onnavigate} />
+		<CompositionSection bind:definition {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'knowledge'}
 		<KnowledgeSection bind:definition {issues} />
 	{:else if section === 'chat'}
-		<ChatSection bind:definition {issues} {selectedItems} />
+		<ChatSection bind:definition {issues} bind:selectedItems />
 	{:else if section === 'achievements'}
-		<AchievementsSection bind:definition {assets} {media} {issues} {selectedItems} />
+		<AchievementsSection bind:definition {assets} {media} {issues} bind:selectedItems />
 	{:else}
-		<MediaSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
+		<MediaSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
 	{/if}
 </DefinitionEditorLayout>

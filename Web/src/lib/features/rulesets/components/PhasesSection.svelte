@@ -17,7 +17,7 @@
 		definition = $bindable(),
 		media,
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
@@ -158,7 +158,6 @@
 			</div>
 			<section class="add-sound" aria-labelledby={`add-sound-${index}`}>
 				<h4 id={`add-sound-${index}`}>Add sound</h4>
-				<p>Upload audio and create a cue for this phase without leaving Game flow.</p>
 				<div class="form-grid">
 					<Field label="Sound name" name={`phase-sound-name-${index}`} bind:value={soundName} />
 					<Field

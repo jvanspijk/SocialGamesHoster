@@ -294,7 +294,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	try {
 		await player.goto('/');
 		await player.getByLabel('Profile name').fill('Browser Player');
-		await player.getByRole('button', { name: 'Request entry' }).click();
+		await player.getByRole('button', { name: 'Join game' }).click();
 		await expect(player.getByRole('heading', { name: 'Awaiting approval' })).toBeVisible();
 
 		await page.getByRole('button', { name: /Entry requests, 1 waiting/ }).click();
@@ -337,7 +337,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		});
 		await nonRecipient.goto('/');
 		await nonRecipient.getByLabel('Profile name').fill('Other Browser Player');
-		await nonRecipient.getByRole('button', { name: 'Request entry' }).click();
+		await nonRecipient.getByRole('button', { name: 'Join game' }).click();
 		await expect(nonRecipient.getByRole('heading', { name: 'Awaiting approval' })).toBeVisible();
 		await page.getByRole('button', { name: /Entry requests, 1 waiting/ }).click();
 		const otherRequest = page.getByRole('article').filter({ hasText: 'Other Browser Player' });
@@ -349,7 +349,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 
 		await roleAssignmentPlayer.goto('/');
 		await roleAssignmentPlayer.getByLabel('Profile name').fill('Role Assignment Player');
-		await roleAssignmentPlayer.getByRole('button', { name: 'Request entry' }).click();
+		await roleAssignmentPlayer.getByRole('button', { name: 'Join game' }).click();
 		await expect(
 			roleAssignmentPlayer.getByRole('heading', { name: 'Awaiting approval' })
 		).toBeVisible();
@@ -371,6 +371,15 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await expect(saveRoles).toBeEnabled();
 		await saveRoles.click();
 		await expect(page.getByText('Role assignments saved.')).toBeVisible();
+		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
+		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
+		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');
+		await page.getByRole('link', { name: 'Overview', exact: true }).click();
+		await page.getByRole('link', { name: 'Players', exact: true }).click();
+		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
+		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
+		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');
+		await page.reload();
 		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
 		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
 		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');

@@ -74,6 +74,6 @@
 	assets={[]}
 	{media}
 	{issues}
-	{selectedItems}
+	bind:selectedItems
 	{onnavigate}
 />

@@ -32,6 +32,9 @@ multi-person validation is useful. Do not run any functional test merely
 because a feature or fix changed.
 
 For every change under `Web/`, run `npm run check` from `Web/` before handing off the work.
+The local Prettier binary is `Web/node_modules/prettier/bin/prettier.cjs`; run it
+from `Web/` with `node ./node_modules/prettier/bin/prettier.cjs` when formatting
+or checking individual files.
 
 `./scripts/Test.ps1` runs:
 

@@ -18,7 +18,7 @@
 	let {
 		definition = $bindable(),
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;

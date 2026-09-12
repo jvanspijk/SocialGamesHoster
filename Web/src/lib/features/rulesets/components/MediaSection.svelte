@@ -11,7 +11,7 @@
 		assets,
 		media,
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
@@ -25,7 +25,7 @@
 
 <MediaLibrary {definition} {assets} {media} {onnavigate} />
 <div class="cues">
-	<AudioSection bind:definition {assets} {media} {issues} {selectedItems} {onnavigate} />
+	<AudioSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
 </div>
 
 <style>

@@ -3,7 +3,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ArrowLeft, Eye, ListChecks, Menu, MoreHorizontal, Save, Trash2 } from '@lucide/svelte';
+	import { ArrowLeft, Eye, ListChecks, Menu, Save, Trash2 } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
@@ -32,7 +32,7 @@
 		type ValidationIssue,
 		type ValidationReport
 	} from '$lib/features/rulesets/editor-state';
-	import { api, download, jsonBody } from '$lib/api/client';
+	import { api, jsonBody } from '$lib/api/client';
 	import { toFormError, type FormError } from '$lib/forms/errors';
 	import type {
 		RulesetAsset,
@@ -99,7 +99,6 @@
 	let saving = $state(false);
 	let saveFailed = $state(false);
 	let validating = $state(false);
-	let actionsOpen = $state(false);
 	let deleteOpen = $state(false);
 	let leaveOpen = $state(false);
 	let sectionMenuOpen = $state(false);
@@ -487,9 +486,6 @@
 			error = toFormError(caught, 'The ruleset could not be deleted.');
 		}
 	}
-	async function exportRuleset() {
-		await download(`/rulesets/${page.params.id}/export`, `${ruleset?.name || 'ruleset'}.sghrules`);
-	}
 	async function loadPreview(request: RulesetPreviewRequest) {
 		return api<RulesetPreviewResponse>(`/rulesets/${page.params.id}/preview`, {
 			method: 'POST',
@@ -512,9 +508,11 @@
 		<div class="actions">
 			<Button variant="secondary" onclick={() => (previewOpen = true)}
 				><Eye size={17} /> Preview</Button
-			><Button loading={saving} onclick={() => save()}><Save size={17} /> Save</Button><Button
-				variant="ghost"
-				onclick={() => (actionsOpen = true)}><MoreHorizontal size={20} /> Actions</Button
+			><Button loading={saving} onclick={() => save()}><Save size={17} /> Save</Button>
+			<!-- Export/import is still under active development and will not ship in v1. -->
+			<!-- <Button variant="secondary" onclick={exportRuleset}>Export ruleset</Button> -->
+			<Button variant="danger" onclick={() => (deleteOpen = true)}
+				><Trash2 size={17} /> Delete ruleset</Button
 			>
 		</div>
 	</header>
@@ -614,7 +612,7 @@
 					{assets}
 					{media}
 					issues={report.errors}
-					{selectedItems}
+					bind:selectedItems
 					onnavigate={selectSection}
 				/>{/if}
 		</section>
@@ -681,7 +679,7 @@
 			</ul>
 		{/if}
 		<Button variant="secondary" onclick={() => (previewOpen = true)}
-			>Test the current ruleset</Button
+			>Preview the current ruleset</Button
 		>
 	</div>{/snippet}
 
@@ -721,25 +719,11 @@
 		>{/snippet}</Dialog
 >
 <Dialog
-	open={actionsOpen}
-	title="Ruleset actions"
-	description="Other actions, including deletion."
-	close={() => (actionsOpen = false)}
-	><Button variant="secondary" onclick={exportRuleset}>Export ruleset</Button><Button
-		variant="danger"
-		onclick={() => {
-			actionsOpen = false;
-			deleteOpen = true;
-		}}><Trash2 size={17} /> Delete ruleset</Button
-	>{#snippet actions()}<Button variant="ghost" onclick={() => (actionsOpen = false)}>Close</Button
-		>{/snippet}</Dialog
->
-<Dialog
 	open={deleteOpen}
 	title="Delete ruleset?"
 	description="This removes the ruleset from the library and from new-game selection."
 	close={() => (deleteOpen = false)}
-	><p>Games already using this ruleset keep their saved copy.</p>
+	><p>This has no effect on existing games.</p>
 	{#snippet actions()}<Button variant="ghost" onclick={() => (deleteOpen = false)}>Cancel</Button
 		><Button variant="danger" onclick={remove}>Delete ruleset</Button>{/snippet}</Dialog
 >

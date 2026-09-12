@@ -8,7 +8,6 @@
 		Forward,
 		Megaphone,
 		QrCode,
-		ShieldCheck,
 		Users,
 		XCircle
 	} from '@lucide/svelte';
@@ -16,17 +15,17 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import RoleVisibilityControl from '$lib/features/games/components/RoleVisibilityControl.svelte';
 	import TimerControl from '$lib/features/games/components/TimerControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Game, TimerProjection } from '$lib/api/types';
+	import { hasAssignedRole } from '$lib/features/games/roleAssignments';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let phaseOpen = $state(false);
 	let announcementOpen = $state(false);
-	let roleConfirmOpen = $state(false);
-	let hideRoleConfirmOpen = $state(false);
 	let cancelConfirmOpen = $state(false);
 	let busy = $state(false);
 	let selectedPhase = $state('');
@@ -55,9 +54,9 @@
 	const activePlayers = $derived(
 		view?.participants.filter((player) => !['kicked', 'left'].includes(player.status)) ?? []
 	);
-	const assignedPlayers = $derived(activePlayers.filter((player) => player.roleKey));
-	const assignmentsReady = $derived(
-		activePlayers.length > 0 && assignedPlayers.length === activePlayers.length
+	const unassignedPlayers = $derived(
+		activePlayers.filter((player) => !hasAssignedRole(player.roleKey, view?.ruleset.roles ?? []))
+			.length
 	);
 	const currentPhase = $derived(
 		view?.ruleset.phases.find((phase) => phase.id === view?.game.phaseKey)
@@ -204,25 +203,6 @@
 		}
 	}
 
-	async function setRoleVisibility(rolesVisible: boolean) {
-		if (!view) return;
-		busy = true;
-		try {
-			await api(`/games/${view.game.id}/role-visibility`, {
-				method: 'PATCH',
-				...jsonBody({ rolesVisible })
-			});
-			await gameState.refreshAdmin(view.game.id);
-			roleConfirmOpen = false;
-			hideRoleConfirmOpen = false;
-			toasts.success(rolesVisible ? 'Roles are available.' : 'Roles are hidden.');
-		} catch (caught) {
-			toasts.error(errorMessage(caught, 'Role visibility could not be changed.'));
-		} finally {
-			busy = false;
-		}
-	}
-
 	async function startCompletion() {
 		if (!view) return;
 		busy = true;
@@ -265,8 +245,6 @@
 							Round {view.game.roundNumber || 1} · {currentPhase.description}
 						{:else if view.game.status === 'draft'}
 							Open the lobby when you are ready for players to join.
-						{:else}
-							Choose a phase when play begins.
 						{/if}
 					</p>
 				</div>
@@ -321,12 +299,12 @@
 			</div>
 
 			{#if view.game.joiningOpen}
-				<Panel title="Player invitation" description="Players can join while joining remains open.">
+				<Panel title="QR Code">
 					<div class="invitation">
 						<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
 						<div>
 							<QrCode size={24} aria-hidden="true" />
-							<p>Players scan the code while connected to the same private network.</p>
+							<p>Players must be connected to the same Wi-Fi network to join.</p>
 							{#if joinUrl}<code>{joinUrl}</code>{/if}
 						</div>
 					</div>
@@ -340,37 +318,28 @@
 					<li>
 						<Users size={20} />
 						<div>
-							<strong>{activePlayers.length} players</strong><span
-								>{assignedPlayers.length} assigned roles</span
-							>
+							<strong>{activePlayers.length} players</strong>
+							<span>
+								{#if unassignedPlayers === 0}
+									Everyone has a role
+								{:else}
+									{unassignedPlayers}
+									{unassignedPlayers === 1 ? 'player' : 'players'} without a role
+								{/if}
+							</span>
 						</div>
 						<a href={resolve(`/admin/games/${view.game.id}/players`)}>Open</a>
 					</li>
-					<li>
-						<ShieldCheck size={20} />
-						<div>
-							<strong>{view.game.rolesVisible ? 'Roles available' : 'Roles hidden'}</strong>
-							<span
-								>{assignmentsReady
-									? 'Assignments are ready'
-									: 'Assign every active player first'}</span
-							>
-						</div>
-						{#if view.game.rolesVisible}
-							<button type="button" onclick={() => (hideRoleConfirmOpen = true)}>Hide</button>
-						{:else}
-							<button
-								type="button"
-								disabled={!assignmentsReady}
-								onclick={() => (roleConfirmOpen = true)}>Make available</button
-							>
-						{/if}
-					</li>
+					<RoleVisibilityControl
+						gameId={view.game.id}
+						rolesVisible={view.game.rolesVisible}
+						presentation="readiness"
+					/>
 				</ul>
 			</Panel>
 
 			<Panel title="Announcement">
-				<p>Send an important update separately from chat.</p>
+				<p>Shows a popup to all selected players.</p>
 				<Button variant="secondary" onclick={() => (announcementOpen = true)}>
 					<Megaphone size={18} /> New announcement
 				</Button>
@@ -620,34 +589,6 @@
 		>
 			Send announcement
 		</Button>
-	{/snippet}
-</Dialog>
-
-<Dialog
-	open={roleConfirmOpen}
-	title="Make roles available?"
-	description="Players will be able to open and reveal their assigned roles."
-	close={() => (roleConfirmOpen = false)}
->
-	<p>Each player still chooses when to reveal their private role screen.</p>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (roleConfirmOpen = false)}>Cancel</Button>
-		<Button loading={busy} onclick={() => setRoleVisibility(true)}>Make roles available</Button>
-	{/snippet}
-</Dialog>
-
-<Dialog
-	open={hideRoleConfirmOpen}
-	title="Hide roles?"
-	description="Players with the Role screen open will lose access immediately."
-	close={() => (hideRoleConfirmOpen = false)}
->
-	<p>Role and knowledge data will be removed from player screens.</p>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (hideRoleConfirmOpen = false)}>Cancel</Button>
-		<Button variant="danger" loading={busy} onclick={() => setRoleVisibility(false)}
-			>Hide roles</Button
-		>
 	{/snippet}
 </Dialog>
 

@@ -3,11 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Gamepad2, LogOut, ScrollText, Settings, ShieldCheck, Swords } from '@lucide/svelte';
+	import { Gamepad2, LogOut, ScrollText, Settings, Swords, UsersRound } from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
+	import ProfileRequestAttention from '$lib/features/profiles/components/ProfileRequestAttention.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { api, jsonBody } from '$lib/api/client';
@@ -30,6 +31,7 @@
 		confirmation: ''
 	});
 	let recoveryError = $state<FormError | null>(null);
+	let pendingProfileRequestCount = $state(0);
 
 	const liveRoute = $derived(
 		/^\/admin\/games\/[^/]+\/(overview|players|chat|activity|finish|summary)/.test(
@@ -42,16 +44,25 @@
 	);
 	const current = $derived.by(() => {
 		if (page.url.pathname.startsWith('/admin/rulesets')) return 'rulesets';
-		if (page.url.pathname.startsWith('/admin/approvals')) return 'approvals';
+		if (page.url.pathname.startsWith('/admin/approvals')) return 'profiles';
 		if (page.url.pathname.startsWith('/admin/settings')) return 'settings';
 		return 'games';
 	});
-	const navigation = [
+	const navigation = $derived([
 		{ id: 'games', label: 'Games', href: resolve('/admin/games'), icon: Gamepad2 },
 		{ id: 'rulesets', label: 'Rulesets', href: resolve('/admin/rulesets'), icon: ScrollText },
-		{ id: 'approvals', label: 'Approvals', href: resolve('/admin/approvals'), icon: ShieldCheck },
+		{
+			id: 'profiles',
+			label: 'Profiles',
+			href: resolve('/admin/approvals'),
+			icon: UsersRound,
+			attention: pendingProfileRequestCount > 0,
+			attentionCount: pendingProfileRequestCount,
+			attentionLabel:
+				pendingProfileRequestCount === 1 ? 'pending profile request' : 'pending profile requests'
+		},
 		{ id: 'settings', label: 'Settings', href: resolve('/admin/settings/network'), icon: Settings }
-	];
+	]);
 
 	onMount(() => {
 		if (auth.isPlayer) {
@@ -120,9 +131,9 @@
 	<main class="login-page">
 		<section class="login-panel" aria-labelledby="login-heading">
 			<div class="seal" aria-hidden="true"><Swords size={32} /></div>
-			<p class="eyebrow">Game master</p>
+			<p class="eyebrow">Game Master</p>
 			<h1 id="login-heading">Sign in</h1>
-			<p class="muted">Manage games on this host.</p>
+			<p class="muted">Sign in with a Game Master account.</p>
 			<form onsubmit={login}>
 				<Field
 					label="Username"
@@ -143,17 +154,20 @@
 				<Button type="submit" loading={busy}>Sign in</Button>
 			</form>
 			{#if recoveryAvailable}
-				<Button variant="ghost" onclick={() => (recoveryOpen = true)}
-					>Recover local ownership</Button
-				>
+				<button class="recovery-link" onclick={() => (recoveryOpen = true)}>
+					Recover admin access
+				</button>
 			{/if}
-			<a href={resolve('/')}>Return to join page</a>
+			<div class="login-exit">
+				<a href={resolve('/')}>Return to join page</a>
+			</div>
 		</section>
 	</main>
 {:else if liveRoute || editorRoute}
 	{@render children()}
 {:else}
 	<div class="management-shell">
+		<ProfileRequestAttention oncountchange={(count) => (pendingProfileRequestCount = count)} />
 		<AppNav items={navigation} {current} label="Management" />
 		<header class="management-header">
 			<a class="product" href={resolve('/admin/games')}><Swords size={23} /> Social Games Hoster</a>
@@ -259,6 +273,44 @@
 
 	form :global(button) {
 		width: 100%;
+	}
+
+	.recovery-link {
+		min-height: 44px;
+		border: 0;
+		background: transparent;
+		color: var(--crimson-dark);
+		cursor: pointer;
+		font-family: var(--font-display);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		padding: var(--space-2);
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.recovery-link:hover {
+		color: var(--crimson);
+	}
+
+	.recovery-link:focus-visible,
+	.login-exit a:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: 2px;
+	}
+
+	.login-exit {
+		border-block-start: var(--border-subtle);
+		margin-block-start: var(--space-3);
+		padding-block-start: var(--space-4);
+	}
+
+	.login-exit a {
+		color: var(--ink);
+		font-size: 0.9rem;
 	}
 
 	.field-error {

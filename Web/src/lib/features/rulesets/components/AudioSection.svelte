@@ -19,7 +19,7 @@
 		assets,
 		media,
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;
@@ -55,7 +55,7 @@
 
 <CollectionEditor
 	title="Sounds"
-	description="Optional named sounds for selected listeners."
+	description="Optional sound to play."
 	{entries}
 	selectedId={selectedItems.audioCues ?? ''}
 	onselect={(id) => (selectedItems.audioCues = id)}
@@ -78,7 +78,7 @@
 	validationPath="audioCues"
 	itemPath={(id) => `audioCues[${definition.audioCues.findIndex((item) => item.id === id)}]`}
 	{issues}
-	emptyDescription="Add a named sound for phases or game-master playback."
+	emptyDescription="Add a sound."
 >
 	{#snippet editor(id)}{@const index = definition.audioCues.findIndex(
 			(item) => item.id === id

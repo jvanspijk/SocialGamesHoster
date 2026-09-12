@@ -19,7 +19,7 @@
 		assets,
 		media,
 		issues = [],
-		selectedItems,
+		selectedItems = $bindable(),
 		onnavigate
 	}: {
 		definition: RulesetDefinition;

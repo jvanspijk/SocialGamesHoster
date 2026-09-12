@@ -19,7 +19,7 @@
 	let {
 		definition = $bindable(),
 		issues = [],
-		selectedItems
+		selectedItems = $bindable()
 	}: {
 		definition: RulesetDefinition;
 		issues?: ValidationIssue[];
@@ -113,7 +113,9 @@
 	}
 </script>
 
-<ContentHeader density="dense" description="These settings apply unless a phase changes them."
+<ContentHeader
+	density="dense"
+	description="These are the default chat settings. You can override them for individual phases."
 	>{#snippet title()}<h2>Default chat settings</h2>{/snippet}</ContentHeader
 >
 <InlineValidationMessages {issues} path="chat" />

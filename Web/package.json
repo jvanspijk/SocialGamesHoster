@@ -10,7 +10,7 @@
 		"check": "npm run format && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && eslint .",
 		"check:types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test:unit": "vitest run --configLoader runner",
+		"test:unit": "vitest run --configLoader native --pool=threads",
 		"test:e2e": "node e2e/run-playwright.mjs",
 		"format": "node ./node_modules/prettier/bin/prettier.cjs --write .",
 		"format:staged": "prettier --write --ignore-unknown",

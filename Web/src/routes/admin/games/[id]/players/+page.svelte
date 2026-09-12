@@ -5,8 +5,6 @@
 		Award,
 		Check,
 		Dices,
-		Eye,
-		EyeOff,
 		MessageCircle,
 		ShieldAlert,
 		UserMinus,
@@ -16,37 +14,45 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
+	import RoleVisibilityControl from '$lib/features/games/components/RoleVisibilityControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Participant } from '$lib/api/types';
+	import { hasAssignedRole } from '$lib/features/games/roleAssignments';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let selectedId = $state('');
-	let roleConfirmOpen = $state(false);
-	let hideRoleConfirmOpen = $state(false);
 	let kickConfirmOpen = $state(false);
 	let busy = $state(false);
 	let assignments = $state<Record<string, string>>({});
+	let hydratedAssignmentsFor = $state('');
 
 	const view = $derived(gameState.admin);
+	const assignmentsHydrated = $derived(view !== null && hydratedAssignmentsFor === view.game.id);
 	const selected = $derived(view?.participants.find((player) => player.id === selectedId) ?? null);
 	let aliasDraft = $derived(selected?.gameAlias ?? '');
 	const activePlayers = $derived(
 		view?.participants.filter((player) => !['kicked', 'left'].includes(player.status)) ?? []
 	);
-	const assignmentsReady = $derived(
-		activePlayers.length > 0 &&
-			activePlayers.every((player) => assignments[player.id] || player.roleKey)
-	);
-
 	$effect(() => {
 		if (view) {
+			if (hydratedAssignmentsFor !== view.game.id) {
+				hydrateAssignments(view.game.id, view.participants);
+				return;
+			}
 			for (const player of view.participants) {
 				if (!(player.id in assignments)) assignments[player.id] = player.roleKey ?? '';
 			}
 		}
 	});
+
+	function hydrateAssignments(gameId: string, participants: Participant[]) {
+		assignments = Object.fromEntries(
+			participants.map((player) => [player.id, player.roleKey ?? ''])
+		);
+		hydratedAssignmentsFor = gameId;
+	}
 
 	function playerName(player: Participant) {
 		return player.gameAlias || player.displayNameSnapshot;
@@ -75,7 +81,8 @@
 					}))
 				})
 			});
-			await gameState.refreshAdmin(view.game.id);
+			const refreshed = await gameState.refreshAdmin(view.game.id);
+			hydrateAssignments(refreshed.game.id, refreshed.participants);
 			toasts.success('Role assignments saved.');
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Role assignments could not be saved.'));
@@ -92,35 +99,11 @@
 				method: 'POST',
 				...jsonBody({ assignments: [] })
 			});
-			await gameState.refreshAdmin(view.game.id);
-			const refreshed = gameState.admin;
-			if (refreshed) {
-				assignments = Object.fromEntries(
-					refreshed.participants.map((player) => [player.id, player.roleKey ?? ''])
-				);
-			}
+			const refreshed = await gameState.refreshAdmin(view.game.id);
+			hydrateAssignments(refreshed.game.id, refreshed.participants);
 			toasts.success('Roles randomized.');
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Roles could not be randomized.'));
-		} finally {
-			busy = false;
-		}
-	}
-
-	async function setRoleVisibility(rolesVisible: boolean) {
-		if (!view) return;
-		busy = true;
-		try {
-			await api(`/games/${view.game.id}/role-visibility`, {
-				method: 'PATCH',
-				...jsonBody({ rolesVisible })
-			});
-			await gameState.refreshAdmin(view.game.id);
-			roleConfirmOpen = false;
-			hideRoleConfirmOpen = false;
-			toasts.success(rolesVisible ? 'Roles are available.' : 'Roles are hidden.');
-		} catch (caught) {
-			toasts.error(errorMessage(caught, 'Role visibility could not be changed.'));
 		} finally {
 			busy = false;
 		}
@@ -223,88 +206,75 @@
 	<PageHeading
 		eyebrow="Roster and assignments"
 		title="Players"
-		description={`${activePlayers.length} active players · ${activePlayers.filter((player) => player.roleKey).length} roles assigned`}
+		description={`${activePlayers.length} active players · ${activePlayers.filter((player) => hasAssignedRole(player.roleKey, view.ruleset.roles)).length} roles assigned`}
 		variant="compact"
 	>
 		{#snippet actions()}
-			<div class="role-visibility">
-				<div>
-					{#if view.game.rolesVisible}<Eye size={20} />{:else}<EyeOff size={20} />{/if}
-					<span>
-						<strong>{view.game.rolesVisible ? 'Roles available' : 'Roles hidden'}</strong>
-						<small
-							>{assignmentsReady ? 'Assignments ready' : 'Assign every active player first'}</small
-						>
-					</span>
-				</div>
-				{#if view.game.rolesVisible}
-					<Button variant="secondary" onclick={() => (hideRoleConfirmOpen = true)}
-						>Hide roles</Button
-					>
-				{:else}
-					<Button disabled={!assignmentsReady} onclick={() => (roleConfirmOpen = true)}
-						>Make roles available</Button
-					>
-				{/if}
-			</div>
+			<RoleVisibilityControl
+				gameId={view.game.id}
+				rolesVisible={view.game.rolesVisible}
+				presentation="heading"
+			/>
 		{/snippet}
 	</PageHeading>
 
-	<div class="assignment-actions">
-		<Button variant="secondary" loading={busy} onclick={randomize}
-			><Dices size={18} /> Randomize roles</Button
-		>
-		<Button loading={busy} onclick={saveAssignments}><Check size={18} /> Save roles</Button>
-	</div>
+	{#if assignmentsHydrated}
+		<div class="assignment-actions">
+			<Button variant="secondary" loading={busy} onclick={randomize}
+				><Dices size={18} /> Randomize roles</Button
+			>
+			<Button loading={busy} onclick={saveAssignments}><Check size={18} /> Save roles</Button>
+		</div>
 
-	<div class="player-list" role="list" aria-label="Players">
-		{#each view.participants as player (player.id)}
-			<article role="listitem" class:inactive={['kicked', 'left'].includes(player.status)}>
-				<button class="player-open" type="button" onclick={() => (selectedId = player.id)}>
-					<span class="avatar">{playerName(player).slice(0, 1).toUpperCase()}</span>
-					<span class="identity">
-						<strong><i>Seat {player.seatNumber}</i>{playerName(player)}</strong>
-						<small
-							>{player.gameAlias ? player.displayNameSnapshot : statusLabel(player.status)}</small
-						>
-					</span>
-				</button>
-				<label class="role-select">
-					<span class="sr-only">Role for {playerName(player)}</span>
-					{#if view.game.status === 'lobby'}
-						<select
-							bind:value={assignments[player.id]}
-							disabled={['kicked', 'left'].includes(player.status)}
-						>
-							<option value="">Unassigned</option>
-							{#each view.ruleset.roles as role (role.id)}
-								<option value={role.id}>{role.name}</option>
-							{/each}
-						</select>
-					{:else}
-						<select value={player.roleKey ?? ''} disabled>
-							<option value="">Unassigned</option>
-							{#each view.ruleset.roles as role (role.id)}
-								<option value={role.id}>{role.name}</option>
-							{/each}
-						</select>
-					{/if}
-				</label>
-				<div class="player-facts">
-					<span class:unset={player.outcome === 'unset'}
-						>{player.outcome === 'unset' ? 'No outcome' : player.outcome}</span
-					>
-					{#if awardedCount(player) > 0}<span><Award size={15} /> Awarded</span>{/if}
-				</div>
-			</article>
-		{/each}
-	</div>
+		<div class="player-list" role="list" aria-label="Players">
+			{#each view.participants as player (player.id)}
+				<article role="listitem" class:inactive={['kicked', 'left'].includes(player.status)}>
+					<button class="player-open" type="button" onclick={() => (selectedId = player.id)}>
+						<span class="avatar">{playerName(player).slice(0, 1).toUpperCase()}</span>
+						<span class="identity">
+							<strong><i>Player {player.seatNumber}</i>{playerName(player)}</strong>
+							<small
+								>{player.gameAlias ? player.displayNameSnapshot : statusLabel(player.status)}</small
+							>
+						</span>
+					</button>
+					<label class="role-select">
+						<span class="sr-only">Role for {playerName(player)}</span>
+						{#if view.game.status === 'lobby'}
+							<select
+								bind:value={assignments[player.id]}
+								disabled={['kicked', 'left'].includes(player.status)}
+							>
+								<option value="">Unassigned</option>
+								{#each view.ruleset.roles as role (role.id)}
+									<option value={role.id}>{role.name}</option>
+								{/each}
+							</select>
+						{:else}
+							<select value={player.roleKey ?? ''} disabled>
+								<option value="">Unassigned</option>
+								{#each view.ruleset.roles as role (role.id)}
+									<option value={role.id}>{role.name}</option>
+								{/each}
+							</select>
+						{/if}
+					</label>
+					<div class="player-facts">
+						{#if player.outcome !== 'unset'}
+							<span>{player.outcome}</span>
+						{/if}
+						{#if awardedCount(player) > 0}<span><Award size={15} /> Awarded</span>{/if}
+					</div>
+				</article>
+			{/each}
+		</div>
+	{/if}
 {/if}
 
 <Dialog
 	open={selected !== null}
 	title={selected ? playerName(selected) : 'Player'}
-	description={selected ? `Seat ${selected.seatNumber} · ${statusLabel(selected.status)}` : ''}
+	description={selected ? `Player ${selected.seatNumber} · ${statusLabel(selected.status)}` : ''}
 	close={() => (selectedId = '')}
 >
 	{#if selected && view}
@@ -385,34 +355,6 @@
 </Dialog>
 
 <Dialog
-	open={roleConfirmOpen}
-	title="Make roles available?"
-	description="Players will be able to open and reveal their assigned roles."
-	close={() => (roleConfirmOpen = false)}
->
-	<p>Every active player has a role assignment.</p>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (roleConfirmOpen = false)}>Cancel</Button>
-		<Button loading={busy} onclick={() => setRoleVisibility(true)}>Make roles available</Button>
-	{/snippet}
-</Dialog>
-
-<Dialog
-	open={hideRoleConfirmOpen}
-	title="Hide roles?"
-	description="Players with the Role screen open will lose access immediately."
-	close={() => (hideRoleConfirmOpen = false)}
->
-	<p>Role and knowledge data will be removed from player screens.</p>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (hideRoleConfirmOpen = false)}>Cancel</Button>
-		<Button variant="danger" loading={busy} onclick={() => setRoleVisibility(false)}
-			>Hide roles</Button
-		>
-	{/snippet}
-</Dialog>
-
-<Dialog
 	open={kickConfirmOpen}
 	title="Kick player?"
 	description={selected ? `${playerName(selected)} will lose access to this game.` : ''}
@@ -428,30 +370,6 @@
 </Dialog>
 
 <style>
-	.role-visibility {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		border: var(--border-subtle);
-		background: rgb(255 249 230 / 58%);
-		padding: var(--space-2);
-	}
-
-	.role-visibility > div {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	.role-visibility strong,
-	.role-visibility small {
-		display: block;
-	}
-
-	.role-visibility small {
-		color: var(--ink-soft);
-	}
-
 	.assignment-actions {
 		display: flex;
 		justify-content: flex-end;
@@ -546,11 +464,6 @@
 		text-transform: capitalize;
 	}
 
-	.player-facts span.unset {
-		border-color: var(--ink-faint);
-		color: var(--ink-soft);
-	}
-
 	.player-detail {
 		display: grid;
 		gap: var(--space-5);
@@ -636,18 +549,7 @@
 		border-block-start-color: var(--danger);
 	}
 
-	@media (max-width: 63.99rem) {
-		.role-visibility {
-			justify-content: space-between;
-		}
-	}
-
 	@media (max-width: 47.99rem) {
-		.role-visibility {
-			align-items: stretch;
-			flex-direction: column;
-		}
-
 		.assignment-actions {
 			display: grid;
 			grid-template-columns: 1fr 1fr;

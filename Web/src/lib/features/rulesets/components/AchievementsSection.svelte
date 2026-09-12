@@ -17,7 +17,7 @@
 		assets,
 		media,
 		issues = [],
-		selectedItems
+		selectedItems = $bindable()
 	}: {
 		definition: RulesetDefinition;
 		assets: AssetOption[];
