@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RulesetDefinition } from '$lib/api/types';
 import {
+	copyDefinition,
 	humanIssueLocation,
 	itemTargetForIssue,
 	issueControlName,
@@ -51,6 +52,56 @@ describe('ruleset editor state', () => {
 		expect(normalizedDefinition(left)).toBe(normalizedDefinition(right));
 		right.teams.push({ id: 'team_b', name: 'Wolves', description: '' });
 		expect(normalizedDefinition(left)).not.toBe(normalizedDefinition(right));
+	});
+
+	it('loads omitted selector lists without mutating saved data or creating edits', () => {
+		const saved = definition();
+		saved.compositionBands[0].slots = [
+			{
+				id: 'slot',
+				label: 'Players',
+				count: 4,
+				selector: {
+					roleIds: ['role_a']
+				} as RulesetDefinition['compositionBands'][number]['slots'][number]['selector']
+			}
+		];
+		saved.knowledgeRules = [
+			{
+				viewer: {} as RulesetDefinition['knowledgeRules'][number]['viewer'],
+				target: {} as RulesetDefinition['knowledgeRules'][number]['target'],
+				reveal: []
+			}
+		];
+		const original = JSON.stringify(saved);
+		const working = copyDefinition(saved);
+		expect(working.compositionBands[0].slots[0].selector).toEqual({
+			roleIds: ['role_a'],
+			teamIds: [],
+			categoryIds: [],
+			tags: []
+		});
+		expect(working.knowledgeRules[0].viewer).toEqual({
+			roleIds: [],
+			teamIds: [],
+			categoryIds: [],
+			tags: []
+		});
+		expect(JSON.stringify(saved)).toBe(original);
+		expect(normalizedDefinition(working)).toBe(normalizedDefinition(saved));
+		working.compositionBands[0].slots[0].selector.roleIds = [];
+		expect(normalizedDefinition(working)).not.toBe(normalizedDefinition(saved));
+	});
+
+	it('does not restore empty media defaults as edits, but detects removing an image', () => {
+		const saved = definition();
+		const restored = copyDefinition(saved);
+		restored.metadata.coverAssetKey = '';
+		restored.teams[0].imageAssetKey = '';
+		restored.roles[0].imageAssetKey = '';
+		expect(normalizedDefinition(restored)).toBe(normalizedDefinition(saved));
+		saved.metadata.coverAssetKey = 'cover';
+		expect(normalizedDefinition(restored)).not.toBe(normalizedDefinition(saved));
 	});
 
 	it('round-trips recovery and rejects malformed records', () => {

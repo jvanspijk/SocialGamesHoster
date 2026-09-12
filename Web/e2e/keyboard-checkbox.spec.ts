@@ -7,6 +7,11 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.setViewportSize({ width: 320, height: 720 });
 	await page.goto('/');
+	await expect(
+		page
+			.getByRole('heading', { name: 'Set up the host' })
+			.or(page.getByRole('link', { name: 'Click here if you are a game master' }))
+	).toBeVisible();
 
 	if (await page.getByRole('heading', { name: 'Set up the host' }).isVisible()) {
 		await page.getByLabel('Username').fill('keyboardowner');
@@ -42,7 +47,10 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await page.getByRole('link', { name: /Echo Location/ }).click();
 	await expect(page.getByRole('main')).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Rulesets', exact: true })).toBeVisible();
-	await expect(page.getByText(/Saved · (Valid|Invalid)/)).toHaveAttribute('aria-live', 'polite');
+	await expect(page.getByText('All changes saved', { exact: true })).toHaveAttribute(
+		'aria-live',
+		'polite'
+	);
 	const preview = page.getByRole('button', { name: 'Preview', exact: true });
 	await preview.focus();
 	await page.keyboard.press('Enter');
@@ -55,6 +63,62 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 		.toBe(true);
 	await page.keyboard.press('Escape');
 	await expect(preview).toBeFocused();
+
+	await page.getByRole('button', { name: 'Sections', exact: true }).click();
+	await page
+		.getByRole('dialog', { name: 'Ruleset sections' })
+		.getByRole('button', { name: /^Basics/ })
+		.click();
+	await expect(page.getByRole('textbox', { name: 'Media name', exact: true })).not.toBeVisible();
+	await page.getByRole('button', { name: 'Upload new', exact: true }).click();
+	await expect(
+		page
+			.getByRole('dialog', { name: 'Upload image' })
+			.getByRole('textbox', { name: 'Media name', exact: true })
+	).toBeVisible();
+	await page.keyboard.press('Escape');
+	await page.getByRole('button', { name: 'Ruleset actions', exact: true }).click();
+	await page
+		.getByRole('dialog', { name: 'Ruleset actions' })
+		.getByRole('button', { name: 'Delete ruleset', exact: true })
+		.click();
+	await expect(page.getByRole('dialog', { name: 'Delete ruleset?' })).toBeVisible();
+	await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+	await page.getByRole('textbox', { name: /^Name/ }).fill('Keyboard editor changes');
+	await expect(page.getByText('Unsaved changes', { exact: true })).toHaveAttribute(
+		'aria-live',
+		'polite'
+	);
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				Object.keys(localStorage).some((key) =>
+					key.startsWith('social-games-hoster:ruleset-working-copy:')
+				)
+			)
+		)
+		.toBe(true);
+	await page.reload();
+	await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible();
+	await expect(page.getByRole('textbox', { name: /^Name/ })).toHaveValue('Keyboard editor changes');
+	await page.getByRole('button', { name: /^Overview/ }).click();
+	await expect(
+		page
+			.getByRole('dialog', { name: 'Ruleset overview' })
+			.getByRole('heading', { name: 'Overview', exact: true })
+	).toBeVisible();
+	await expect(page.getByText('Saved version: Game readiness')).not.toBeVisible();
+	await page.keyboard.press('Escape');
+	for (const width of [1280, 1600, 320]) {
+		await page.setViewportSize({ width, height: 900 });
+		await expect
+			.poll(() =>
+				page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
+			)
+			.toBe(true);
+		if (width === 1600)
+			await page.screenshot({ path: 'test-results/ruleset-editor-desktop.png', fullPage: true });
+	}
 
 	// A 320 CSS-pixel layout is the reflow viewport produced by 200% browser
 	// zoom on a 640-pixel window; CSS `zoom` would scale the document without

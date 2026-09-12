@@ -684,8 +684,7 @@
 		font-size: 0.82rem;
 	}
 
-	.readiness a,
-	.readiness button {
+	.readiness a {
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
@@ -694,11 +693,6 @@
 		font-family: var(--font-display);
 		font-size: 0.68rem;
 		font-weight: 700;
-	}
-
-	.readiness button:disabled {
-		color: var(--disabled);
-		cursor: not-allowed;
 	}
 
 	.invitation {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Sheet from '$lib/components/Sheet.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
@@ -11,7 +12,8 @@
 		value = $bindable<string | undefined>(),
 		assets,
 		media,
-		name
+		name,
+		compact = false
 	}: {
 		label: string;
 		kind: 'image' | 'audio';
@@ -19,8 +21,10 @@
 		assets: AssetOption[];
 		media: MediaActions;
 		name: string;
+		compact?: boolean;
 	} = $props();
 
+	let uploadOpen = $state(false);
 	let displayName = $state('');
 	let accessibilityText = $state('');
 	let uploading = $state(false);
@@ -47,6 +51,7 @@
 				accessibilityText.trim()
 			);
 			value = asset.assetKey;
+			uploadOpen = false;
 		} catch (caught) {
 			uploadError =
 				caught instanceof Error ? caught.message : 'The media file could not be uploaded.';
@@ -61,7 +66,8 @@
 	<SelectField
 		label={`${label} — Choose existing file`}
 		{name}
-		bind:value
+		value={value ?? ''}
+		onchange={(next) => (value = next)}
 		options={[
 			{ value: '', label: kind === 'image' ? 'No image' : 'No audio' },
 			...options.map((asset) => ({ value: asset.assetKey, label: asset.displayName }))
@@ -82,15 +88,7 @@
 			</div>
 		</div>
 	{/if}
-	<div class="upload-details">
-		<Field label="Media name" name={`${name}-upload-name`} bind:value={displayName} />
-		<Field
-			label={kind === 'image' ? 'Image description' : 'Accessibility description'}
-			name={`${name}-upload-accessibility`}
-			bind:value={accessibilityText}
-			help="This default is reused wherever the media item is selected."
-		/>
-	</div>
+	{#if !compact}{@render uploadDetails()}{/if}
 	<input
 		class="visually-hidden"
 		bind:this={input}
@@ -101,13 +99,37 @@
 		onchange={upload}
 	/>
 	<div class="actions">
-		<Button variant="secondary" loading={uploading} onclick={chooseUpload}>Upload new</Button>
-		{#if selected}<Button variant="secondary" loading={uploading} onclick={chooseUpload}
-				>Replace only here</Button
+		<Button
+			variant="secondary"
+			loading={uploading}
+			onclick={() => (compact ? (uploadOpen = true) : chooseUpload())}>Upload new</Button
+		>
+		{#if selected}<Button
+				variant="secondary"
+				loading={uploading}
+				onclick={() => (compact ? (uploadOpen = true) : chooseUpload())}>Replace only here</Button
 			><Button variant="ghost" onclick={() => (value = '')}>Remove from this usage</Button>{/if}
 	</div>
 	{#if uploadError}<p class="error" role="alert">{uploadError}</p>{/if}
 </section>
+
+{#snippet uploadDetails()}
+	<div class="upload-details">
+		<Field label="Media name" name={`${name}-upload-name`} bind:value={displayName} />
+		<Field
+			label={kind === 'image' ? 'Image description' : 'Accessibility description'}
+			name={`${name}-upload-accessibility`}
+			bind:value={accessibilityText}
+			help="Describe the image or sound for players who cannot see or hear it."
+		/>
+	</div>
+{/snippet}
+<Sheet open={uploadOpen} title={`Upload ${kind}`} close={() => (uploadOpen = false)}>
+	{@render uploadDetails()}
+	{#if uploadError}<p class="error" role="alert">{uploadError}</p>{/if}
+	{#snippet actions()}<Button loading={uploading} onclick={chooseUpload}>Choose file</Button
+		>{/snippet}
+</Sheet>
 
 <style>
 	.media-field {

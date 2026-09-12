@@ -1,4 +1,4 @@
-import type { RulesetDefinition } from '$lib/api/types';
+import type { RulesetDefinition, RulesetSelector } from '$lib/api/types';
 
 export type EditorSection =
 	| 'metadata'
@@ -27,27 +27,79 @@ export type RecoveryRecord = {
 
 export const requiredSections: EditorSection[] = ['metadata', 'teams', 'roles', 'composition'];
 
+// The host omits empty selector lists. Give the editor complete collections
+// before taking the saved snapshot, so rendering never changes the definition.
+function copySelector(selector: RulesetSelector): RulesetSelector {
+	return {
+		...selector,
+		roleIds: selector?.roleIds ?? [],
+		teamIds: selector?.teamIds ?? [],
+		categoryIds: selector?.categoryIds ?? [],
+		tags: selector?.tags ?? []
+	};
+}
+
 export function copyDefinition(definition: RulesetDefinition): RulesetDefinition {
 	const value = JSON.parse(JSON.stringify(definition)) as RulesetDefinition;
 	return {
 		...value,
-		teams: value.teams ?? [],
-		categories: value.categories ?? [],
-		abilities: value.abilities ?? [],
-		roles: value.roles ?? [],
+		metadata: { ...value.metadata, coverAssetKey: value.metadata.coverAssetKey ?? '' },
+		teams: (value.teams ?? []).map((team) => ({
+			...team,
+			imageAssetKey: team.imageAssetKey ?? ''
+		})),
+		categories: (value.categories ?? []).map((category) => ({
+			...category,
+			description: category.description ?? ''
+		})),
+		abilities: (value.abilities ?? []).map((ability) => ({
+			...ability,
+			imageAssetKey: ability.imageAssetKey ?? '',
+			activationPhaseIds: ability.activationPhaseIds ?? []
+		})),
+		roles: (value.roles ?? []).map((role) => ({
+			...role,
+			imageAssetKey: role.imageAssetKey ?? '',
+			categoryIds: role.categoryIds ?? [],
+			tags: role.tags ?? [],
+			abilityIds: role.abilityIds ?? []
+		})),
 		phases: value.phases ?? [],
-		knowledgeRules: value.knowledgeRules ?? [],
-		compositionBands: value.compositionBands ?? [],
-		compositionModifiers: value.compositionModifiers ?? [],
+		knowledgeRules: (value.knowledgeRules ?? []).map((rule) => ({
+			...rule,
+			viewer: copySelector(rule.viewer),
+			target: copySelector(rule.target),
+			reveal: rule.reveal ?? []
+		})),
+		compositionBands: (value.compositionBands ?? []).map((band) => ({
+			...band,
+			slots: (band.slots ?? []).map((slot) => ({ ...slot, selector: copySelector(slot.selector) }))
+		})),
+		compositionModifiers: (value.compositionModifiers ?? []).map((modifier) => ({
+			...modifier,
+			slotAdjustments: modifier.slotAdjustments ?? [],
+			requiresRoleIds: modifier.requiresRoleIds ?? [],
+			excludesRoleIds: modifier.excludesRoleIds ?? []
+		})),
 		chat: {
 			defaultPolicy: {
 				...(value.chat?.defaultPolicy ?? {}),
 				teams: value.chat?.defaultPolicy?.teams ?? {}
 			},
 			phaseOverrides: value.chat?.phaseOverrides ?? {},
-			channels: value.chat?.channels ?? []
+			channels: (value.chat?.channels ?? []).map((channel) => ({
+				...channel,
+				readerRoleIds: channel.readerRoleIds ?? [],
+				readerTeamIds: channel.readerTeamIds ?? [],
+				senderRoleIds: channel.senderRoleIds ?? [],
+				senderTeamIds: channel.senderTeamIds ?? [],
+				phaseOverrides: channel.phaseOverrides ?? {}
+			}))
 		},
-		achievements: value.achievements ?? [],
+		achievements: (value.achievements ?? []).map((achievement) => ({
+			...achievement,
+			imageAssetKey: achievement.imageAssetKey ?? ''
+		})),
 		audioCues: value.audioCues ?? [],
 		assetAccessibility: value.assetAccessibility ?? {}
 	};
@@ -60,7 +112,7 @@ export function normalizeReport(
 }
 
 export function normalizedDefinition(definition: RulesetDefinition): string {
-	return JSON.stringify(sortObject(definition));
+	return JSON.stringify(sortObject(copyDefinition(definition)));
 }
 
 function sortObject(value: unknown): unknown {

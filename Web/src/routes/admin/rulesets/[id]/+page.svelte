@@ -3,7 +3,19 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ArrowLeft, Eye, ListChecks, Menu, Save, Trash2 } from '@lucide/svelte';
+	import {
+		ArrowLeft,
+		Eye,
+		ListChecks,
+		Menu,
+		Save,
+		Trash2,
+		Check,
+		Circle,
+		CircleAlert,
+		Ellipsis
+	} from '@lucide/svelte';
+	import Panel from '$lib/components/Panel.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
@@ -95,11 +107,11 @@
 	let mediaDirty = $state(false);
 	let reuploadNames = $state<string[]>([]);
 	let loaded = $state(false);
-	let recovered = $state(false);
 	let saving = $state(false);
 	let saveFailed = $state(false);
 	let validating = $state(false);
 	let deleteOpen = $state(false);
+	let actionsOpen = $state(false);
 	let leaveOpen = $state(false);
 	let sectionMenuOpen = $state(false);
 	let overviewOpen = $state(false);
@@ -137,14 +149,19 @@
 			? 'Saving…'
 			: saveFailed
 				? 'Save failed — retry'
-				: recovered && dirty
-					? 'Unsaved changes restored'
-					: dirty
-						? 'Unsaved changes'
-						: ruleset?.status === 'valid'
-							? 'Saved · Ready to use'
-							: 'Saved · Needs attention'
+				: dirty
+					? 'Unsaved changes'
+					: loaded
+						? 'All changes saved'
+						: 'Loading ruleset…'
 	);
+	const requiredComplete = $derived(
+		sections.filter((item) => !item.optional && states[item.id] === 'Complete').length
+	);
+	const optionalConfigured = $derived(
+		sections.filter((item) => item.optional && states[item.id] !== 'Not started').length
+	);
+
 	const previewGuidance = $derived.by(() => {
 		const guidance: Array<{
 			mode: RulesetPreviewMode;
@@ -286,7 +303,6 @@
 				definition = copyDefinition(restored.definition);
 				selectedItems = { ...restored.selectedItems };
 				section = restored.section;
-				recovered = true;
 			} else if (requested && isEditorSection(requested)) section = requested;
 			else section = nextRequiredSection(definition, report);
 			loaded = true;
@@ -311,22 +327,34 @@
 		}
 	}
 
-	function optionalSummary(id: EditorSection) {
-		if (id === 'phases')
-			return definition.phases.length ? `${definition.phases.length} phases` : 'Not configured';
-		if (id === 'knowledge')
-			return definition.knowledgeRules.length
-				? `${definition.knowledgeRules.length} information rules`
-				: 'Not configured';
-		if (id === 'chat')
-			return definition.chat.channels.length
-				? `${definition.chat.channels.length} chat channels`
-				: 'Not configured';
-		if (id === 'achievements')
-			return definition.achievements.length
-				? `${definition.achievements.length} achievements`
-				: 'Not configured';
-		return assets.length ? `${assets.length} media items` : 'Not configured';
+	function sectionSummary(item: SectionDefinition) {
+		if (issueCounts[item.id])
+			return `${issueCounts[item.id]} ${issueCounts[item.id] === 1 ? 'issue' : 'issues'}`;
+		if (section === item.id) return 'Editing';
+		if (states[item.id] === 'Not started') return item.optional ? 'Not configured' : 'Not started';
+		const count = (n: number, label: string) => `${n} ${label}${n === 1 ? '' : 's'}`;
+		switch (item.id) {
+			case 'metadata':
+				return states.metadata;
+			case 'teams':
+				return count(definition.teams.length, 'team');
+			case 'roles':
+				return count(definition.roles.length, 'role');
+			case 'composition':
+				return count(definition.compositionBands.length, 'band');
+			case 'phases':
+				return count(definition.phases.length, 'phase');
+			case 'knowledge':
+				return count(definition.knowledgeRules.length, 'rule');
+			case 'chat':
+				return definition.chat.channels.length
+					? count(definition.chat.channels.length, 'channel')
+					: 'Configured';
+			case 'achievements':
+				return count(definition.achievements.length, 'reward');
+			case 'audio':
+				return assets.length ? count(assets.length, 'file') : 'Configured';
+		}
 	}
 
 	function selectSection(next: EditorSection, itemId?: string, itemKey?: string) {
@@ -388,7 +416,6 @@
 			);
 			report = normalizeReport(saved.validation);
 			savedDefinition = copyDefinition(definition);
-			recovered = false;
 			localStorage.removeItem(recoveryKey(page.params.id ?? ''));
 			toasts.success(
 				saved.availability === 'ready'
@@ -499,20 +526,12 @@
 </script>
 
 <div class="editor stack">
-	<header>
+	<header class="editor-topbar">
 		<a href={resolve('/admin/rulesets')}><ArrowLeft size={18} /> Rulesets</a>
-		<div>
+		<div class="topbar-actions">
 			<p class="status" aria-live="polite">{status}</p>
-			<h1>{definition.metadata.name || 'Ruleset'}</h1>
-		</div>
-		<div class="actions">
-			<Button variant="secondary" onclick={() => (previewOpen = true)}
-				><Eye size={17} /> Preview</Button
-			><Button loading={saving} onclick={() => save()}><Save size={17} /> Save</Button>
-			<!-- Export/import is still under active development and will not ship in v1. -->
-			<!-- <Button variant="secondary" onclick={exportRuleset}>Export ruleset</Button> -->
-			<Button variant="danger" onclick={() => (deleteOpen = true)}
-				><Trash2 size={17} /> Delete ruleset</Button
+			<Button variant="ghost" disabled={!loaded} onclick={() => (actionsOpen = true)}
+				><Ellipsis size={18} /> Ruleset actions</Button
 			>
 		</div>
 	</header>
@@ -531,98 +550,109 @@
 		>
 	</div>
 	<div class="workspace">
-		<nav class="section-rail" aria-label="Ruleset sections">
-			<h2>Required sections</h2>
-			{#each sections.filter((item) => !item.optional) as item (item.id)}<button
-					class:active={section === item.id}
-					onclick={() => selectSection(item.id)}
-					><span>{item.label}</span><small
-						>{states[item.id]}{#if issueCounts[item.id]}
-							· {issueCounts[item.id]} issues{/if}</small
-					></button
-				>{/each}
-			<h2>Optional features</h2>
-			{#each sections.filter((item) => item.optional) as item (item.id)}<button
-					class:active={section === item.id}
-					onclick={() => selectSection(item.id)}
-					><span>{item.label}</span><small
-						>{states[item.id] === 'Needs attention'
-							? `${issueCounts[item.id]} issues`
-							: optionalSummary(item.id)}</small
-					></button
-				>{/each}
-		</nav>
-		<section class="panel stack" aria-label="Ruleset editor section">
-			{#if !loaded}<p role="status">Loading ruleset…</p>
-			{:else if sectionIssues.length}<section
-					class="inline-issues"
-					aria-labelledby="section-issues"
-				>
-					<h2 id="section-issues">Needs attention</h2>
-					{#each sectionIssues as issue (`${issue.path}:${issue.message}`)}<button
-							onclick={() => goToIssue(issue)}>{issue.message}</button
-						>{/each}
-				</section>{/if}
-			{#if loaded && section === 'metadata'}<h2>Basics</h2>
-				<Field
-					label="Name"
-					name="name"
-					bind:value={definition.metadata.name}
-					required
-					error={report.errors.find((issue) => issue.path === 'metadata.name')?.message}
-				/><Field
-					label="Description"
-					name="description"
-					bind:value={definition.metadata.description}
-					multiline
-				/>
-				<div class="limits">
-					<label
-						><span>Minimum players</span><input
-							name="minimum-players"
-							type="number"
-							min="1"
-							max="30"
-							bind:value={definition.metadata.minPlayers}
-							required
-						/></label
-					><label
-						><span>Maximum players</span><input
-							name="maximum-players"
-							type="number"
-							min="1"
-							max="30"
-							bind:value={definition.metadata.maxPlayers}
-							required
-						/></label
-					>
-				</div>
-				<MediaField
-					label="Ruleset cover"
-					kind="image"
-					name="ruleset-cover"
-					bind:value={definition.metadata.coverAssetKey}
-					{assets}
-					{media}
-				/>
-				<InlineValidationMessages issues={report.errors} path="metadata" />
-			{:else if loaded}<VisualDefinitionEditor
-					bind:definition
-					section={section === 'metadata' ? 'teams' : section}
-					{assets}
-					{media}
-					issues={report.errors}
-					bind:selectedItems
-					onnavigate={selectSection}
-				/>{/if}
+		<div class="section-rail">{@render sectionNavigation()}</div>
+		<section class="editor-section" aria-label="Ruleset editor section">
+			<Panel variant="focal">
+				<div class="editor-body">
+					<div class="section-heading">
+						<div>
+							<p class="eyebrow">{definition.metadata.name || 'Ruleset'}</p>
+							<h1>{labels[section]}</h1>
+							{#if section === 'metadata'}<p class="section-description">
+									Set the name, description, and player limits.
+								</p>{/if}
+						</div>
+						<div class="actions">
+							<Button variant="secondary" disabled={!loaded} onclick={() => (previewOpen = true)}
+								><Eye size={17} /> Preview</Button
+							>
+							<Button loading={saving} disabled={!loaded} onclick={() => save()}
+								><Save size={17} /> Save</Button
+							>
+						</div>
+					</div>
+					<div class="section-fields">
+						{#if !loaded}<p role="status">Loading ruleset…</p>
+						{:else if sectionIssues.length}<section
+								class="inline-issues"
+								aria-labelledby="section-issues"
+							>
+								<h2 id="section-issues">Needs attention</h2>
+								{#each sectionIssues as issue (`${issue.path}:${issue.message}`)}<button
+										onclick={() => goToIssue(issue)}>{issue.message}</button
+									>{/each}
+							</section>{/if}
+						{#if loaded && section === 'metadata'}
+							<Field
+								label="Name"
+								name="name"
+								help="Shown to hosts when they choose a ruleset."
+								bind:value={definition.metadata.name}
+								required
+								error={report.errors.find((issue) => issue.path === 'metadata.name')?.message}
+							/><Field
+								label="Description"
+								name="description"
+								help="Briefly explain the goal or style of the game."
+								bind:value={definition.metadata.description}
+								multiline
+							/>
+							<div class="limits">
+								<label
+									><span>Minimum players</span><input
+										name="minimum-players"
+										type="number"
+										min="1"
+										max="30"
+										bind:value={definition.metadata.minPlayers}
+										required
+									/></label
+								><label
+									><span>Maximum players</span><input
+										name="maximum-players"
+										type="number"
+										min="1"
+										max="30"
+										bind:value={definition.metadata.maxPlayers}
+										required
+									/></label
+								>
+							</div>
+							<Panel title="Cover image" description="Optional. Help hosts recognize this ruleset.">
+								<MediaField
+									label="Ruleset cover"
+									kind="image"
+									name="ruleset-cover"
+									compact
+									bind:value={definition.metadata.coverAssetKey}
+									{assets}
+									{media}
+								/>
+							</Panel>
+							<InlineValidationMessages issues={report.errors} path="metadata" />
+						{:else if loaded}<VisualDefinitionEditor
+								bind:definition
+								section={section === 'metadata' ? 'teams' : section}
+								{assets}
+								{media}
+								issues={report.errors}
+								bind:selectedItems
+								onnavigate={selectSection}
+							/>{/if}
+					</div>
+				</div></Panel
+			>
 		</section>
 		<aside class="overview">{@render overview()}</aside>
 	</div>
 </div>
 
 {#snippet overview()}<div class="overview-content">
-		<p class="eyebrow">Overview</p>
-		<h2>{report.errors.length ? `${report.errors.length} issues` : 'Ready to save'}</h2>
+		<h2>Overview</h2>
+		<label class="setup-progress"
+			>Required steps: {requiredComplete} of 4 complete<progress max="4" value={requiredComplete}
+			></progress></label
+		>
 		{#if validating}<small>Checking changes…</small>{/if}
 		<dl>
 			<div>
@@ -660,7 +690,7 @@
 				>Add the first role</Button
 			>{:else if definition.compositionBands.length === 0}<Button
 				onclick={() => selectSection('composition')}>Add player setup</Button
-			>{:else}<p>Ready to be used in games.</p>{/if}{#if report.warnings.length}<h3>Warnings</h3>
+			>{/if}{#if report.warnings.length}<h3>Warnings</h3>
 			<ul>
 				{#each report.warnings as issue (`${issue.path}:${issue.message}`)}<li>
 						<span
@@ -678,22 +708,66 @@
 					</li>{/each}
 			</ul>
 		{/if}
-		<Button variant="secondary" onclick={() => (previewOpen = true)}
-			>Preview the current ruleset</Button
-		>
+		{#if loaded}<p
+				class="readiness"
+				class:ready={requiredComplete === 4 && report.errors.length === 0}
+				role="status"
+			>
+				{#if requiredComplete < 4}<CircleAlert size={18} /> Missing required steps
+				{:else if report.errors.length}<CircleAlert size={18} /> Resolve issues
+				{:else}<Check size={18} /> Ready to use{/if}
+			</p>{/if}
 	</div>{/snippet}
 
+{#snippet sectionNavigation()}
+	<nav class="section-nav" aria-label="Ruleset sections">
+		{#each [false, true] as optional (optional)}
+			<div class="nav-group">
+				<h2>
+					{optional ? 'Optional' : 'Required'}
+					<span
+						>· {optional
+							? `${optionalConfigured} configured`
+							: `${requiredComplete} of 4 complete`}</span
+					>
+				</h2>
+				{#each sections.filter((item) => item.optional === optional) as item (item.id)}
+					<button
+						class:active={section === item.id}
+						aria-current={section === item.id ? 'page' : undefined}
+						onclick={() => selectSection(item.id)}
+					>
+						<span
+							class="step-icon"
+							class:complete={states[item.id] === 'Complete'}
+							class:attention={issueCounts[item.id] > 0}
+							aria-hidden="true"
+						>
+							{#if issueCounts[item.id]}<CircleAlert
+									size={18}
+								/>{:else if states[item.id] === 'Complete'}<Check size={18} />{:else}<Circle
+									size={18}
+								/>{/if}
+						</span>
+						<span class="step-label">{item.label}</span><small>{sectionSummary(item)}</small>
+					</button>
+				{/each}
+			</div>
+		{/each}
+	</nav>
+{/snippet}
 <Sheet open={sectionMenuOpen} title="Ruleset sections" close={() => (sectionMenuOpen = false)}
-	><nav class="sheet-nav" aria-label="Ruleset sections">
-		{#each sections as item (item.id)}<button
-				class:active={section === item.id}
-				onclick={() => selectSection(item.id)}
-				><span>{item.label}</span><small
-					>{item.optional ? optionalSummary(item.id) : states[item.id]}</small
-				></button
-			>{/each}
-	</nav></Sheet
+	>{@render sectionNavigation()}</Sheet
 >
+<Sheet open={actionsOpen} title="Ruleset actions" close={() => (actionsOpen = false)}>
+	<Button
+		variant="danger"
+		onclick={() => {
+			actionsOpen = false;
+			deleteOpen = true;
+		}}><Trash2 size={17} /> Delete ruleset</Button
+	>
+</Sheet>
 <Sheet open={overviewOpen} title="Ruleset overview" close={() => (overviewOpen = false)}
 	>{@render overview()}</Sheet
 >
@@ -731,7 +805,11 @@
 
 <style>
 	.editor {
-		max-width: 100rem;
+		width: min(100%, 100rem);
+		margin-inline: auto;
+		padding: var(--space-5) max(var(--space-4), env(safe-area-inset-right)) var(--space-7)
+			max(var(--space-4), env(safe-area-inset-left));
+		gap: var(--space-6);
 	}
 	.reupload-warning {
 		border: 1px solid var(--warning);
@@ -743,7 +821,7 @@
 	}
 	header {
 		display: grid;
-		grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr) auto;
+		grid-template-columns: 1fr auto;
 		align-items: center;
 		gap: var(--space-4);
 	}
@@ -753,7 +831,7 @@
 		color: var(--crimson-dark);
 		text-decoration: none;
 	}
-	header h1,
+	.section-heading h1,
 	.status {
 		margin: 0;
 	}
@@ -764,51 +842,140 @@
 	}
 	.actions,
 	.mobile-tools {
+		flex-wrap: wrap;
 		display: flex;
 		gap: var(--space-2);
 	}
 	.workspace {
 		display: grid;
-		grid-template-columns: 14rem minmax(0, 1fr) minmax(16rem, 20rem);
+		grid-template-columns: 17rem minmax(0, 1fr) 18rem;
 		align-items: start;
-		gap: var(--space-4);
+		gap: var(--space-5);
 	}
-	.section-rail,
-	.sheet-nav {
+	.topbar-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--space-5);
+	}
+	.section-rail {
+		background: var(--paper-light);
+		border: var(--border-subtle);
+		padding: var(--space-4) var(--space-2);
+	}
+	.section-nav {
 		display: grid;
-		align-content: start;
-		gap: var(--space-1);
+		gap: var(--space-5);
 	}
-	.section-rail h2 {
-		margin: var(--space-3) var(--space-2) var(--space-1);
+	.nav-group + .nav-group {
+		border-top: var(--border-subtle);
+		padding-top: var(--space-5);
+	}
+	.nav-group h2 {
+		margin: 0 var(--space-3) var(--space-3);
 		font-size: 0.72rem;
+		line-height: 1.6;
 	}
-	.section-rail button,
-	.sheet-nav button {
+	.nav-group h2 span {
+		color: var(--ink-soft);
+	}
+	.section-nav button {
+		width: 100%;
 		display: grid;
+		grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+		gap: var(--space-2);
+		align-items: center;
 		min-height: var(--target-size);
+		margin-block: var(--space-1);
+		padding: var(--space-3) var(--space-2);
 		border: 0;
 		border-inline-start: 3px solid transparent;
 		background: transparent;
 		color: var(--ink);
-		cursor: pointer;
-		padding: var(--space-2) var(--space-3);
 		text-align: start;
+		cursor: pointer;
 	}
-	.section-rail button.active,
-	.sheet-nav button.active {
-		border-color: var(--crimson);
-		background: rgb(255 249 230 / 70%);
+	.section-nav button.active {
+		border-inline-start-color: var(--crimson);
+		background: color-mix(in srgb, var(--crimson) 12%, var(--paper-light));
+		color: var(--crimson-dark);
 	}
-	.section-rail button span,
-	.sheet-nav button span {
+	.section-nav button:hover {
+		background: color-mix(in srgb, var(--crimson) 8%, var(--paper-light));
+	}
+	.section-nav button:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: 2px;
+	}
+	.step-icon {
+		display: flex;
+		color: var(--ink-soft);
+	}
+	.step-icon.complete {
+		color: var(--success);
+	}
+	.step-icon.attention {
+		color: var(--danger);
+	}
+	.step-label {
 		font-weight: 700;
 	}
-	.panel {
-		min-width: 0;
-		border: var(--border-subtle);
-		background: rgb(255 249 230 / 62%);
+	.section-nav small {
+		text-align: end;
+		max-width: 6rem;
+	}
+	.editor-body {
 		padding: var(--space-4);
+	}
+	.section-fields {
+		display: grid;
+		gap: var(--space-5);
+	}
+	.readiness {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		border-top: var(--border-subtle);
+		padding-top: var(--space-4);
+		color: var(--danger);
+		font-size: 1rem;
+	}
+	.readiness.ready {
+		color: var(--success);
+	}
+	.editor-section {
+		min-width: 0;
+	}
+	.section-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		padding-bottom: var(--space-4);
+		border-bottom: var(--border-subtle);
+		margin-bottom: var(--space-6);
+	}
+	.section-heading h1 {
+		font-size: 1.6rem;
+	}
+	.section-heading .eyebrow {
+		margin: 0 0 var(--space-1);
+		overflow-wrap: anywhere;
+	}
+	.section-description {
+		margin: var(--space-2) 0 0;
+		color: var(--ink-soft);
+	}
+	.setup-progress {
+		display: grid;
+		gap: var(--space-2);
+	}
+	.setup-progress progress {
+		width: 100%;
+		height: 0.5rem;
+		accent-color: var(--success);
 	}
 	.overview {
 		position: sticky;
@@ -817,11 +984,14 @@
 		overflow: auto;
 		border: var(--border-subtle);
 		background: var(--paper-light);
-		padding: var(--space-4);
+		padding: var(--space-5);
 	}
 	.overview-content {
 		display: grid;
 		gap: var(--space-3);
+	}
+	.overview-content h2 {
+		font-size: 1.2rem;
 	}
 	.overview-content h2,
 	.overview-content h3,
@@ -833,40 +1003,42 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 	}
-	.overview dl {
+	.overview-content dl {
 		display: grid;
 		gap: var(--space-1);
 		margin: 0;
 	}
-	.overview dl div {
+	.overview-content dl div {
 		display: flex;
 		justify-content: space-between;
 		gap: var(--space-2);
+		padding-block: var(--space-3);
+		border-bottom: var(--border-subtle);
 	}
-	.overview dt {
+	.overview-content dt {
 		color: var(--ink-soft);
 	}
-	.overview dd {
+	.overview-content dd {
 		margin: 0;
 		font-weight: 700;
 	}
-	.overview ul {
+	.overview-content ul {
 		display: grid;
 		gap: var(--space-2);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
-	.overview li {
+	.overview-content li {
 		display: grid;
 		gap: var(--space-1);
 		border-block-start: var(--border-subtle);
 		padding-top: var(--space-2);
 	}
-	.overview li span {
+	.overview-content li span {
 		display: grid;
 	}
-	.overview li button,
+	.overview-content li button,
 	.inline-issues button {
 		width: fit-content;
 		border: 0;
@@ -911,7 +1083,20 @@
 	.mobile-tools {
 		display: none;
 	}
+	@media (min-width: 64rem) and (max-width: 89.99rem) {
+		.workspace {
+			grid-template-columns: 17rem minmax(0, 1fr);
+		}
+		.overview {
+			grid-column: 2;
+			position: static;
+			max-height: none;
+		}
+	}
 	@media (max-width: 63.99rem) {
+		.editor-body {
+			padding: 0;
+		}
 		header {
 			grid-template-columns: 1fr;
 		}
