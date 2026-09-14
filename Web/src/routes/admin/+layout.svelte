@@ -44,7 +44,11 @@
 	);
 	const current = $derived.by(() => {
 		if (page.url.pathname.startsWith('/admin/rulesets')) return 'rulesets';
-		if (page.url.pathname.startsWith('/admin/approvals')) return 'profiles';
+		if (
+			page.url.pathname.startsWith('/admin/approvals') ||
+			page.url.pathname.startsWith('/admin/profiles')
+		)
+			return 'profiles';
 		if (page.url.pathname.startsWith('/admin/settings')) return 'settings';
 		return 'games';
 	});

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { UserX, UserCheck } from '@lucide/svelte';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import ManagementTable from '$lib/components/ManagementTable.svelte';
@@ -92,12 +93,12 @@
 			{#each visibleProfiles as profile (profile.id)}
 				<tr>
 					<th scope="row" data-label="Profile">
-						<div class="profile-name">
+						<a class="profile-name" href={resolve(`/admin/profiles/${profile.id}`)}>
 							<div class="avatar" aria-hidden="true">
 								{profile.displayName.slice(0, 1).toUpperCase()}
 							</div>
 							{profile.displayName}
-						</div>
+						</a>
 					</th>
 					<td data-label="Status">
 						<span class:disabled={!profile.active} class="status">
@@ -132,9 +133,22 @@
 		display: flex;
 		min-width: 0;
 		align-items: center;
+		color: inherit;
 		gap: var(--space-2);
 		font-family: var(--font-display);
 		font-size: 1rem;
+		text-decoration: none;
+	}
+
+	.profile-name:hover {
+		color: var(--crimson-dark);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+
+	.profile-name:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: 3px;
 	}
 
 	.avatar {
