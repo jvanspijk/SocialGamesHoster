@@ -4,7 +4,6 @@
 	import {
 		Award,
 		Check,
-		Dices,
 		MessageCircle,
 		ShieldAlert,
 		UserMinus,
@@ -86,24 +85,6 @@
 			toasts.success('Role assignments saved.');
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Role assignments could not be saved.'));
-		} finally {
-			busy = false;
-		}
-	}
-
-	async function randomize() {
-		if (!view) return;
-		busy = true;
-		try {
-			await api<{ assignments: Participant[] }>(`/games/${view.game.id}/assignments/randomize`, {
-				method: 'POST',
-				...jsonBody({ assignments: [] })
-			});
-			const refreshed = await gameState.refreshAdmin(view.game.id);
-			hydrateAssignments(refreshed.game.id, refreshed.participants);
-			toasts.success('Roles randomized.');
-		} catch (caught) {
-			toasts.error(errorMessage(caught, 'Roles could not be randomized.'));
 		} finally {
 			busy = false;
 		}
@@ -220,9 +201,6 @@
 
 	{#if assignmentsHydrated}
 		<div class="assignment-actions">
-			<Button variant="secondary" loading={busy} onclick={randomize}
-				><Dices size={18} /> Randomize roles</Button
-			>
 			<Button loading={busy} onclick={saveAssignments}><Check size={18} /> Save roles</Button>
 		</div>
 
