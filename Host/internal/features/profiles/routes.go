@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
@@ -60,7 +61,7 @@ func Register(event *core.ServeEvent) {
 	profileGroup.BindFunc(actorauth.RequirePlayer)
 	profileGroup.GET("/me", me)
 	profileGroup.PATCH("/me", updateMe)
-	profileGroup.POST("/me/avatar", updateAvatar)
+	profileGroup.POST("/me/avatar", updateAvatar).Bind(apis.BodyLimit(72 << 20))
 	profileGroup.GET("/me/history", privateHistory)
 	profileGroup.GET("/{profileId}/summary", summary)
 	event.Router.GET("/api/app/v1/profiles/{profileId}/avatar", avatar)
@@ -436,7 +437,7 @@ func publishLiveParticipantNameChange(app core.App, game, participant *core.Reco
 			"id": participant.Id, "profileId": participant.GetString("profile"),
 			"displayNameSnapshot": participant.GetString("display_name_snapshot"),
 			"gameAlias":           participant.GetString("game_alias"),
-			"seatNumber":          participant.GetInt("seat_number"), "status": participant.GetString("status"),
+			"seatNumber":          participant.GetInt("player_number"), "status": participant.GetString("status"),
 		},
 	}
 	for _, topic := range []string{"game:" + game.Id + ":public", "game:" + game.Id + ":game-masters"} {
@@ -458,16 +459,16 @@ func updateAvatar(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Invalid("profile.avatar_required", "Choose one JPEG, PNG, or WebP image.", nil))
 	}
 	file := files[0]
-	if file.Size <= 0 || file.Size > 1<<20 {
-		return httpx.WriteError(event, result.Invalid("profile.avatar_too_large", "Profile images must be 1 MB or smaller.", nil))
+	if file.Size <= 0 || file.Size > 64<<20 {
+		return httpx.WriteError(event, result.Invalid("profile.avatar_too_large", "Profile images must be 64 MiB or smaller.", nil))
 	}
 	reader, err := file.Reader.Open()
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	content, readErr := io.ReadAll(io.LimitReader(reader, (1<<20)+1))
+	content, readErr := io.ReadAll(io.LimitReader(reader, (64<<20)+1))
 	closeErr := reader.Close()
-	if readErr != nil || closeErr != nil || len(content) > 1<<20 {
+	if readErr != nil || closeErr != nil || len(content) > 64<<20 {
 		return httpx.WriteError(event, result.Invalid("profile.avatar_invalid", "The profile image could not be read safely.", nil))
 	}
 	if _, width, height, err := rulesets.InspectProfileImageUpload(content); err != nil {

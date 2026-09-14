@@ -35,8 +35,6 @@ function definition(): RulesetDefinition {
 		],
 		phases: [],
 		knowledgeRules: [],
-		compositionBands: [{ id: 'band_a', minPlayers: 4, maxPlayers: 8, slots: [] }],
-		compositionModifiers: [],
 		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 		achievements: [],
 		audioCues: [],
@@ -56,40 +54,26 @@ describe('ruleset editor state', () => {
 
 	it('loads omitted selector lists without mutating saved data or creating edits', () => {
 		const saved = definition();
-		saved.compositionBands[0].slots = [
-			{
-				id: 'slot',
-				label: 'Players',
-				count: 4,
-				selector: {
-					roleIds: ['role_a']
-				} as RulesetDefinition['compositionBands'][number]['slots'][number]['selector']
-			}
-		];
 		saved.knowledgeRules = [
 			{
-				viewer: {} as RulesetDefinition['knowledgeRules'][number]['viewer'],
+				viewer: {
+					roleIds: ['role_a']
+				} as RulesetDefinition['knowledgeRules'][number]['viewer'],
 				target: {} as RulesetDefinition['knowledgeRules'][number]['target'],
 				reveal: []
 			}
 		];
 		const original = JSON.stringify(saved);
 		const working = copyDefinition(saved);
-		expect(working.compositionBands[0].slots[0].selector).toEqual({
-			roleIds: ['role_a'],
-			teamIds: [],
-			categoryIds: [],
-			tags: []
-		});
 		expect(working.knowledgeRules[0].viewer).toEqual({
-			roleIds: [],
+			roleIds: ['role_a'],
 			teamIds: [],
 			categoryIds: [],
 			tags: []
 		});
 		expect(JSON.stringify(saved)).toBe(original);
 		expect(normalizedDefinition(working)).toBe(normalizedDefinition(saved));
-		working.compositionBands[0].slots[0].selector.roleIds = [];
+		working.knowledgeRules[0].viewer.roleIds = [];
 		expect(normalizedDefinition(working)).not.toBe(normalizedDefinition(saved));
 	});
 
@@ -122,6 +106,18 @@ describe('ruleset editor state', () => {
 		vi.useRealTimers();
 	});
 
+	it('restores recovery records from the former media route into assets', () => {
+		const recovered = {
+			version: 2,
+			definition: definition(),
+			section: 'media',
+			selectedItems: {},
+			timestamp: '2026-08-19T12:00:00.000Z'
+		};
+
+		expect(parseRecovery(JSON.stringify(recovered))?.section).toBe('assets');
+	});
+
 	it('selects the next incomplete required section and derives attention states', () => {
 		const value = definition();
 		value.roles = [];
@@ -131,40 +127,34 @@ describe('ruleset editor state', () => {
 			metadata: 'Complete',
 			teams: 'Complete',
 			roles: 'Needs attention',
-			composition: 'Complete',
 			phases: 'Not started'
 		});
 	});
 
 	it('maps validation paths to author-facing destinations', () => {
 		const issue = {
-			path: 'compositionBands[0].slots[0].selector',
+			path: 'knowledgeRules[0].viewer',
 			message: 'Choose at least one matching role.'
 		};
-		expect(sectionForPath(issue.path)).toBe('composition');
+		expect(sectionForPath(issue.path)).toBe('knowledge');
 		expect(
 			humanIssueLocation(definition(), issue, {
 				metadata: 'Basics',
 				teams: 'Teams',
 				roles: 'Roles and abilities',
-				composition: 'Player setup',
 				phases: 'Game flow',
 				knowledge: 'Information rules',
 				chat: 'Chat',
 				achievements: 'Rewards',
-				audio: 'Media'
+				assets: 'Assets'
 			})
-		).toBe('Player setup → 4–8 players');
+		).toBe('Information rules → Knowledge rule 1');
 	});
 
 	it.each([
 		['knowledgeRules[0].reveal', 'knowledge-reveal-0'],
 		['knowledgeRules[1].viewer.teamIds', 'knowledge-viewer-1-teams'],
 		['knowledgeRules[1].target.roleIds', 'knowledge-target-1-roles'],
-		['compositionBands[0].slots[2].count', 'slot-count-0-2'],
-		['compositionBands[0].slots[2].selector', 'slot-selector-0-2'],
-		['compositionBands[0].slots[2].selector.categoryIds', 'slot-selector-0-2-categories'],
-		['compositionModifiers[1].slotAdjustments[3]', 'modifier-slot-1-3'],
 		['chat.channels[2].readers.teamIds', 'channel-reader-teams-2'],
 		['chat.channels[2].senders', 'channel-sender-roles-2']
 	])('maps nested validation path %s to control %s', (path, control) => {
@@ -173,21 +163,11 @@ describe('ruleset editor state', () => {
 
 	it.each([
 		['categories[0].name', 'categories', 'category_a'],
-		['abilities[0].name', 'abilities', 'ability_a'],
-		['compositionModifiers[0].whenRolePresent', 'compositionModifiers', 'condition_alpha']
+		['abilities[0].name', 'abilities', 'ability_a']
 	])('finds the correct collection item for %s', (path, key, id) => {
 		const value = definition();
 		value.categories = [{ id: 'category_a', name: 'Support', description: '' }];
 		value.abilities = [{ id: 'ability_a', name: 'Inspect', description: '' }];
-		value.compositionModifiers = [
-			{
-				id: 'condition_alpha',
-				whenRolePresent: 'role_a',
-				slotAdjustments: [],
-				requiresRoleIds: [],
-				excludesRoleIds: []
-			}
-		];
 		expect(itemTargetForIssue(value, { path, message: 'Fix this.' })).toEqual({ key, id });
 	});
 });

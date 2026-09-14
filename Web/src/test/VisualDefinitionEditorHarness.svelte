@@ -5,7 +5,7 @@
 	import type { ValidationIssue } from '$lib/features/rulesets/editor-state';
 
 	let {
-		section = 'composition',
+		section = 'roles',
 		issues = [],
 		onnavigate = () => {}
 	}: {
@@ -29,36 +29,12 @@
 				reveal: ['role']
 			}
 		],
-		compositionBands: [
-			{
-				id: 'band-1',
-				minPlayers: 3,
-				maxPlayers: 8,
-				slots: [
-					{
-						id: 'slot-1',
-						label: 'Villager slot',
-						count: 1,
-						selector: { roleIds: [], teamIds: [], categoryIds: [], tags: [] }
-					}
-				]
-			}
-		],
-		compositionModifiers: [
-			{
-				id: 'modifier-1',
-				whenRolePresent: '',
-				slotAdjustments: [{ slotId: 'slot-1', delta: 1 }],
-				requiresRoleIds: [],
-				excludesRoleIds: []
-			}
-		],
 		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 		achievements: [],
 		audioCues: [],
 		assetAccessibility: {}
 	});
-	let selectedItems = $state<Record<string, string>>({ compositionBands: 'band-1' });
+	let selectedItems = $state<Record<string, string>>({});
 	const media = {
 		upload: async () => {
 			throw new Error('Media upload is not available in this harness.');

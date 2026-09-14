@@ -2,7 +2,7 @@ import type { RulesetAsset, RulesetDefinition, RulesetSelector } from '$lib/api/
 import type { EditorSection } from '../editor-state';
 
 export type DefinitionEditorSection =
-	'teams' | 'roles' | 'phases' | 'composition' | 'knowledge' | 'chat' | 'achievements' | 'audio';
+	'teams' | 'roles' | 'phases' | 'knowledge' | 'chat' | 'achievements' | 'assets';
 
 export type AssetOption = RulesetAsset;
 
@@ -84,7 +84,7 @@ export function assetUsages(definition: RulesetDefinition, key: string): Usage[]
 		if (cue.assetKey !== key) continue;
 		const phases = definition.phases.filter((phase) => phase.audioCueId === cue.id);
 		if (!phases.length)
-			usages.push({ label: `Audio cue · ${cue.name}`, section: 'audio', itemId: cue.id });
+			usages.push({ label: `Audio cue · ${cue.name}`, section: 'assets', itemId: cue.id });
 		for (const phase of phases)
 			usages.push({
 				label: `Audio cue · ${cue.name} → Phase · ${phase.name}`,
@@ -97,7 +97,7 @@ export function assetUsages(definition: RulesetDefinition, key: string): Usage[]
 
 export function incomingReferences(
 	definition: RulesetDefinition,
-	kind: 'team' | 'category' | 'ability' | 'role' | 'phase' | 'slot' | 'audioCue',
+	kind: 'team' | 'category' | 'ability' | 'role' | 'phase' | 'audioCue',
 	id: string
 ): Usage[] {
 	const usages: Usage[] = [];
@@ -153,20 +153,6 @@ export function incomingReferences(
 				usages.push({ section: 'roles', itemId: role.id, label: `Role · ${role.name}` })
 			);
 	if (kind === 'role') {
-		definition.compositionModifiers
-			.filter(
-				(modifier) =>
-					modifier.whenRolePresent === id ||
-					modifier.requiresRoleIds.includes(id) ||
-					modifier.excludesRoleIds.includes(id)
-			)
-			.forEach((modifier, index) =>
-				usages.push({
-					section: 'composition',
-					itemId: modifier.id,
-					label: `Player setup · Conditional change ${index + 1}`
-				})
-			);
 		definition.chat.channels
 			.filter((channel) => [...channel.readerRoleIds, ...channel.senderRoleIds].includes(id))
 			.forEach((channel) =>
@@ -195,16 +181,6 @@ export function incomingReferences(
 				})
 			);
 	}
-	if (kind === 'slot')
-		definition.compositionModifiers
-			.filter((modifier) => modifier.slotAdjustments.some((adjustment) => adjustment.slotId === id))
-			.forEach((modifier, index) =>
-				usages.push({
-					section: 'composition',
-					itemId: modifier.id,
-					label: `Conditional change ${index + 1}`
-				})
-			);
 	if (kind === 'audioCue')
 		definition.phases
 			.filter((phase) => phase.audioCueId === id)
@@ -216,8 +192,5 @@ export function incomingReferences(
 			rule.viewer,
 			rule.target
 		]);
-	for (const band of definition.compositionBands)
-		for (const slot of band.slots)
-			addSelectors('composition', `Player setup · ${slot.label}`, band.id, [slot.selector]);
 	return usages;
 }

@@ -26,6 +26,7 @@
 <button
 	aria-busy={loading || undefined}
 	aria-label={loading ? `Loading ${label}` : label}
+	title={label}
 	class:danger={variant === 'danger'}
 	class:ghost={variant === 'ghost'}
 	class:loading

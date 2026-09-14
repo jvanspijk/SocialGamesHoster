@@ -1,15 +1,7 @@
 import type { RulesetDefinition, RulesetSelector } from '$lib/api/types';
 
 export type EditorSection =
-	| 'metadata'
-	| 'teams'
-	| 'roles'
-	| 'composition'
-	| 'phases'
-	| 'knowledge'
-	| 'chat'
-	| 'achievements'
-	| 'audio';
+	'metadata' | 'teams' | 'roles' | 'phases' | 'knowledge' | 'chat' | 'achievements' | 'assets';
 
 export type ValidationIssue = { path: string; code?: string; message: string };
 export type ValidationReport = { errors: ValidationIssue[]; warnings: ValidationIssue[] };
@@ -25,7 +17,7 @@ export type RecoveryRecord = {
 	timestamp: string;
 };
 
-export const requiredSections: EditorSection[] = ['metadata', 'teams', 'roles', 'composition'];
+export const requiredSections: EditorSection[] = ['metadata', 'teams', 'roles'];
 
 // The host omits empty selector lists. Give the editor complete collections
 // before taking the saved snapshot, so rendering never changes the definition.
@@ -70,16 +62,6 @@ export function copyDefinition(definition: RulesetDefinition): RulesetDefinition
 			viewer: copySelector(rule.viewer),
 			target: copySelector(rule.target),
 			reveal: rule.reveal ?? []
-		})),
-		compositionBands: (value.compositionBands ?? []).map((band) => ({
-			...band,
-			slots: (band.slots ?? []).map((slot) => ({ ...slot, selector: copySelector(slot.selector) }))
-		})),
-		compositionModifiers: (value.compositionModifiers ?? []).map((modifier) => ({
-			...modifier,
-			slotAdjustments: modifier.slotAdjustments ?? [],
-			requiresRoleIds: modifier.requiresRoleIds ?? [],
-			excludesRoleIds: modifier.excludesRoleIds ?? []
 		})),
 		chat: {
 			defaultPolicy: {
@@ -139,16 +121,17 @@ export function serializeRecovery(record: Omit<RecoveryRecord, 'version' | 'time
 export function parseRecovery(value: string | null): RecoveryRecord | null {
 	if (!value) return null;
 	try {
-		const parsed = JSON.parse(value) as RecoveryRecord;
+		const parsed = JSON.parse(value) as Omit<RecoveryRecord, 'section'> & { section: string };
+		const section = ['audio', 'media'].includes(parsed.section) ? 'assets' : parsed.section;
 		if (
 			(parsed.version !== 1 && parsed.version !== 2) ||
 			!parsed.definition ||
-			!isEditorSection(parsed.section) ||
+			!isEditorSection(section) ||
 			typeof parsed.timestamp !== 'string' ||
 			!parsed.selectedItems
 		)
 			return null;
-		return parsed;
+		return { ...parsed, section };
 	} catch {
 		return null;
 	}
@@ -159,12 +142,11 @@ export function isEditorSection(value: string): value is EditorSection {
 		'metadata',
 		'teams',
 		'roles',
-		'composition',
 		'phases',
 		'knowledge',
 		'chat',
 		'achievements',
-		'audio'
+		'assets'
 	].includes(value);
 }
 
@@ -172,12 +154,11 @@ export function sectionForPath(path: string): EditorSection {
 	if (path.startsWith('metadata') || path === 'schemaVersion') return 'metadata';
 	if (path.startsWith('teams') || path.startsWith('categories')) return 'teams';
 	if (path.startsWith('roles') || path.startsWith('abilities')) return 'roles';
-	if (path.startsWith('composition')) return 'composition';
 	if (path.startsWith('phases')) return 'phases';
 	if (path.startsWith('knowledgeRules')) return 'knowledge';
 	if (path.startsWith('chat')) return 'chat';
 	if (path.startsWith('achievements')) return 'achievements';
-	return 'audio';
+	return 'assets';
 }
 
 export function sectionStates(
@@ -190,7 +171,6 @@ export function sectionStates(
 		metadata: Boolean(definition.metadata.name.trim()),
 		teams: definition.teams.length + definition.categories.length > 0,
 		roles: definition.roles.length + definition.abilities.length > 0,
-		composition: definition.compositionBands.length + definition.compositionModifiers.length > 0,
 		phases: definition.phases.length > 0,
 		knowledge: definition.knowledgeRules.length > 0,
 		chat:
@@ -202,7 +182,7 @@ export function sectionStates(
 				Object.keys(definition.chat.defaultPolicy.teams).length
 			),
 		achievements: definition.achievements.length > 0,
-		audio: definition.audioCues.length > 0 || Boolean(definition.metadata.coverAssetKey)
+		assets: definition.audioCues.length > 0 || Boolean(definition.metadata.coverAssetKey)
 	};
 	const complete: Record<EditorSection, boolean> = {
 		metadata:
@@ -215,12 +195,11 @@ export function sectionStates(
 		roles:
 			definition.roles.length > 0 &&
 			definition.roles.every((item) => Boolean(item.name.trim() && item.teamId)),
-		composition: definition.compositionBands.length > 0,
 		phases: started.phases,
 		knowledge: started.knowledge,
 		chat: started.chat,
 		achievements: started.achievements,
-		audio: started.audio
+		assets: started.assets
 	};
 	return Object.fromEntries(
 		(Object.keys(started) as EditorSection[]).map((section) => [
@@ -249,18 +228,13 @@ export function itemNameForIssue(
 	issue: ValidationIssue
 ): string | undefined {
 	const match =
-		/^(teams|categories|abilities|roles|phases|compositionBands|compositionModifiers|knowledgeRules|achievements|audioCues|chat\.channels)\[(\d+)\]/.exec(
+		/^(teams|categories|abilities|roles|phases|knowledgeRules|achievements|audioCues|chat\.channels)\[(\d+)\]/.exec(
 			issue.path
 		);
 	if (!match) return undefined;
 	const index = Number(match[2]);
 	if (match[1] === 'chat.channels') return definition.chat.channels[index]?.name;
 	if (match[1] === 'knowledgeRules') return `Knowledge rule ${index + 1}`;
-	if (match[1] === 'compositionBands') {
-		const band = definition.compositionBands[index];
-		return band ? `${band.minPlayers}–${band.maxPlayers} players` : undefined;
-	}
-	if (match[1] === 'compositionModifiers') return `Conditional change ${index + 1}`;
 	const collection = definition[match[1] as keyof RulesetDefinition] as Array<{ name?: string }>;
 	return collection?.[index]?.name;
 }
@@ -270,7 +244,7 @@ export function itemTargetForIssue(
 	issue: ValidationIssue
 ): IssueItemTarget | undefined {
 	const match =
-		/^(teams|categories|abilities|roles|phases|compositionBands|compositionModifiers|achievements|audioCues|chat\.channels)\[(\d+)\]/.exec(
+		/^(teams|categories|abilities|roles|phases|achievements|audioCues|chat\.channels)\[(\d+)\]/.exec(
 			issue.path
 		);
 	if (!match) return undefined;
@@ -299,25 +273,6 @@ export function issueControlName(path: string): string | undefined {
 	if (path.startsWith('metadata'))
 		return path.includes('maxPlayers') ? 'maximum-players' : 'minimum-players';
 
-	const slot = /^compositionBands\[(\d+)\]\.slots\[(\d+)\](?:\.(.+))?$/.exec(path);
-	if (slot) {
-		const [, bandIndex, slotIndex, field = 'selector'] = slot;
-		if (field === 'count') return `slot-count-${bandIndex}-${slotIndex}`;
-		if (field === 'label') return `slot-label-${bandIndex}-${slotIndex}`;
-		const selectorField = /^selector(?:\.(roleIds|teamIds|categoryIds|tags))?$/.exec(field);
-		if (selectorField) {
-			const suffix = {
-				roleIds: 'roles',
-				teamIds: 'teams',
-				categoryIds: 'categories',
-				tags: 'tags'
-			}[selectorField[1] ?? ''];
-			return suffix
-				? `slot-selector-${bandIndex}-${slotIndex}-${suffix}`
-				: `slot-selector-${bandIndex}-${slotIndex}`;
-		}
-	}
-
 	const knowledge =
 		/^knowledgeRules\[(\d+)\]\.(viewer|target)(?:\.(roleIds|teamIds|categoryIds|tags))?$/.exec(
 			path
@@ -334,9 +289,6 @@ export function issueControlName(path: string): string | undefined {
 			: `knowledge-${knowledge[2]}-${knowledge[1]}`;
 	}
 
-	const adjustment = /^compositionModifiers\[(\d+)\]\.slotAdjustments\[(\d+)\]/.exec(path);
-	if (adjustment) return `modifier-slot-${adjustment[1]}-${adjustment[2]}`;
-
 	const audience = /^chat\.channels\[(\d+)\]\.(readers|senders)(?:\.(roleIds|teamIds))?/.exec(path);
 	if (audience) {
 		const kind = audience[3] === 'teamIds' ? 'teams' : 'roles';
@@ -344,7 +296,7 @@ export function issueControlName(path: string): string | undefined {
 	}
 
 	const match =
-		/^(teams|categories|abilities|roles|phases|compositionBands|compositionModifiers|knowledgeRules|achievements|audioCues|chat\.channels)\[(\d+)\](?:\.([A-Za-z]+))?/.exec(
+		/^(teams|categories|abilities|roles|phases|knowledgeRules|achievements|audioCues|chat\.channels)\[(\d+)\](?:\.([A-Za-z]+))?/.exec(
 			path
 		);
 	if (!match) return undefined;
@@ -354,8 +306,6 @@ export function issueControlName(path: string): string | undefined {
 		abilities: 'ability',
 		roles: 'role',
 		phases: 'phase',
-		compositionBands: 'band',
-		compositionModifiers: 'modifier',
 		knowledgeRules: 'knowledge',
 		achievements: 'achievement',
 		audioCues: 'cue',
@@ -374,15 +324,10 @@ export function issueControlName(path: string): string | undefined {
 		defaultAudience: 'audience',
 		messageRestriction: 'message-restriction',
 		senderDisplay: 'sender-display',
-		whenRolePresent: 'role',
-		requiresRoleIds: 'required-roles',
-		excludesRoleIds: 'excluded-roles',
 		name: 'name',
 		points: 'points'
 	};
 	const defaults: Record<string, string> = {
-		compositionBands: 'min',
-		compositionModifiers: 'role',
 		knowledgeRules: 'reveal'
 	};
 	return `${prefixes[match[1]]}-${fields[match[3] ?? ''] ?? defaults[match[1]] ?? 'name'}-${match[2]}`;

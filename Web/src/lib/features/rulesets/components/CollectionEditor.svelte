@@ -138,30 +138,33 @@
 			{#snippet detail()}
 				{#if selected}
 					{#if itemPath}<InlineValidationMessages {issues} path={itemPath(selected.id)} />{/if}
-					<div class="detail-toolbar" aria-label={`${selected.label} actions`}>
-						<IconButton
-							label={`Move ${selected.label} up`}
-							disabled={selectedIndex <= 0}
-							onclick={() => onmove(selected.id, -1)}
-							>{#snippet icon()}<ArrowUp size={18} />{/snippet}</IconButton
-						>
-						<IconButton
-							label={`Move ${selected.label} down`}
-							disabled={selectedIndex >= entries.length - 1}
-							onclick={() => onmove(selected.id, 1)}
-							>{#snippet icon()}<ArrowDown size={18} />{/snippet}</IconButton
-						>
-						<IconButton
-							label={`Duplicate ${selected.label}`}
-							onclick={() => onduplicate(selected.id)}
-							>{#snippet icon()}<Copy size={18} />{/snippet}</IconButton
-						>
-						<IconButton
-							label={`Delete ${selected.label}`}
-							variant="danger"
-							onclick={() => (deleteOpen = true)}
-							>{#snippet icon()}<Trash2 size={18} />{/snippet}</IconButton
-						>
+					<div class="detail-toolbar">
+						<h3>{selected.label}</h3>
+						<div class="detail-actions" aria-label={`${selected.label} actions`}>
+							<IconButton
+								label={`Move ${selected.label} up`}
+								disabled={selectedIndex <= 0}
+								onclick={() => onmove(selected.id, -1)}
+								>{#snippet icon()}<ArrowUp size={18} />{/snippet}</IconButton
+							>
+							<IconButton
+								label={`Move ${selected.label} down`}
+								disabled={selectedIndex >= entries.length - 1}
+								onclick={() => onmove(selected.id, 1)}
+								>{#snippet icon()}<ArrowDown size={18} />{/snippet}</IconButton
+							>
+							<IconButton
+								label={`Duplicate ${selected.label}`}
+								onclick={() => onduplicate(selected.id)}
+								>{#snippet icon()}<Copy size={18} />{/snippet}</IconButton
+							>
+							<IconButton
+								label={`Delete ${selected.label}`}
+								variant="danger"
+								onclick={() => (deleteOpen = true)}
+								>{#snippet icon()}<Trash2 size={18} />{/snippet}</IconButton
+							>
+						</div>
 					</div>
 					<div class="detail-body">{@render editor(selected.id)}</div>
 				{/if}
@@ -175,7 +178,7 @@
 	title={`Delete ${selected?.label ?? 'item'}?`}
 	description={incoming.length
 		? 'This item is still used elsewhere in the ruleset.'
-		: 'This cannot be undone after you save.'}
+		: 'This cannot be undone.'}
 	close={() => (deleteOpen = false)}
 >
 	{#if incoming.length}
@@ -191,7 +194,7 @@
 						>{:else}{usage.label}{/if}
 				</li>{/each}
 		</ul>
-	{:else}<p>The item will be removed from your unsaved changes.</p>{/if}
+	{/if}
 	{#snippet actions()}<Button variant="ghost" onclick={() => (deleteOpen = false)}>Keep item</Button
 		>{#if !incoming.length}<Button variant="danger" onclick={confirmDelete}>Delete</Button
 			>{/if}{/snippet}
@@ -205,17 +208,33 @@
 	.rail-head {
 		padding-top: var(--space-3);
 	}
+	.entry-list :global(.selectable-list > button) {
+		padding-inline: var(--space-3);
+	}
 	.detail-toolbar {
 		display: flex;
-		justify-content: flex-end;
-		gap: var(--space-1);
-		border-block-end: var(--border-subtle);
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
 		padding: var(--space-2);
+	}
+	.detail-toolbar h3 {
+		min-width: 0;
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+	.detail-actions {
+		display: flex;
+		flex: 0 0 auto;
+		gap: var(--space-1);
 	}
 	.detail-body {
 		display: grid;
 		gap: var(--space-3);
 		padding: var(--space-4);
+	}
+	.detail-body :global(> h3) {
+		display: none;
 	}
 	.no-results {
 		color: var(--ink-soft);

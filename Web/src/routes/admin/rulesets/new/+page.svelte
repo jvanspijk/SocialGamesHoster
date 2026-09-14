@@ -78,7 +78,6 @@
 			<ErrorNotice message={error?.message} traceId={error?.traceId} />
 			<Field
 				label="Ruleset name"
-				help="Shown to hosts when they choose a ruleset."
 				name="ruleset-name"
 				bind:value={form.name}
 				error={fieldError(error, 'name')}
@@ -117,7 +116,7 @@
 			{/if}
 			<Field
 				label="Description"
-				help="Briefly explain the goal or style of the game."
+				help="The main idea behind the game."
 				name="description"
 				bind:value={form.description}
 				multiline

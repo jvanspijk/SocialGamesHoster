@@ -54,8 +54,8 @@
 	}
 
 	.detail {
-		display: grid;
-		grid-template-rows: minmax(0, 1fr);
+		display: flex;
+		flex-direction: column;
 	}
 
 	@media (max-width: 47.99rem) {

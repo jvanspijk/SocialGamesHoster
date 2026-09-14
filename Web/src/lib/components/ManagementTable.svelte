@@ -118,10 +118,6 @@
 	}
 
 	tbody :global(.row-actions) {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: var(--space-1);
 		text-align: right;
 	}
 

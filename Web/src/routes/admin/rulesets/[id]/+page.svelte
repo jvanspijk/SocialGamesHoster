@@ -12,8 +12,7 @@
 		Trash2,
 		Check,
 		Circle,
-		CircleAlert,
-		Ellipsis
+		CircleAlert
 	} from '@lucide/svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -25,6 +24,7 @@
 	import InlineValidationMessages from '$lib/features/rulesets/components/InlineValidationMessages.svelte';
 	import MediaField from '$lib/features/rulesets/components/MediaField.svelte';
 	import RulesetPreview from '$lib/features/rulesets/components/RulesetPreview.svelte';
+	import { assetUsages } from '$lib/features/rulesets/components/definition-editor';
 	import {
 		copyDefinition,
 		humanIssueLocation,
@@ -73,8 +73,6 @@
 		roles: [],
 		phases: [],
 		knowledgeRules: [],
-		compositionBands: [],
-		compositionModifiers: [],
 		chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 		achievements: [],
 		audioCues: [],
@@ -84,12 +82,11 @@
 		{ id: 'metadata', label: 'Basics', optional: false },
 		{ id: 'teams', label: 'Teams', optional: false },
 		{ id: 'roles', label: 'Roles and abilities', optional: false },
-		{ id: 'composition', label: 'Player setup', optional: false },
 		{ id: 'phases', label: 'Game flow', optional: true },
 		{ id: 'knowledge', label: 'Information rules', optional: true },
 		{ id: 'chat', label: 'Chat', optional: true },
 		{ id: 'achievements', label: 'Rewards', optional: true },
-		{ id: 'audio', label: 'Media', optional: true }
+		{ id: 'assets', label: 'Assets', optional: true }
 	];
 	const labels = Object.fromEntries(sections.map((item) => [item.id, item.label])) as Record<
 		EditorSection,
@@ -111,7 +108,6 @@
 	let saveFailed = $state(false);
 	let validating = $state(false);
 	let deleteOpen = $state(false);
-	let actionsOpen = $state(false);
 	let leaveOpen = $state(false);
 	let sectionMenuOpen = $state(false);
 	let overviewOpen = $state(false);
@@ -130,7 +126,7 @@
 	);
 	const states = $derived.by(() => {
 		const values = sectionStates(definition, report);
-		if (assets.length && values.audio === 'Not started') values.audio = 'Complete';
+		if (assets.length && values.assets === 'Not started') values.assets = 'Complete';
 		return values;
 	});
 	const issueCounts = $derived(
@@ -161,6 +157,9 @@
 	const optionalConfigured = $derived(
 		sections.filter((item) => item.optional && states[item.id] !== 'Not started').length
 	);
+	const orphanedAssets = $derived(
+		assets.filter((asset) => assetUsages(definition, asset.assetKey).length === 0)
+	);
 
 	const previewGuidance = $derived.by(() => {
 		const guidance: Array<{
@@ -169,15 +168,6 @@
 			action?: string;
 			section?: EditorSection;
 		}> = [];
-		const composition = previewResults.composition;
-		if (composition) {
-			guidance.push({
-				mode: 'composition',
-				message: composition.message ?? 'Player setup preview completed.',
-				action: composition.feasible ? undefined : 'Adjust player setup',
-				section: composition.feasible ? undefined : 'composition'
-			});
-		}
 		const chat = previewResults.chat;
 		if (chat?.rooms) {
 			const readable = chat.rooms.filter((room) => room.readable).length;
@@ -197,8 +187,8 @@
 				message: count
 					? `${media.media.displayName} was checked in ${count} ${count === 1 ? 'game context' : 'game contexts'}.`
 					: `${media.media.displayName} is not currently used in the ruleset.`,
-				action: count === 0 ? 'Review media' : undefined,
-				section: count === 0 ? 'audio' : undefined
+				action: count === 0 ? 'Review assets' : undefined,
+				section: count === 0 ? 'assets' : undefined
 			});
 		}
 		const phases = previewResults.phases;
@@ -305,6 +295,10 @@
 				section = restored.section;
 			} else if (requested && isEditorSection(requested)) section = requested;
 			else section = nextRequiredSection(definition, report);
+			if (requested === 'audio' || requested === 'media') {
+				section = 'assets';
+				void goto(resolve(`/admin/rulesets/${page.params.id}/edit/assets`), { replaceState: true });
+			}
 			loaded = true;
 		} catch (caught) {
 			error = toFormError(caught, 'The ruleset could not be loaded.');
@@ -340,8 +334,6 @@
 				return count(definition.teams.length, 'team');
 			case 'roles':
 				return count(definition.roles.length, 'role');
-			case 'composition':
-				return count(definition.compositionBands.length, 'band');
 			case 'phases':
 				return count(definition.phases.length, 'phase');
 			case 'knowledge':
@@ -352,7 +344,7 @@
 					: 'Configured';
 			case 'achievements':
 				return count(definition.achievements.length, 'reward');
-			case 'audio':
+			case 'assets':
 				return assets.length ? count(assets.length, 'file') : 'Configured';
 		}
 	}
@@ -369,12 +361,9 @@
 							: 'teams',
 						roles: definition.abilities.some((item) => item.id === itemId) ? 'abilities' : 'roles',
 						phases: 'phases',
-						composition: definition.compositionModifiers.some((item) => item.id === itemId)
-							? 'compositionModifiers'
-							: 'compositionBands',
 						chat: 'channels',
 						achievements: 'achievements',
-						audio: 'audioCues'
+						assets: 'audioCues'
 					} as Partial<Record<EditorSection, string>>
 				)[next];
 			if (key) selectedItems[key] = itemId;
@@ -441,7 +430,7 @@
 				});
 			} catch {
 				toasts.info(
-					'Your unsaved changes were discarded. Some uploaded media could not be cleaned up and will expire automatically.'
+					'Your unsaved changes were discarded. Some uploaded assets could not be cleaned up and will expire automatically.'
 				);
 			}
 		}
@@ -464,7 +453,7 @@
 		accessibilityText: string,
 		replaceAssetKey?: string
 	) {
-		if (!editSession) throw new Error('The media editing session is not ready.');
+		if (!editSession) throw new Error('The asset editing session is not ready.');
 		const body = new FormData();
 		body.set('file', file);
 		body.set('kind', kind);
@@ -482,7 +471,7 @@
 	}
 
 	async function updateMedia(assetKey: string, displayName: string, accessibilityText: string) {
-		if (!editSession) throw new Error('The media editing session is not ready.');
+		if (!editSession) throw new Error('The asset editing session is not ready.');
 		await api(
 			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets/${encodeURIComponent(assetKey)}`,
 			{ method: 'PATCH', ...jsonBody({ displayName, accessibilityText }) }
@@ -492,7 +481,7 @@
 	}
 
 	async function removeMedia(assetKey: string) {
-		if (!editSession) throw new Error('The media editing session is not ready.');
+		if (!editSession) throw new Error('The asset editing session is not ready.');
 		await api(
 			`/rulesets/${page.params.id}/edit-session/${editSession.id}/assets/${encodeURIComponent(assetKey)}`,
 			{ method: 'DELETE', ...jsonBody({ definition }) }
@@ -530,15 +519,15 @@
 		<a href={resolve('/admin/rulesets')}><ArrowLeft size={18} /> Rulesets</a>
 		<div class="topbar-actions">
 			<p class="status" aria-live="polite">{status}</p>
-			<Button variant="ghost" disabled={!loaded} onclick={() => (actionsOpen = true)}
-				><Ellipsis size={18} /> Ruleset actions</Button
+			<Button variant="danger" disabled={!loaded} onclick={() => (deleteOpen = true)}
+				><Trash2 size={18} /> Delete ruleset</Button
 			>
 		</div>
 	</header>
 	<ErrorNotice message={error?.message} traceId={error?.traceId} />
 	{#if reuploadNames.length}
 		<section class="reupload-warning" role="status">
-			<strong>Some recovered media files must be uploaded again.</strong>
+			<strong>Some recovered asset files must be uploaded again.</strong>
 			<p>{reuploadNames.join(', ')}</p>
 		</section>
 	{/if}
@@ -558,9 +547,6 @@
 						<div>
 							<p class="eyebrow">{definition.metadata.name || 'Ruleset'}</p>
 							<h1>{labels[section]}</h1>
-							{#if section === 'metadata'}<p class="section-description">
-									Set the name, description, and player limits.
-								</p>{/if}
 						</div>
 						<div class="actions">
 							<Button variant="secondary" disabled={!loaded} onclick={() => (previewOpen = true)}
@@ -586,14 +572,13 @@
 							<Field
 								label="Name"
 								name="name"
-								help="Shown to hosts when they choose a ruleset."
 								bind:value={definition.metadata.name}
 								required
 								error={report.errors.find((issue) => issue.path === 'metadata.name')?.message}
 							/><Field
 								label="Description"
 								name="description"
-								help="Briefly explain the goal or style of the game."
+								help="The main idea behind the game."
 								bind:value={definition.metadata.description}
 								multiline
 							/>
@@ -618,7 +603,7 @@
 									/></label
 								>
 							</div>
-							<Panel title="Cover image" description="Optional. Help hosts recognize this ruleset.">
+							<Panel title="Cover image" description="Optional cover image for the ruleset.">
 								<MediaField
 									label="Ruleset cover"
 									kind="image"
@@ -627,6 +612,7 @@
 									bind:value={definition.metadata.coverAssetKey}
 									{assets}
 									{media}
+									onuploadnew={() => selectSection('assets')}
 								/>
 							</Panel>
 							<InlineValidationMessages issues={report.errors} path="metadata" />
@@ -650,7 +636,7 @@
 {#snippet overview()}<div class="overview-content">
 		<h2>Overview</h2>
 		<label class="setup-progress"
-			>Required steps: {requiredComplete} of 4 complete<progress max="4" value={requiredComplete}
+			>Required steps: {requiredComplete} of 3 complete<progress max="3" value={requiredComplete}
 			></progress></label
 		>
 		{#if validating}<small>Checking changes…</small>{/if}
@@ -671,10 +657,6 @@
 				<dt>Phases</dt>
 				<dd>{definition.phases.length || 'Optional'}</dd>
 			</div>
-			<div>
-				<dt>Player setup</dt>
-				<dd>{definition.compositionBands.length} bands</dd>
-			</div>
 		</dl>
 		{#if report.errors.length}<h3>Fix next</h3>
 			<Button onclick={() => goToIssue(report.errors[0])}
@@ -688,16 +670,23 @@
 					</li>{/each}
 			</ul>{:else if definition.roles.length === 0}<Button onclick={() => selectSection('roles')}
 				>Add the first role</Button
-			>{:else if definition.compositionBands.length === 0}<Button
-				onclick={() => selectSection('composition')}>Add player setup</Button
-			>{/if}{#if report.warnings.length}<h3>Warnings</h3>
+			>{/if}{#if report.warnings.length || orphanedAssets.length}<h3 class="warning-heading">
+				<CircleAlert size={18} aria-hidden="true" /> Warnings
+			</h3>
 			<ul>
 				{#each report.warnings as issue (`${issue.path}:${issue.message}`)}<li>
 						<span
 							><strong>{humanIssueLocation(definition, issue, labels)}</strong>{issue.message}</span
 						><button onclick={() => goToIssue(issue)}>Review</button>
 					</li>{/each}
-			</ul>{/if}
+				{#each orphanedAssets as asset (asset.assetKey)}
+					<li>
+						<span>{asset.displayName} is not used anywhere.</span>
+						<button onclick={() => selectSection('assets')}>Review</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 		{#if previewGuidance.length}<h3>Preview checks</h3>
 			<ul class="preview-guidance">
 				{#each previewGuidance as item (item.mode)}<li>
@@ -710,10 +699,10 @@
 		{/if}
 		{#if loaded}<p
 				class="readiness"
-				class:ready={requiredComplete === 4 && report.errors.length === 0}
+				class:ready={requiredComplete === 3 && report.errors.length === 0}
 				role="status"
 			>
-				{#if requiredComplete < 4}<CircleAlert size={18} /> Missing required steps
+				{#if requiredComplete < 3}<CircleAlert size={18} /> Missing required steps
 				{:else if report.errors.length}<CircleAlert size={18} /> Resolve issues
 				{:else}<Check size={18} /> Ready to use{/if}
 			</p>{/if}
@@ -728,7 +717,7 @@
 					<span
 						>· {optional
 							? `${optionalConfigured} configured`
-							: `${requiredComplete} of 4 complete`}</span
+							: `${requiredComplete} of 3 complete`}</span
 					>
 				</h2>
 				{#each sections.filter((item) => item.optional === optional) as item (item.id)}
@@ -759,15 +748,6 @@
 <Sheet open={sectionMenuOpen} title="Ruleset sections" close={() => (sectionMenuOpen = false)}
 	>{@render sectionNavigation()}</Sheet
 >
-<Sheet open={actionsOpen} title="Ruleset actions" close={() => (actionsOpen = false)}>
-	<Button
-		variant="danger"
-		onclick={() => {
-			actionsOpen = false;
-			deleteOpen = true;
-		}}><Trash2 size={17} /> Delete ruleset</Button
-	>
-</Sheet>
 <Sheet open={overviewOpen} title="Ruleset overview" close={() => (overviewOpen = false)}
 	>{@render overview()}</Sheet
 >
@@ -964,10 +944,6 @@
 		margin: 0 0 var(--space-1);
 		overflow-wrap: anywhere;
 	}
-	.section-description {
-		margin: var(--space-2) 0 0;
-		color: var(--ink-soft);
-	}
 	.setup-progress {
 		display: grid;
 		gap: var(--space-2);
@@ -978,6 +954,7 @@
 		accent-color: var(--success);
 	}
 	.overview {
+		min-width: 0;
 		position: sticky;
 		top: var(--space-3);
 		max-height: calc(100dvh - var(--space-6));
@@ -989,6 +966,7 @@
 	.overview-content {
 		display: grid;
 		gap: var(--space-3);
+		min-width: 0;
 	}
 	.overview-content h2 {
 		font-size: 1.2rem;
@@ -997,6 +975,12 @@
 	.overview-content h3,
 	.overview-content p {
 		margin: 0;
+	}
+	.warning-heading {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		color: var(--warning);
 	}
 	.eyebrow {
 		font-family: var(--font-display);
@@ -1032,11 +1016,14 @@
 	.overview-content li {
 		display: grid;
 		gap: var(--space-1);
+		min-width: 0;
 		border-block-start: var(--border-subtle);
 		padding-top: var(--space-2);
 	}
 	.overview-content li span {
 		display: grid;
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 	.overview-content li button,
 	.inline-issues button {

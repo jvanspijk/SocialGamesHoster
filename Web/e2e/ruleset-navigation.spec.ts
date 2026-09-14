@@ -44,14 +44,6 @@ test.beforeAll(async ({ request }) => {
 			maxCopies: 12
 		}
 	];
-	definition.compositionBands = [
-		{
-			id: 'band',
-			minPlayers: 2,
-			maxPlayers: 12,
-			slots: [{ id: 'slot', label: 'Players', count: 2, selector: { roleIds: ['role'] } }]
-		}
-	];
 	const saved = await request.post(`${base}/rulesets/${id}/save`, {
 		headers,
 		data: { definition }
@@ -85,14 +77,11 @@ test('saved ruleset sections render in sequence without becoming dirty', async (
 	for (const [label, section] of [
 		['Teams', 'teams'],
 		['Roles and abilities', 'roles'],
-		['Player setup', 'composition'],
 		['Basics', 'metadata']
 	]) {
 		await nav.getByRole('button', { name: new RegExp(`^${label}`) }).click();
 		await expect(page).toHaveURL(new RegExp(`/edit/${section}$`));
 		await expect(page.getByRole('heading', { name: label, exact: true }).first()).toBeVisible();
-		if (section === 'composition')
-			await expect(page.getByRole('group', { name: 'Roles allowed in this group' })).toBeVisible();
 	}
 	expect(errors).toEqual([]);
 	await expect(page.getByText('All changes saved', { exact: true })).toBeVisible();

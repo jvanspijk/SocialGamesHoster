@@ -21,7 +21,7 @@ function oneSecondWav() {
 	return wav;
 }
 
-test('owner completes the ruleset lifecycle with recovery, media, previews, and a new game', async ({
+test('owner completes the ruleset lifecycle with recovery, assets, previews, and a new game', async ({
 	page
 }) => {
 	test.setTimeout(120_000);
@@ -50,12 +50,13 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await page.waitForTimeout(600);
 	await page.reload();
 	await expect(page.getByRole('textbox', { name: /^Name$/ })).toHaveValue('Recovered Party Test');
-	await expect(page.getByText('Unsaved changes restored', { exact: true })).toBeVisible();
-	await page.getByRole('textbox', { name: /Media name/ }).fill('Party cover');
-	await page
-		.getByRole('textbox', { name: /Image description/ })
-		.fill('Friends gathered for a game');
-	await page.locator('input[type="file"]').setInputFiles({
+	await page.getByRole('button', { name: 'Upload new' }).click();
+	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
+	const coverChooser = page.waitForEvent('filechooser');
+	await page.getByRole('button', { name: 'Upload image' }).click();
+	await (
+		await coverChooser
+	).setFiles({
 		name: 'party-cover.png',
 		mimeType: 'image/png',
 		buffer: Buffer.from(
@@ -63,6 +64,17 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 			'base64'
 		)
 	});
+	await page.getByRole('button', { name: /party-cover\.png/ }).click();
+	await page.getByRole('textbox', { name: 'Display name' }).fill('Party cover');
+	await page
+		.getByRole('textbox', { name: /Image description/ })
+		.fill('Friends gathered for a game');
+	await page.getByRole('button', { name: 'Save details' }).click();
+	await page
+		.getByRole('navigation', { name: 'Ruleset sections' })
+		.getByRole('button', { name: /^Basics/ })
+		.click();
+	await page.getByLabel('Ruleset cover').selectOption({ label: 'Party cover' });
 	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
 		'Party cover'
 	);
@@ -79,7 +91,7 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
 		'Party cover'
 	);
-	await page.getByLabel('Description', { exact: true }).fill('Discard this change');
+	await page.getByLabel(/^Description/).fill('Discard this change');
 	const discardPattern = '**/api/app/v1/rulesets/*/edit-session/*';
 	await page.route(discardPattern, async (route) => {
 		if (route.request().method() === 'DELETE') await route.abort();
@@ -95,28 +107,25 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	).toBeVisible();
 	await page.unroute(discardPattern);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await expect(page.getByLabel('Description', { exact: true })).toHaveValue('');
+	await expect(page.getByLabel(/^Description/)).toHaveValue('');
 
 	const previewAction = page.getByRole('button', { name: 'Preview', exact: true });
 	await previewAction.click();
 	const previewSheet = page.getByRole('dialog', { name: 'Preview ruleset' });
 	await expect(previewSheet).toBeVisible();
 	await expect(previewSheet.getByText('Previewing the saved ruleset')).toBeVisible();
-	await previewSheet.getByRole('button', { name: 'Player setup', exact: true }).click();
-	await expect(previewSheet.getByRole('spinbutton', { name: 'Player count' })).toBeVisible();
-	await expect(previewSheet.getByRole('heading', { name: 'Setup is not feasible' })).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(previewSheet).not.toBeVisible();
 	await expect(previewAction).toBeFocused();
 
-	const actions = page.getByRole('button', { name: 'Actions', exact: true });
-	await actions.click();
-	const actionsDialog = page.getByRole('dialog', { name: 'Ruleset actions' });
-	await expect(actionsDialog).toBeVisible();
-	await expect(page.getByRole('button', { name: 'Close Ruleset actions' })).toBeFocused();
+	const deleteAction = page.getByRole('button', { name: 'Delete ruleset', exact: true });
+	await deleteAction.click();
+	const deleteDialog = page.getByRole('dialog', { name: 'Delete ruleset?' });
+	await expect(deleteDialog).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
 	await page.keyboard.press('Escape');
-	await expect(actionsDialog).not.toBeVisible();
-	await expect(actions).toBeFocused();
+	await expect(deleteDialog).not.toBeVisible();
+	await expect(deleteAction).toBeFocused();
 
 	await page.setViewportSize({ width: 390, height: 844 });
 	const sections = page.getByRole('button', { name: /Sections/ });
@@ -144,25 +153,6 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await expect(sheet).not.toBeVisible();
 	await expect(sections).toBeFocused();
 
-	await sections.click();
-	await sheet.getByRole('button', { name: /^Player setup/ }).click();
-	await page.getByRole('button', { name: 'Add band', exact: true }).click();
-
-	const roleSlots = page
-		.locator('.content-header')
-		.filter({ has: page.getByText('Role groups', { exact: true }) });
-	await expect(roleSlots).toBeVisible();
-
-	await page.setViewportSize({ width: 700, height: 844 });
-	await expect(roleSlots).toHaveCSS('flex-direction', 'column');
-	const roleSlotsTitle = roleSlots.getByText('Role groups', { exact: true });
-	const addSlot = roleSlots.getByRole('button', { name: 'Add role group', exact: true });
-	const titleBox = await roleSlotsTitle.boundingBox();
-	const actionBox = await addSlot.boundingBox();
-	expect(titleBox).not.toBeNull();
-	expect(actionBox).not.toBeNull();
-	expect(actionBox!.y).toBeGreaterThan(titleBox!.y);
-
 	await page.setViewportSize({ width: 1280, height: 800 });
 	const sectionRail = page.getByRole('navigation', { name: 'Ruleset sections' });
 	await sectionRail.getByRole('button', { name: /^Teams/ }).click();
@@ -180,11 +170,8 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await rolesEditor.getByLabel('Win condition').fill('Find every threat.');
 	await rolesEditor.getByLabel('Maximum copies').fill('3');
 
-	await sectionRail.getByRole('button', { name: /^Player setup/ }).click();
-	await page.getByRole('button', { name: 'Add role group', exact: true }).click();
-	await page.getByLabel('Number of players').fill('3');
-
-	await sectionRail.getByRole('button', { name: /^Media/ }).click();
+	await sectionRail.getByRole('button', { name: /^Assets/ }).click();
+	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
 	await page.getByRole('button', { name: /Party cover/ }).click();
 	const replacementChooser = page.waitForEvent('filechooser');
 	await page.getByRole('button', { name: 'Replace everywhere' }).click();
@@ -203,23 +190,17 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await expect(page.getByText('Saved · Valid', { exact: true })).toBeVisible();
+	await expect(page.getByText('All changes saved', { exact: true })).toBeVisible();
 
 	await page.getByRole('button', { name: 'Preview', exact: true }).click();
 	const completedPreview = page.getByRole('dialog', { name: 'Preview ruleset' });
 	await expect(completedPreview.getByRole('heading', { name: 'Villager' })).toBeVisible();
-	await completedPreview.getByRole('button', { name: 'Player setup', exact: true }).click();
-	await expect(completedPreview.getByRole('heading', { name: 'Setup is feasible' })).toBeVisible();
-	await completedPreview.getByRole('button', { name: 'Media', exact: true }).click();
+	await completedPreview.getByRole('button', { name: 'Assets', exact: true }).click();
 	await expect(completedPreview.getByRole('heading', { name: 'In the game' })).toBeVisible();
 	await expect(
 		completedPreview.getByRole('heading', { name: 'Recovered Party Test' })
 	).toBeVisible();
 	await page.keyboard.press('Escape');
-	await expect(
-		page.locator('aside.readiness').getByText('A valid setup is available for 3 players.')
-	).toBeVisible();
-
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	await page.getByRole('link', { name: 'Games', exact: true }).click();
 	await page.getByRole('button', { name: 'New game' }).first().click();
@@ -228,7 +209,7 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 	await gameDialog.getByLabel('Ruleset').selectOption({ label: 'Recovered Party Test' });
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
-	await expect(page.getByText('Player invitation')).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'QR Code' })).toBeVisible();
 	await page.getByRole('link', { name: 'Back to Games' }).click();
 	await expect(page.getByRole('columnheader', { name: 'Game' })).toBeVisible();
 	await expect(page.getByRole('cell', { name: '0/3' })).toBeVisible();
@@ -247,11 +228,10 @@ test('owner completes the ruleset lifecycle with recovery, media, previews, and 
 
 	await page.goto('/admin/rulesets');
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await expect(page.getByText('Saved · Valid', { exact: true })).toBeVisible();
-	await page.getByRole('button', { name: 'Actions', exact: true }).click();
-	await page.getByRole('button', { name: 'Delete ruleset' }).click();
-	const deleteDialog = page.getByRole('dialog', { name: 'Delete ruleset?' });
-	await deleteDialog.getByRole('button', { name: 'Delete ruleset', exact: true }).click();
+	await expect(page.getByText('All changes saved', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Delete ruleset', exact: true }).click();
+	const finalDeleteDialog = page.getByRole('dialog', { name: 'Delete ruleset?' });
+	await finalDeleteDialog.getByRole('button', { name: 'Delete ruleset', exact: true }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await expect(page.getByRole('link', { name: /Recovered Party Test/ })).not.toBeVisible();
 });
@@ -283,7 +263,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
 	const gameUrl = page.url();
-	await expect(page.getByText('Player invitation')).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'QR Code' })).toBeVisible();
 
 	const playerContext = await browser.newContext();
 	const player = await playerContext.newPage();

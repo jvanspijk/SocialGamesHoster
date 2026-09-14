@@ -78,6 +78,7 @@
 	}
 
 	.selectable-list button {
+		position: relative;
 		display: flex;
 		width: 100%;
 		min-height: var(--target-size);
@@ -90,6 +91,25 @@
 		cursor: pointer;
 		padding: var(--space-2) 0;
 		text-align: start;
+		transition:
+			background var(--speed-fast) ease-out,
+			box-shadow var(--speed-fast) ease-out;
+	}
+
+	.selectable-list button:hover:not(.selected) {
+		background: color-mix(in srgb, var(--crimson) 6%, var(--paper-light));
+	}
+
+	.selectable-list button.selected {
+		box-shadow: inset 0.25rem 0 var(--crimson);
+		background: color-mix(in srgb, var(--crimson) 12%, var(--paper-light));
+		color: var(--crimson-dark);
+	}
+
+	.selectable-list button:focus-visible {
+		z-index: 1;
+		outline: var(--focus-ring);
+		outline-offset: -3px;
 	}
 
 	.selectable-list button strong {

@@ -23,18 +23,14 @@ import (
 )
 
 const (
-	maxImageSize = 2 << 20
-	maxAudioSize = 5 << 20
+	maxMediaSize = 64 << 20
 )
 
 // MediaUploadLimit and InspectMediaUpload keep every feature that accepts
 // ruleset-compatible media on the same byte, signature, dimension, and
 // duration policy.
-func MediaUploadLimit(kind string) int64 {
-	if kind == "image" {
-		return maxImageSize
-	}
-	return maxAudioSize
+func MediaUploadLimit(_ string) int64 {
+	return maxMediaSize
 }
 
 func InspectMediaUpload(kind string, content []byte) (string, error) {
@@ -72,8 +68,8 @@ func previewAsset(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	defer reader.Close()
-	content, err := io.ReadAll(io.LimitReader(reader, maxAudioSize+1))
-	if err != nil || len(content) > maxAudioSize {
+	content, err := io.ReadAll(io.LimitReader(reader, maxMediaSize+1))
+	if err != nil || len(content) > maxMediaSize {
 		return httpx.WriteError(event, result.Internal(errors.New("asset storage content exceeds limit")))
 	}
 	event.Response.Header().Set("Cache-Control", "private, max-age=31536000, immutable")

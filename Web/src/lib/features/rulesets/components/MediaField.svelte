@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Sheet from '$lib/components/Sheet.svelte';
+	import { Plus } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
@@ -13,7 +13,8 @@
 		assets,
 		media,
 		name,
-		compact = false
+		compact = false,
+		onuploadnew
 	}: {
 		label: string;
 		kind: 'image' | 'audio';
@@ -22,9 +23,9 @@
 		media: MediaActions;
 		name: string;
 		compact?: boolean;
+		onuploadnew?: () => void;
 	} = $props();
 
-	let uploadOpen = $state(false);
 	let displayName = $state('');
 	let accessibilityText = $state('');
 	let uploading = $state(false);
@@ -32,6 +33,11 @@
 	let input = $state<HTMLInputElement>();
 	const options = $derived(assets.filter((asset) => asset.kind === kind));
 	const selected = $derived(options.find((asset) => asset.assetKey === value));
+	const selectedValue = $derived(selected?.assetKey ?? '');
+
+	$effect(() => {
+		if (value && !selected) value = '';
+	});
 
 	function chooseUpload() {
 		input?.click();
@@ -51,10 +57,9 @@
 				accessibilityText.trim()
 			);
 			value = asset.assetKey;
-			uploadOpen = false;
 		} catch (caught) {
 			uploadError =
-				caught instanceof Error ? caught.message : 'The media file could not be uploaded.';
+				caught instanceof Error ? caught.message : 'The asset file could not be uploaded.';
 		} finally {
 			uploading = false;
 			target.value = '';
@@ -66,7 +71,7 @@
 	<SelectField
 		label={`${label} — Choose existing file`}
 		{name}
-		value={value ?? ''}
+		value={selectedValue}
 		onchange={(next) => (value = next)}
 		options={[
 			{ value: '', label: kind === 'image' ? 'No image' : 'No audio' },
@@ -99,23 +104,20 @@
 		onchange={upload}
 	/>
 	<div class="actions">
-		<Button
-			variant="secondary"
-			loading={uploading}
-			onclick={() => (compact ? (uploadOpen = true) : chooseUpload())}>Upload new</Button
-		>
-		{#if selected}<Button
-				variant="secondary"
-				loading={uploading}
-				onclick={() => (compact ? (uploadOpen = true) : chooseUpload())}>Replace only here</Button
-			><Button variant="ghost" onclick={() => (value = '')}>Remove from this usage</Button>{/if}
+		{#if selected}
+			<Button variant="secondary" loading={uploading} onclick={chooseUpload}>Replace</Button>
+		{:else}
+			<Button variant="secondary" loading={uploading} onclick={onuploadnew ?? chooseUpload}
+				><Plus size={16} aria-hidden="true" /> Upload new</Button
+			>
+		{/if}
 	</div>
 	{#if uploadError}<p class="error" role="alert">{uploadError}</p>{/if}
 </section>
 
 {#snippet uploadDetails()}
 	<div class="upload-details">
-		<Field label="Media name" name={`${name}-upload-name`} bind:value={displayName} />
+		<Field label="Asset name" name={`${name}-upload-name`} bind:value={displayName} />
 		<Field
 			label={kind === 'image' ? 'Image description' : 'Accessibility description'}
 			name={`${name}-upload-accessibility`}
@@ -124,12 +126,6 @@
 		/>
 	</div>
 {/snippet}
-<Sheet open={uploadOpen} title={`Upload ${kind}`} close={() => (uploadOpen = false)}>
-	{@render uploadDetails()}
-	{#if uploadError}<p class="error" role="alert">{uploadError}</p>{/if}
-	{#snippet actions()}<Button loading={uploading} onclick={chooseUpload}>Choose file</Button
-		>{/snippet}
-</Sheet>
 
 <style>
 	.media-field {
@@ -162,7 +158,6 @@
 	}
 	.upload-details {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: var(--space-3);
 	}
 	.actions {
@@ -181,7 +176,6 @@
 		color: var(--danger);
 	}
 	@media (max-width: 47.99rem) {
-		.upload-details,
 		.preview {
 			grid-template-columns: 1fr;
 		}

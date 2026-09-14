@@ -39,7 +39,7 @@
 	const senderDisplayOptions: SelectOption<RulesetChatChannel['senderDisplay']>[] = [
 		{ value: 'profile_name', label: 'Profile name' },
 		{ value: 'game_alias', label: 'Game alias' },
-		{ value: 'seat_number', label: 'Seat number' },
+		{ value: 'player_number', label: 'Player number' },
 		{ value: 'role_label', label: 'Role name' },
 		{ value: 'team_label', label: 'Team name' }
 	];

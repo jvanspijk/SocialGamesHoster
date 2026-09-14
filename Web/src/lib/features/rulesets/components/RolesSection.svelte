@@ -94,7 +94,7 @@
 
 <CollectionEditor
 	title="Abilities"
-	description="Optional reusable powers assigned to roles."
+	description=""
 	entries={abilityEntries}
 	selectedId={selectedItems.abilities ?? ''}
 	onselect={(id) => (selectedItems.abilities = id)}

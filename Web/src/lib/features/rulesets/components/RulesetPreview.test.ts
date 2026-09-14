@@ -26,8 +26,6 @@ const definition: RulesetDefinition = {
 	],
 	phases: [{ id: 'phase_private', name: 'Night', description: '', order: 1, startsRound: true }],
 	knowledgeRules: [],
-	compositionBands: [],
-	compositionModifiers: [],
 	chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 	achievements: [],
 	audioCues: [],
@@ -69,12 +67,6 @@ describe('RulesetPreview', () => {
 		expect(onresult).toHaveBeenCalledWith(expect.objectContaining({ mode: 'role' }));
 		expect(screen.getByRole('option', { name: 'Villager' })).toBeVisible();
 		expect(screen.queryByText('role_private')).not.toBeInTheDocument();
-
-		await fireEvent.click(screen.getByRole('button', { name: 'Player setup' }));
-		await waitFor(() =>
-			expect(loadPreview).toHaveBeenLastCalledWith(expect.objectContaining({ mode: 'composition' }))
-		);
-		expect(screen.getByRole('spinbutton', { name: 'Player count' })).toBeVisible();
 	});
 
 	it('renders selected media in each consuming game context', async () => {
@@ -130,7 +122,7 @@ describe('RulesetPreview', () => {
 			}
 		});
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Media' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Assets' }));
 		await waitFor(() => expect(screen.getByRole('heading', { name: 'Night game' })).toBeVisible());
 		expect(screen.getByRole('heading', { name: 'Village' })).toBeVisible();
 		expect(screen.getByText('3–8 players')).toBeVisible();

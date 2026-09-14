@@ -45,7 +45,7 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	await page.getByRole('link', { name: /Echo Location/ }).click();
-	await expect(page.getByRole('main')).toBeVisible();
+	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/metadata$/);
 	await expect(page.getByRole('link', { name: 'Rulesets', exact: true })).toBeVisible();
 	await expect(page.getByText('All changes saved', { exact: true })).toHaveAttribute(
 		'aria-live',
@@ -69,19 +69,15 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 		.getByRole('dialog', { name: 'Ruleset sections' })
 		.getByRole('button', { name: /^Basics/ })
 		.click();
-	await expect(page.getByRole('textbox', { name: 'Media name', exact: true })).not.toBeVisible();
+	await expect(page.getByRole('textbox', { name: 'Asset name', exact: true })).not.toBeVisible();
 	await page.getByRole('button', { name: 'Upload new', exact: true }).click();
-	await expect(
-		page
-			.getByRole('dialog', { name: 'Upload image' })
-			.getByRole('textbox', { name: 'Media name', exact: true })
-	).toBeVisible();
-	await page.keyboard.press('Escape');
-	await page.getByRole('button', { name: 'Ruleset actions', exact: true }).click();
+	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
+	await expect(page.getByRole('heading', { name: 'Assets', exact: true })).toBeVisible();
 	await page
-		.getByRole('dialog', { name: 'Ruleset actions' })
-		.getByRole('button', { name: 'Delete ruleset', exact: true })
+		.getByRole('navigation', { name: 'Ruleset sections' })
+		.getByRole('button', { name: /^Basics/ })
 		.click();
+	await page.getByRole('button', { name: 'Delete ruleset', exact: true }).click();
 	await expect(page.getByRole('dialog', { name: 'Delete ruleset?' })).toBeVisible();
 	await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await page.getByRole('textbox', { name: /^Name/ }).fill('Keyboard editor changes');

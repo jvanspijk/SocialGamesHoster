@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/router"
@@ -40,7 +41,7 @@ func registerEditSessionRoutes(group *router.RouterGroup[*core.RequestEvent]) {
 	group.POST("/rulesets/{id}/edit-session", openEditSession)
 	group.DELETE("/rulesets/{id}/edit-session/{sessionId}", discardEditSession)
 	group.GET("/rulesets/{id}/edit-session/{sessionId}/assets", listSessionAssets)
-	group.POST("/rulesets/{id}/edit-session/{sessionId}/assets", uploadSessionAsset)
+	group.POST("/rulesets/{id}/edit-session/{sessionId}/assets", uploadSessionAsset).Bind(apis.BodyLimit(72 << 20))
 	group.PATCH("/rulesets/{id}/edit-session/{sessionId}/assets/{assetKey}", updateSessionAsset)
 	group.DELETE("/rulesets/{id}/edit-session/{sessionId}/assets/{assetKey}", deleteSessionAsset)
 	group.GET("/ruleset-edit-assets/{id}", previewSessionAsset)
@@ -146,7 +147,7 @@ func uploadSessionAsset(event *core.RequestEvent) error {
 	if mode == "replace" {
 		asset, ok := current[key]
 		if !ok {
-			return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Media item not found.", Status: http.StatusNotFound})
+			return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Asset not found.", Status: http.StatusNotFound})
 		}
 		if asset.kind != kind {
 			return httpx.WriteError(event, result.Invalid("asset.kind_mismatch", "Replace an image with an image or audio with audio.", nil))
@@ -158,7 +159,7 @@ func uploadSessionAsset(event *core.RequestEvent) error {
 			accessibilityText = asset.accessibilityText
 		}
 	} else if len(current) >= MaxBundleFiles {
-		return httpx.WriteError(event, result.Conflict("asset.limit_reached", "A ruleset can contain at most 100 media items."))
+		return httpx.WriteError(event, result.Conflict("asset.limit_reached", "A ruleset can contain at most 100 Assets."))
 	}
 	files, err := event.FindUploadedFiles("file")
 	if err != nil || len(files) != 1 {
@@ -174,10 +175,7 @@ func uploadSessionAsset(event *core.RequestEvent) error {
 	if len([]rune(accessibilityText)) > 1000 {
 		return httpx.WriteError(event, result.Invalid("asset.invalid_accessibility", "Keep the image description or audio alternative under 1000 characters.", nil))
 	}
-	limit := int64(maxAudioSize)
-	if kind == "image" {
-		limit = maxImageSize
-	}
+	limit := MediaUploadLimit(kind)
 	if uploaded.Size <= 0 || uploaded.Size > limit {
 		return httpx.WriteError(event, result.Invalid("asset.too_large", "The selected media file exceeds its size limit.", nil))
 	}
@@ -237,7 +235,7 @@ func updateSessionAsset(event *core.RequestEvent) error {
 	key := event.Request.PathValue("assetKey")
 	asset, ok := assets[key]
 	if !ok {
-		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Media item not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Asset not found.", Status: http.StatusNotFound})
 	}
 	var request assetMetadataRequest
 	if err := event.BindBody(&request); err != nil {
@@ -286,14 +284,14 @@ func deleteSessionAsset(event *core.RequestEvent) error {
 	key := event.Request.PathValue("assetKey")
 	asset, ok := assets[key]
 	if !ok {
-		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Media item not found.", Status: http.StatusNotFound})
+		return httpx.WriteError(event, result.AppError{Code: "asset.not_found", Message: "Asset not found.", Status: http.StatusNotFound})
 	}
 	var request deleteAssetRequest
 	if err := event.BindBody(&request); err != nil {
 		return httpx.WriteError(event, result.Invalid("asset.invalid", "The ruleset definition could not be read.", nil))
 	}
 	if usages := scanAssetUsages(request.Definition, key); len(usages) > 0 {
-		return event.JSON(http.StatusConflict, map[string]any{"code": "asset.in_use", "message": "Remove this media item from its usages before deleting it.", "usages": usages})
+		return event.JSON(http.StatusConflict, map[string]any{"code": "asset.in_use", "message": "Remove this Asset from its usages before deleting it.", "usages": usages})
 	}
 	change, err := upsertAssetChange(event.App, session, key)
 	if err != nil {
@@ -323,7 +321,7 @@ func deleteSessionAsset(event *core.RequestEvent) error {
 
 func previewSessionAsset(event *core.RequestEvent) error {
 	if event.Auth == nil || event.Auth.Collection().Name != "game_masters" || !event.Auth.GetBool("active") {
-		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to preview this media item.", Status: http.StatusUnauthorized})
+		return httpx.WriteError(event, result.AppError{Code: "auth.required", Message: "Sign in to preview this Asset.", Status: http.StatusUnauthorized})
 	}
 	change, err := event.App.FindRecordById("ruleset_asset_changes", event.Request.PathValue("id"))
 	if err != nil || change.GetString("file") == "" {
@@ -333,7 +331,7 @@ func previewSessionAsset(event *core.RequestEvent) error {
 	if err != nil || session.GetString("creator") != event.Auth.Id || !session.GetDateTime("expires_at").Time().After(time.Now().UTC()) {
 		return httpx.WriteError(event, result.Forbidden("asset.forbidden", "This media preview is not available."))
 	}
-	return serveRecordFile(event, change, maxAudioSize)
+	return serveRecordFile(event, change, maxMediaSize)
 }
 
 func ownedEditSession(event *core.RequestEvent) (*core.Record, error) {

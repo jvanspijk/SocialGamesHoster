@@ -19,8 +19,6 @@ const definition: RulesetDefinition = {
 		{ id: 'night', name: 'Night', description: '', order: 1, startsRound: true, audioCueId: 'bell' }
 	],
 	knowledgeRules: [],
-	compositionBands: [],
-	compositionModifiers: [],
 	chat: { defaultPolicy: { teams: {} }, phaseOverrides: {}, channels: [] },
 	achievements: [],
 	audioCues: [{ id: 'bell', name: 'Bell', assetKey: 'bell-file', defaultAudience: 'all' }],

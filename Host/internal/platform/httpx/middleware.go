@@ -165,11 +165,11 @@ func limitRequestBody(event *core.RequestEvent) {
 	path := event.Request.URL.Path
 	switch {
 	case path == "/api/app/v1/rulesets/import":
-		limit = 26 << 20
+		limit = 512 << 20
 	case strings.HasSuffix(path, "/announcements"):
-		limit = 8 << 20
+		limit = 136 << 20
 	case strings.Contains(path, "/assets"), strings.HasSuffix(path, "/avatar"):
-		limit = 6 << 20
+		limit = 72 << 20
 	}
 	event.Request.Body = http.MaxBytesReader(event.Response, event.Request.Body, limit)
 }

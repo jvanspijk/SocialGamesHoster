@@ -4,7 +4,6 @@
 	import type { EditorSection } from '../editor-state';
 	import AchievementsSection from './AchievementsSection.svelte';
 	import ChatSection from './ChatSection.svelte';
-	import CompositionSection from './CompositionSection.svelte';
 	import DefinitionEditorLayout from './DefinitionEditorLayout.svelte';
 	import type { AssetOption, DefinitionEditorSection, MediaActions } from './definition-editor';
 	import KnowledgeSection from './KnowledgeSection.svelte';
@@ -39,15 +38,13 @@
 		<RolesSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'phases'}
 		<PhasesSection bind:definition {media} {issues} bind:selectedItems {onnavigate} />
-	{:else if section === 'composition'}
-		<CompositionSection bind:definition {issues} bind:selectedItems {onnavigate} />
 	{:else if section === 'knowledge'}
 		<KnowledgeSection bind:definition {issues} />
 	{:else if section === 'chat'}
 		<ChatSection bind:definition {issues} bind:selectedItems />
 	{:else if section === 'achievements'}
 		<AchievementsSection bind:definition {assets} {media} {issues} bind:selectedItems />
-	{:else}
-		<MediaSection bind:definition {assets} {media} {issues} bind:selectedItems {onnavigate} />
+	{:else if section === 'assets'}
+		<MediaSection bind:definition {assets} {media} {onnavigate} />
 	{/if}
 </DefinitionEditorLayout>

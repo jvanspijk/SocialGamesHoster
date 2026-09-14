@@ -296,13 +296,12 @@ export interface RulesetAsset {
 	usages: RulesetAssetUsage[];
 }
 
-export type RulesetPreviewMode = 'role' | 'phases' | 'composition' | 'chat' | 'media';
+export type RulesetPreviewMode = 'role' | 'phases' | 'chat' | 'media';
 
 export interface RulesetPreviewRequest {
 	mode: RulesetPreviewMode;
 	roleId?: string;
 	phaseId?: string;
-	playerCount?: number;
 	assetKey?: string;
 }
 
@@ -335,9 +334,6 @@ export interface RulesetPreviewResponse {
 		sound?: string;
 		media?: RulesetPreviewMedia;
 	}>;
-	playerCount?: number;
-	feasible?: boolean;
-	roles?: Array<{ name: string; teamName: string; count: number }>;
 	audience?: string;
 	phase?: string;
 	rooms?: Array<{
@@ -372,8 +368,6 @@ export interface RulesetDefinition {
 	roles: RulesetRole[];
 	phases: RulesetPhase[];
 	knowledgeRules: RulesetKnowledgeRule[];
-	compositionBands: RulesetCompositionBand[];
-	compositionModifiers: RulesetCompositionModifier[];
 	chat: RulesetChatPolicy;
 	achievements: RulesetAchievement[];
 	audioCues: RulesetAudioCue[];
@@ -438,28 +432,8 @@ export interface RulesetKnowledgeRule {
 	reveal: string[];
 }
 
-export interface RulesetCompositionBand {
-	id: string;
-	minPlayers: number;
-	maxPlayers: number;
-	slots: Array<{
-		id: string;
-		label: string;
-		count: number;
-		selector: RulesetSelector;
-	}>;
-}
-
-export interface RulesetCompositionModifier {
-	id: string;
-	whenRolePresent: string;
-	slotAdjustments: Array<{ slotId: string; delta: number }>;
-	requiresRoleIds: string[];
-	excludesRoleIds: string[];
-}
-
 export type RulesetSenderDisplay =
-	'profile_name' | 'game_alias' | 'seat_number' | 'role_label' | 'team_label';
+	'profile_name' | 'game_alias' | 'player_number' | 'role_label' | 'team_label';
 
 export interface RulesetRoomPermission {
 	visible: boolean;

@@ -8,12 +8,14 @@
 		description,
 		actionLabel,
 		onaction,
+		actionLoading = false,
 		icon
 	}: {
 		title: string;
 		description: string;
 		actionLabel?: string;
 		onaction?: () => void;
+		actionLoading?: boolean;
 		icon?: Snippet;
 	} = $props();
 </script>
@@ -29,7 +31,7 @@
 	<h2>{title}</h2>
 	<p>{description}</p>
 	{#if actionLabel && onaction}
-		<Button onclick={onaction}>{actionLabel}</Button>
+		<Button loading={actionLoading} onclick={onaction}>{actionLabel}</Button>
 	{/if}
 </section>
 

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
@@ -31,7 +32,7 @@ func Register(event *core.ServeEvent) {
 	group.PATCH("/rooms/{roomId}", updateRoom).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/lock", setRoomLock(true)).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/rooms/{roomId}/unlock", setRoomLock(false)).BindFunc(actorauth.RequireGameMaster)
-	group.POST("/games/{id}/announcements", createAnnouncement).BindFunc(actorauth.RequireGameMaster)
+	group.POST("/games/{id}/announcements", createAnnouncement).Bind(apis.BodyLimit(136 << 20)).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/games/{id}/announcements/{announcementId}/acknowledge", acknowledgeAnnouncement).BindFunc(actorauth.RequirePlayer)
 	group.GET("/games/{id}/announcements/{announcementId}/media/{kind}", announcementMedia)
 	group.GET("/games/{id}/announcements", listAnnouncements).BindFunc(actorauth.RequireGameMaster)
@@ -541,7 +542,7 @@ func playerSenderLabel(app core.App, resolved access, profile *core.Record) (str
 	}
 	return SenderLabel(Sender{
 		ProfileName: profile.GetString("display_name"), GameAlias: resolved.Participant.GetString("game_alias"),
-		SeatNumber: resolved.Participant.GetInt("seat_number"), RoleLabel: roleName, TeamLabel: teamName,
+		SeatNumber: resolved.Participant.GetInt("player_number"), RoleLabel: roleName, TeamLabel: teamName,
 	}, display), nil
 }
 

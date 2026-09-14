@@ -15,7 +15,7 @@ import (
 
 const (
 	BundleFormatVersion = 2
-	MaxBundleSize       = 25 << 20
+	MaxBundleSize       = 512 << 20
 	MaxBundleFiles      = 100
 	MaxRulesetJSONSize  = 2 << 20
 )
@@ -216,17 +216,11 @@ func validateBundlePath(file *zip.File) error {
 }
 
 func validateAssetContent(asset BundleAssetManifest, content []byte) error {
-	switch asset.Kind {
-	case "image":
-		if len(content) > 2<<20 {
-			return fmt.Errorf("image %q exceeds 2 MB", asset.Path)
-		}
-	case "audio":
-		if len(content) > 5<<20 {
-			return fmt.Errorf("audio %q exceeds 5 MB", asset.Path)
-		}
-	default:
+	if asset.Kind != "image" && asset.Kind != "audio" {
 		return fmt.Errorf("asset %q has unsupported kind %q", asset.Path, asset.Kind)
+	}
+	if int64(len(content)) > MediaUploadLimit(asset.Kind) {
+		return fmt.Errorf("asset %q exceeds 64 MiB", asset.Path)
 	}
 	if _, _, err := validateDeclaredAsset(asset.Kind, asset.MIMEType, content); err != nil {
 		return fmt.Errorf("asset %q: %w", asset.Path, err)

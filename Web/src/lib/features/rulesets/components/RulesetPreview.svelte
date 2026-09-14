@@ -31,14 +31,12 @@
 	const modes: Array<{ id: RulesetPreviewMode; label: string }> = [
 		{ id: 'role', label: 'Role card' },
 		{ id: 'phases', label: 'Phase flow' },
-		{ id: 'composition', label: 'Player setup' },
 		{ id: 'chat', label: 'Chat' },
-		{ id: 'media', label: 'Media' }
+		{ id: 'media', label: 'Assets' }
 	];
 	let mode = $state<RulesetPreviewMode>('role');
 	let roleId = $state('');
 	let phaseId = $state('');
-	let playerCount = $state(3);
 	let assetKey = $state('');
 	let preview = $state<RulesetPreviewResponse | null>(null);
 	let loading = $state(false);
@@ -51,12 +49,6 @@
 		if (!definition.phases.some((phase) => phase.id === phaseId))
 			phaseId = definition.phases[0]?.id ?? '';
 		if (!assets.some((asset) => asset.assetKey === assetKey)) assetKey = assets[0]?.assetKey ?? '';
-		if (
-			playerCount < definition.metadata.minPlayers ||
-			playerCount > definition.metadata.maxPlayers
-		) {
-			playerCount = definition.metadata.minPlayers;
-		}
 	});
 
 	$effect(() => {
@@ -64,7 +56,6 @@
 		const currentMode = mode;
 		const currentRole = roleId;
 		const currentPhase = phaseId;
-		const currentPlayers = playerCount;
 		const currentAsset = assetKey;
 		JSON.stringify(definition);
 		JSON.stringify(assets.map((asset) => [asset.assetKey, asset.checksum, asset.displayName]));
@@ -74,7 +65,6 @@
 					mode: currentMode,
 					roleId: currentRole,
 					phaseId: currentPhase,
-					playerCount: currentPlayers,
 					assetKey: currentAsset
 				}),
 			100
@@ -144,15 +134,9 @@
 					</select>
 				</label>
 			{/if}
-			{#if mode === 'composition'}
-				<label>
-					<span>Player count</span>
-					<input type="number" min="1" max="30" bind:value={playerCount} />
-				</label>
-			{/if}
 			{#if mode === 'media'}
 				<label>
-					<span>Media item</span>
+					<span>Asset</span>
 					<select bind:value={assetKey}>
 						{#each assets as asset (asset.assetKey)}<option value={asset.assetKey}
 								>{asset.displayName}</option
@@ -211,18 +195,6 @@
 									/>{/if}
 							</li>{/each}
 					</ol>
-				</div>
-			{:else if preview?.mode === 'composition'}
-				<div class="composition-result">
-					<h2>{preview.feasible ? 'Setup is feasible' : 'Setup is not feasible'}</h2>
-					<p>{preview.message}</p>
-					{#if preview.roles?.length}<ul>
-							{#each preview.roles as role, index (`${role.teamName}:${role.name}:${index}`)}<li>
-									<span>{role.name}<small>{role.teamName}</small></span><strong
-										>× {role.count}</strong
-									>
-								</li>{/each}
-						</ul>{/if}
 				</div>
 			{:else if preview?.mode === 'chat' && preview.rooms}
 				<div class="chat-preview">
@@ -308,7 +280,6 @@
 	.preview-stage,
 	.role-card,
 	.phase-flow,
-	.composition-result,
 	.chat-preview,
 	.media-preview {
 		display: grid;
@@ -371,7 +342,6 @@
 	}
 	.preview-controls label,
 	.role-card li span,
-	.composition-result li span,
 	.chat-preview li > span:first-child {
 		display: grid;
 		gap: var(--space-1);
@@ -383,8 +353,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 	}
-	.preview-controls select,
-	.preview-controls input {
+	.preview-controls select {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
 		background: var(--paper-light);
@@ -411,7 +380,6 @@
 	}
 	.role-card ul,
 	.phase-flow ol,
-	.composition-result ul,
 	.chat-preview ul {
 		display: grid;
 		gap: var(--space-2);
@@ -419,7 +387,6 @@
 		padding-inline-start: var(--space-5);
 	}
 	.phase-flow li,
-	.composition-result li,
 	.chat-preview li {
 		border-block-start: var(--border-subtle);
 		padding: var(--space-3) 0;
@@ -428,7 +395,6 @@
 		border-inline-start: 0.25rem solid var(--crimson);
 		padding-inline-start: var(--space-3);
 	}
-	.composition-result li,
 	.chat-preview li {
 		display: flex;
 		justify-content: space-between;
@@ -442,7 +408,6 @@
 		color: var(--danger);
 	}
 	@media (max-width: 47.99rem) {
-		.composition-result li,
 		.chat-preview li {
 			display: grid;
 		}
