@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 
@@ -54,7 +55,7 @@ func RegisterRoutes(event *core.ServeEvent, applicationVersion string) {
 	group.POST("/rulesets/{id}/save", saveRuleset)
 	group.POST("/rulesets/import", func(event *core.RequestEvent) error {
 		return importBundle(event, applicationVersion)
-	})
+	}).Bind(apis.BodyLimit(MaxBundleSize))
 	group.GET("/rulesets/{id}/export", func(event *core.RequestEvent) error {
 		return exportLatestSavedBundle(event, applicationVersion)
 	})
@@ -687,7 +688,7 @@ func deleteRuleset(event *core.RequestEvent) error {
 func importBundle(event *core.RequestEvent, applicationVersion string) error {
 	data, err := io.ReadAll(io.LimitReader(event.Request.Body, MaxBundleSize+1))
 	if err != nil || len(data) > MaxBundleSize {
-		return httpx.WriteError(event, result.Invalid("bundle.too_large", "The ruleset bundle exceeds 25 MB.", nil))
+		return httpx.WriteError(event, result.Invalid("bundle.too_large", "The ruleset bundle exceeds 512 MiB.", nil))
 	}
 	imported, err := ReadBundle(data)
 	if err != nil {
@@ -941,9 +942,9 @@ func blankDefinition(name, description string, minPlayers, maxPlayers int) Defin
 		SchemaVersion: 1,
 		Metadata:      Metadata{Name: name, Description: description, MinPlayers: minPlayers, MaxPlayers: maxPlayers},
 		Teams:         []Team{}, Categories: []Category{}, Abilities: []Ability{}, Roles: []Role{}, Phases: []Phase{},
-		KnowledgeRules: []KnowledgeRule{}, CompositionBands: []CompositionBand{}, CompositionModifiers: []CompositionModifier{},
-		Chat:         ChatPolicy{DefaultPolicy: ChatPolicyDefaults{Teams: map[string]RoomPermission{}}, PhaseOverrides: map[string]ChatPolicyOverride{}, Channels: []ChatChannel{}},
-		Achievements: []Achievement{}, AudioCues: []AudioCue{}, AssetAccessibility: map[string]AssetAccessibility{},
+		KnowledgeRules: []KnowledgeRule{},
+		Chat:           ChatPolicy{DefaultPolicy: ChatPolicyDefaults{Teams: map[string]RoomPermission{}}, PhaseOverrides: map[string]ChatPolicyOverride{}, Channels: []ChatChannel{}},
+		Achievements:   []Achievement{}, AudioCues: []AudioCue{}, AssetAccessibility: map[string]AssetAccessibility{},
 	}
 }
 
@@ -981,21 +982,6 @@ func normalizeDefinitionIdentifiers(definition DefinitionV1) (DefinitionV1, erro
 	}
 	for index := range definition.Phases {
 		if err := assign("phase", &definition.Phases[index].ID); err != nil {
-			return definition, err
-		}
-	}
-	for bandIndex := range definition.CompositionBands {
-		if err := assign("band", &definition.CompositionBands[bandIndex].ID); err != nil {
-			return definition, err
-		}
-		for slotIndex := range definition.CompositionBands[bandIndex].Slots {
-			if err := assign("slot", &definition.CompositionBands[bandIndex].Slots[slotIndex].ID); err != nil {
-				return definition, err
-			}
-		}
-	}
-	for index := range definition.CompositionModifiers {
-		if err := assign("modifier", &definition.CompositionModifiers[index].ID); err != nil {
 			return definition, err
 		}
 	}

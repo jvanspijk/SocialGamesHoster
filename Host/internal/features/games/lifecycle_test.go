@@ -39,14 +39,14 @@ func TestLifecycleRejectsInvalidAndArchivedTransitions(t *testing.T) {
 }
 
 func TestValidateAssignmentRolesAllowsPartialAssignments(t *testing.T) {
-	definition := rulesets.DefinitionV1{Roles: []rulesets.Role{{ID: "dealer"}}}
-	if appError := validateAssignmentRoles(definition, []rulesets.Assignment{{
+	definition := rulesets.DefinitionV1{Roles: []rulesets.Role{{ID: "dealer", Name: "Dealer", MaxCopies: 1}}}
+	if appError := validateAssignmentRoles(definition, []roleAssignment{{
 		ParticipantID: "first-player",
 		RoleID:        "dealer",
 	}}); appError != nil {
 		t.Fatalf("partial assignment was rejected: %#v", appError)
 	}
-	if appError := validateAssignmentRoles(definition, []rulesets.Assignment{{
+	if appError := validateAssignmentRoles(definition, []roleAssignment{{
 		ParticipantID: "first-player",
 		RoleID:        "unknown",
 	}}); appError == nil {

@@ -23,8 +23,8 @@ game audit; accounts should not be shared.
    the private IP address and port, never an account secret.
 4. A new or recovering player chooses their profile name. Approve the request
    from **Entry requests** in the live-game header, or under **Approvals**.
-5. Assign seats, aliases, and roles manually or use constrained randomization.
-   The roster must satisfy the selected composition band before the game starts.
+5. Assign seats, aliases, and roles. Every active player needs a role before the
+   game starts.
 
 Returning approved devices keep their profile. Recovering that profile on a new
 device requires approval and invalidates its old device token.
@@ -54,15 +54,15 @@ can still see and revoke hidden awards from the Live Table.
 
 ## Rulesets
 
-The guided creator covers basics, teams, roles and abilities, player setup,
-game flow, information rules, chat, rewards, and image/audio media. Work is
+The guided creator covers basics, teams, roles and abilities, game flow,
+information rules, chat, rewards, and image/audio media. Work is
 stored only when you choose **Save**; local recovery can restore unsaved browser
 changes after an interruption.
 
 A saved ruleset is marked **Valid** or **Invalid**. Valid rulesets can be chosen
 for new games. Invalid rulesets remain editable but are unavailable for new
 games until their blocking issues are fixed and saved. Use **Preview** to check
-role cards, phase flow, player setup, chat availability, and media in context.
+role cards, phase flow, chat availability, and media in context.
 Use **Edit**, **Save**, and **Delete ruleset** to manage the library.
 
 `.sghrules` exports include checksums, provenance, the definition, and declared

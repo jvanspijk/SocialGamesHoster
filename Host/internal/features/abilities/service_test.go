@@ -209,7 +209,7 @@ func abilityFixture(t *testing.T) (core.App, *core.Record, *core.Record, *core.R
 	participant.Set("game", game.Id)
 	participant.Set("profile", profile.Id)
 	participant.Set("display_name_snapshot", "Alice")
-	participant.Set("seat_number", 1)
+	participant.Set("player_number", 1)
 	participant.Set("status", "active")
 	participant.Set("role_key", "seer")
 	participant.Set("outcome", "unset")

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -100,6 +101,10 @@ func TestInitialMigrationUp(t *testing.T) {
 			t.Fatalf("announcement attachment field %q is missing", field)
 		}
 	}
+	attachmentFile, ok := attachments.Fields.GetByName("file").(*core.FileField)
+	if !ok || attachmentFile.MaxSize != 64<<20 {
+		t.Fatalf("announcement attachment file limit = %d, want %d", attachmentFile.MaxSize, 64<<20)
+	}
 	rulesets, err := app.FindCollectionByNameOrId("rulesets")
 	if err != nil {
 		t.Fatal(err)
@@ -121,12 +126,38 @@ func TestInitialMigrationUp(t *testing.T) {
 	if rulesetAssets.Fields.GetByName("display_name") == nil {
 		t.Fatal("ruleset asset display name field is missing")
 	}
+	assetFile, ok := rulesetAssets.Fields.GetByName("file").(*core.FileField)
+	if !ok || assetFile.MaxSize != 64<<20 {
+		t.Fatalf("ruleset asset file limit = %d, want %d", assetFile.MaxSize, 64<<20)
+	}
+	profiles, err := app.FindCollectionByNameOrId("player_profiles")
+	if err != nil {
+		t.Fatal(err)
+	}
+	avatarFile, ok := profiles.Fields.GetByName("avatar").(*core.FileField)
+	if !ok || avatarFile.MaxSize != 64<<20 {
+		t.Fatalf("profile avatar file limit = %d, want %d", avatarFile.MaxSize, 64<<20)
+	}
+	rulesetAssetChanges, err := app.FindCollectionByNameOrId("ruleset_asset_changes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	changeFile, ok := rulesetAssetChanges.Fields.GetByName("file").(*core.FileField)
+	if !ok || changeFile.MaxSize != 64<<20 {
+		t.Fatalf("ruleset asset change file limit = %d, want %d", changeFile.MaxSize, 64<<20)
+	}
 	participants, err := app.FindCollectionByNameOrId("participants")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if participants.Fields.GetByName("role_revision") == nil {
 		t.Fatal("participant role revision is missing")
+	}
+	if participants.Fields.GetByName("player_number") == nil {
+		t.Fatal("participant player number is missing")
+	}
+	if participants.Fields.GetByName("seat_number") != nil {
+		t.Fatal("legacy participant seat number was not removed")
 	}
 	rooms, err := app.FindCollectionByNameOrId("chat_rooms")
 	if err != nil {
@@ -145,6 +176,52 @@ func TestInitialMigrationUp(t *testing.T) {
 		t.Fatalf("single-live-game index missing: %v", err)
 	}
 
+}
+
+func TestPlayerNumberMigrationPreservesExistingValues(t *testing.T) {
+	app := core.NewBaseApp(core.BaseAppConfig{DataDir: t.TempDir(), EncryptionEnv: "sgh_test_encryption"})
+	if err := app.Bootstrap(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = app.ResetBootstrapState() })
+	if err := app.RunAllMigrations(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := renameParticipantNumberField(app, "player_number", "seat_number"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.DB().NewQuery(`
+		INSERT INTO participants (id, game, profile, display_name_snapshot, seat_number, status, outcome)
+		VALUES ('legacyplayer01', '', '', 'Legacy player', 7, 'active', 'unset')
+	`).Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := renameParticipantNumberField(app, "seat_number", "player_number"); err != nil {
+		t.Fatal(err)
+	}
+	var number int
+	if err := app.DB().NewQuery("SELECT player_number FROM participants WHERE id = 'legacyplayer01'").Row(&number); err != nil {
+		t.Fatal(err)
+	}
+	if number != 7 {
+		t.Fatalf("player number = %d, want 7", number)
+	}
+	participants, err := app.FindCollectionByNameOrId("participants")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if participants.Fields.GetByName("player_number") == nil || participants.Fields.GetByName("seat_number") != nil {
+		t.Fatal("participant field was not renamed to player_number")
+	}
+	var indexSQL string
+	if err := app.DB().NewQuery("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_participants_game_seat'").Row(&indexSQL); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(indexSQL, "player_number") {
+		t.Fatalf("participant number index was not updated: %s", indexSQL)
+	}
 }
 
 func TestUpgradeFixtureKeepsExistingOwnerCredentials(t *testing.T) {

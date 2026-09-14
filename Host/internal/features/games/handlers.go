@@ -331,7 +331,7 @@ func joinGame(event *core.RequestEvent) error {
 		participant.Set("game", game.Id)
 		participant.Set("profile", event.Auth.Id)
 		participant.Set("display_name_snapshot", event.Auth.GetString("display_name"))
-		participant.Set("seat_number", nextSeat(participants))
+		participant.Set("player_number", nextSeat(participants))
 		participant.Set("status", gamepolicy.ParticipantActive)
 		participant.Set("outcome", "unset")
 		participant.Set("joined_at", time.Now().UTC())
@@ -476,7 +476,7 @@ func playerView(event *core.RequestEvent) error {
 		party = append(party, map[string]any{
 			"id": member.Id, "profileId": member.GetString("profile"),
 			"displayName": member.GetString("display_name_snapshot"), "gameAlias": member.GetString("game_alias"),
-			"seatNumber": member.GetInt("seat_number"), "status": member.GetString("status"),
+			"seatNumber": member.GetInt("player_number"), "status": member.GetString("status"),
 		})
 	}
 	attentionItems, err := chatfeature.UnacknowledgedAttentionForParticipant(event.App, game.Id, participant.Id)
@@ -512,7 +512,7 @@ func playerView(event *core.RequestEvent) error {
 		"game": projectPlayerGame(game),
 		"participant": map[string]any{
 			"id": participant.Id, "displayName": participant.GetString("display_name_snapshot"),
-			"gameAlias": participant.GetString("game_alias"), "seatNumber": participant.GetInt("seat_number"),
+			"gameAlias": participant.GetString("game_alias"), "seatNumber": participant.GetInt("player_number"),
 			"status": participant.GetString("status"),
 		},
 		"ruleset":        map[string]any{"name": definition.Metadata.Name, "description": definition.Metadata.Description},
@@ -531,8 +531,8 @@ func playerView(event *core.RequestEvent) error {
 func nextSeat(participants []*core.Record) int {
 	maximum := 0
 	for _, participant := range participants {
-		if participant.GetInt("seat_number") > maximum {
-			maximum = participant.GetInt("seat_number")
+		if participant.GetInt("player_number") > maximum {
+			maximum = participant.GetInt("player_number")
 		}
 	}
 	return maximum + 1
@@ -621,7 +621,7 @@ func projectKnowledge(app core.App, gameID string, viewer *core.Record, definiti
 				targetRole = role
 			}
 		}
-		revealed := map[string]any{"participantId": target.Id, "seatNumber": target.GetInt("seat_number")}
+		revealed := map[string]any{"participantId": target.Id, "seatNumber": target.GetInt("player_number")}
 		hasReveal := false
 		for _, rule := range definition.KnowledgeRules {
 			if !selectorMatches(viewerRole, rule.Viewer) || !selectorMatches(targetRole, rule.Target) {

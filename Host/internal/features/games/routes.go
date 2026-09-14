@@ -39,7 +39,6 @@ func Register(event *core.ServeEvent) {
 	group.POST("/games/{id}/participants/{participantId}/eliminate", setParticipantStatus(gamepolicy.ParticipantEliminated)).BindFunc(actorauth.RequireGameMaster)
 	group.POST("/games/{id}/participants/{participantId}/reinstate", setParticipantStatus(gamepolicy.ParticipantActive)).BindFunc(actorauth.RequireGameMaster)
 	group.PUT("/games/{id}/assignments", putAssignments).BindFunc(actorauth.RequireGameMaster)
-	group.POST("/games/{id}/assignments/randomize", randomizeAssignments).BindFunc(actorauth.RequireGameMaster)
 	group.PUT("/games/{id}/outcomes", putOutcomes).BindFunc(actorauth.RequireGameMaster)
 
 	group.GET("/games/live", func(event *core.RequestEvent) error {

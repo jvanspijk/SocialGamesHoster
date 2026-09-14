@@ -263,7 +263,7 @@ func ProjectAdmin(app core.App, game *core.Record, definition rulesets.Definitio
 			}
 			results = append(results, map[string]any{
 				"participantId": participant.Id, "displayName": participant.GetString("display_name_snapshot"),
-				"seatNumber": participant.GetInt("seat_number"), "phaseKey": group.phaseKey,
+				"seatNumber": participant.GetInt("player_number"), "phaseKey": group.phaseKey,
 				"roundNumber": group.round, "abilities": group.abilities,
 			})
 		}

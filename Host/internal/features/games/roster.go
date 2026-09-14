@@ -1,8 +1,6 @@
 package games
 
 import (
-	"crypto/rand"
-	"encoding/binary"
 	"net/http"
 	"strings"
 	"time"
@@ -138,7 +136,12 @@ func participantChanged(event *core.RequestEvent, game, participant *core.Record
 }
 
 type assignmentRequest struct {
-	Assignments []rulesets.Assignment `json:"assignments"`
+	Assignments []roleAssignment `json:"assignments"`
+}
+
+type roleAssignment struct {
+	ParticipantID string `json:"participantId"`
+	RoleID        string `json:"roleId"`
 }
 
 func putAssignments(event *core.RequestEvent) error {
@@ -173,45 +176,7 @@ func putAssignments(event *core.RequestEvent) error {
 	return assignmentsChanged(event, game)
 }
 
-func randomizeAssignments(event *core.RequestEvent) error {
-	game, err := findGame(event)
-	if err != nil {
-		return httpx.WriteErrorFrom(event, err)
-	}
-	if game.GetString("status") != string(StatusLobby) {
-		return httpx.WriteError(event, result.Conflict("game.assignments_not_allowed", "Assignments can only change in the lobby."))
-	}
-	var request assignmentRequest
-	if err := event.BindBody(&request); err != nil {
-		return httpx.WriteError(event, result.Invalid("game.assignments_invalid", "The locked assignments could not be read.", nil))
-	}
-	participants, err := currentParticipants(event.App, game.Id)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	ids := make([]string, len(participants))
-	for index, participant := range participants {
-		ids[index] = participant.Id
-	}
-	definition, err := snapshot(game)
-	if err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	seedBytes := [8]byte{}
-	if _, err := rand.Read(seedBytes[:]); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	assignments, err := rulesets.RandomizeAssignments(definition, ids, request.Assignments, binary.LittleEndian.Uint64(seedBytes[:]))
-	if err != nil {
-		return httpx.WriteError(event, result.Conflict("game.assignment_unsatisfiable", err.Error()))
-	}
-	if err := saveAssignments(event.App, game, assignments, event.Auth.Id, event.Auth, event.Get(httpx.TraceIDKey)); err != nil {
-		return httpx.WriteError(event, result.Internal(err))
-	}
-	return assignmentsChanged(event, game)
-}
-
-func validateAssignmentParticipants(participants []*core.Record, assignments []rulesets.Assignment) *result.AppError {
+func validateAssignmentParticipants(participants []*core.Record, assignments []roleAssignment) *result.AppError {
 	allowed := make(map[string]bool, len(participants))
 	for _, participant := range participants {
 		allowed[participant.Id] = true
@@ -227,21 +192,31 @@ func validateAssignmentParticipants(participants []*core.Record, assignments []r
 	return nil
 }
 
-func validateAssignmentRoles(definition rulesets.DefinitionV1, assignments []rulesets.Assignment) *result.AppError {
-	roles := make(map[string]bool, len(definition.Roles))
+func validateAssignmentRoles(definition rulesets.DefinitionV1, assignments []roleAssignment) *result.AppError {
+	roles := make(map[string]rulesets.Role, len(definition.Roles))
 	for _, role := range definition.Roles {
-		roles[role.ID] = true
+		roles[role.ID] = role
 	}
+	counts := make(map[string]int, len(definition.Roles))
 	for _, assignment := range assignments {
-		if assignment.RoleID != "" && !roles[assignment.RoleID] {
+		if assignment.RoleID == "" {
+			continue
+		}
+		role, exists := roles[assignment.RoleID]
+		if !exists {
 			value := result.Invalid("game.assignments_invalid", "Choose a role from this game's ruleset.", nil)
+			return &value
+		}
+		counts[assignment.RoleID]++
+		if counts[assignment.RoleID] > role.MaxCopies {
+			value := result.Invalid("game.assignments_invalid", role.Name+" exceeds its maximum number of copies.", nil)
 			return &value
 		}
 	}
 	return nil
 }
 
-func saveAssignments(app core.App, game *core.Record, assignments []rulesets.Assignment, gameMasterID string, actor *core.Record, traceID any) error {
+func saveAssignments(app core.App, game *core.Record, assignments []roleAssignment, gameMasterID string, actor *core.Record, traceID any) error {
 	return app.RunInTransaction(func(tx core.App) error {
 		for _, assignment := range assignments {
 			participant, err := tx.FindRecordById("participants", assignment.ParticipantID)

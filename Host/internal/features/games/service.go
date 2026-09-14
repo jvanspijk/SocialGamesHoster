@@ -65,7 +65,7 @@ func projectParticipant(record *core.Record, includeRole bool) map[string]any {
 		"profileId":           record.GetString("profile"),
 		"displayNameSnapshot": record.GetString("display_name_snapshot"),
 		"gameAlias":           record.GetString("game_alias"),
-		"seatNumber":          record.GetInt("seat_number"),
+		"seatNumber":          record.GetInt("player_number"),
 		"status":              record.GetString("status"),
 		"joinedAt":            dateValue(record, "joined_at"),
 		"eliminatedAt":        dateValue(record, "eliminated_at"),
@@ -87,7 +87,7 @@ func dateValue(record *core.Record, field string) any {
 }
 
 func gameParticipants(app core.App, gameID string) ([]*core.Record, error) {
-	return app.FindRecordsByFilter("participants", "game = {:game}", "seat_number", 30, 0, dbx.Params{"game": gameID})
+	return app.FindRecordsByFilter("participants", "game = {:game}", "player_number", 30, 0, dbx.Params{"game": gameID})
 }
 
 func currentParticipants(app core.App, gameID string) ([]*core.Record, error) {

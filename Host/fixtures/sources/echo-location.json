@@ -140,40 +140,6 @@
       "reveal": ["identity", "role", "team", "elimination_state"]
     }
   ],
-  "compositionBands": [
-    {
-      "id": "three_crew",
-      "minPlayers": 3,
-      "maxPlayers": 3,
-      "slots": [
-        {
-          "id": "lookout_slot",
-          "label": "Lookout",
-          "count": 1,
-          "selector": {
-            "roleIds": ["lookout"]
-          }
-        },
-        {
-          "id": "sonar_slot",
-          "label": "Sonar Operator",
-          "count": 1,
-          "selector": {
-            "roleIds": ["sonar_operator"]
-          }
-        },
-        {
-          "id": "captain_slot",
-          "label": "Captain",
-          "count": 1,
-          "selector": {
-            "roleIds": ["captain"]
-          }
-        }
-      ]
-    }
-  ],
-  "compositionModifiers": [],
   "chat": {
     "defaultPolicy": {
       "general": {

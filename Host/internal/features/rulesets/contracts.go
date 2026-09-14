@@ -12,10 +12,6 @@ type (
 	Phase                    = domainrulesets.Phase
 	Selector                 = domainrulesets.Selector
 	KnowledgeRule            = domainrulesets.KnowledgeRule
-	CompositionBand          = domainrulesets.CompositionBand
-	CompositionSlot          = domainrulesets.CompositionSlot
-	CompositionModifier      = domainrulesets.CompositionModifier
-	SlotAdjustment           = domainrulesets.SlotAdjustment
 	SenderDisplay            = domainrulesets.SenderDisplay
 	RoomPermission           = domainrulesets.RoomPermission
 	PartialRoomPermission    = domainrulesets.PartialRoomPermission

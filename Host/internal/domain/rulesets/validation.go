@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -149,58 +148,6 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 		}
 	}
 
-	sortedBands := slices.Clone(def.CompositionBands)
-	sort.Slice(sortedBands, func(i, j int) bool { return sortedBands[i].MinPlayers < sortedBands[j].MinPlayers })
-	for i, band := range sortedBands {
-		path := fmt.Sprintf("compositionBands[%d]", i)
-		if band.MinPlayers < def.Metadata.MinPlayers || band.MaxPlayers > def.Metadata.MaxPlayers || band.MinPlayers > band.MaxPlayers {
-			addError(path, "band.invalid_range", "Composition band is outside the ruleset player range.")
-		}
-		if i > 0 && band.MinPlayers <= sortedBands[i-1].MaxPlayers {
-			addError(path, "band.overlap", "Composition bands cannot overlap.")
-		}
-		slotIDs := validateIDs(path+".slots", slotIDValues(band.Slots), addError)
-		_ = slotIDs
-		for slotIndex, slot := range band.Slots {
-			slotPath := fmt.Sprintf("%s.slots[%d]", path, slotIndex)
-			if slot.Count < 0 {
-				addError(slotPath+".count", "slot.negative", "Slot count cannot be negative.")
-			}
-			validateSelector(slotPath+".selector", slot.Selector, roleIDs, teamIDs, categoryIDs, def.Roles, addError)
-			if len(MatchingRoles(def.Roles, slot.Selector)) == 0 {
-				addError(slotPath+".selector", "selector.empty", "Slot selector does not match any role.")
-			}
-		}
-	}
-
-	if !bandsCoverRange(sortedBands, def.Metadata.MinPlayers, def.Metadata.MaxPlayers) {
-		addError("compositionBands", "band.missing_coverage", "Composition bands must cover every supported player count.")
-	}
-
-	allSlotIDs := map[string]struct{}{}
-	for _, band := range def.CompositionBands {
-		for _, slot := range band.Slots {
-			allSlotIDs[slot.ID] = struct{}{}
-		}
-	}
-	validateIDs("compositionModifiers", modifierIDValues(def.CompositionModifiers), addError)
-	for i, modifier := range def.CompositionModifiers {
-		path := fmt.Sprintf("compositionModifiers[%d]", i)
-		if _, ok := roleIDs[modifier.WhenRolePresent]; !ok {
-			addError(path+".whenRolePresent", "reference.unknown", "Modifier trigger role does not exist.")
-		}
-		for _, id := range append(slices.Clone(modifier.RequiresRoleIDs), modifier.ExcludesRoleIDs...) {
-			if _, ok := roleIDs[id]; !ok {
-				addError(path, "reference.unknown", "Choose an existing role.")
-			}
-		}
-		for adjustmentIndex, adjustment := range modifier.SlotAdjustments {
-			if _, ok := allSlotIDs[adjustment.SlotID]; !ok {
-				addError(fmt.Sprintf("%s.slotAdjustments[%d]", path, adjustmentIndex), "reference.unknown", "Modifier references an unknown slot.")
-			}
-		}
-	}
-
 	for teamID := range def.Chat.DefaultPolicy.Teams {
 		if _, ok := teamIDs[teamID]; !ok {
 			addError("chat.defaultPolicy.teams", "reference.unknown", "Choose an existing team.")
@@ -340,22 +287,6 @@ func validateSelector(path string, selector Selector, roleIDs, teamIDs, category
 	}
 }
 
-func bandsCoverRange(bands []CompositionBand, minPlayers, maxPlayers int) bool {
-	for playerCount := minPlayers; playerCount <= maxPlayers; playerCount++ {
-		found := false
-		for _, band := range bands {
-			if playerCount >= band.MinPlayers && playerCount <= band.MaxPlayers {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
-}
-
 func MatchingRoles(roles []Role, selector Selector) []Role {
 	matches := make([]Role, 0)
 	for _, role := range roles {
@@ -419,12 +350,6 @@ func achievementIDValues(values []Achievement) []string {
 }
 func audioCueIDValues(values []AudioCue) []string {
 	return mapIDs(values, func(value AudioCue) string { return value.ID })
-}
-func slotIDValues(values []CompositionSlot) []string {
-	return mapIDs(values, func(value CompositionSlot) string { return value.ID })
-}
-func modifierIDValues(values []CompositionModifier) []string {
-	return mapIDs(values, func(value CompositionModifier) string { return value.ID })
 }
 
 func mapIDs[T any](values []T, getID func(T) string) []string {

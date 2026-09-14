@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -15,13 +14,12 @@ import (
 )
 
 type previewRequest struct {
-	Definition  DefinitionV1 `json:"definition"`
-	SessionID   string       `json:"sessionId,omitempty"`
-	Mode        string       `json:"mode"`
-	RoleID      string       `json:"roleId,omitempty"`
-	PhaseID     string       `json:"phaseId,omitempty"`
-	PlayerCount int          `json:"playerCount,omitempty"`
-	AssetKey    string       `json:"assetKey,omitempty"`
+	Definition DefinitionV1 `json:"definition"`
+	SessionID  string       `json:"sessionId,omitempty"`
+	Mode       string       `json:"mode"`
+	RoleID     string       `json:"roleId,omitempty"`
+	PhaseID    string       `json:"phaseId,omitempty"`
+	AssetKey   string       `json:"assetKey,omitempty"`
 }
 
 func previewRuleset(event *core.RequestEvent) error {
@@ -82,8 +80,6 @@ func buildRulesetPreview(request previewRequest, assets map[string]effectiveAsse
 		return rolePreview(request.Definition, assets, request.RoleID)
 	case "phases":
 		return phasePreview(request.Definition, assets, request.PhaseID), nil
-	case "composition":
-		return compositionPreview(request.Definition, request.PlayerCount), nil
 	case "chat":
 		return chatPreview(request.Definition, request.RoleID, request.PhaseID)
 	case "media":
@@ -132,7 +128,7 @@ func phasePreview(definition DefinitionV1, assets map[string]effectiveAsset, sel
 		return phases[i].Order < phases[j].Order
 	})
 	if len(phases) == 0 {
-		return map[string]any{"mode": "phases", "empty": true, "message": "This ruleset has no game flow. The game master can run it without phases."}
+		return map[string]any{"mode": "phases", "empty": true, "message": ""}
 	}
 	items := make([]map[string]any, 0, len(phases))
 	for _, phase := range phases {
@@ -151,68 +147,6 @@ func phasePreview(definition DefinitionV1, assets map[string]effectiveAsset, sel
 		items = append(items, item)
 	}
 	return map[string]any{"mode": "phases", "phases": items}
-}
-
-func compositionPreview(definition DefinitionV1, playerCount int) map[string]any {
-	if playerCount == 0 {
-		playerCount = definition.Metadata.MinPlayers
-	}
-	response := map[string]any{"mode": "composition", "playerCount": playerCount}
-	if playerCount < 1 || playerCount > 30 {
-		response["feasible"] = false
-		response["message"] = "Choose a player count between 1 and 30."
-		return response
-	}
-	participants := make([]string, playerCount)
-	for index := range participants {
-		participants[index] = fmt.Sprintf("seat-%d", index+1)
-	}
-	assignments, err := RandomizeAssignments(definition, participants, nil, 1)
-	if err != nil {
-		response["feasible"] = false
-		response["message"] = compositionPreviewMessage(err, playerCount)
-		return response
-	}
-	roles := make(map[string]Role, len(definition.Roles))
-	teams := make(map[string]string, len(definition.Teams))
-	for _, role := range definition.Roles {
-		roles[role.ID] = role
-	}
-	for _, team := range definition.Teams {
-		teams[team.ID] = team.Name
-	}
-	counts := map[string]int{}
-	teamByRoleName := map[string]string{}
-	for _, assignment := range assignments {
-		role := roles[assignment.RoleID]
-		counts[role.Name]++
-		teamByRoleName[role.Name] = teams[role.TeamID]
-	}
-	names := make([]string, 0, len(counts))
-	for name := range counts {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	roleCounts := make([]map[string]any, 0, len(names))
-	for _, name := range names {
-		roleCounts = append(roleCounts, map[string]any{"name": name, "teamName": teamByRoleName[name], "count": counts[name]})
-	}
-	response["feasible"] = true
-	response["message"] = fmt.Sprintf("A valid setup is available for %d players.", playerCount)
-	response["roles"] = roleCounts
-	return response
-}
-
-func compositionPreviewMessage(err error, playerCount int) string {
-	message := err.Error()
-	switch {
-	case strings.Contains(message, "no composition band"):
-		return fmt.Sprintf("No player setup covers %d players.", playerCount)
-	case strings.Contains(message, "base composition slots total"):
-		return fmt.Sprintf("The player setup does not provide exactly %d role places.", playerCount)
-	default:
-		return fmt.Sprintf("No valid role combination is available for %d players.", playerCount)
-	}
 }
 
 func chatPreview(definition DefinitionV1, roleID, phaseID string) (map[string]any, error) {

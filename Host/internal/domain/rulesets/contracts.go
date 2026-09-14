@@ -1,21 +1,23 @@
 package rulesets
 
 type DefinitionV1 struct {
-	SchemaVersion        int                           `json:"schemaVersion"`
-	Metadata             Metadata                      `json:"metadata"`
-	Teams                []Team                        `json:"teams"`
-	Categories           []Category                    `json:"categories"`
-	Abilities            []Ability                     `json:"abilities"`
-	Roles                []Role                        `json:"roles"`
-	Phases               []Phase                       `json:"phases"`
-	KnowledgeRules       []KnowledgeRule               `json:"knowledgeRules"`
-	CompositionBands     []CompositionBand             `json:"compositionBands"`
-	CompositionModifiers []CompositionModifier         `json:"compositionModifiers"`
-	Chat                 ChatPolicy                    `json:"chat"`
-	Achievements         []Achievement                 `json:"achievements"`
-	AudioCues            []AudioCue                    `json:"audioCues"`
-	AssetAccessibility   map[string]AssetAccessibility `json:"assetAccessibility,omitempty"`
+	SchemaVersion      int                           `json:"schemaVersion"`
+	Metadata           Metadata                      `json:"metadata"`
+	Teams              []Team                        `json:"teams"`
+	Categories         []Category                    `json:"categories"`
+	Abilities          []Ability                     `json:"abilities"`
+	Roles              []Role                        `json:"roles"`
+	Phases             []Phase                       `json:"phases"`
+	KnowledgeRules     []KnowledgeRule               `json:"knowledgeRules"`
+	Chat               ChatPolicy                    `json:"chat"`
+	Achievements       []Achievement                 `json:"achievements"`
+	AudioCues          []AudioCue                    `json:"audioCues"`
+	AssetAccessibility map[string]AssetAccessibility `json:"assetAccessibility,omitempty"`
 }
+
+// TODO: Revisit optional role-composition recommendations after the v1 release.
+// They should guide game masters without blocking manual role assignments, and
+// automatic assignment should only return with a deliberately designed solver.
 
 type Metadata struct {
 	Name          string `json:"name"`
@@ -83,39 +85,12 @@ type KnowledgeRule struct {
 	Reveal []string `json:"reveal"`
 }
 
-type CompositionBand struct {
-	ID         string            `json:"id"`
-	MinPlayers int               `json:"minPlayers"`
-	MaxPlayers int               `json:"maxPlayers"`
-	Slots      []CompositionSlot `json:"slots"`
-}
-
-type CompositionSlot struct {
-	ID       string   `json:"id"`
-	Label    string   `json:"label"`
-	Count    int      `json:"count"`
-	Selector Selector `json:"selector"`
-}
-
-type CompositionModifier struct {
-	ID              string           `json:"id"`
-	WhenRolePresent string           `json:"whenRolePresent"`
-	SlotAdjustments []SlotAdjustment `json:"slotAdjustments"`
-	RequiresRoleIDs []string         `json:"requiresRoleIds"`
-	ExcludesRoleIDs []string         `json:"excludesRoleIds"`
-}
-
-type SlotAdjustment struct {
-	SlotID string `json:"slotId"`
-	Delta  int    `json:"delta"`
-}
-
 type SenderDisplay string
 
 const (
 	SenderProfileName SenderDisplay = "profile_name"
 	SenderGameAlias   SenderDisplay = "game_alias"
-	SenderSeatNumber  SenderDisplay = "seat_number"
+	SenderSeatNumber  SenderDisplay = "player_number"
 	SenderRoleLabel   SenderDisplay = "role_label"
 	SenderTeamLabel   SenderDisplay = "team_label"
 )

@@ -211,7 +211,7 @@ func authorizationFixture(t *testing.T) (
 		participant.Set("game", game.Id)
 		participant.Set("profile", profiles[index].Id)
 		participant.Set("display_name_snapshot", profiles[index].GetString("display_name"))
-		participant.Set("seat_number", index+1)
+		participant.Set("player_number", index+1)
 		participant.Set("status", status)
 		participant.Set("outcome", "unset")
 		participant.Set("joined_at", time.Now().UTC())

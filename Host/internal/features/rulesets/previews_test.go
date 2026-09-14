@@ -19,10 +19,6 @@ func TestBuildRulesetPreviewCoversEveryMode(t *testing.T) {
 			AbilityIDs: []string{"ability-see"}, WinCondition: "Keep the village safe.", MaxCopies: 3, ImageAssetKey: "portrait",
 		}},
 		Phases: []Phase{{ID: "phase-night", Name: "Night", Description: "Close your eyes.", Order: 1, SuggestedDurationSeconds: 60, AudioCueID: "cue-bell"}},
-		CompositionBands: []CompositionBand{{
-			ID: "band-three", MinPlayers: 3, MaxPlayers: 3,
-			Slots: []CompositionSlot{{ID: "slot-village", Label: "Village roles", Count: 3, Selector: Selector{TeamIDs: []string{"team-village"}}}},
-		}},
 		Chat: ChatPolicy{
 			DefaultPolicy:  ChatPolicyDefaults{General: &RoomPermission{Visible: true, Readable: true, Sendable: true}, Teams: map[string]RoomPermission{}},
 			PhaseOverrides: map[string]ChatPolicyOverride{"phase-night": {General: &PartialRoomPermission{Visible: &visible, Sendable: &sendable}}},
@@ -51,11 +47,6 @@ func TestBuildRulesetPreviewCoversEveryMode(t *testing.T) {
 	phases, err := buildRulesetPreview(previewRequest{Definition: definition, Mode: "phases", PhaseID: "phase-night"}, assets)
 	if err != nil || len(phases["phases"].([]map[string]any)) != 1 {
 		t.Fatalf("phase preview = %#v, %v", phases, err)
-	}
-
-	composition, err := buildRulesetPreview(previewRequest{Definition: definition, Mode: "composition", PlayerCount: 3}, assets)
-	if err != nil || composition["feasible"] != true || len(composition["roles"].([]map[string]any)) != 1 {
-		t.Fatalf("composition preview = %#v, %v", composition, err)
 	}
 
 	chat, err := buildRulesetPreview(previewRequest{Definition: definition, Mode: "chat", RoleID: "role-villager", PhaseID: "phase-night"}, assets)
@@ -103,14 +94,10 @@ func TestMediaPreviewProjectsEveryConsumingContext(t *testing.T) {
 	}
 }
 
-func TestCompositionAndPhaseLessPreviewsExplainUnavailableConfiguration(t *testing.T) {
+func TestPhaseLessPreviewExplainsUnavailableConfiguration(t *testing.T) {
 	definition := DefinitionV1{Metadata: Metadata{MinPlayers: 4, MaxPlayers: 8}}
 	phases, err := buildRulesetPreview(previewRequest{Definition: definition, Mode: "phases"}, nil)
 	if err != nil || phases["empty"] != true {
 		t.Fatalf("phase-less preview = %#v, %v", phases, err)
-	}
-	composition, err := buildRulesetPreview(previewRequest{Definition: definition, Mode: "composition", PlayerCount: 6}, nil)
-	if err != nil || composition["feasible"] != false || composition["message"] != "No player setup covers 6 players." {
-		t.Fatalf("infeasible preview = %#v, %v", composition, err)
 	}
 }

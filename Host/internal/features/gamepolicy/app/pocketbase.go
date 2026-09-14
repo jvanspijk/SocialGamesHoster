@@ -45,7 +45,7 @@ func CurrentParticipantsByGame(app core.App, gameID string) ([]*core.Record, err
 	return app.FindRecordsByFilter(
 		"participants",
 		currentParticipantsByGameFilter,
-		"seat_number",
+		"player_number",
 		30,
 		0,
 		dbx.Params{"game": gameID},

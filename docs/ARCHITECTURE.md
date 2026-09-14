@@ -113,7 +113,7 @@ PocketBase dashboard are not exposed. Custom handlers verify both the auth
 collection and active state, then authorize the specific record or scope.
 
 The published ruleset definition is copied into each game at creation. Starting
-a game requires a composition-valid assignment. A partial unique SQLite index
+a game requires every active player to have a role from that ruleset. A partial unique SQLite index
 enforces one live game (`lobby`, `running`, or `paused`) even under concurrent
 requests. Archived game snapshots, sender labels, role/outcome history, and
 achievement titles remain stable when a later ruleset version changes.

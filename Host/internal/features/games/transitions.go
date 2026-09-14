@@ -141,16 +141,15 @@ func validateStart(app core.App, game *core.Record) error {
 			Status: http.StatusConflict,
 		}
 	}
-	assignments := make([]rulesets.Assignment, len(participants))
+	assignments := make([]roleAssignment, len(participants))
 	for index, participant := range participants {
 		if participant.GetString("role_key") == "" {
 			return result.AppError{Code: "game.assignments_incomplete", Message: "Assign a role to every player before starting.", Status: http.StatusConflict}
 		}
-		assignments[index] = rulesets.Assignment{ParticipantID: participant.Id, RoleID: participant.GetString("role_key")}
+		assignments[index] = roleAssignment{ParticipantID: participant.Id, RoleID: participant.GetString("role_key")}
 	}
-	report := rulesets.ValidateAssignments(definition, len(participants), assignments)
-	if !report.Valid() {
-		return result.AppError{Code: "game.assignments_invalid", Message: "The role assignments do not satisfy the ruleset composition.", Status: http.StatusConflict}
+	if appError := validateAssignmentRoles(definition, assignments); appError != nil {
+		return *appError
 	}
 	return nil
 }

@@ -117,7 +117,7 @@ func TestSyncLiveParticipantNamesUpdatesOnlyLiveGames(t *testing.T) {
 		participant.Set("profile", profile.Id)
 		participant.Set("display_name_snapshot", "Old Name")
 		participant.Set("status", "active")
-		participant.Set("seat_number", 1)
+		participant.Set("player_number", 1)
 		participant.Set("outcome", "unset")
 		participant.Set("joined_at", time.Now().UTC())
 		if err := app.Save(participant); err != nil {

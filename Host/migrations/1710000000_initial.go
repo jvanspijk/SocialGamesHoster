@@ -190,7 +190,7 @@ func init() {
 			relation("profile", playerProfiles.Id, true),
 			text("display_name_snapshot", true, 2, 32),
 			&core.TextField{Name: "game_alias", Max: 32},
-			&core.NumberField{Name: "seat_number", Required: true, OnlyInt: true, Min: number(1), Max: number(30)},
+			&core.NumberField{Name: "player_number", Required: true, OnlyInt: true, Min: number(1), Max: number(30)},
 			selectField("status", true, "active", "eliminated", "kicked", "left"),
 			&core.TextField{Name: "role_key", Hidden: true, Max: 32},
 			selectField("outcome", true, "unset", "win", "loss", "draw"),
@@ -199,7 +199,7 @@ func init() {
 			relation("assigned_by", gameMasters.Id, false),
 		)
 		participants.AddIndex("idx_participants_game_profile", true, "game,profile", "")
-		participants.AddIndex("idx_participants_game_seat", true, "game,seat_number", "")
+		participants.AddIndex("idx_participants_game_seat", true, "game,player_number", "")
 		if err := app.Save(participants); err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func init() {
 			&core.TextField{Name: "team_key", Max: 32},
 			&core.BoolField{Name: "manually_locked"},
 			selectField("manual_visibility_override", true, "default", "visible", "hidden"),
-			selectField("sender_display", true, "profile_name", "game_alias", "seat_number", "role_label", "team_label"),
+			selectField("sender_display", true, "profile_name", "game_alias", "player_number", "role_label", "team_label"),
 		)
 		chatRooms.AddIndex("idx_chat_rooms_key", true, "game,room_key", "")
 		if err := app.Save(chatRooms); err != nil {

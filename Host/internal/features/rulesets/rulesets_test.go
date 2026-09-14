@@ -36,49 +36,6 @@ func TestDecodeSnapshot(t *testing.T) {
 	}
 }
 
-func TestRandomAssignmentIsDeterministicAndRespectsLocks(t *testing.T) {
-	def := testDefinition()
-	participants := []string{"a", "b", "c", "d"}
-	locked := []Assignment{{ParticipantID: "a", RoleID: "mafioso", Locked: true}}
-
-	first, err := RandomizeAssignments(def, participants, locked, 42)
-	if err != nil {
-		t.Fatal(err)
-	}
-	second, err := RandomizeAssignments(def, participants, locked, 42)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(first, second) {
-		t.Fatalf("seed was not deterministic:\n%#v\n%#v", first, second)
-	}
-	if first[0].RoleID != "mafioso" || !first[0].Locked {
-		t.Fatalf("lock was not preserved: %#v", first[0])
-	}
-	if report := ValidateAssignments(def, len(participants), first); !report.Valid() {
-		t.Fatalf("invalid assignment: %#v", report.Errors)
-	}
-}
-
-func TestModifierRejectsExcludedRole(t *testing.T) {
-	def := testDefinition()
-	def.CompositionModifiers = []CompositionModifier{{
-		ID:              "boss_rule",
-		WhenRolePresent: "mafioso",
-		ExcludesRoleIDs: []string{"doctor"},
-		SlotAdjustments: []SlotAdjustment{},
-	}}
-	assignments := []Assignment{
-		{ParticipantID: "a", RoleID: "mafioso"},
-		{ParticipantID: "b", RoleID: "doctor"},
-		{ParticipantID: "c", RoleID: "villager"},
-		{ParticipantID: "d", RoleID: "villager"},
-	}
-	if ValidateAssignments(def, 4, assignments).Valid() {
-		t.Fatal("expected excluded role combination to fail")
-	}
-}
-
 func TestAchievementContractPreservesPointsAndSpoilerVisibility(t *testing.T) {
 	definition := testDefinition()
 	definition.Achievements = []Achievement{{
@@ -212,10 +169,9 @@ func TestCustomChatChannelEmptySenderAudienceMeansEveryReader(t *testing.T) {
 
 func TestNormalizeDefinitionIdentifiersPreservesImportedValuesAndFillsMissingValues(t *testing.T) {
 	definition := DefinitionV1{
-		Teams:            []Team{{ID: "existing_team"}, {}},
-		Roles:            []Role{{}},
-		CompositionBands: []CompositionBand{{Slots: []CompositionSlot{{}}}},
-		Chat:             ChatPolicy{Channels: []ChatChannel{{}}},
+		Teams: []Team{{ID: "existing_team"}, {}},
+		Roles: []Role{{}},
+		Chat:  ChatPolicy{Channels: []ChatChannel{{}}},
 	}
 	normalized, err := normalizeDefinitionIdentifiers(definition)
 	if err != nil {
@@ -227,8 +183,6 @@ func TestNormalizeDefinitionIdentifiersPreservesImportedValuesAndFillsMissingVal
 	for _, value := range []string{
 		normalized.Teams[1].ID,
 		normalized.Roles[0].ID,
-		normalized.CompositionBands[0].ID,
-		normalized.CompositionBands[0].Slots[0].ID,
 		normalized.Chat.Channels[0].ID,
 	} {
 		if !stableIDPattern.MatchString(value) {
@@ -254,15 +208,6 @@ func testDefinition() DefinitionV1 {
 			{ID: "doctor", Name: "Doctor", TeamID: "town", CategoryIDs: []string{"town_any"}, MaxCopies: 1},
 			{ID: "mafioso", Name: "Mafioso", TeamID: "mafia", CategoryIDs: []string{"mafia_any"}, MaxCopies: 1},
 		},
-		CompositionBands: []CompositionBand{{
-			ID:         "four_players",
-			MinPlayers: 4,
-			MaxPlayers: 4,
-			Slots: []CompositionSlot{
-				{ID: "mafia_slot", Label: "Mafia", Count: 1, Selector: Selector{TeamIDs: []string{"mafia"}}},
-				{ID: "town_slot", Label: "Town", Count: 3, Selector: Selector{TeamIDs: []string{"town"}}},
-			},
-		}},
 		Chat: ChatPolicy{
 			DefaultPolicy:  ChatPolicyDefaults{Teams: map[string]RoomPermission{}},
 			PhaseOverrides: map[string]ChatPolicyOverride{},

@@ -603,7 +603,7 @@ func newAttentionFixture(t *testing.T) attentionFixture {
 		participant.Set("game", game.Id)
 		participant.Set("profile", profile.Id)
 		participant.Set("display_name_snapshot", profile.GetString("display_name"))
-		participant.Set("seat_number", index+1)
+		participant.Set("player_number", index+1)
 		participant.Set("status", "active")
 		participant.Set("role_key", definition.Roles[index].ID)
 		participant.Set("outcome", "unset")
