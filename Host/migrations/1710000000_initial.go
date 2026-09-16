@@ -199,7 +199,7 @@ func init() {
 			relation("assigned_by", gameMasters.Id, false),
 		)
 		participants.AddIndex("idx_participants_game_profile", true, "game,profile", "")
-		participants.AddIndex("idx_participants_game_seat", true, "game,player_number", "")
+		participants.AddIndex("idx_participants_game_player_number", true, "game,player_number", "")
 		if err := app.Save(participants); err != nil {
 			return err
 		}

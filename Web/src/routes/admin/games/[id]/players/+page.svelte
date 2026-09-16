@@ -210,7 +210,7 @@
 					<button class="player-open" type="button" onclick={() => (selectedId = player.id)}>
 						<span class="avatar">{playerName(player).slice(0, 1).toUpperCase()}</span>
 						<span class="identity">
-							<strong><i>Player {player.seatNumber}</i>{playerName(player)}</strong>
+							<strong><i>Player {player.playerNumber}</i>{playerName(player)}</strong>
 							<small
 								>{player.gameAlias ? player.displayNameSnapshot : statusLabel(player.status)}</small
 							>
@@ -252,7 +252,7 @@
 <Dialog
 	open={selected !== null}
 	title={selected ? playerName(selected) : 'Player'}
-	description={selected ? `Player ${selected.seatNumber} · ${statusLabel(selected.status)}` : ''}
+	description={selected ? `Player ${selected.playerNumber} · ${statusLabel(selected.status)}` : ''}
 	close={() => (selectedId = '')}
 >
 	{#if selected && view}

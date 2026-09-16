@@ -19,8 +19,8 @@ func TestPolicyOrderHonorsMembershipAndManualLock(t *testing.T) {
 }
 
 func TestAnonymousSenderProjection(t *testing.T) {
-	sender := Sender{ProfileName: "Secret Name", SeatNumber: 7}
-	if label := SenderLabel(sender, rulesets.SenderSeatNumber); label != "Player 7" {
+	sender := Sender{ProfileName: "Secret Name", PlayerNumber: 7}
+	if label := SenderLabel(sender, rulesets.SenderPlayerNumber); label != "Player 7" {
 		t.Fatalf("unexpected label: %s", label)
 	}
 }

@@ -376,11 +376,6 @@ func TestAnnouncementUploadRejectsInvalidSourcesAndCleansFailedWork(t *testing.T
 			file:   uploadFixture{name: "mixed.png", contentType: "image/png", content: testAnnouncementPNG(t)},
 		},
 		{
-			name:   "missing accessibility text",
-			fields: map[string]string{"content": "No description", "audience": "all"},
-			file:   uploadFixture{name: "missing.png", contentType: "image/png", content: testAnnouncementPNG(t)},
-		},
-		{
 			name:   "invalid signature",
 			fields: map[string]string{"content": "Bad image", "audience": "all", "imageDescription": "Description"},
 			file:   uploadFixture{name: "bad.png", contentType: "image/png", content: []byte("not an image")},

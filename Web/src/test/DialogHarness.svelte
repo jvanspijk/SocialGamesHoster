@@ -21,7 +21,7 @@
 	{close}
 >
 	<div class="player-list">
-		<button type="button" onclick={() => (chosen = 'Rowan')}>Rowan<small>Seat 2</small></button>
+		<button type="button" onclick={() => (chosen = 'Rowan')}>Rowan<small>Player 2</small></button>
 	</div>
 	<p data-testid="chosen">{chosen}</p>
 	<p data-testid="updates">{updates}</p>

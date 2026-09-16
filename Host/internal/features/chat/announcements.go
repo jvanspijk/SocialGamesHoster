@@ -331,8 +331,8 @@ func validateUploadedAccessibility(kind, value string) (string, error) {
 		limit = 1000
 		label = "audio alternative"
 	}
-	if value == "" || len([]rune(value)) > limit || containsControlCharacter(value) {
-		return "", result.Invalid("attention.accessibility_required", "Provide an accessible "+label+" for the attachment.", nil)
+	if len([]rune(value)) > limit || containsControlCharacter(value) {
+		return "", result.Invalid("attention.accessibility_invalid", "The "+label+" is invalid.", nil)
 	}
 	return value, nil
 }
@@ -555,8 +555,8 @@ func validateAnnouncementAsset(app core.App, game *core.Record, definition rules
 		limit = 1000
 		label = "audio alternative"
 	}
-	if description == "" || len([]rune(description)) > limit || containsControlCharacter(description) {
-		return "", result.Invalid("attention.accessibility_required", "Provide an accessible "+label+" for the attachment.", nil)
+	if len([]rune(description)) > limit || containsControlCharacter(description) {
+		return "", result.Invalid("attention.accessibility_invalid", "The "+label+" is invalid.", nil)
 	}
 	return description, nil
 }

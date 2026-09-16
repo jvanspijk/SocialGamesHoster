@@ -437,7 +437,7 @@ func publishLiveParticipantNameChange(app core.App, game, participant *core.Reco
 			"id": participant.Id, "profileId": participant.GetString("profile"),
 			"displayNameSnapshot": participant.GetString("display_name_snapshot"),
 			"gameAlias":           participant.GetString("game_alias"),
-			"seatNumber":          participant.GetInt("player_number"), "status": participant.GetString("status"),
+			"playerNumber":        participant.GetInt("player_number"), "status": participant.GetString("status"),
 		},
 	}
 	for _, topic := range []string{"game:" + game.Id + ":public", "game:" + game.Id + ":game-masters"} {

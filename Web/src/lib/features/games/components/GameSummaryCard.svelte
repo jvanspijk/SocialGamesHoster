@@ -60,7 +60,7 @@
 			{/snippet}
 			<div class="participant">
 				<h3>{playerName(player)}</h3>
-				<p>Seat {player.seatNumber}</p>
+				<p>Player {player.playerNumber}</p>
 			</div>
 		</RecordItem>
 	{/each}

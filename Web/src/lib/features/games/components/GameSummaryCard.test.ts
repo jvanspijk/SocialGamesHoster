@@ -12,7 +12,7 @@ const summary = {
 			id: 'participant-1',
 			gameAlias: 'A very long alias that should wrap cleanly on a phone',
 			displayNameSnapshot: 'Alex',
-			seatNumber: 3,
+			playerNumber: 3,
 			outcome: 'win',
 			achievements: [
 				{ id: 'award-1', title: 'Sharp Eye', description: '', points: 2 },
@@ -23,7 +23,7 @@ const summary = {
 			id: 'participant-2',
 			gameAlias: '',
 			displayNameSnapshot: 'Jordan',
-			seatNumber: 4,
+			playerNumber: 4,
 			outcome: 'loss',
 			achievements: []
 		}
@@ -42,7 +42,7 @@ describe('GameSummaryCard', () => {
 		expect(screen.getByText('1 minutes · 2 players')).toBeVisible();
 		expect(screen.getByText('A very long alias that should wrap cleanly on a phone')).toBeVisible();
 		expect(screen.getByText('Jordan')).toBeVisible();
-		expect(screen.getByText('Seat 3')).toBeVisible();
+		expect(screen.getByText('Player 3')).toBeVisible();
 		expect(screen.getByText('Win')).toHaveClass('tone-success');
 		expect(screen.getByText('Loss')).toHaveClass('tone-danger');
 		expect(screen.getByText('Sharp Eye')).toBeVisible();

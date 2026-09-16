@@ -12,7 +12,7 @@
 				directMessageRecipient(
 					player.id,
 					player.gameAlias || player.displayNameSnapshot,
-					player.seatNumber
+					player.playerNumber
 				)
 			) ?? []
 	);

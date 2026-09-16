@@ -43,7 +43,7 @@
 	);
 	const knowledge = $derived(
 		view.knowledge.map((item, index) => ({
-			id: `${item.participantId ?? item.seatNumber ?? index}`,
+			id: `${item.participantId ?? item.playerNumber ?? index}`,
 			text: knowledgeText(item)
 		})) satisfies RoleKnowledgePresentation[]
 	);
@@ -119,7 +119,7 @@
 	}
 
 	function knowledgeText(item: Record<string, unknown>) {
-		const name = String(item.displayName ?? `Seat ${item.seatNumber ?? ''}`).trim();
+		const name = String(item.displayName ?? `Player ${item.playerNumber ?? ''}`).trim();
 		if (item.role && typeof item.role === 'object') {
 			const roleName = String((item.role as { name?: unknown }).name ?? 'role known');
 			return `${name}: ${roleName}`;

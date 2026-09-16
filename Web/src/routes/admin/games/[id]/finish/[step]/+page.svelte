@@ -214,7 +214,7 @@
 							<div class="avatar">{playerName(player).slice(0, 1).toUpperCase()}</div>
 							<div>
 								<h3>{playerName(player)}</h3>
-								<p>Seat {player.seatNumber}</p>
+								<p>Player {player.playerNumber}</p>
 							</div>
 							<div class="outcome-choices">
 								{#each ['win', 'loss', 'draw', 'unset'] as outcome (outcome)}

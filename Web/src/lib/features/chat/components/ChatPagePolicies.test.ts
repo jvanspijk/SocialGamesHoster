@@ -50,14 +50,14 @@ it('offers admin active players and opens their existing game-master conversatio
 				id: 'participant-2',
 				displayNameSnapshot: 'Rowan',
 				gameAlias: '',
-				seatNumber: 2,
+				playerNumber: 2,
 				status: 'active'
 			},
 			{
 				id: 'participant-left',
 				displayNameSnapshot: 'Left player',
 				gameAlias: '',
-				seatNumber: 3,
+				playerNumber: 3,
 				status: 'left'
 			}
 		],
@@ -65,7 +65,7 @@ it('offers admin active players and opens their existing game-master conversatio
 	};
 	render(AdminChatPage);
 	await fireEvent.click(newMessageButton());
-	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Seat 2/ }));
+	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Player 2/ }));
 	await waitFor(() => expect(mocks.goto).toHaveBeenCalledWith('/admin/games/game-1/chat/room-2'));
 	expect(screen.queryByRole('button', { name: /Left player/ })).not.toBeInTheDocument();
 });
@@ -80,7 +80,7 @@ it('excludes the player and creates their direct conversation before navigating'
 				profileId: 'profile-1',
 				displayName: 'You',
 				gameAlias: '',
-				seatNumber: 1,
+				playerNumber: 1,
 				status: 'active'
 			},
 			{
@@ -88,7 +88,7 @@ it('excludes the player and creates their direct conversation before navigating'
 				profileId: 'profile-2',
 				displayName: 'Rowan',
 				gameAlias: '',
-				seatNumber: 2,
+				playerNumber: 2,
 				status: 'active'
 			},
 			{
@@ -96,14 +96,14 @@ it('excludes the player and creates their direct conversation before navigating'
 				profileId: 'profile-3',
 				displayName: 'Eliminated player',
 				gameAlias: '',
-				seatNumber: 3,
+				playerNumber: 3,
 				status: 'eliminated'
 			}
 		]
 	};
 	render(PlayerChatPage);
 	await fireEvent.click(newMessageButton());
-	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Seat 2/ }));
+	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Player 2/ }));
 	await waitFor(() =>
 		expect(mocks.api).toHaveBeenCalledWith('/games/game-1/rooms/player-dm', {
 			method: 'POST',
@@ -111,8 +111,8 @@ it('excludes the player and creates their direct conversation before navigating'
 		})
 	);
 	expect(mocks.goto).toHaveBeenCalledWith('/play/chat/room-2');
-	expect(screen.queryByRole('button', { name: /You.*Seat 1/ })).not.toBeInTheDocument();
+	expect(screen.queryByRole('button', { name: /You.*Player 1/ })).not.toBeInTheDocument();
 	expect(
-		screen.queryByRole('button', { name: /Eliminated player.*Seat 3/ })
+		screen.queryByRole('button', { name: /Eliminated player.*Player 3/ })
 	).not.toBeInTheDocument();
 });

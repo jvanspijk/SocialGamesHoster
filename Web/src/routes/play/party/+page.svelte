@@ -47,7 +47,7 @@
 					>
 					<span>
 						<strong>{member.gameAlias || member.displayName}</strong>
-						<small>{member.gameAlias ? member.displayName : `Seat ${member.seatNumber}`}</small>
+						<small>{member.gameAlias ? member.displayName : `Player ${member.playerNumber}`}</small>
 					</span>
 					<i class:eliminated={member.status === 'eliminated'}>{member.status}</i>
 				</button>

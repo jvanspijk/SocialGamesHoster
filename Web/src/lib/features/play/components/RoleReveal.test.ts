@@ -20,7 +20,7 @@ const view = {
 		id: 'participant',
 		displayName: 'Mira',
 		gameAlias: '',
-		seatNumber: 1,
+		playerNumber: 1,
 		status: 'active'
 	},
 	ruleset: { name: 'Test', description: '' },
@@ -34,7 +34,7 @@ const view = {
 		team: { id: 'village', name: 'Village', description: '' },
 		abilities: [{ id: 'read', name: 'Read', description: 'Inspect one player.' }]
 	},
-	knowledge: [{ participantId: 'p2', seatNumber: 2, role: { name: 'Villager' } }],
+	knowledge: [{ participantId: 'p2', playerNumber: 2, role: { name: 'Villager' } }],
 	rooms: [],
 	attentionItems: [],
 	assets: [],

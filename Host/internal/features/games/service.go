@@ -65,7 +65,7 @@ func projectParticipant(record *core.Record, includeRole bool) map[string]any {
 		"profileId":           record.GetString("profile"),
 		"displayNameSnapshot": record.GetString("display_name_snapshot"),
 		"gameAlias":           record.GetString("game_alias"),
-		"seatNumber":          record.GetInt("player_number"),
+		"playerNumber":        record.GetInt("player_number"),
 		"status":              record.GetString("status"),
 		"joinedAt":            dateValue(record, "joined_at"),
 		"eliminatedAt":        dateValue(record, "eliminated_at"),

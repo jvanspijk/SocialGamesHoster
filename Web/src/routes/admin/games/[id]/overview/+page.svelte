@@ -370,7 +370,7 @@
 						<ul class="ability-results">
 							{#each view.abilityResults as result (`${result.participantId}-${result.roundNumber}-${result.phaseKey}`)}
 								<li>
-									<strong>Seat {result.seatNumber} · {result.displayName}</strong>
+									<strong>Player {result.playerNumber} · {result.displayName}</strong>
 									<span>
 										Round {result.roundNumber || 1}, {view.ruleset.phases.find(
 											(phase) => phase.id === result.phaseKey
@@ -464,7 +464,7 @@
 					<option value="">Choose a player</option>
 					{#each activePlayers as player (player.id)}
 						<option value={player.id}
-							>Seat {player.seatNumber} · {player.displayNameSnapshot}</option
+							>Player {player.playerNumber} · {player.displayNameSnapshot}</option
 						>
 					{/each}
 				</select>
@@ -515,15 +515,6 @@
 				</label>
 			{/if}
 		</fieldset>
-		{#if announcementImageSource !== 'none'}
-			<Field
-				label="Image description"
-				name="announcement-image-description"
-				bind:value={announcementImageDescription}
-				multiline
-				required
-			/>
-		{/if}
 		<fieldset>
 			<legend>Audio (optional)</legend>
 			<div class="source-options">
@@ -569,15 +560,6 @@
 				</label>
 			{/if}
 		</fieldset>
-		{#if announcementAudioSource !== 'none'}
-			<Field
-				label="Audio alternative"
-				name="announcement-audio-alternative"
-				bind:value={announcementAudioAlternative}
-				multiline
-				required
-			/>
-		{/if}
 	</form>
 	{#snippet actions()}
 		<Button variant="ghost" onclick={() => (announcementOpen = false)}>Cancel</Button>

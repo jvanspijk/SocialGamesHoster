@@ -34,7 +34,7 @@ describe('AttentionCard', () => {
 		expect(audio).toHaveAttribute('autoplay');
 		expect(audio).not.toHaveAttribute('controls');
 		expect(audio).toHaveAttribute('preload', 'auto');
-		expect(screen.getByText('A short rising tone.')).toBeInTheDocument();
+		expect(screen.queryByText('A short rising tone.')).not.toBeInTheDocument();
 	});
 
 	it('presents the queue, announcement text, image alternative, and acknowledgement action', async () => {
@@ -53,7 +53,7 @@ describe('AttentionCard', () => {
 		expect(screen.getByText('2 of 3')).toBeInTheDocument();
 		expect(screen.getByText('Announcement from Host')).toBeInTheDocument();
 		expect(screen.getByText('Listen carefully.')).toBeInTheDocument();
-		expect(screen.getByText('A red wax seal.')).toBeInTheDocument();
+		expect(screen.queryByText('A red wax seal.')).not.toBeInTheDocument();
 		await screen.findByAltText('A red wax seal.');
 
 		screen.getByRole('button', { name: 'Acknowledge' }).click();

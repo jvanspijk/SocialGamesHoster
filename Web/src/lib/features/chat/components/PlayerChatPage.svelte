@@ -14,7 +14,11 @@
 		view?.party
 			.filter((player) => player.profileId !== auth.actor?.id && player.status === 'active')
 			.map((player) =>
-				directMessageRecipient(player.id, player.gameAlias || player.displayName, player.seatNumber)
+				directMessageRecipient(
+					player.id,
+					player.gameAlias || player.displayName,
+					player.playerNumber
+				)
 			) ?? []
 	);
 

@@ -63,6 +63,6 @@
 	}
 
 	.actions {
-		justify-self: start;
+		justify-self: center;
 	}
 </style>

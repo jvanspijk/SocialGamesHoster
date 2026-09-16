@@ -27,11 +27,11 @@ type (
 )
 
 const (
-	SenderProfileName = domainrulesets.SenderProfileName
-	SenderGameAlias   = domainrulesets.SenderGameAlias
-	SenderSeatNumber  = domainrulesets.SenderSeatNumber
-	SenderRoleLabel   = domainrulesets.SenderRoleLabel
-	SenderTeamLabel   = domainrulesets.SenderTeamLabel
-	ChatNormalText    = domainrulesets.ChatNormalText
-	ChatEmojiOnly     = domainrulesets.ChatEmojiOnly
+	SenderProfileName  = domainrulesets.SenderProfileName
+	SenderGameAlias    = domainrulesets.SenderGameAlias
+	SenderPlayerNumber = domainrulesets.SenderPlayerNumber
+	SenderRoleLabel    = domainrulesets.SenderRoleLabel
+	SenderTeamLabel    = domainrulesets.SenderTeamLabel
+	ChatNormalText     = domainrulesets.ChatNormalText
+	ChatEmojiOnly      = domainrulesets.ChatEmojiOnly
 )

@@ -110,11 +110,11 @@ type KnowledgeRule struct {
 type SenderDisplay string
 
 const (
-	SenderProfileName SenderDisplay = "profile_name"
-	SenderGameAlias   SenderDisplay = "game_alias"
-	SenderSeatNumber  SenderDisplay = "player_number"
-	SenderRoleLabel   SenderDisplay = "role_label"
-	SenderTeamLabel   SenderDisplay = "team_label"
+	SenderProfileName  SenderDisplay = "profile_name"
+	SenderGameAlias    SenderDisplay = "game_alias"
+	SenderPlayerNumber SenderDisplay = "player_number"
+	SenderRoleLabel    SenderDisplay = "role_label"
+	SenderTeamLabel    SenderDisplay = "team_label"
 )
 
 type RoomPermission struct {

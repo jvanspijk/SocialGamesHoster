@@ -13,13 +13,11 @@
 {#if image}
 	<figure>
 		<ProtectedMedia src={image.url} kind="image" alt={image.description} />
-		<figcaption>{image.description}</figcaption>
 	</figure>
 {/if}
 {#if audio}
 	<div class="audio-attachment">
 		<ProtectedMedia src={audio.url} kind="audio" autoplay />
-		<p><strong>Audio alternative:</strong> {audio.alternative}</p>
 	</div>
 {/if}
 
@@ -31,12 +29,6 @@
 	figure :global(img) {
 		max-height: 18rem;
 		object-fit: contain;
-	}
-
-	figcaption,
-	.audio-attachment p {
-		color: var(--ink-soft);
-		font-size: 0.85rem;
 	}
 
 	.audio-attachment {

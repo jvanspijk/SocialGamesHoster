@@ -63,7 +63,7 @@ export interface Participant {
 	profileId: string;
 	displayNameSnapshot: string;
 	gameAlias: string;
-	seatNumber: number;
+	playerNumber: number;
 	status: 'active' | 'eliminated' | 'kicked' | 'left';
 	outcome: 'unset' | 'win' | 'loss' | 'draw';
 	roleKey?: string;
@@ -165,7 +165,7 @@ export interface PlayerGameView {
 		id: string;
 		displayName: string;
 		gameAlias: string;
-		seatNumber: number;
+		playerNumber: number;
 		status: string;
 	};
 	ruleset: { name: string; description: string };
@@ -189,7 +189,7 @@ export interface PlayerGameView {
 		profileId: string;
 		displayName: string;
 		gameAlias: string;
-		seatNumber: number;
+		playerNumber: number;
 		status: string;
 	}>;
 	abilityChoices?: AbilityChoice[];
@@ -239,7 +239,7 @@ export interface AdminGameView {
 	abilityResults: Array<{
 		participantId: string;
 		displayName: string;
-		seatNumber: number;
+		playerNumber: number;
 		phaseKey: string;
 		roundNumber: number;
 		abilities: Array<{ id: string; name: string }>;

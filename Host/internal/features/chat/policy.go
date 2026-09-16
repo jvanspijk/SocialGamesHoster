@@ -37,11 +37,11 @@ func EffectivePolicy(base rulesets.RoomPermission, override *rulesets.PartialRoo
 }
 
 type Sender struct {
-	ProfileName string
-	GameAlias   string
-	SeatNumber  int
-	RoleLabel   string
-	TeamLabel   string
+	ProfileName  string
+	GameAlias    string
+	PlayerNumber int
+	RoleLabel    string
+	TeamLabel    string
 }
 
 func SenderLabel(sender Sender, display rulesets.SenderDisplay) string {
@@ -51,8 +51,8 @@ func SenderLabel(sender Sender, display rulesets.SenderDisplay) string {
 			return sender.GameAlias
 		}
 		return sender.ProfileName
-	case rulesets.SenderSeatNumber:
-		return "Player " + itoa(sender.SeatNumber)
+	case rulesets.SenderPlayerNumber:
+		return "Player " + itoa(sender.PlayerNumber)
 	case rulesets.SenderRoleLabel:
 		return sender.RoleLabel
 	case rulesets.SenderTeamLabel:

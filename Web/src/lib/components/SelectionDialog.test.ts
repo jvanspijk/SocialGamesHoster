@@ -13,8 +13,8 @@ const entries = [
 	{
 		id: 'participant-2',
 		label: 'Rowan',
-		accessibleLabel: 'Rowan, Seat 2',
-		supportingLabel: 'Seat 2',
+		accessibleLabel: 'Rowan, Player 2',
+		supportingLabel: 'Player 2',
 		leadingText: 'R'
 	}
 ];
@@ -44,11 +44,11 @@ describe('SelectionDialog', () => {
 			'Select where to continue.'
 		);
 
-		const entry = screen.getByRole('button', { name: 'Rowan, Seat 2' });
+		const entry = screen.getByRole('button', { name: 'Rowan, Player 2' });
 		expect(entry).toBeInstanceOf(HTMLButtonElement);
 		expect(entry).toHaveTextContent('R');
 		expect(entry).toHaveTextContent('Rowan');
-		expect(entry).toHaveTextContent('Seat 2');
+		expect(entry).toHaveTextContent('Player 2');
 		entry.focus();
 		await fireEvent.click(entry);
 		expect(onselect).toHaveBeenCalledWith('participant-2');
@@ -72,7 +72,7 @@ describe('SelectionDialog', () => {
 			}
 		});
 
-		const entry = screen.getByRole('button', { name: 'Rowan, Seat 2' });
+		const entry = screen.getByRole('button', { name: 'Rowan, Player 2' });
 		entry.focus();
 		await user.keyboard(input);
 		expect(onselect).toHaveBeenCalledWith('participant-2');
@@ -96,7 +96,7 @@ describe('SelectionDialog', () => {
 
 		expect(screen.getByRole('heading', { name: 'Nothing available' })).toBeVisible();
 		expect(screen.getByText('There are no destinations to choose.')).toBeVisible();
-		expect(screen.queryByRole('button', { name: 'Rowan, Seat 2' })).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: 'Rowan, Player 2' })).not.toBeInTheDocument();
 	});
 
 	it('closes explicitly and restores focus to the trigger', async () => {

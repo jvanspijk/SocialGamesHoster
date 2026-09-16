@@ -170,7 +170,7 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 			addError(path+".messageRestriction", "chat.invalid_message_restriction", "Choose normal text or emoji-only messages.")
 		}
 		if !slices.Contains([]SenderDisplay{
-			SenderProfileName, SenderGameAlias, SenderSeatNumber, SenderRoleLabel, SenderTeamLabel,
+			SenderProfileName, SenderGameAlias, SenderPlayerNumber, SenderRoleLabel, SenderTeamLabel,
 		}, channel.SenderDisplay) {
 			addError(path+".senderDisplay", "chat.invalid_sender_display", "Choose how player senders are shown.")
 		}

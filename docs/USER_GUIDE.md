@@ -23,7 +23,7 @@ game audit; accounts should not be shared.
    the private IP address and port, never an account secret.
 4. A new or recovering player chooses their profile name. Approve the request
    from **Entry requests** in the live-game header, or under **Approvals**.
-5. Assign seats, aliases, and roles. Every active player needs a role before the
+5. Assign player numbers, aliases, and roles. Every active player needs a role before the
    game starts.
 
 Returning approved devices keep their profile. Recovering that profile on a new

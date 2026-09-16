@@ -28,6 +28,12 @@ func renameParticipantNumberField(app core.App, from, to string) error {
 		return fmt.Errorf("participants field %q is not a number field", from)
 	}
 	field.Name = to
-	participants.AddIndex("idx_participants_game_seat", true, "game,"+to, "")
+	participants.RemoveIndex("idx_participants_game_seat")
+	participants.RemoveIndex("idx_participants_game_player_number")
+	indexName := "idx_participants_game_player_number"
+	if to == "seat_number" {
+		indexName = "idx_participants_game_seat"
+	}
+	participants.AddIndex(indexName, true, "game,"+to, "")
 	return app.Save(participants)
 }

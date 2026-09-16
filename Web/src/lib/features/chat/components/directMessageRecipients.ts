@@ -3,9 +3,9 @@ import type { SelectionDialogEntry } from '$lib/components/SelectionDialog.svelt
 export function directMessageRecipient(
 	id: string,
 	label: string,
-	seatNumber: number
+	playerNumber: number
 ): SelectionDialogEntry {
-	const supportingLabel = `Seat ${seatNumber}`;
+	const supportingLabel = `Player ${playerNumber}`;
 	return {
 		id,
 		label,

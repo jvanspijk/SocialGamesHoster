@@ -51,19 +51,10 @@
 	<Dialog
 		open={revealConfirmOpen}
 		title="Reveal roles?"
-		description={presentation === 'readiness'
-			? 'Players will be able to see their assigned role.'
-			: ''}
+		description="Players will be able to see their assigned role."
 		close={() => (revealConfirmOpen = false)}
 	>
-		{#if presentation === 'readiness'}
-			<p>Players can still toggle the visibility of their role on their own screen.</p>
-		{:else}
-			<p>
-				Players will be able to view their assigned roles. They can hide them again on their screen
-				at any time.
-			</p>
-		{/if}
+		<p>Each player can still hide or show it on their own device at any time.</p>
 		{#snippet actions()}
 			<Button variant="ghost" onclick={() => (revealConfirmOpen = false)}>Cancel</Button>
 			<Button loading={busy} onclick={() => setRoleVisibility(true)}>Reveal roles</Button>
@@ -73,14 +64,10 @@
 	<Dialog
 		open={hideConfirmOpen}
 		title="Hide roles?"
-		description={presentation === 'readiness'
-			? 'Players with the Role screen open will lose access immediately.'
-			: ''}
+		description=""
 		close={() => (hideConfirmOpen = false)}
 	>
-		{#if presentation !== 'readiness'}
-			<p>Roles will be hidden on all player screens immediately.</p>
-		{/if}
+		<p>Roles will be hidden on all player screens immediately.</p>
 		{#snippet actions()}
 			<Button variant="ghost" onclick={() => (hideConfirmOpen = false)}>Cancel</Button>
 			<Button variant="danger" loading={busy} onclick={() => setRoleVisibility(false)}

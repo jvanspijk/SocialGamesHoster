@@ -28,12 +28,12 @@ it('opens a recipient, closes the dialog, and selects the returned conversation'
 	const openConversation = vi.fn().mockResolvedValue('room-2');
 	render(DirectMessageChatPage, {
 		gameId: 'game-1',
-		recipientEntries: [{ id: 'participant-2', label: 'Rowan', accessibleLabel: 'Rowan, Seat 2' }],
+		recipientEntries: [{ id: 'participant-2', label: 'Rowan', accessibleLabel: 'Rowan, Player 2' }],
 		roomPath: (roomId) => `/play/chat/${roomId}`,
 		openConversation
 	});
 	await fireEvent.click(newMessageButton());
-	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Seat 2/ }));
+	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Player 2/ }));
 	await waitFor(() => expect(openConversation).toHaveBeenCalledWith('participant-2'));
 	expect(mocks.goto).toHaveBeenCalledWith('/play/chat/room-2');
 	await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -42,11 +42,11 @@ it('opens a recipient, closes the dialog, and selects the returned conversation'
 it('keeps the recipient dialog open when opening fails', async () => {
 	render(DirectMessageChatPage, {
 		gameId: 'game-1',
-		recipientEntries: [{ id: 'participant-2', label: 'Rowan', accessibleLabel: 'Rowan, Seat 2' }],
+		recipientEntries: [{ id: 'participant-2', label: 'Rowan', accessibleLabel: 'Rowan, Player 2' }],
 		roomPath: (roomId) => `/play/chat/${roomId}`,
 		openConversation: () => undefined
 	});
 	await fireEvent.click(newMessageButton());
-	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Seat 2/ }));
+	await fireEvent.click(screen.getByRole('button', { name: /Rowan.*Player 2/ }));
 	expect(screen.getByRole('dialog')).toBeInTheDocument();
 });

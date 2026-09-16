@@ -60,7 +60,7 @@
 			</div>
 			<div class="timer-wrap">
 				<Clock3 size={22} aria-hidden="true" />
-				<TimerDisplay gameId={view.game.id} />
+				<TimerDisplay gameId={view.game.id} revision={view.game.revision} />
 			</div>
 			<div class="quick-actions">
 				<!-- The disabled role state intentionally has no destination. -->

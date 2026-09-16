@@ -542,7 +542,7 @@ func playerSenderLabel(app core.App, resolved access, profile *core.Record) (str
 	}
 	return SenderLabel(Sender{
 		ProfileName: profile.GetString("display_name"), GameAlias: resolved.Participant.GetString("game_alias"),
-		SeatNumber: resolved.Participant.GetInt("player_number"), RoleLabel: roleName, TeamLabel: teamName,
+		PlayerNumber: resolved.Participant.GetInt("player_number"), RoleLabel: roleName, TeamLabel: teamName,
 	}, display), nil
 }
 

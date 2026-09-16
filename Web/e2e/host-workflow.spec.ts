@@ -281,6 +281,8 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await expect(request).toBeVisible();
 		await request.getByRole('button', { name: 'Approve' }).click();
 		await expect(player).toHaveURL(/\/play(?:\/party)?$/);
+		await player.getByRole('link', { name: 'Party', exact: true }).click();
+		await expect(player.getByText('Player 1', { exact: true })).toBeVisible();
 		await page.goto(gameUrl);
 
 		await page.getByRole('button', { name: 'New announcement' }).first().click();
@@ -372,7 +374,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		const browserPlayerId = await announcement
 			.getByLabel('Player')
 			.locator('option')
-			.filter({ hasText: /^Seat \d+ · Browser Player$/ })
+			.filter({ hasText: /^Player \d+ · Browser Player$/ })
 			.getAttribute('value');
 		expect(browserPlayerId).not.toBeNull();
 		await announcement

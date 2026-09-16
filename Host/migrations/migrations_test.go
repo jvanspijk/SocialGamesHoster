@@ -220,11 +220,18 @@ func TestPlayerNumberMigrationPreservesExistingValues(t *testing.T) {
 		t.Fatal("participant field was not renamed to player_number")
 	}
 	var indexSQL string
-	if err := app.DB().NewQuery("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_participants_game_seat'").Row(&indexSQL); err != nil {
+	if err := app.DB().NewQuery("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_participants_game_player_number'").Row(&indexSQL); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(indexSQL, "player_number") {
 		t.Fatalf("participant number index was not updated: %s", indexSQL)
+	}
+	var legacyIndexCount int
+	if err := app.DB().NewQuery("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'idx_participants_game_seat'").Row(&legacyIndexCount); err != nil {
+		t.Fatal(err)
+	}
+	if legacyIndexCount != 0 {
+		t.Fatal("legacy participant seat index was not removed")
 	}
 }
 
