@@ -10,8 +10,11 @@ if ($Diagnostics) {
     $arguments += "--diagnostics"
 }
 
-$hostProcess = Start-Process -FilePath "go" -ArgumentList $arguments -WorkingDirectory $projectRoot `
-    -PassThru -WindowStyle Hidden
+$hostJob = Start-Job -ArgumentList $projectRoot, $arguments -ScriptBlock {
+    param($root, [string[]]$goArguments)
+    Set-Location -LiteralPath $root
+    & go @goArguments
+}
 try {
     Push-Location (Join-Path $projectRoot "Web")
     try {
@@ -22,7 +25,6 @@ try {
     }
 }
 finally {
-    if (-not $hostProcess.HasExited) {
-        Stop-Process -Id $hostProcess.Id
-    }
+    Stop-Job -Job $hostJob -ErrorAction SilentlyContinue
+    Remove-Job -Job $hostJob -Force -ErrorAction SilentlyContinue
 }

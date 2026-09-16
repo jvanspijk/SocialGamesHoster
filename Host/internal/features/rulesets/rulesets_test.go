@@ -204,9 +204,9 @@ func testDefinition() DefinitionV1 {
 			{ID: "mafia_any", Name: "Mafia"},
 		},
 		Roles: []Role{
-			{ID: "villager", Name: "Villager", TeamID: "town", CategoryIDs: []string{"town_any"}, MaxCopies: 3},
-			{ID: "doctor", Name: "Doctor", TeamID: "town", CategoryIDs: []string{"town_any"}, MaxCopies: 1},
-			{ID: "mafioso", Name: "Mafioso", TeamID: "mafia", CategoryIDs: []string{"mafia_any"}, MaxCopies: 1},
+			{ID: "villager", Name: "Villager", TeamID: "town", CategoryIDs: []string{"town_any"}},
+			{ID: "doctor", Name: "Doctor", TeamID: "town", CategoryIDs: []string{"town_any"}},
+			{ID: "mafioso", Name: "Mafioso", TeamID: "mafia", CategoryIDs: []string{"mafia_any"}},
 		},
 		Chat: ChatPolicy{
 			DefaultPolicy:  ChatPolicyDefaults{Teams: map[string]RoomPermission{}},

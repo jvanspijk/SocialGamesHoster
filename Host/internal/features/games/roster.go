@@ -197,19 +197,13 @@ func validateAssignmentRoles(definition rulesets.DefinitionV1, assignments []rol
 	for _, role := range definition.Roles {
 		roles[role.ID] = role
 	}
-	counts := make(map[string]int, len(definition.Roles))
 	for _, assignment := range assignments {
 		if assignment.RoleID == "" {
 			continue
 		}
-		role, exists := roles[assignment.RoleID]
+		_, exists := roles[assignment.RoleID]
 		if !exists {
 			value := result.Invalid("game.assignments_invalid", "Choose a role from this game's ruleset.", nil)
-			return &value
-		}
-		counts[assignment.RoleID]++
-		if counts[assignment.RoleID] > role.MaxCopies {
-			value := result.Invalid("game.assignments_invalid", role.Name+" exceeds its maximum number of copies.", nil)
 			return &value
 		}
 	}

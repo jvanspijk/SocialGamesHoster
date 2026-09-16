@@ -72,8 +72,7 @@
 			categoryIds: [],
 			tags: [],
 			abilityIds: [],
-			winCondition: '',
-			maxCopies: 1
+			winCondition: ''
 		};
 		definition.roles.push(item);
 		selectedItems.roles = item.id;
@@ -206,17 +205,6 @@
 					bind:value={role.winCondition}
 					multiline
 				/>
-				<div class="form-grid">
-					<label
-						><span>Maximum copies</span><input
-							name={`role-max-copies-${index}`}
-							type="number"
-							min="1"
-							max="30"
-							bind:value={role.maxCopies}
-						/></label
-					>
-				</div>
 				<MediaField
 					label="Role image"
 					kind="image"

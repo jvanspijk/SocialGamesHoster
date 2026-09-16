@@ -405,7 +405,6 @@ export interface RulesetRole {
 	tags: string[];
 	abilityIds: string[];
 	winCondition: string;
-	maxCopies: number;
 	imageAssetKey?: string;
 }
 

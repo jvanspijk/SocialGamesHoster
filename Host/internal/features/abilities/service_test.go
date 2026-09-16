@@ -167,7 +167,7 @@ func abilityFixture(t *testing.T) (core.App, *core.Record, *core.Record, *core.R
 			{ID: "foreign", Name: "Foreign", ActivationPhaseIDs: []string{"night"}},
 		},
 		Roles: []rulesets.Role{{
-			ID: "seer", Name: "Seer", TeamID: "town", MaxCopies: 1,
+			ID: "seer", Name: "Seer", TeamID: "town",
 			AbilityIDs: []string{"solo", "combo_one", "combo_two", "day_only"},
 		}},
 	}

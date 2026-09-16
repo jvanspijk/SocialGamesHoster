@@ -40,8 +40,7 @@ test.beforeAll(async ({ request }) => {
 			categoryIds: [],
 			tags: [],
 			abilityIds: [],
-			winCondition: '',
-			maxCopies: 12
+			winCondition: ''
 		}
 	];
 	const saved = await request.post(`${base}/rulesets/${id}/save`, {

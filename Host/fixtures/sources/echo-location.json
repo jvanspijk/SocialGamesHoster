@@ -65,8 +65,7 @@
       "categoryIds": ["observer"],
       "tags": ["visual_clue", "emoji_report"],
       "abilityIds": [],
-      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
-      "maxCopies": 1
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero."
     },
     {
       "id": "sonar_operator",
@@ -76,8 +75,7 @@
       "categoryIds": ["observer"],
       "tags": ["audio_clue", "text_report"],
       "abilityIds": [],
-      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
-      "maxCopies": 1
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero."
     },
     {
       "id": "captain",
@@ -87,8 +85,7 @@
       "categoryIds": ["commander"],
       "tags": ["decision_maker"],
       "abilityIds": ["ascend", "dive", "port", "starboard"],
-      "winCondition": "Help the crew clear three hazards before oxygen reaches zero.",
-      "maxCopies": 1
+      "winCondition": "Help the crew clear three hazards before oxygen reaches zero."
     }
   ],
   "phases": [

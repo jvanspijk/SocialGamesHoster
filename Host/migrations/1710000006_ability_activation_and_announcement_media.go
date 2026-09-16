@@ -28,10 +28,10 @@ func init() {
 		choices.Fields.Add(
 			relation("game", games.Id, true),
 			relation("participant", participants.Id, true),
-			text("phase_key", true, 1, 32),
+			text("phase_key", true, 1, 64),
 			intField("round_number", 0),
 			intField("phase_instance", 0),
-			text("ability_key", true, 1, 32),
+			text("ability_key", true, 1, 64),
 			selectField("status", true, "activated", "finalized"),
 			&core.DateField{Name: "activated_at", Required: true},
 			&core.DateField{Name: "finalized_at"},

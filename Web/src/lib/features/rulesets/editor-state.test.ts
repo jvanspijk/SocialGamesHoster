@@ -29,8 +29,7 @@ function definition(): RulesetDefinition {
 				categoryIds: [],
 				tags: [],
 				abilityIds: [],
-				winCondition: '',
-				maxCopies: 8
+				winCondition: ''
 			}
 		],
 		phases: [],

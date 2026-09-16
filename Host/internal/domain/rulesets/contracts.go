@@ -1,5 +1,7 @@
 package rulesets
 
+import "encoding/json"
+
 type DefinitionV1 struct {
 	SchemaVersion      int                           `json:"schemaVersion"`
 	Metadata           Metadata                      `json:"metadata"`
@@ -58,8 +60,28 @@ type Role struct {
 	Tags          []string `json:"tags"`
 	AbilityIDs    []string `json:"abilityIds"`
 	WinCondition  string   `json:"winCondition"`
-	MaxCopies     int      `json:"maxCopies"`
 	ImageAssetKey string   `json:"imageAssetKey,omitempty"`
+}
+
+// UnmarshalJSON accepts retired maxCopies values in saved v1 rulesets. The
+// value is intentionally discarded: manual role assignment has no copy cap.
+func (r *Role) UnmarshalJSON(data []byte) error {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+	delete(fields, "maxCopies")
+	withoutRetiredField, err := json.Marshal(fields)
+	if err != nil {
+		return err
+	}
+	type role Role
+	var decoded role
+	if err := json.Unmarshal(withoutRetiredField, &decoded); err != nil {
+		return err
+	}
+	*r = Role(decoded)
+	return nil
 }
 
 type Phase struct {

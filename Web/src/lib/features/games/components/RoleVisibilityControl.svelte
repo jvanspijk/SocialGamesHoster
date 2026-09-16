@@ -78,9 +78,7 @@
 			: ''}
 		close={() => (hideConfirmOpen = false)}
 	>
-		{#if presentation === 'readiness'}
-			<p>Role and knowledge data will be removed from player screens.</p>
-		{:else}
+		{#if presentation !== 'readiness'}
 			<p>Roles will be hidden on all player screens immediately.</p>
 		{/if}
 		{#snippet actions()}

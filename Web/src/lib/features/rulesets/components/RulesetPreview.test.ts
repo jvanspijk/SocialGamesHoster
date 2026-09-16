@@ -20,8 +20,7 @@ const definition: RulesetDefinition = {
 			categoryIds: [],
 			tags: [],
 			abilityIds: [],
-			winCondition: 'Keep the village safe.',
-			maxCopies: 8
+			winCondition: 'Keep the village safe.'
 		}
 	],
 	phases: [{ id: 'phase_private', name: 'Night', description: '', order: 1, startsRound: true }],

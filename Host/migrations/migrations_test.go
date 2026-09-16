@@ -153,6 +153,10 @@ func TestInitialMigrationUp(t *testing.T) {
 	if participants.Fields.GetByName("role_revision") == nil {
 		t.Fatal("participant role revision is missing")
 	}
+	roleKey, ok := participants.Fields.GetByName("role_key").(*core.TextField)
+	if !ok || roleKey.Max != 64 {
+		t.Fatalf("participant role key maximum = %#v, want 64", roleKey)
+	}
 	if participants.Fields.GetByName("player_number") == nil {
 		t.Fatal("participant player number is missing")
 	}

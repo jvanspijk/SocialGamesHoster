@@ -110,9 +110,6 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 				addError(path+".abilityIds", "reference.unknown", "Choose an existing ability.")
 			}
 		}
-		if role.MaxCopies < 1 || role.MaxCopies > 30 {
-			addError(path+".maxCopies", "role.invalid_max_copies", "Maximum copies must be between 1 and 30.")
-		}
 		checkAsset(path+".imageAssetKey", role.ImageAssetKey)
 	}
 

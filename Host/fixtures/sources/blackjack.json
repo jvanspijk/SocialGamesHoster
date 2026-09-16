@@ -49,8 +49,7 @@
       "categoryIds": ["dealer_role"],
       "tags": ["public_role"],
       "abilityIds": ["deal"],
-      "winCondition": "Resolve each hand according to the table rules.",
-      "maxCopies": 1
+      "winCondition": "Resolve each hand according to the table rules."
     },
     {
       "id": "player",
@@ -60,8 +59,7 @@
       "categoryIds": ["player_role"],
       "tags": ["public_role"],
       "abilityIds": ["play_hand"],
-      "winCondition": "Finish closer to 21 than the dealer without busting.",
-      "maxCopies": 5
+      "winCondition": "Finish closer to 21 than the dealer without busting."
     }
   ],
   "phases": [

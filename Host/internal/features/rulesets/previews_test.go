@@ -16,7 +16,7 @@ func TestBuildRulesetPreviewCoversEveryMode(t *testing.T) {
 		Abilities:     []Ability{{ID: "ability-see", Name: "Inspect", Description: "Inspect one player."}},
 		Roles: []Role{{
 			ID: "role-villager", Name: "Villager", Description: "Find the threat.", TeamID: "team-village",
-			AbilityIDs: []string{"ability-see"}, WinCondition: "Keep the village safe.", MaxCopies: 3, ImageAssetKey: "portrait",
+			AbilityIDs: []string{"ability-see"}, WinCondition: "Keep the village safe.", ImageAssetKey: "portrait",
 		}},
 		Phases: []Phase{{ID: "phase-night", Name: "Night", Description: "Close your eyes.", Order: 1, SuggestedDurationSeconds: 60, AudioCueID: "cue-bell"}},
 		Chat: ChatPolicy{

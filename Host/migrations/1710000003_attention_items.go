@@ -30,7 +30,7 @@ func init() {
 			&core.TextField{Name: "content", Required: true, Hidden: true, Min: 1, Max: 1000},
 			selectField("audience", true, "all", "team", "player"),
 			&core.TextField{Name: "target_id", Hidden: true, Max: 64},
-			&core.TextField{Name: "cue_key", Max: 32},
+			&core.TextField{Name: "cue_key", Max: 64},
 		)
 		items.AddIndex("idx_attention_items_game_created", false, "game,created DESC,id DESC", "")
 		if err := app.Save(items); err != nil {

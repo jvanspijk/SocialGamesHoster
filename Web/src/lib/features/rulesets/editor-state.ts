@@ -315,7 +315,6 @@ export function issueControlName(path: string): string | undefined {
 		teamId: 'team',
 		categoryIds: 'categories',
 		abilityIds: 'abilities',
-		maxCopies: 'max-copies',
 		activationPhaseIds: 'phases',
 		suggestedDurationSeconds: 'seconds',
 		audioCueId: 'audio',

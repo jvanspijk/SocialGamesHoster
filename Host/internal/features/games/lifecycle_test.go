@@ -38,13 +38,13 @@ func TestLifecycleRejectsInvalidAndArchivedTransitions(t *testing.T) {
 	}
 }
 
-func TestValidateAssignmentRolesAllowsPartialAssignments(t *testing.T) {
-	definition := rulesets.DefinitionV1{Roles: []rulesets.Role{{ID: "dealer", Name: "Dealer", MaxCopies: 1}}}
-	if appError := validateAssignmentRoles(definition, []roleAssignment{{
-		ParticipantID: "first-player",
-		RoleID:        "dealer",
-	}}); appError != nil {
-		t.Fatalf("partial assignment was rejected: %#v", appError)
+func TestValidateAssignmentRolesAllowsManualRoleRepeats(t *testing.T) {
+	definition := rulesets.DefinitionV1{Roles: []rulesets.Role{{ID: "dealer", Name: "Dealer"}}}
+	if appError := validateAssignmentRoles(definition, []roleAssignment{
+		{ParticipantID: "first-player", RoleID: "dealer"},
+		{ParticipantID: "second-player", RoleID: "dealer"},
+	}); appError != nil {
+		t.Fatalf("manual repeated role assignment was rejected: %#v", appError)
 	}
 	if appError := validateAssignmentRoles(definition, []roleAssignment{{
 		ParticipantID: "first-player",

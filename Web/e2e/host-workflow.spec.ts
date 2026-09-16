@@ -168,7 +168,6 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 		.getByRole('textbox', { name: 'Description', exact: true })
 		.fill('Keep the village safe.');
 	await rolesEditor.getByLabel('Win condition').fill('Find every threat.');
-	await rolesEditor.getByLabel('Maximum copies').fill('3');
 
 	await sectionRail.getByRole('button', { name: /^Assets/ }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
