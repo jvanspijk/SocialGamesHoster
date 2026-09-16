@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, LogOut, UserRound, Volume2, VolumeX, Wifi } from '@lucide/svelte';
+	import { ArrowLeft, History, LogOut, UserRound, Volume2, VolumeX, Wifi } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
 	import Panel from '$lib/components/Panel.svelte';
@@ -31,9 +31,9 @@
 	>
 		{#snippet actions()}
 			<nav aria-label="Account pages">
-				{#if gameState.player}<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a
-					>{/if}
+				<a href={resolve('/play')}><ArrowLeft size={18} /> Player home</a>
 				<a href={resolve('/play/profile')}><UserRound size={18} /> Profile</a>
+				<a href={resolve('/play/history')}><History size={18} /> History</a>
 			</nav>
 		{/snippet}
 	</PageHeading>

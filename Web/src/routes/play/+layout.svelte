@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import {
 		Gamepad2,
+		House,
 		MessageCircle,
 		Shield,
+		Swords,
 		UserCircle,
 		Users,
 		Volume2,
@@ -13,6 +15,10 @@
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
+	import {
+		playerShellContextKey,
+		type PlayerShellContext
+	} from '$lib/features/play/playerShellContext';
 	import Button from '$lib/components/Button.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
@@ -34,23 +40,29 @@
 	let availableLobby = $state<Game | null>(null);
 	let liveGame = $state<Game | null>(null);
 	let joiningLobby = $state(false);
+	let loadError = $state('');
 	let acknowledging = $state(false);
 	let hasUnreadChat = $state(false);
 	let unsubscribers: Array<() => void> = [];
 	let unsubscribeLobbyOpened: (() => void) | null = null;
 
 	const view = $derived(gameState.player);
+	const homeRoute = $derived(page.url.pathname === '/play');
 	const accountRoute = $derived(
-		page.url.pathname.startsWith('/play/profile') || page.url.pathname.startsWith('/play/settings')
+		page.url.pathname.startsWith('/play/profile') ||
+			page.url.pathname.startsWith('/play/history') ||
+			page.url.pathname.startsWith('/play/settings')
 	);
+	const hubRoute = $derived(homeRoute || accountRoute);
 	const current = $derived.by(() => {
 		if (page.url.pathname.startsWith('/play/role')) return 'role';
 		if (page.url.pathname.startsWith('/play/party')) return 'party';
 		if (page.url.pathname.startsWith('/play/chat')) return '';
-		return 'game';
+		if (page.url.pathname.startsWith('/play/game')) return 'game';
+		return '';
 	});
 	const navigation = $derived([
-		{ id: 'game', label: 'Game', href: resolve('/play'), icon: Gamepad2 },
+		{ id: 'game', label: 'Game', href: resolve('/play/game'), icon: Gamepad2 },
 		{
 			id: 'role',
 			label: 'Role',
@@ -61,6 +73,26 @@
 		},
 		{ id: 'party', label: 'Party', href: resolve('/play/party'), icon: Users }
 	]);
+
+	setContext<PlayerShellContext>(playerShellContextKey, {
+		get loading() {
+			return loading;
+		},
+		get availableLobby() {
+			return availableLobby;
+		},
+		get liveGame() {
+			return liveGame;
+		},
+		get joiningLobby() {
+			return joiningLobby;
+		},
+		get loadError() {
+			return loadError;
+		},
+		refresh: initialize,
+		joinAvailableLobby
+	});
 
 	$effect(() => {
 		void view;
@@ -83,6 +115,7 @@
 			return;
 		}
 		loading = true;
+		loadError = '';
 		availableLobby = null;
 		liveGame = null;
 		try {
@@ -125,7 +158,8 @@
 			]);
 			refreshUnreadChat();
 		} catch (caught) {
-			if (!accountRoute) {
+			loadError = errorMessage(caught, 'The game could not be loaded.');
+			if (!hubRoute) {
 				toasts.error(errorMessage(caught, 'The game could not be loaded.'), {
 					actionLabel: 'Retry',
 					action: initialize,
@@ -159,11 +193,13 @@
 	async function joinAvailableLobby() {
 		if (!availableLobby) return;
 		joiningLobby = true;
+		loadError = '';
 		try {
 			await api(`/games/${availableLobby.id}/join`, { method: 'POST', ...jsonBody({}) });
 			await initialize();
 		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The lobby could not be joined.'));
+			loadError = errorMessage(caught, 'The lobby could not be joined.');
+			toasts.error(loadError);
 		} finally {
 			joiningLobby = false;
 		}
@@ -191,21 +227,30 @@
 		<p>Choose or create your player profile first.</p>
 		<a href={resolve('/')}>Return to join page</a>
 	</main>
+{:else if hubRoute}
+	<div class="account-shell">
+		<header class="account-header">
+			<a class="account-product" href={resolve('/play')}>
+				<Swords size={22} /> Player home
+			</a>
+			<div class="account-tools">
+				<ConnectionBadge />
+				<a href={resolve('/play/profile')} aria-label="Player profile">
+					<UserCircle size={22} />
+				</a>
+			</div>
+		</header>
+		<main class="account-content">{@render children()}</main>
+	</div>
 {:else}
-	<div class:account={accountRoute} class="player-shell">
-		{#if view && !accountRoute}
-			<AppNav items={navigation} {current} label="Player" />
-		{/if}
-		<header class:account={accountRoute} class="player-header">
-			{#if view && !accountRoute}
-				<div class="game-name">
-					<strong>{view.game.name}</strong><span>{view.game.status}</span>
-				</div>
-			{:else}
-				<div class="game-name">
-					<strong>Player account</strong><span>{auth.actor?.displayName}</span>
-				</div>
-			{/if}
+	<div class="player-shell">
+		{#if view}<AppNav items={navigation} {current} label="Player" />{/if}
+		<header class="player-header">
+			<div class="game-name">
+				<strong>{view?.game.name ?? 'Current game'}</strong><span
+					>{view?.game.status ?? 'Unavailable'}</span
+				>
+			</div>
 			<div class="player-tools">
 				<ConnectionBadge />
 				<button
@@ -217,7 +262,7 @@
 				>
 					{#if sound.enabled}<Volume2 size={19} />{:else}<VolumeX size={19} />{/if}
 				</button>
-				{#if view && !accountRoute}
+				{#if view}
 					<a
 						class="chat-action"
 						href={resolve('/play/chat')}
@@ -228,20 +273,16 @@
 					</a>
 				{/if}
 				<a
-					class:active={accountRoute}
 					class="account-action"
-					href={resolve('/play/profile')}
-					aria-label="Profile and settings"
-					aria-current={accountRoute ? 'page' : undefined}
+					href={resolve('/play')}
+					aria-label="Leave game and return to Player home"
 				>
-					<UserCircle size={22} />
+					<House size={22} />
 				</a>
 			</div>
 		</header>
-		<main class:account={accountRoute} class="player-content">
-			{#if accountRoute}
-				{@render children()}
-			{:else if loading && !view}
+		<main class="player-content">
+			{#if loading && !view}
 				<p role="status">Loading game…</p>
 			{:else if view}
 				{@render children()}
@@ -255,17 +296,17 @@
 				<section class="unavailable">
 					<h1>{liveGame.name} has started</h1>
 					<p>The game master is not accepting new players right now.</p>
-					<a href={resolve('/')}>Return to join page</a>
+					<a href={resolve('/play')}>Return to Player home</a>
 				</section>
 			{:else}
 				<section class="unavailable">
 					<h1>No game available</h1>
-					<p>Wait for the game master to allow players to join, then return to the join page.</p>
-					<a href={resolve('/')}>Return to join page</a>
+					<p>Wait for the game master to allow players to join.</p>
+					<a href={resolve('/play')}>Return to Player home</a>
 				</section>
 			{/if}
 		</main>
-		{#if view && view.attentionItems.length > 0 && page.url.pathname !== resolve('/play')}
+		{#if view && view.attentionItems.length > 0 && page.url.pathname !== resolve('/play/game')}
 			<section class="attention-popup" aria-live="assertive" aria-label="New announcement">
 				<AttentionCard
 					item={view.attentionItems[0]}
@@ -283,6 +324,53 @@
 	.player-shell {
 		min-height: 100dvh;
 		padding-block-end: calc(4rem + env(safe-area-inset-bottom));
+	}
+
+	.account-shell {
+		min-height: 100dvh;
+		background: var(--paper);
+	}
+
+	.account-header {
+		position: sticky;
+		z-index: var(--layer-sticky);
+		inset-block-start: 0;
+		display: flex;
+		min-height: 4rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		border-block-end: var(--border-subtle);
+		background: rgb(247 231 196 / 94%);
+		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
+			max(var(--space-4), env(safe-area-inset-left));
+		backdrop-filter: blur(8px);
+	}
+
+	.account-product {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		color: var(--ink);
+		font-family: var(--font-display);
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-decoration: none;
+		text-transform: uppercase;
+	}
+
+	.account-tools {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.account-tools > a {
+		display: grid;
+		width: var(--target-size);
+		height: var(--target-size);
+		place-items: center;
+		color: var(--ink);
 	}
 
 	.player-header {
@@ -344,12 +432,6 @@
 		cursor: pointer;
 	}
 
-	.account-action.active {
-		border-radius: 50%;
-		background: var(--gold);
-		color: var(--wood);
-	}
-
 	.chat-action i {
 		position: absolute;
 		inset-block-start: 0.25rem;
@@ -363,11 +445,6 @@
 
 	.player-content {
 		min-height: calc(100dvh - 7.75rem);
-	}
-
-	.player-content.account {
-		min-height: calc(100dvh - 3.75rem);
-		background: var(--paper);
 	}
 
 	.attention-popup {
@@ -401,7 +478,7 @@
 	}
 
 	@media (min-width: 64rem) {
-		.player-shell:not(.account) {
+		.player-shell {
 			padding-block-end: 0;
 			padding-inline-start: 13rem;
 		}

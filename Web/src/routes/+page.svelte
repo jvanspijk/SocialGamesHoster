@@ -266,7 +266,7 @@
 					<p>
 						{liveGame ? `${liveGame.name} is ${liveGame.status}.` : 'There is no live game yet.'}
 					</p>
-					<Button onclick={() => goto(resolve('/play'))}>Open game</Button>
+					<Button onclick={() => goto(resolve('/play'))}>Player home</Button>
 				</div>
 			{:else if pending}
 				<div class="card stack">

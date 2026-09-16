@@ -31,6 +31,6 @@
 		{revealed}
 		reveal={() => (revealed = true)}
 		hide={() => (revealed = false)}
-		back={() => goto(resolve('/play'))}
+		back={() => goto(resolve('/play/game'))}
 	/>
 {/if}

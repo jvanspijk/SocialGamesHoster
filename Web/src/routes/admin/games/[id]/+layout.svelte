@@ -145,9 +145,7 @@
 		<AppNav items={navigation} {current} label="Live game" />
 	{/if}
 	<header class="live-header">
-		<a class="back" href={resolve('/admin/games')}
-			><ArrowLeft size={18} /> <span>Back to Games</span></a
-		>
+		<a class="back" href={resolve('/admin')}><ArrowLeft size={18} /> <span>Admin home</span></a>
 		{#if view}
 			<div class="game-identity">
 				<strong>{view.game.name}</strong>
@@ -189,7 +187,7 @@
 		{:else}
 			<section class="load-failure">
 				<h1>Game unavailable</h1>
-				<p>Return to Games and choose another game.</p>
+				<p>Return to Admin home and choose another destination.</p>
 			</section>
 		{/if}
 	</main>

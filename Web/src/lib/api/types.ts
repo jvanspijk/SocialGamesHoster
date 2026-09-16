@@ -22,6 +22,20 @@ export interface Profile {
 	active: boolean;
 }
 
+export interface PlayerHistoryView {
+	profile: Profile;
+	games: Array<{
+		id: string;
+		name: string;
+		rulesetName: string;
+		roleName: string;
+		outcome: string;
+		endedAt?: string;
+		achievements: Array<{ id: string; title: string }>;
+	}>;
+	statistics: { achievementCount: number; achievementPoints: number };
+}
+
 export interface ProfileRequest {
 	id: string;
 	requestType: 'new' | 'recover';

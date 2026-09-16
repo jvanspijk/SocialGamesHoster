@@ -3,7 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Gamepad2, LogOut, ScrollText, Settings, Swords, UsersRound } from '@lucide/svelte';
+	import {
+		Gamepad2,
+		House,
+		LogOut,
+		ScrollText,
+		Settings,
+		Swords,
+		UsersRound
+	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
@@ -43,6 +51,7 @@
 			/^\/admin\/rulesets\/[^/]+\/edit\//.test(page.url.pathname)
 	);
 	const current = $derived.by(() => {
+		if (page.url.pathname === '/admin') return 'home';
 		if (page.url.pathname.startsWith('/admin/rulesets')) return 'rulesets';
 		if (
 			page.url.pathname.startsWith('/admin/approvals') ||
@@ -53,6 +62,7 @@
 		return 'games';
 	});
 	const navigation = $derived([
+		{ id: 'home', label: 'Home', href: resolve('/admin'), icon: House },
 		{ id: 'games', label: 'Games', href: resolve('/admin/games'), icon: Gamepad2 },
 		{ id: 'rulesets', label: 'Rulesets', href: resolve('/admin/rulesets'), icon: ScrollText },
 		{
@@ -174,7 +184,7 @@
 		<ProfileRequestAttention oncountchange={(count) => (pendingProfileRequestCount = count)} />
 		<AppNav items={navigation} {current} label="Management" />
 		<header class="management-header">
-			<a class="product" href={resolve('/admin/games')}><Swords size={23} /> Social Games Hoster</a>
+			<a class="product" href={resolve('/admin')}><Swords size={23} /> Social Games Hoster</a>
 			<div class="header-actions">
 				<ConnectionBadge />
 				<IconButton label="Sign out" variant="ghost" onclick={logout}>

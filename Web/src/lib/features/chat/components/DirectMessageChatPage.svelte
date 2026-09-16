@@ -4,8 +4,13 @@
 	} from '$lib/components/SelectionDialog.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { Pathname } from '$app/types';
 	import ChatApp from './ChatApp.svelte';
+
+	type ChatPath =
+		| '/play/chat'
+		| `/play/chat/${string}`
+		| `/admin/games/${string}/chat`
+		| `/admin/games/${string}/chat/${string}`;
 
 	let {
 		gameId,
@@ -25,7 +30,7 @@
 		archived?: boolean;
 		policyRevision?: string;
 		recipientEntries: readonly SelectionDialogEntry[];
-		roomPath: (roomId: string) => Pathname;
+		roomPath: (roomId: string) => ChatPath;
 		openConversation: (participantId: string) => string | undefined | Promise<string | undefined>;
 	}
 

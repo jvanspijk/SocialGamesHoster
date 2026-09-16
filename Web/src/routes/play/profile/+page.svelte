@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, Save, Settings, UserRound } from '@lucide/svelte';
+	import { ArrowLeft, History, Save, Settings, UserRound } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';
@@ -13,26 +13,10 @@
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { Profile } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
-	import { gameState } from '$lib/state/game.svelte';
 	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
-	type HistoryView = {
-		profile: Profile;
-		games: Array<{
-			id: string;
-			name: string;
-			rulesetName: string;
-			roleName: string;
-			outcome: string;
-			endedAt?: string;
-			achievements: Array<{ id: string; title: string }>;
-		}>;
-		statistics: { achievementCount: number; achievementPoints: number };
-	};
-
 	let profile = $state<Profile | null>(null);
-	let history = $state<HistoryView | null>(null);
 	let form = $state({ displayName: '', bio: '', accent: 'crimson' });
 	let busy = $state(false);
 	let saveError = $state<FormError | null>(null);
@@ -41,10 +25,7 @@
 
 	async function load() {
 		try {
-			[profile, history] = await Promise.all([
-				api<Profile>('/profiles/me'),
-				api<HistoryView>('/profiles/me/history')
-			]);
+			profile = await api<Profile>('/profiles/me');
 			form = {
 				displayName: profile.displayName,
 				bio: profile.bio,
@@ -86,16 +67,13 @@
 	<PageHeading
 		eyebrow="Player account"
 		title="Profile"
-		description="Your profile and game history are shared across games."
+		description="Your player details are shared across games."
 		variant="flush"
 	>
 		{#snippet actions()}
 			<nav aria-label="Account pages">
-				{#if gameState.player}
-					<a href={resolve('/play')}><ArrowLeft size={18} /> Return to game</a>
-				{:else}
-					<a href={resolve('/')}><ArrowLeft size={18} /> Return to join page</a>
-				{/if}
+				<a href={resolve('/play')}><ArrowLeft size={18} /> Player home</a>
+				<a href={resolve('/play/history')}><History size={18} /> History</a>
 				<a href={resolve('/play/settings')}><Settings size={18} /> Settings</a>
 			</nav>
 		{/snippet}
@@ -144,29 +122,6 @@
 		</Panel>
 	{:else}
 		<p role="status">Loading profile…</p>
-	{/if}
-
-	{#if history}
-		<Panel
-			title="Game history"
-			description={`${history.statistics.achievementPoints} achievement points across ${history.statistics.achievementCount} achievements`}
-		>
-			{#if history.games.length === 0}
-				<p>No completed games yet.</p>
-			{:else}
-				<div class="history">
-					{#each history.games as game (game.id)}
-						<article>
-							<div>
-								<h3>{game.name}</h3>
-								<p>{game.rulesetName} · {game.roleName || 'No role'}</p>
-							</div>
-							<strong>{game.outcome}</strong>
-						</article>
-					{/each}
-				</div>
-			{/if}
-		</Panel>
 	{/if}
 </div>
 
@@ -232,8 +187,7 @@
 		display: block;
 	}
 
-	.profile-heading span,
-	.history p {
+	.profile-heading span {
 		color: var(--ink-soft);
 	}
 
@@ -254,23 +208,5 @@
 		border: var(--border-subtle);
 		background: var(--paper-light);
 		padding: var(--space-2);
-	}
-
-	.history article {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-3);
-		border-block-end: var(--border-subtle);
-		padding: var(--space-2) 0;
-	}
-
-	.history h3,
-	.history p {
-		margin: 0;
-	}
-
-	.history > article > strong {
-		text-transform: capitalize;
 	}
 </style>
