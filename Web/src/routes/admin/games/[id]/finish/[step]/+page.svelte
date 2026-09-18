@@ -104,7 +104,11 @@
 			await goto(resolve(`/admin/games/${page.params.id}/finish/achievements`));
 	}
 
-	async function toggleAchievement(profileId: string, achievementId: string) {
+	async function toggleAchievement(
+		participantId: string,
+		profileId: string,
+		achievementId: string
+	) {
 		if (!view) return;
 		const existing = view.awards.find(
 			(award) => award.profileId === profileId && award.achievementId === achievementId
@@ -116,7 +120,7 @@
 			} else {
 				await api(`/games/${view.game.id}/achievement-awards`, {
 					method: 'POST',
-					...jsonBody({ profileId, achievementId, note: '' })
+					...jsonBody({ participantId, achievementId, note: '' })
 				});
 			}
 			await gameState.refreshAdmin(view.game.id);
@@ -270,7 +274,7 @@
 										<button
 											type="button"
 											class:awarded
-											onclick={() => toggleAchievement(player.profileId, achievement.id)}
+											onclick={() => toggleAchievement(player.id, player.profileId, achievement.id)}
 										>
 											<span class="check"
 												>{#if awarded}<Check size={16} />{/if}</span

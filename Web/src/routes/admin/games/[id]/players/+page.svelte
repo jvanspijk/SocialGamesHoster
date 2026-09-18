@@ -136,7 +136,7 @@
 			} else {
 				await api(`/games/${view.game.id}/achievement-awards`, {
 					method: 'POST',
-					...jsonBody({ profileId: selected.profileId, achievementId, note: '' })
+					...jsonBody({ participantId: selected.id, achievementId, note: '' })
 				});
 			}
 			await gameState.refreshAdmin(view.game.id);
