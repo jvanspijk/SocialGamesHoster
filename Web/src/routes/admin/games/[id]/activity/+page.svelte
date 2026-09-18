@@ -86,7 +86,7 @@
 <PageHeading
 	eyebrow="Game record"
 	title="Activity"
-	description="See Game Master activity"
+	description="Review announcements and Game Master actions. Chat and private role information stay private."
 	variant="spacious"
 />
 

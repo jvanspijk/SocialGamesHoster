@@ -316,7 +316,11 @@
 				...jsonBody({ playersCanPost: !selectedRoom.playersCanPost })
 			});
 			rooms = rooms.map((room) => (room.id === updated.id ? updated : room));
-			toasts.success(updated.playersCanPost ? 'Players can post.' : 'Players are read-only.');
+			toasts.success(
+				updated.playersCanPost
+					? 'Players can post.'
+					: 'Players cannot post. They can still read messages.'
+			);
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Posting access could not be updated.'));
 		}

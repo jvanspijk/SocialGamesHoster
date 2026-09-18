@@ -95,7 +95,7 @@
 <Sheet
 	{open}
 	title="Preview ruleset"
-	description="Preview how this ruleset will appear to players and game masters."
+	description="Preview how this ruleset will appear to players and Game Masters."
 	{close}
 >
 	<div class="preview-workspace">
@@ -174,7 +174,7 @@
 				</article>
 			{:else if preview?.mode === 'phases' && preview.phases}
 				<div class="phase-flow">
-					<h2>Game-master phase sequence</h2>
+					<h2>Game Master phase sequence</h2>
 					<ol>
 						{#each preview.phases as phase, index (`${phase.name}:${index}`)}<li
 								class:selected={phase.selected}
