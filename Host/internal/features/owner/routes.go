@@ -24,11 +24,9 @@ import (
 const settingsID = "sghhostsettings"
 
 type settingsRequest struct {
-	Port                   int    `json:"port"`
-	BindAddress            string `json:"bindAddress"`
-	PreferredAdapter       string `json:"preferredAdapter"`
-	TrustedLANAcknowledged bool   `json:"trustedLanAcknowledged"`
-	AutomaticBackups       bool   `json:"automaticBackups"`
+	Port                   int  `json:"port"`
+	TrustedLANAcknowledged bool `json:"trustedLanAcknowledged"`
+	AutomaticBackups       bool `json:"automaticBackups"`
 }
 
 type restoreRequest struct {
@@ -59,8 +57,6 @@ func RegisterJobs(app core.App) {
 
 type RuntimeSettings struct {
 	Port             int
-	BindAddress      string
-	PreferredAddress string
 	AutomaticBackups bool
 }
 
@@ -73,15 +69,8 @@ func RuntimeConfiguration(app core.App) (RuntimeSettings, error) {
 	if port == 0 {
 		port = 8090
 	}
-	bindAddress := record.GetString("bind_address")
-	if bindAddress == "" {
-		bindAddress = "0.0.0.0"
-	}
-	preferred := preferredPrivateAddress(record.GetString("preferred_adapter"))
 	return RuntimeSettings{
 		Port:             port,
-		BindAddress:      bindAddress,
-		PreferredAddress: preferred,
 		AutomaticBackups: record.GetBool("automatic_backups"),
 	}, nil
 }
@@ -91,7 +80,7 @@ func JoinURL(app core.App) string {
 	if err != nil {
 		return "http://127.0.0.1:8090/"
 	}
-	address := settings.PreferredAddress
+	address := preferredPrivateAddress()
 	if address == "" {
 		address = "127.0.0.1"
 	}
@@ -160,14 +149,10 @@ func getSettings(event *core.RequestEvent) error {
 func updateSettings(event *core.RequestEvent) error {
 	var request settingsRequest
 	if err := event.BindBody(&request); err != nil {
-		return httpx.WriteError(event, result.Invalid("settings.invalid", "The host settings could not be read.", nil))
+		return httpx.WriteError(event, result.Invalid("settings.invalid", "The app settings could not be read.", nil))
 	}
 	if request.Port < 1 || request.Port > 65535 {
 		return httpx.WriteError(event, result.Invalid("settings.invalid_port", "Choose a port between 1 and 65535.", nil))
-	}
-	request.BindAddress = strings.TrimSpace(request.BindAddress)
-	if request.BindAddress != "" && net.ParseIP(request.BindAddress) == nil {
-		return httpx.WriteError(event, result.Invalid("settings.invalid_address", "Choose a valid local IP address.", nil))
 	}
 	settings, err := EnsureSettings(event.App)
 	if err != nil {
@@ -179,8 +164,6 @@ func updateSettings(event *core.RequestEvent) error {
 		}
 	}
 	settings.Set("port", request.Port)
-	settings.Set("bind_address", request.BindAddress)
-	settings.Set("preferred_adapter", strings.TrimSpace(request.PreferredAdapter))
 	settings.Set("trusted_lan_acknowledged", request.TrustedLANAcknowledged)
 	settings.Set("automatic_backups", request.AutomaticBackups)
 	if err := event.App.RunInTransaction(func(tx core.App) error {
@@ -199,7 +182,7 @@ func createBackup(event *core.RequestEvent) error {
 	name, err := CreateManualBackup(event.App)
 	if err != nil {
 		event.App.Logger().Error("manual backup failed", "error", err)
-		return httpx.WriteError(event, result.Conflict("backup.failed", "The backup could not be created. Try again when the host is idle."))
+		return httpx.WriteError(event, result.Conflict("backup.failed", "The backup could not be created. Try again when the app is idle."))
 	}
 	backups, err := backupFiles(event.App)
 	if err != nil {
@@ -271,7 +254,6 @@ func EnsureSettings(app core.App) (*core.Record, error) {
 	record = core.NewRecord(collection)
 	record.Id = settingsID
 	record.Set("port", 8090)
-	record.Set("bind_address", "0.0.0.0")
 	record.Set("trusted_lan_acknowledged", false)
 	record.Set("automatic_backups", true)
 	if err := app.Save(record); err != nil {
@@ -282,8 +264,7 @@ func EnsureSettings(app core.App) (*core.Record, error) {
 
 func projectSettings(app core.App, record *core.Record) map[string]any {
 	return map[string]any{
-		"port": record.GetInt("port"), "bindAddress": record.GetString("bind_address"),
-		"preferredAdapter":       record.GetString("preferred_adapter"),
+		"port":                   record.GetInt("port"),
 		"trustedLanAcknowledged": record.GetBool("trusted_lan_acknowledged"),
 		"automaticBackups":       record.GetBool("automatic_backups"),
 		"privateAddresses":       privateAddresses(),
@@ -313,13 +294,8 @@ func privateAddresses() []map[string]string {
 	return result
 }
 
-func preferredPrivateAddress(adapterName string) string {
+func preferredPrivateAddress() string {
 	addresses := privateAddresses()
-	for _, address := range addresses {
-		if address["adapter"] == adapterName {
-			return address["address"]
-		}
-	}
 	if len(addresses) > 0 {
 		return addresses[0]["address"]
 	}

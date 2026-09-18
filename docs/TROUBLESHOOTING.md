@@ -2,15 +2,13 @@
 
 ## A phone cannot open the join link
 
-1. Confirm the host and phone are connected to the same Wi-Fi or wired LAN.
+1. Confirm the computer running the app and phone are connected to the same Wi-Fi or wired LAN.
 2. On Windows, open **Settings → Network & internet → Properties** and confirm
    the network profile is **Private**.
 3. Avoid guest Wi-Fi. Many guest networks enable client isolation, which blocks
    devices from reaching each other.
-4. In **Host → Installation**, choose the adapter whose private IPv4 address
-   matches the current network, save, and restart the host.
-5. Disconnect VPN software temporarily if it has become the preferred adapter.
-6. Verify the firewall contains one enabled “Social Games Hoster” inbound TCP
+4. In **Manage → Settings → Phone join**, use the address for the current network.
+5. Verify the firewall contains one enabled “Social Games Hoster” inbound TCP
    rule with **Private** profile only.
 
 Never solve this by exposing the application to a Public profile or by
@@ -52,7 +50,7 @@ when audio is unavailable.
 ## The timer changed after sleep or restart
 
 The persisted end timestamp is authoritative. When the computer wakes or the
-host restarts, expired timers reconcile to completed once; running timers resume
+app restarts, expired timers reconcile to completed once; running timers resume
 from the remaining wall-clock duration. Browser countdowns are visual only.
 
 ## Restore does not complete on Windows

@@ -25,8 +25,6 @@
 
 	type HostSettings = {
 		port: number;
-		bindAddress: string;
-		preferredAdapter: string;
 		trustedLanAcknowledged: boolean;
 		automaticBackups: boolean;
 		privateAddresses: Array<{ adapter: string; address: string }>;
@@ -45,7 +43,7 @@
 	const sections = [
 		{ id: 'network', label: 'Network', icon: Network },
 		{ id: 'phone-join', label: 'Phone join', icon: QrCode },
-		{ id: 'game-masters', label: 'Game masters', icon: Shield },
+		{ id: 'game-masters', label: 'Game Masters', icon: Shield },
 		{ id: 'backups', label: 'Backups', icon: DatabaseBackup },
 		{ id: 'diagnostics', label: 'Diagnostics', icon: MonitorCog },
 		{ id: 'display', label: 'Display', icon: UserCog },
@@ -103,7 +101,7 @@
 			});
 			toasts.success(
 				settings.restartRequired
-					? 'Settings saved. Restart the host to apply them.'
+					? 'Settings saved. Restart the app to apply them.'
 					: 'Settings saved.'
 			);
 		} catch (caught) {
@@ -134,9 +132,9 @@
 			gameMasters = await api<GameMaster[]>('/owner/game-masters');
 			accountForm = { username: '', displayName: '', password: '' };
 			addMasterOpen = false;
-			toasts.success('Game master added.');
+			toasts.success('Game Master added.');
 		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The game master could not be added.'));
+			toasts.error(errorMessage(caught, 'The Game Master could not be added.'));
 		} finally {
 			busy = false;
 		}
@@ -153,7 +151,7 @@
 			});
 			restoreBackupTarget = null;
 			restoreConfirmation = '';
-			toasts.info('Restore scheduled. The host will restart when it is ready.', {
+			toasts.info('Restore scheduled. The app will restart when it is ready.', {
 				persistent: true
 			});
 		} catch (caught) {
@@ -164,7 +162,7 @@
 	}
 </script>
 
-<PageHeading eyebrow="Host configuration" title="Settings" />
+<PageHeading eyebrow="App configuration" title="Settings" />
 
 <div class="settings-layout">
 	<nav aria-label="Settings sections">
@@ -182,7 +180,7 @@
 			<p role="status">Loading settings…</p>
 		{:else if !auth.isOwner && ['network', 'phone-join', 'game-masters', 'backups'].includes(section)}
 			<Panel title="Owner access required" variant="focal">
-				<p>Only the host owner can change these settings.</p>
+				<p>Only the game host can change these settings.</p>
 			</Panel>
 		{:else if section === 'network' && settings}
 			<Panel title="Network" description="Changes apply after restarting the application.">
@@ -191,17 +189,6 @@
 						<span>Port</span>
 						<input type="number" min="1" max="65535" bind:value={settings.port} />
 					</label>
-					<Field
-						label="Bind address"
-						name="bind-address"
-						bind:value={settings.bindAddress}
-						help="Leave blank to use the recommended private network address."
-					/>
-					<Field
-						label="Preferred adapter"
-						name="preferred-adapter"
-						bind:value={settings.preferredAdapter}
-					/>
 					<label class="check"
 						><input type="checkbox" bind:checked={settings.trustedLanAcknowledged} /> I trust this local
 						network.</label
@@ -212,7 +199,7 @@
 		{:else if section === 'phone-join' && settings}
 			<Panel
 				title="Phone join"
-				description="Players must be connected to the same Wi-Fi network to join."
+				description="Players must be connected through your local network to join."
 				variant="focal"
 			>
 				<div class="join-layout">
@@ -230,10 +217,10 @@
 		{:else if section === 'game-masters'}
 			<div class="section-header">
 				<div>
-					<h2>Game masters</h2>
+					<h2>Game Masters</h2>
 					<p>People who can prepare and run games.</p>
 				</div>
-				<Button onclick={() => (addMasterOpen = true)}><Plus size={17} /> Add game master</Button>
+				<Button onclick={() => (addMasterOpen = true)}><Plus size={17} /> Add Game Master</Button>
 			</div>
 			<div class="record-list">
 				{#each gameMasters as master (master.id)}
@@ -307,7 +294,7 @@
 					</div>
 					<div>
 						<dt>Access</dt>
-						<dd>{auth.isOwner ? 'Host owner' : 'Game master'}</dd>
+						<dd>{auth.isOwner ? 'Game host' : 'Game Master'}</dd>
 					</div>
 				</dl>
 			</Panel>
@@ -315,7 +302,7 @@
 	</div>
 </div>
 
-<Dialog open={addMasterOpen} title="Add game master" close={() => (addMasterOpen = false)}>
+<Dialog open={addMasterOpen} title="Add Game Master" close={() => (addMasterOpen = false)}>
 	<form id="add-master-form" class="form-stack" onsubmit={addGameMaster}>
 		<Field label="Username" name="master-username" bind:value={accountForm.username} required />
 		<Field
@@ -339,7 +326,7 @@
 			onclick={() =>
 				(document.getElementById('add-master-form') as HTMLFormElement)?.requestSubmit()}
 		>
-			Add game master
+			Add Game Master
 		</Button>
 	{/snippet}
 </Dialog>
@@ -351,7 +338,7 @@
 >
 	{#if restoreBackupTarget}
 		<p>
-			The host will create a rollback backup, restore <strong>{restoreBackupTarget.id}</strong>, and
+			The app will create a rollback backup, restore <strong>{restoreBackupTarget.id}</strong>, and
 			restart. Everyone will be disconnected.
 		</p>
 		<form id="restore-backup-form" class="form-stack" onsubmit={restoreBackup}>

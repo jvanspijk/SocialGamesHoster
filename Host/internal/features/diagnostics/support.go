@@ -126,9 +126,8 @@ func sanitizedSettings(app core.App) map[string]any {
 		return map[string]any{"configured": false}
 	}
 	return map[string]any{
-		"configured": true, "port": settings.GetInt("port"),
-		"bindAddress":            settings.GetString("bind_address"),
-		"preferredAdapter":       settings.GetString("preferred_adapter"),
+		"configured":             true,
+		"port":                   settings.GetInt("port"),
 		"trustedLanAcknowledged": settings.GetBool("trusted_lan_acknowledged"),
 		"automaticBackups":       settings.GetBool("automatic_backups"),
 	}

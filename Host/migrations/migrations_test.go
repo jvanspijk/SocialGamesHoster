@@ -68,6 +68,15 @@ func TestInitialMigrationUp(t *testing.T) {
 			t.Fatalf("collection %s exposes a generic API rule", name)
 		}
 	}
+	hostSettings, err := app.FindCollectionByNameOrId("host_settings")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"bind_address", "preferred_adapter"} {
+		if hostSettings.Fields.GetByName(field) != nil {
+			t.Fatalf("obsolete host setting field %q remains", field)
+		}
+	}
 	awards, err := app.FindCollectionByNameOrId("achievement_awards")
 	if err != nil {
 		t.Fatal(err)

@@ -7,17 +7,17 @@ automatically. On a new installation:
 
 1. Create the owner username, display name, and a password of at least ten
    characters.
-2. Review the trusted-LAN notice. The host is visible to devices on the selected
-   Windows Private network.
+2. Review the trusted-LAN notice. The app is available on your local networks;
+   the Windows Private-network firewall rule controls which devices can reach it.
 3. The Blackjack demonstration ruleset is installed automatically.
-4. Open **Host → Installation** to confirm the selected adapter and port.
+4. Open **Manage → Settings → Network** to confirm the port.
 
-Use named game-master accounts for every host. Actions are attributed in the
+Each game host should use a named game-master account. Actions are attributed in the
 game audit; accounts should not be shared.
 
 ## Prepare a game
 
-1. Open **Host → Games** and create a game from a valid saved ruleset.
+1. Open **Manage → Games** and create a game from a valid saved ruleset.
 2. Select **Open lobby**. Only one game can be live.
 3. Show the phone QR from the Installation page or tray. The link contains only
    the private IP address and port, never an account secret.
@@ -78,13 +78,13 @@ owner and game masters where explicitly authorized.
 
 ## Backups and restore
 
-Open **Host → Installation** or use the tray to create a backup. The dashboard
+Open **Manage → Settings → Backups** or use the tray to create a backup. The dashboard
 lists automatic and manual backups. Restore:
 
 1. Select the intended backup.
 2. Read the replacement warning.
 3. Type the exact `RESTORE <backup-name>` phrase.
-4. Wait for the host to restart.
+4. Wait for the app to restart.
 
 A rollback backup of the current ledger is created before restore begins. Do
 not terminate the computer while backup or restore is active. After restart,
@@ -92,11 +92,11 @@ the Backups card records whether the last restore completed or failed.
 
 ## Tray commands
 
-- **Open Dashboard**: host controls.
+- **Open Dashboard**: game-management controls.
 - **Open Player Join Page**: local player landing page.
 - **Copy Join Link**: places the LAN URL on the clipboard.
 - **Show QR Code**: opens the scannable join card.
-- **Start / Stop Hosting**: closes or reopens LAN request handling without
+- **Enable / Disable LAN Access**: closes or reopens LAN request handling without
   exiting the application.
 - **Start / Show Diagnostics**: opens diagnostics and explains when the
   Diagnostic Mode shortcut is required.

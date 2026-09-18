@@ -153,7 +153,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if configuration.httpAddress == "" {
-		configuration.httpAddress = fmt.Sprintf("%s:%d", runtimeSettings.BindAddress, runtimeSettings.Port)
+		configuration.httpAddress = fmt.Sprintf("0.0.0.0:%d", runtimeSettings.Port)
 	}
 	controller.address = configuration.httpAddress
 	localBase := loopbackURL(configuration.httpAddress)
