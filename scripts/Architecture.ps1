@@ -44,11 +44,13 @@ rules:
     try {
         Write-Host "Checking package boundaries with go-depcheck..."
         $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
-        go install "github.com/v-standard/go-depcheck/cmd/depcheck@$goDepcheckVersion"
-        Assert-NativeSuccess "go-depcheck installation"
         $depcheckTool = Join-Path (go env GOPATH) "bin\depcheck.exe"
         if (-not (Test-Path -LiteralPath $depcheckTool)) {
-            throw "go-depcheck was installed but its executable was not found at $depcheckTool."
+            go install "github.com/v-standard/go-depcheck/cmd/depcheck@$goDepcheckVersion"
+            Assert-NativeSuccess "go-depcheck installation"
+            if (-not (Test-Path -LiteralPath $depcheckTool)) {
+                throw "go-depcheck was installed but its executable was not found at $depcheckTool."
+            }
         }
         Push-Location $hostRoot
         try {
