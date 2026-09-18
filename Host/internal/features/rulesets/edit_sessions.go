@@ -173,7 +173,7 @@ func uploadSessionAsset(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Invalid("asset.invalid_name", "Enter a media name up to 160 characters.", nil))
 	}
 	if len([]rune(accessibilityText)) > 1000 {
-		return httpx.WriteError(event, result.Invalid("asset.invalid_accessibility", "Keep the image description or audio alternative under 1000 characters.", nil))
+		return httpx.WriteError(event, result.Invalid("asset.invalid_accessibility", "Keep the image description or accessibility description under 1000 characters.", nil))
 	}
 	limit := MediaUploadLimit(kind)
 	if uploaded.Size <= 0 || uploaded.Size > limit {
