@@ -603,7 +603,7 @@
 									/></label
 								>
 							</div>
-							<Panel title="Cover image" description="Optional">
+							<Panel title="Cover image (Optional)">
 								<MediaField
 									label="Ruleset cover"
 									kind="image"
