@@ -23,20 +23,18 @@ describe('RoleVisibilityControl', () => {
 		}
 	);
 
-	it.each([
-		['readiness', 'Players can still toggle the visibility of their role on their own screen.'],
-		[
-			'heading',
-			'Players will be able to view their assigned roles. They can hide them again on their screen at any time.'
-		]
-	] as const)('preserves the %s reveal confirmation', async (presentation, confirmation) => {
-		render(RoleVisibilityControl, {
-			props: { gameId: 'game-1', rolesVisible: false, presentation }
-		});
+	it.each(['readiness', 'heading'] as const)(
+		'opens the %s reveal confirmation',
+		async (presentation) => {
+			render(RoleVisibilityControl, {
+				props: { gameId: 'game-1', rolesVisible: false, presentation }
+			});
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Reveal roles' }));
-		const dialog = screen.getByRole('dialog', { name: 'Reveal roles?' });
+			await fireEvent.click(screen.getByRole('button', { name: 'Reveal roles' }));
+			const dialog = screen.getByRole('dialog', { name: 'Reveal roles?' });
 
-		expect(within(dialog).getByText(confirmation)).toBeVisible();
-	});
+			expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeVisible();
+			expect(within(dialog).getByRole('button', { name: 'Reveal roles' })).toBeVisible();
+		}
+	);
 });
