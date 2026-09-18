@@ -36,7 +36,7 @@ AppMutex=Local\SocialGamesHoster
 UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#WindowsVersion}
-VersionInfoDescription=Local-first social game host
+VersionInfoDescription=Local-first social games app
 
 [Files]
 Source: "..\..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
@@ -53,7 +53,7 @@ Name: "{group}\Uninstall Social Games Hoster"; Filename: "{uninstallexe}"
 
 [Run]
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRuleName}"""; Flags: runhidden; StatusMsg: "Refreshing the private-network firewall rule..."
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""{#FirewallRuleName}"" dir=in action=allow program=""{app}\{#AppExeName}"" protocol=TCP localport=8090 profile=private enable=yes"; Flags: runhidden; StatusMsg: "Allowing hosting on private networks only..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""{#FirewallRuleName}"" dir=in action=allow program=""{app}\{#AppExeName}"" protocol=TCP localport=8090 profile=private enable=yes"; Flags: runhidden; StatusMsg: "Allowing app access on private networks only..."
 Filename: "{app}\{#AppExeName}"; Description: "Launch Social Games Hoster"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]

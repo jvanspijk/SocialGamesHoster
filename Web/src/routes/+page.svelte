@@ -180,20 +180,20 @@
 	}
 
 	function setError(caught: unknown) {
-		error = toFormError(caught, 'The local host could not be reached.');
+		error = toFormError(caught, 'The local app could not be reached.');
 	}
 </script>
 
 {#if needsOwner === null}
 	<div class="card loading-card">
 		<Hourglass aria-hidden="true" />
-		<p>Loading host settings…</p>
+		<p>Loading app settings…</p>
 	</div>
 {:else if needsOwner}
 	<section class="setup stack">
 		<div>
 			<p class="ornament">First launch</p>
-			<h1>Set up the host</h1>
+			<h1>Set up the app</h1>
 			<p class="lead">
 				Create the owner account on this computer. The included demonstration rulesets will be added
 				automatically.
@@ -230,7 +230,7 @@
 			<div class="trust-notice">
 				<strong>Use a trusted local network</strong>
 				<p>
-					People connected to this LAN can reach the host. Use it on your private party network, not
+					People connected to this LAN can access the app. Use it on your private party network, not
 					on public Wi-Fi.
 				</p>
 				<label>
@@ -256,7 +256,7 @@
 					<QrCode size={34} aria-hidden="true" />
 					<h2>Scan to join</h2>
 					<img src="/api/app/v1/setup/join-qr" alt="QR code for this player join page" />
-					<code>{joinUrl}</code>
+					Or navigate to: <code>{joinUrl}</code>
 				</section>
 			{/if}
 			{#if auth.isPlayer}
@@ -274,7 +274,7 @@
 					<h2>{pending.status === 'pending' ? 'Awaiting approval' : 'Request update'}</h2>
 					<p>
 						{#if pending.status === 'pending'}
-							Ask a game master to approve your profile. This page will continue automatically.
+							Ask a Game Master to approve your profile. This page will continue automatically.
 						{:else if pending.status === 'rejected'}
 							The request was declined. {pending.reason ?? ''}
 						{:else}
@@ -305,7 +305,7 @@
 				</form>
 			{/if}
 
-			<a class="game-master-link" href={resolve('/admin')}>Click here if you are a game master</a>
+			<a class="game-master-link" href={resolve('/admin')}>Game Master sign in</a>
 		</div>
 	</section>
 {/if}

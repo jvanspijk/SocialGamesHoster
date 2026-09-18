@@ -52,7 +52,7 @@
 		},
 		{
 			label: 'Settings',
-			description: 'Configure this host and its display.',
+			description: 'Configure the app and its display.',
 			href: resolve('/admin/settings/network'),
 			icon: Settings
 		}

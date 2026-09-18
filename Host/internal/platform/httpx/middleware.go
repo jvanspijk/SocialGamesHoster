@@ -55,7 +55,7 @@ func SecurityMiddleware(event *core.RequestEvent) error {
 	if strings.HasPrefix(path, "/api/app/v1/") {
 		if !validHost(event.Request.Host) {
 			return WriteError(event, result.AppError{
-				Code: "request.invalid_host", Message: "The requested host address is not allowed.", Status: http.StatusBadRequest,
+				Code: "request.invalid_host", Message: "The requested address is not allowed.", Status: http.StatusBadRequest,
 			})
 		}
 		limitRequestBody(event)

@@ -9,11 +9,11 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await page.goto('/');
 	await expect(
 		page
-			.getByRole('heading', { name: 'Set up the host' })
-			.or(page.getByRole('link', { name: 'Click here if you are a game master' }))
+			.getByRole('heading', { name: 'Set up the app' })
+			.or(page.getByRole('link', { name: 'Game Master sign in' }))
 	).toBeVisible();
 
-	if (await page.getByRole('heading', { name: 'Set up the host' }).isVisible()) {
+	if (await page.getByRole('heading', { name: 'Set up the app' }).isVisible()) {
 		await page.getByLabel('Username').fill('keyboardowner');
 		await page.getByLabel('Display name').fill('Keyboard Owner');
 		await page.getByLabel(/^Password/).fill('correct-horse-battery');
@@ -21,7 +21,7 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 		await page.getByRole('button', { name: 'Create owner' }).click();
 		await expect(page.getByRole('navigation', { name: 'Management' })).toBeVisible();
 	} else {
-		await page.getByRole('link', { name: 'Click here if you are a game master' }).click();
+		await page.getByRole('link', { name: 'Game Master sign in' }).click();
 		await page.getByRole('textbox', { name: /^Username$/ }).fill('partyhost');
 		await page.getByLabel(/^Password/).fill('correct-horse-battery');
 		await page.getByRole('button', { name: 'Sign in' }).click();

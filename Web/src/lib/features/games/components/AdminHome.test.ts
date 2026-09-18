@@ -57,10 +57,10 @@ describe('AdminHome', () => {
 	it('shows a retry action when loading fails', async () => {
 		const retry = vi.fn();
 		render(AdminHome, {
-			props: { games: [], loading: false, loadError: 'Host unavailable.', retry }
+			props: { games: [], loading: false, loadError: 'App unavailable.', retry }
 		});
 		await fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
-		expect(screen.getByRole('alert')).toHaveTextContent('Host unavailable.');
+		expect(screen.getByRole('alert')).toHaveTextContent('App unavailable.');
 		expect(retry).toHaveBeenCalledOnce();
 	});
 });

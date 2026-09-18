@@ -52,13 +52,14 @@
 	<Panel title="Connection">
 		<div class="connection-row">
 			<Wifi size={21} />
-			<span>Connected to this game host</span>
+			<span>Connected to this game</span>
 		</div>
 	</Panel>
 
 	<Panel title="Account">
 		<p>
-			Signing out removes this profile from the current device. Your game history stays on the host.
+			Signing out removes this profile from the current device. Your game history stays with this
+			game.
 		</p>
 		<Button variant="danger" onclick={signOut}><LogOut size={18} /> Sign out</Button>
 	</Panel>

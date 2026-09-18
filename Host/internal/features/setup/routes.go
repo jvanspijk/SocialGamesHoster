@@ -66,7 +66,7 @@ func status(applicationVersion string) func(*core.RequestEvent) error {
 
 func recoverOwner(event *core.RequestEvent) error {
 	if !isLoopback(event.RemoteIP()) {
-		return httpx.WriteError(event, result.Forbidden("setup.loopback_only", "Owner recovery is available only on the host computer."))
+		return httpx.WriteError(event, result.Forbidden("setup.loopback_only", "Owner recovery is available only on this computer."))
 	}
 	var request ownerRecoveryRequest
 	if err := event.BindBody(&request); err != nil {
@@ -88,7 +88,7 @@ func recoverOwner(event *core.RequestEvent) error {
 		fields["password"] = []string{"Use at least 6 characters."}
 	}
 	if !request.TrustedLANAcknowledged {
-		fields["trustedLanAcknowledged"] = []string{"Confirm that this host will be used only on a network you trust."}
+		fields["trustedLanAcknowledged"] = []string{"Confirm that this app will be used only on a network you trust."}
 	}
 	if len(fields) > 0 {
 		return httpx.WriteError(event, result.Invalid("setup.recovery_invalid", "Please correct the highlighted recovery details.", fields))
@@ -210,7 +210,7 @@ func joinQRCode(event *core.RequestEvent) error {
 
 func createOwner(event *core.RequestEvent) error {
 	if !isLoopback(event.RemoteIP()) {
-		return httpx.WriteError(event, result.Forbidden("setup.loopback_only", "First-time setup is available only on the host computer."))
+		return httpx.WriteError(event, result.Forbidden("setup.loopback_only", "First-time setup is available only on this computer."))
 	}
 	count, err := event.App.CountRecords(collectionName)
 	if err != nil {
@@ -237,7 +237,7 @@ func createOwner(event *core.RequestEvent) error {
 		fields["password"] = []string{"Use at least 6 characters."}
 	}
 	if !request.TrustedLANAcknowledged {
-		fields["trustedLanAcknowledged"] = []string{"Confirm that this host will be used only on a network you trust."}
+		fields["trustedLanAcknowledged"] = []string{"Confirm that this app will be used only on a network you trust."}
 	}
 	if len(fields) > 0 {
 		return httpx.WriteError(event, result.Invalid("setup.invalid", "Please correct the highlighted setup details.", fields))

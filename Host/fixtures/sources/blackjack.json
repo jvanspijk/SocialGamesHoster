@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metadata": {
     "name": "Blackjack",
-    "description": "A public-role demonstration for manually hosted Blackjack rounds.",
+    "description": "A public-role demonstration for Blackjack rounds managed by a game host.",
     "minPlayers": 2,
     "maxPlayers": 6
   },
@@ -37,7 +37,7 @@
     {
       "id": "play_hand",
       "name": "Play Hand",
-      "description": "Choose to hit, stand, double, or split as the host allows."
+      "description": "Choose to hit, stand, double, or split as the game host allows."
     }
   ],
   "roles": [

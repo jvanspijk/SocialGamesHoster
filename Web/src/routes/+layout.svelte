@@ -73,7 +73,7 @@
 					<UserRound size={17} /> Play
 				</a>
 				<a class:active={page.url.pathname.startsWith('/admin')} href={resolve('/admin')}>
-					<Shield size={17} /> Host
+					<Shield size={17} /> Manage
 				</a>
 				{#if auth.authenticated}
 					<IconButton label="Sign out" variant="ghost" onclick={logout}>

@@ -26,7 +26,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 }) => {
 	test.setTimeout(120_000);
 	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Set up the host' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Set up the app' })).toBeVisible();
 
 	await page.getByLabel('Username').fill('partyhost');
 	await page.getByLabel('Display name').fill('Party Host');
@@ -241,14 +241,14 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 }) => {
 	test.setTimeout(90_000);
 	await page.goto('/');
-	if (await page.getByRole('heading', { name: 'Set up the host' }).isVisible()) {
+	if (await page.getByRole('heading', { name: 'Set up the app' }).isVisible()) {
 		await page.getByLabel('Username').fill('partyhost');
 		await page.getByLabel('Display name').fill('Party Host');
 		await page.getByLabel('Password').fill('correct-horse-battery');
 		await page.getByLabel('I understand and trust this local network.').check();
 		await page.getByRole('button', { name: 'Create owner' }).click();
 	} else {
-		await page.getByRole('link', { name: 'Click here if you are a game master' }).click();
+		await page.getByRole('link', { name: 'Game Master sign in' }).click();
 		await page.getByRole('textbox', { name: /^Username$/ }).fill('partyhost');
 		await page.getByRole('textbox', { name: /^Password$/ }).fill('correct-horse-battery');
 		await page.getByRole('button', { name: 'Sign in' }).click();
@@ -415,7 +415,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 			await route.continue();
 		});
 		await announcement.getByRole('button', { name: 'Send announcement' }).click();
-		await expect(page.getByText('The host returned an unexpected response.')).toBeVisible();
+		await expect(page.getByText('The app returned an unexpected response.')).toBeVisible();
 		await expect(announcement).toBeVisible();
 		await expect(announcement.getByLabel('Announcement message')).toHaveValue(
 			'Uploaded media announcement'

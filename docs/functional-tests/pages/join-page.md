@@ -8,17 +8,17 @@
 
 ## Background
 
-Given the host is running on a private Wi-Fi network
+Given the app is running on a private Wi-Fi network
 And an owner account exists
 And a phone that is not already approved is connected to the same Wi-Fi network
 
 ## Scenario: Scan the displayed QR code and request entry
 
-When the host opens the QR code from the dashboard or tray
+When the game host opens the QR code from the dashboard or tray
 And the phone scans the QR code with its camera
 And the phone opens the resulting join page
 And the user requests entry with a new profile name
-Then the join page opens without a certificate, mixed-content, or unreachable-host error
+Then the join page opens without a certificate, mixed-content, or unreachable-app error
 And the game master sees the pending request without manually refreshing
 And approving the request moves the phone to the player game page
 

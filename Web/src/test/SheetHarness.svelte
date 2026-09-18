@@ -16,7 +16,7 @@
 <Sheet
 	{open}
 	title="Display settings"
-	description="Choose how the host looks on this device."
+	description="Choose how the app looks on this device."
 	{close}
 >
 	<label>Example setting <input type="checkbox" /></label>

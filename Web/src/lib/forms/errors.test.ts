@@ -33,10 +33,7 @@ describe('form error normalization', () => {
 			),
 			'The game could not be updated.'
 		);
-		const network = toFormError(
-			new Error('raw transport detail'),
-			'The host could not be reached.'
-		);
+		const network = toFormError(new Error('raw transport detail'), 'The app could not be reached.');
 
 		expect(application).toMatchObject({
 			kind: 'application',
@@ -45,7 +42,7 @@ describe('form error normalization', () => {
 		});
 		expect(network).toEqual({
 			kind: 'network',
-			message: 'The host could not be reached.',
+			message: 'The app could not be reached.',
 			fieldErrors: {}
 		});
 	});

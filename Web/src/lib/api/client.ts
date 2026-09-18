@@ -40,7 +40,7 @@ export async function api<T>(path: string, init: ApiOptions = {}): Promise<T> {
 			throw new AppApiError(
 				{
 					code: data.code ?? 'network.unexpected',
-					message: data.message ?? 'The host returned an unexpected response.',
+					message: data.message ?? 'The app returned an unexpected response.',
 					fieldErrors: data.fieldErrors,
 					traceId: caught.status === 422 || data.fieldErrors ? undefined : data.traceId
 				},

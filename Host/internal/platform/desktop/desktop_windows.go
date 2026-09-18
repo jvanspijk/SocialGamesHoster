@@ -160,22 +160,22 @@ func Run(actions Actions) error {
 	})
 	menu.Add("Show QR Code", func() { _ = OpenURL(actions.JoinURL() + "?showQr=1") })
 	menu.AddSeparator()
-	menu.Add("Start / Stop Hosting", func() {
+	menu.Add("Enable / Disable LAN Access", func() {
 		go serialized(&operation, func() {
 			var err error
 			if actions.IsHosting() {
 				err = actions.StopHosting()
 				if err == nil {
-					tray.ShowNotification("Social Games Hoster", "Hosting stopped.")
+					tray.ShowNotification("Social Games Hoster", "LAN access disabled.")
 				}
 			} else {
 				err = actions.StartHosting()
 				if err == nil {
-					tray.ShowNotification("Social Games Hoster", "Hosting started.")
+					tray.ShowNotification("Social Games Hoster", "LAN access enabled.")
 				}
 			}
 			if err != nil {
-				tray.ShowNotification("Social Games Hoster", "The hosting state could not be changed.")
+				tray.ShowNotification("Social Games Hoster", "LAN access could not be changed.")
 			}
 		})
 	})

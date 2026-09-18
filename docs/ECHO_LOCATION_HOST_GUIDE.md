@@ -1,4 +1,4 @@
-# Echo Location host guide
+# Echo Location game host guide
 
 Echo Location is a cooperative game for exactly three players. Assign one
 Lookout, one Sonar Operator, and one Captain. The crew must clear three hazards
@@ -85,7 +85,7 @@ Use the full manual on the Captain's role card:
 
 The answer distribution is balanced: five cards resolve to each maneuver.
 
-## Host safeguards
+## Game host safeguards
 
 - Never send a chart or sonar cue to the Captain.
 - Use the player audience for private clues, not the crew team.

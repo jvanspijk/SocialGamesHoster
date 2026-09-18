@@ -8,7 +8,7 @@
 
 ## Background
 
-Given a game master is signed in on the Windows host computer
+Given a game master is signed in on the Windows computer running the app
 And at least two physical phones are approved and joined to an open lobby
 And a valid saved ruleset with a phase and an optional sound cue is available
 
@@ -51,6 +51,6 @@ And the uploaded files do not appear in the ruleset Media section or a later ann
 
 Given the owner has created a manual backup before making a recognizable game change
 When the owner restores that backup and enters the required confirmation text
-Then the host restarts as indicated by the UI
+Then the app restarts as indicated by the UI
 And the dashboard shows the recorded restore outcome after it becomes available
 And the recognizable change made after the backup is absent
