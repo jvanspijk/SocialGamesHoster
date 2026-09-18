@@ -7,7 +7,6 @@
 		Flag,
 		Forward,
 		Megaphone,
-		QrCode,
 		Users,
 		XCircle
 	} from '@lucide/svelte';
@@ -303,9 +302,9 @@
 					<div class="invitation">
 						<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
 						<div>
-							<QrCode size={24} aria-hidden="true" />
+							<h3>Scan to join</h3>
 							<p>Players must be connected to the same Wi-Fi network to join.</p>
-							{#if joinUrl}<code>{joinUrl}</code>{/if}
+							{#if joinUrl}Or navigate to: <code>{joinUrl}</code>{/if}
 						</div>
 					</div>
 				</Panel>
