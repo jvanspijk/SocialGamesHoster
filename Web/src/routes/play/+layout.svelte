@@ -295,13 +295,13 @@
 			{:else if liveGame}
 				<section class="unavailable">
 					<h1>{liveGame.name} has started</h1>
-					<p>The game master is not accepting new players right now.</p>
+					<p>The Game Master is not accepting new players right now.</p>
 					<a href={resolve('/play')}>Return to Player home</a>
 				</section>
 			{:else}
 				<section class="unavailable">
 					<h1>No game available</h1>
-					<p>Wait for the game master to allow players to join.</p>
+					<p>Wait for the Game Master to allow players to join.</p>
 					<a href={resolve('/play')}>Return to Player home</a>
 				</section>
 			{/if}

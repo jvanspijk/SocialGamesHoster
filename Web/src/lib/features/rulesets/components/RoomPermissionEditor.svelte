@@ -22,7 +22,7 @@
 		{ key: 'visible', text: 'Players can see the room' },
 		{ key: 'readable', text: 'Players can read messages' },
 		{ key: 'sendable', text: 'Players can send messages' },
-		{ key: 'gameMasterMaySend', text: 'Game masters can send messages' }
+		{ key: 'gameMasterMaySend', text: 'Game Masters can send messages' }
 	];
 	const inheritedOptions: SelectOption<'inherit' | 'yes' | 'no'>[] = [
 		{ value: 'inherit', label: 'Use normal setting' },

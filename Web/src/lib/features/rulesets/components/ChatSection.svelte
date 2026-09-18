@@ -211,7 +211,7 @@
 					name={`channel-sendable-${channelIndex}`}
 					bind:checked={channel.sendable}
 				/><CheckboxField
-					label="Game masters can post"
+					label="Game Masters can post"
 					name={`channel-gm-sendable-${channelIndex}`}
 					bind:checked={channel.gameMasterMaySend}
 				/>

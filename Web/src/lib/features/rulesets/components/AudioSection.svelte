@@ -90,7 +90,7 @@
 					bind:value={cue.defaultAudience}
 					options={[
 						{ value: 'all', label: 'All players' },
-						{ value: 'game_masters', label: 'Game masters' },
+						{ value: 'game_masters', label: 'Game Masters' },
 						{ value: 'team', label: 'A selected team' },
 						{ value: 'player', label: 'A selected player' }
 					]}

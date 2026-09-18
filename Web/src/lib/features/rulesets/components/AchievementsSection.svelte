@@ -50,7 +50,7 @@
 
 <CollectionEditor
 	title="Achievements"
-	description="Optional awards a game master can give after a game."
+	description="Optional awards a Game Master can give after a game."
 	{entries}
 	selectedId={selectedItems.achievements ?? ''}
 	onselect={(id) => (selectedItems.achievements = id)}

@@ -92,7 +92,7 @@
 
 <CollectionEditor
 	title="Phases"
-	description="Optional ordered steps a game master can advance through."
+	description="Optional ordered steps a Game Master can advance through."
 	{entries}
 	selectedId={selectedItems.phases ?? ''}
 	onselect={(id) => (selectedItems.phases = id)}

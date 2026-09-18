@@ -81,7 +81,7 @@
 	onMount(() => {
 		if (auth.isPlayer) {
 			auth.clear();
-			toasts.info('Sign in with a game-master account.');
+			toasts.info('Sign in with a Game Master account.');
 		}
 		void loadRecoveryAvailability();
 	});

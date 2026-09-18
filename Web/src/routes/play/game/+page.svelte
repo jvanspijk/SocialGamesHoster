@@ -47,11 +47,11 @@
 				<p class="eyebrow">Current phase</p>
 				<h1>{phase}</h1>
 				<p>
-					{#if view.game.status === 'lobby'}You are in the lobby. The game master will start the
+					{#if view.game.status === 'lobby'}You are in the lobby. The Game Master will start the
 						game.
 					{:else if view.game.status === 'paused'}The game is paused.
-					{:else if view.game.status === 'review'}The game master is finishing the game.
-					{:else}Follow the game master's instructions.{/if}
+					{:else if view.game.status === 'review'}The Game Master is finishing the game.
+					{:else}Follow the Game Master's instructions.{/if}
 				</p>
 			</div>
 			<div class="timer-wrap">

@@ -65,7 +65,7 @@
 
 			<div class="role-content">
 				<Panel title="How to win">
-					<p>{role.winCondition || 'Follow the win condition provided by the game master.'}</p>
+					<p>{role.winCondition || 'Follow the win condition provided by the Game Master.'}</p>
 				</Panel>
 
 				<Panel title="Abilities">
