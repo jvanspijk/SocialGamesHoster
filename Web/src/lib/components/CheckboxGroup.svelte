@@ -116,7 +116,7 @@
 	input {
 		width: 1.35rem;
 		height: 1.35rem;
-		accent-color: var(--crimson);
+		accent-color: var(--action);
 	}
 
 	input:disabled {

@@ -33,10 +33,10 @@ colors are reserved for media or a documented one-off contrast correction.
 
 The product is designed from 320 CSS px upward.
 
-- `--phone`: below 48rem; one task per viewport, full-screen sheets, bottom
+- Below 48rem: one task per viewport, full-screen sheets, bottom
   navigation, no horizontal rails.
-- `--tablet`: 48rem–63.99rem; wider sheets and selective master-detail.
-- `--desktop`: 64rem and above; side rail, side panels, and stable multi-column
+- 48rem–63.99rem: wider sheets and selective master-detail.
+- 64rem and above: side rail, side panels, and stable multi-column
   workspaces.
 - Content may wrap and vertically scroll except for the running player
   current-moment stage, which fits in `100dvh`.
@@ -49,14 +49,29 @@ The product is designed from 320 CSS px upward.
 
 ## Semantic tokens
 
-`tokens.css` defines:
+`src/lib/styles/tokens.css` defines:
 
-- paper/background/ink and interactive accent colors;
-- success, warning, danger, information, disabled, and focus treatments;
-- display/body fonts and a manual large-text scale;
-- a four-point spacing rhythm (`--space-1` through `--space-8`);
-- density, border, corner, shadow, safe-area, target-size, layer, breakpoint, and
-  motion values.
+- palette colors and configurable `--action`, `--action-dark`, and `--action-light`
+  roles; accent and high-contrast settings override the action roles;
+- shared control borders, focus ring, and recurring paper, shell, navigation,
+  and overlay surfaces;
+- display/body fonts, spacing (`--space-1` through `--space-8`), borders,
+  shadows, target size, layer order, and motion durations.
+
+`src/lib/styles/forms.css` owns the shared label, control, help/error, disabled,
+and invalid presentation of `Field` and `SelectField`. Each primitive retains
+its native behavior and accessible associations. `SearchField` shares the
+control border and focus contract while retaining its icon layout. The global
+focus contract is `--focus-ring` with `--focus-offset`; the native select keeps
+its existing two-pixel ring. `ContentHeader` accepts an inherited
+`--header-description-color`, so a parent surface can set the foreground
+without targeting its private markup.
+
+`app.css` owns document defaults, the page shell, and narrowly scoped layout
+utilities. `Panel` owns its quiet, focal, and dark variants. The entry page owns
+its distinct card treatment locally. Literal media-query thresholds remain in
+CSS because custom properties cannot be used in media-query conditions. Several
+component-specific thresholds below 48rem adapt action layouts.
 
 Default text and controls meet WCAG 2.2 AA. `data-contrast="high"` targets 7:1
 text contrast, removes texture behind text, and strengthens outlines.

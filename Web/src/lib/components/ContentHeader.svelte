@@ -73,9 +73,9 @@
 		margin: 0;
 	}
 
-	.description {
-		margin-block-start: var(--space-1) !important;
-		color: var(--ink-soft);
+	.copy .description {
+		margin-block-start: var(--space-1);
+		color: var(--header-description-color, var(--ink-soft));
 	}
 
 	.actions {

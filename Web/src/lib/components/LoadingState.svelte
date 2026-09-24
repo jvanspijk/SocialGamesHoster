@@ -47,7 +47,7 @@
 
 	progress {
 		width: min(100%, 18rem);
-		accent-color: var(--crimson);
+		accent-color: var(--action);
 	}
 
 	@keyframes spin {

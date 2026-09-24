@@ -162,7 +162,7 @@
 	}
 
 	.ability-card {
-		border-inline-start: 3px solid var(--crimson);
+		border-inline-start: 3px solid var(--action);
 		padding-inline-start: var(--space-3);
 	}
 

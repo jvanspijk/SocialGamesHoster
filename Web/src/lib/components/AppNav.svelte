@@ -40,7 +40,7 @@
 			tabindex={item.disabled ? -1 : undefined}
 		>
 			<span class="icon"><Icon size={21} strokeWidth={1.8} /></span>
-			<span>{item.label}</span>
+			<span class="label">{item.label}</span>
 			{#if item.attention}
 				<span class:count={item.attentionCount} class="attention-badge" aria-hidden="true"
 					>{item.attentionCount === 99 ? '99+' : (item.attentionCount ?? 'New')}</span
@@ -64,7 +64,7 @@
 		display: grid;
 		grid-template-columns: repeat(var(--nav-count, 4), minmax(0, 1fr));
 		border-block-start: 1px solid var(--gold-dark);
-		background: linear-gradient(rgb(28 18 12 / 96%), rgb(20 12 8 / 98%)), var(--wood);
+		background: var(--surface-nav);
 		box-shadow: 0 -0.35rem 1.25rem rgb(19 10 6 / 25%);
 		padding-block-end: env(safe-area-inset-bottom);
 	}
@@ -88,14 +88,20 @@
 	}
 
 	a.active {
-		border-color: var(--crimson-light);
-		background: color-mix(in srgb, var(--crimson) 18%, transparent);
+		border-color: var(--action-light);
+		background: color-mix(in srgb, var(--action) 18%, transparent);
 		color: var(--gold-light);
 	}
 
 	a.disabled {
 		cursor: not-allowed;
 		opacity: 0.52;
+	}
+
+	.label {
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		text-align: center;
 	}
 
 	.icon {
@@ -113,7 +119,7 @@
 		place-items: center;
 		border: 2px solid #1c120c;
 		border-radius: 50%;
-		background: var(--crimson-light);
+		background: var(--action-light);
 		color: var(--wood);
 		font-family: var(--font-display);
 		font-size: 0.56rem;

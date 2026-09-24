@@ -52,13 +52,10 @@
 	}
 
 	.dark {
+		--header-description-color: var(--paper-muted);
 		border: 1px solid var(--gold-dark);
 		background: var(--ink);
 		color: var(--paper-light);
 		padding: var(--space-4);
-	}
-
-	.dark :global(.description) {
-		color: var(--paper-muted);
 	}
 </style>

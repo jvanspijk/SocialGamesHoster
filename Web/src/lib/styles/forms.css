@@ -1,0 +1,58 @@
+/* Field and SelectField share presentation; native control behavior stays in each primitive. */
+.form-field {
+	display: grid;
+	gap: 0.3rem;
+}
+
+.form-field > span {
+	font-family: var(--font-display);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.form-field i {
+	color: var(--danger);
+	font-style: normal;
+}
+
+.form-field :is(input, textarea, select) {
+	width: 100%;
+	min-height: var(--target-size);
+	border: 1px solid var(--control-border);
+	border-radius: var(--control-radius);
+	background: var(--paper-light);
+	color: var(--ink);
+	padding: 0.65rem 0.75rem;
+	transition: border-color var(--speed-fast) ease-out;
+}
+
+.form-field :is(input, textarea, select):is(:hover, :focus) {
+	border-color: var(--action);
+}
+
+/* Preserve the native select's existing two-pixel ring. */
+.form-field select:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+.form-field [aria-invalid='true'] {
+	border-color: var(--danger);
+	box-shadow: 0 0 0 1px var(--danger);
+}
+
+.form-field :is(input, textarea, select):disabled {
+	background: var(--paper-deep);
+	cursor: not-allowed;
+	opacity: var(--control-disabled-opacity);
+}
+
+.form-field small {
+	color: var(--ink-soft);
+}
+
+.form-field small.error {
+	color: var(--danger);
+}

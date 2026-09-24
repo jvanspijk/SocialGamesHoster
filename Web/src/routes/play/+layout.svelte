@@ -341,7 +341,7 @@
 		justify-content: space-between;
 		gap: var(--space-3);
 		border-block-end: var(--border-subtle);
-		background: rgb(247 231 196 / 94%);
+		background: var(--surface-shell);
 		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-4), env(safe-area-inset-left));
 		backdrop-filter: blur(8px);
@@ -383,7 +383,7 @@
 		justify-content: space-between;
 		gap: var(--space-3);
 		border-block-end: 1px solid var(--gold-dark);
-		background: linear-gradient(rgb(28 18 12 / 96%), rgb(20 12 8 / 98%)), var(--wood);
+		background: var(--surface-nav);
 		color: var(--paper-light);
 		padding: var(--space-2) max(var(--space-3), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-3), env(safe-area-inset-left));
@@ -440,7 +440,7 @@
 		height: 0.65rem;
 		border: 2px solid var(--wood);
 		border-radius: 50%;
-		background: var(--crimson-light);
+		background: var(--action-light);
 	}
 
 	.player-content {
@@ -453,7 +453,7 @@
 		inset: 0;
 		display: grid;
 		place-items: center;
-		background: rgb(17 10 6 / 72%);
+		background: var(--surface-backdrop);
 		padding: max(var(--space-4), env(safe-area-inset-top))
 			max(var(--space-4), env(safe-area-inset-right))
 			max(var(--space-4), env(safe-area-inset-bottom))

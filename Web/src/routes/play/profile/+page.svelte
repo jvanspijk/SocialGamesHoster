@@ -145,7 +145,7 @@
 		min-height: var(--target-size);
 		align-items: center;
 		gap: var(--space-1);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;

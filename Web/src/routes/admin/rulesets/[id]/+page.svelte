@@ -808,7 +808,7 @@
 	header a {
 		display: inline-flex;
 		gap: var(--space-1);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		text-decoration: none;
 	}
 	.section-heading h1,
@@ -877,12 +877,12 @@
 		cursor: pointer;
 	}
 	.section-nav button.active {
-		border-inline-start-color: var(--crimson);
-		background: color-mix(in srgb, var(--crimson) 12%, var(--paper-light));
-		color: var(--crimson-dark);
+		border-inline-start-color: var(--action);
+		background: color-mix(in srgb, var(--action) 12%, var(--paper-light));
+		color: var(--action-dark);
 	}
 	.section-nav button:hover {
-		background: color-mix(in srgb, var(--crimson) 8%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 8%, var(--paper-light));
 	}
 	.section-nav button:focus-visible {
 		outline: var(--focus-ring);
@@ -1030,7 +1030,7 @@
 		width: fit-content;
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		padding: 0;
 		text-decoration: underline;

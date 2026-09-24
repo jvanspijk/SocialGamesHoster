@@ -83,9 +83,9 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-2);
-		border: 1px solid var(--crimson-dark);
-		background: var(--crimson);
-		box-shadow: 0 3px 0 var(--crimson-dark);
+		border: 1px solid var(--action-dark);
+		background: var(--action);
+		box-shadow: 0 3px 0 var(--action-dark);
 		color: var(--paper-light);
 		font-family: var(--font-display);
 		font-size: 0.76rem;
@@ -107,7 +107,7 @@
 		grid-template-columns: 5.5rem minmax(0, 1fr);
 		min-height: 8rem;
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 62%);
+		background: var(--surface-paper-wash);
 		color: var(--ink);
 		text-decoration: none;
 		transition:
@@ -128,8 +128,8 @@
 			radial-gradient(circle, transparent 36%, rgb(0 0 0 / 32%) 100%),
 			linear-gradient(
 				145deg,
-				var(--crimson-dark),
-				color-mix(in srgb, var(--crimson-dark) 45%, var(--wood))
+				var(--action-dark),
+				color-mix(in srgb, var(--action-dark) 45%, var(--wood))
 			);
 		color: var(--gold-light);
 	}

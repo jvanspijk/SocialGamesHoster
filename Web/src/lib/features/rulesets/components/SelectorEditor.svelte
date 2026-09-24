@@ -68,7 +68,7 @@
 		display: grid;
 		gap: 0.65rem;
 		min-width: 0;
-		border: 1px solid #b89b6d;
+		border: 1px solid var(--choice-border);
 		padding: 0.75rem;
 	}
 

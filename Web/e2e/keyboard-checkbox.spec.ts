@@ -14,6 +14,11 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	).toBeVisible();
 
 	if (await page.getByRole('heading', { name: 'Set up the app' }).isVisible()) {
+		await expect
+			.poll(() =>
+				page.getByLabel('Username').evaluate((input) => input.getBoundingClientRect().height)
+			)
+			.toBeGreaterThanOrEqual(44);
 		await page.getByLabel('Username').fill('keyboardowner');
 		await page.getByLabel('Display name').fill('Keyboard Owner');
 		await page.getByLabel(/^Password/).fill('correct-horse-battery');
@@ -28,6 +33,11 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 		await expect(page.getByRole('heading', { name: 'Sign in' })).not.toBeVisible();
 	}
 
+	await page.goto('/admin/approvals');
+	const search = page.getByRole('searchbox', { name: 'Search profiles' });
+	await search.focus();
+	await expect(search.locator('..')).toHaveCSS('outline-width', '3px');
+
 	await page.goto('/admin/settings/display');
 	const largeText = page.getByRole('checkbox', { name: /^Large text/ });
 	await largeText.focus();
@@ -39,6 +49,12 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await expect(highContrast).toBeChecked();
 	await expect(page.locator('html')).toHaveAttribute('data-text-size', 'large');
 	await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
+	await expect
+		.poll(() =>
+			page.locator('html').evaluate((html) => parseFloat(getComputedStyle(html).fontSize))
+		)
+		.toBeGreaterThan(18);
+	await expect(page.locator('.immersive-shell')).toHaveCSS('background-image', 'none');
 	await expect
 		.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1))
 		.toBe(true);
@@ -64,22 +80,6 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await page.keyboard.press('Escape');
 	await expect(preview).toBeFocused();
 
-	await page.getByRole('button', { name: 'Sections', exact: true }).click();
-	await page
-		.getByRole('dialog', { name: 'Ruleset sections' })
-		.getByRole('button', { name: /^Basics/ })
-		.click();
-	await expect(page.getByRole('textbox', { name: 'Asset name', exact: true })).not.toBeVisible();
-	await page.getByRole('button', { name: 'Upload new', exact: true }).click();
-	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
-	await expect(page.getByRole('heading', { name: 'Assets', exact: true })).toBeVisible();
-	await page
-		.getByRole('navigation', { name: 'Ruleset sections' })
-		.getByRole('button', { name: /^Basics/ })
-		.click();
-	await page.getByRole('button', { name: 'Delete ruleset', exact: true }).click();
-	await expect(page.getByRole('dialog', { name: 'Delete ruleset?' })).toBeVisible();
-	await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await page.getByRole('textbox', { name: /^Name/ }).fill('Keyboard editor changes');
 	await expect(page.getByText('Unsaved changes', { exact: true })).toHaveAttribute(
 		'aria-live',

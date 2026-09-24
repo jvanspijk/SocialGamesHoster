@@ -81,7 +81,7 @@
 		place-items: center;
 		border: 4px double var(--gold-light);
 		border-radius: 50%;
-		background: var(--crimson-dark);
+		background: var(--action-dark);
 		color: var(--gold-light);
 		font-family: var(--font-display);
 		font-size: 3.2rem;

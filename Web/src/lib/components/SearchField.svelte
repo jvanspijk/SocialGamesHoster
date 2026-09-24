@@ -27,10 +27,16 @@
 		align-items: center;
 		gap: var(--space-2);
 		margin: 0 var(--space-3) var(--space-3);
-		border: 1px solid #8d7248;
+		border: 1px solid var(--control-border);
+		border-radius: var(--control-radius);
 		background: var(--paper-light);
 		color: var(--ink);
 		padding-inline: var(--space-2);
+	}
+
+	.search-field:focus-within {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-offset);
 	}
 
 	.search-field input {
@@ -47,7 +53,7 @@
 	}
 
 	.search-field.inverse {
-		border-color: #755d43;
+		border-color: var(--control-inverse-border);
 		background: rgb(255 255 255 / 7%);
 		color: var(--paper-light);
 	}

@@ -68,7 +68,7 @@
 	}
 
 	.message-meta strong {
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 	}
 
 	.message-meta time {

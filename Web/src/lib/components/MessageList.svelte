@@ -104,7 +104,7 @@
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-size: 0.7rem;
 		padding: 0 var(--space-2);

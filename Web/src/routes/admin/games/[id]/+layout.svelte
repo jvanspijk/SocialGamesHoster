@@ -217,7 +217,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border-block-end: 1px solid var(--gold-dark);
-		background: linear-gradient(rgb(28 18 12 / 96%), rgb(20 12 8 / 98%)), var(--wood);
+		background: var(--surface-nav);
 		color: var(--paper-light);
 		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-4), env(safe-area-inset-left));
@@ -308,7 +308,7 @@
 		inset-inline-end: -0.35rem;
 		border: 2px solid var(--wood);
 		border-radius: 999px;
-		background: var(--crimson-light);
+		background: var(--action-light);
 		color: var(--wood);
 		font-size: 0.54rem;
 		font-style: normal;
@@ -331,7 +331,7 @@
 		justify-self: start;
 		min-height: var(--target-size);
 		align-content: center;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;

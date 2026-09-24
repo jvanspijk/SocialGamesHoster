@@ -148,8 +148,8 @@
 
 	nav a:hover,
 	nav a.active {
-		border-color: var(--crimson);
-		color: var(--crimson-dark);
+		border-color: var(--action);
+		color: var(--action-dark);
 	}
 
 	footer {

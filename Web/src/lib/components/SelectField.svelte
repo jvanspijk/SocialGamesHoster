@@ -44,7 +44,7 @@
 	}
 </script>
 
-<label for={inputId}>
+<label class="form-field" for={inputId}>
 	<span
 		>{label}{#if required}<i aria-hidden="true"> *</i>{/if}</span
 	>
@@ -77,63 +77,3 @@
 		<small id={descriptionId}>{help}</small>
 	{/if}
 </label>
-
-<style>
-	label {
-		display: grid;
-		gap: 0.3rem;
-	}
-
-	span {
-		font-family: var(--font-display);
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	i {
-		color: var(--danger);
-		font-style: normal;
-	}
-
-	select {
-		width: 100%;
-		min-height: var(--target-size);
-		border: 1px solid #8d7248;
-		border-radius: 1px;
-		background: var(--paper-light);
-		color: var(--ink);
-		padding: 0.65rem 0.75rem;
-		transition: border-color var(--speed-fast) ease-out;
-	}
-
-	select:hover,
-	select:focus {
-		border-color: var(--crimson);
-	}
-
-	select:focus-visible {
-		outline: 2px solid var(--focus);
-		outline-offset: 2px;
-	}
-
-	select[aria-invalid='true'] {
-		border-color: var(--danger);
-		box-shadow: 0 0 0 1px var(--danger);
-	}
-
-	select:disabled {
-		background: var(--paper-deep);
-		cursor: not-allowed;
-		opacity: 0.72;
-	}
-
-	small {
-		color: var(--ink-soft);
-	}
-
-	small.error {
-		color: var(--danger);
-	}
-</style>

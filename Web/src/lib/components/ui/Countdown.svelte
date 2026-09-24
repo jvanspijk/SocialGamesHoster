@@ -75,7 +75,7 @@
 
 	.icon {
 		grid-row: span 2;
-		color: var(--crimson);
+		color: var(--action);
 	}
 
 	.countdown strong {

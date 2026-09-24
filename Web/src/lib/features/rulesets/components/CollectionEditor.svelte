@@ -243,7 +243,7 @@
 	.usage {
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		text-decoration: underline;
 	}

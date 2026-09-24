@@ -1,10 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import FormPrimitivesHarness from '../../test/FormPrimitivesHarness.svelte';
 import CheckboxFieldSource from './CheckboxField.svelte?raw';
-import SelectFieldSource from './SelectField.svelte?raw';
 
 describe('native form primitives', () => {
+	const formStyles = readFileSync(resolve(process.cwd(), 'src/lib/styles/forms.css'), 'utf8');
+	const tokens = readFileSync(resolve(process.cwd(), 'src/lib/styles/tokens.css'), 'utf8');
+
 	afterEach(cleanup);
 
 	it('associates labels, help, errors, required state, and disabled state', () => {
@@ -27,19 +31,23 @@ describe('native form primitives', () => {
 		expect(screen.getByRole('checkbox', { name: 'Disabled setting' })).toBeDisabled();
 	});
 
-	it('uses native focusable controls with 44px minimum targets', () => {
+	it('uses native focusable controls with a 44px minimum target', () => {
 		render(FormPrimitivesHarness);
 
 		const audience = screen.getByRole('combobox', { name: /^Audience/ });
 		audience.focus();
 		expect(audience).toHaveFocus();
-		expect(SelectFieldSource).toContain('min-height: var(--target-size)');
 
 		const visible = screen.getByRole('checkbox', {
 			name: /^Visible to players/
 		}) as HTMLInputElement;
 		visible.focus();
 		expect(visible).toHaveFocus();
+
+		// jsdom has no layout engine, so guard the shared target value and its consumers.
+		const minimumTargetPx = Number(tokens.match(/--target-size:\s*(\d+)px/)?.[1]);
+		expect(minimumTargetPx).toBeGreaterThanOrEqual(44);
+		expect(formStyles).toContain('min-height: var(--target-size)');
 		expect(CheckboxFieldSource).toContain('min-height: var(--target-size)');
 	});
 

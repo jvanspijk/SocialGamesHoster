@@ -55,7 +55,7 @@
 		align-items: start;
 		gap: var(--space-2);
 		min-height: var(--target-size);
-		border: 1px solid #b89b6d;
+		border: 1px solid var(--choice-border);
 		padding: var(--space-2);
 		cursor: pointer;
 	}
@@ -69,7 +69,7 @@
 		width: 1.35rem;
 		height: 1.35rem;
 		margin: 0.15rem auto;
-		accent-color: var(--crimson);
+		accent-color: var(--action);
 	}
 
 	input:disabled {

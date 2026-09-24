@@ -6,9 +6,9 @@
 	--ink: #3e322b;
 	--ink-soft: #665347;
 	--ink-faint: #897464;
-	--crimson: #a62a2a;
-	--crimson-dark: #7d2020;
-	--crimson-light: #cf5555;
+	--action: #a62a2a;
+	--action-dark: #7d2020;
+	--action-light: #cf5555;
 	--gold: #9b7129;
 	--gold-dark: #76501d;
 	--gold-light: #dfbd65;
@@ -19,12 +19,24 @@
 	--success: #315b3a;
 	--warning: #7a5517;
 	--information: #354d6d;
-	--disabled: #776b62;
 	--wood: #211811;
 	--wood-light: #3b2a1e;
 	--shadow: 0 16px 46px rgb(13 8 5 / 44%);
 	--shadow-small: 0 5px 12px rgb(35 20 11 / 28%);
 	--focus: #d59632;
+	--focus-ring: 3px solid var(--focus);
+	--focus-offset: 3px;
+	--control-border: #8d7248;
+	--control-radius: 1px;
+	--control-disabled-opacity: 0.72;
+	--action-disabled-opacity: 0.56;
+	--surface-paper-wash: rgb(255 249 230 / 62%);
+	--surface-paper-veil: rgb(255 249 230 / 30%);
+	--surface-backdrop: rgb(17 10 6 / 72%);
+	--surface-shell: rgb(247 231 196 / 94%);
+	--surface-nav: linear-gradient(rgb(28 18 12 / 96%), rgb(20 12 8 / 98%)), var(--wood);
+	--choice-border: #b89b6d;
+	--control-inverse-border: #755d43;
 	--font-display: 'Cinzel', Georgia, serif;
 	--font-body: 'IM Fell English', Georgia, serif;
 	--content-width: 72rem;
@@ -51,31 +63,27 @@
 }
 
 :root[data-accent='forest'] {
-	--crimson: var(--forest);
-	--crimson-dark: #284634;
-	--crimson-light: #5c8a69;
+	--action: var(--forest);
+	--action-dark: #284634;
+	--action-light: #5c8a69;
 }
 
 :root[data-accent='navy'] {
-	--crimson: var(--navy);
-	--crimson-dark: #263b58;
-	--crimson-light: #60799d;
+	--action: var(--navy);
+	--action-dark: #263b58;
+	--action-light: #60799d;
 }
 
 :root[data-accent='gold'] {
-	--crimson: var(--gold);
-	--crimson-dark: var(--gold-dark);
-	--crimson-light: var(--gold-light);
+	--action: var(--gold);
+	--action-dark: var(--gold-dark);
+	--action-light: var(--gold-light);
 }
 
 :root[data-accent='plum'] {
-	--crimson: var(--plum);
-	--crimson-dark: #4c2d4c;
-	--crimson-light: #8c638c;
-}
-
-:root[data-text-size='large'] {
-	font-size: 118.75%;
+	--action: var(--plum);
+	--action-dark: #4c2d4c;
+	--action-light: #8c638c;
 }
 
 :root[data-contrast='high'] {
@@ -86,13 +94,21 @@
 	--ink: #1d1713;
 	--ink-soft: #332820;
 	--ink-faint: #45372b;
-	--crimson: #8b1111;
-	--crimson-dark: #650000;
-	--crimson-light: #aa2222;
+	--action: #8b1111;
+	--action-dark: #650000;
+	--action-light: #aa2222;
 	--gold: #684500;
 	--gold-dark: #3f2a00;
 	--gold-light: #8b6200;
 	--focus: #005fcc;
+	--control-border: var(--ink);
+	--choice-border: var(--ink);
+	--control-inverse-border: var(--paper-light);
+	--surface-paper-wash: var(--paper-light);
+	--surface-paper-veil: var(--paper-light);
+	--surface-shell: var(--paper);
+	--control-disabled-opacity: 1;
+	--action-disabled-opacity: 1;
 	--border-subtle: 2px solid #1d1713;
 	--border-strong: 3px solid #1d1713;
 	--shadow: none;

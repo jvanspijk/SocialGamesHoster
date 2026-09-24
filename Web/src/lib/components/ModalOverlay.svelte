@@ -162,7 +162,7 @@
 	}
 
 	.modal-overlay::backdrop {
-		background: rgb(17 10 6 / 72%);
+		background: var(--surface-backdrop);
 		backdrop-filter: blur(2px);
 		opacity: 1;
 		transition: opacity var(--speed-fast) ease-in;

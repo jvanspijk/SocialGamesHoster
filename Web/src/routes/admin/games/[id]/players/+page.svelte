@@ -404,7 +404,7 @@
 
 	.identity i {
 		display: inline-block;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.65rem;
 		font-style: normal;
@@ -474,8 +474,8 @@
 	}
 
 	.choice-grid button.active {
-		border: 2px solid var(--crimson-dark);
-		background: color-mix(in srgb, var(--crimson) 10%, transparent);
+		border: 2px solid var(--action-dark);
+		background: color-mix(in srgb, var(--action) 10%, transparent);
 		font-weight: 700;
 	}
 

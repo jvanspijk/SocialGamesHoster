@@ -311,6 +311,21 @@
 {/if}
 
 <style>
+	/* The entry page's paper card is distinct from Panel's quiet and focal surfaces. */
+	.card {
+		border: 1px solid #9a7e51;
+		border-radius: var(--control-radius);
+		background: rgb(255 249 230 / 70%);
+		box-shadow:
+			var(--shadow-small),
+			inset 0 0 0 2px rgb(122 85 39 / 8%);
+		padding: 1rem;
+	}
+
+	:global(html[data-contrast='high']) .card {
+		background: var(--paper-light);
+		box-shadow: none;
+	}
 	.hero,
 	.setup {
 		max-width: 58rem;
@@ -391,6 +406,7 @@
 
 	.qr-card img {
 		width: min(100%, 20rem);
+		/* The QR code frame belongs to the image, not the form control border. */
 		border: 1px solid #8d7248;
 		background: white;
 		padding: 0.4rem;

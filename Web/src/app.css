@@ -3,6 +3,7 @@
 @import '@fontsource/im-fell-english/400.css';
 @import '@fontsource/im-fell-english/400-italic.css';
 @import './lib/styles/tokens.css';
+@import './lib/styles/forms.css';
 
 * {
 	box-sizing: border-box;
@@ -18,6 +19,10 @@ html {
 	overflow-x: hidden;
 }
 
+html[data-text-size='large'] {
+	font-size: 21.375px;
+}
+
 body {
 	min-height: 100vh;
 	min-height: 100dvh;
@@ -30,7 +35,8 @@ body {
 }
 
 html[data-contrast='high'] body,
-html[data-contrast='high'] .sheet {
+html[data-contrast='high'] .sheet,
+html[data-contrast='high'] .immersive-shell {
 	background: var(--paper);
 }
 
@@ -47,7 +53,7 @@ a {
 }
 
 a {
-	color: var(--crimson-dark);
+	color: var(--action-dark);
 	text-underline-offset: 0.18em;
 }
 
@@ -131,7 +137,7 @@ p {
 	z-index: 0;
 	width: 4rem;
 	height: 4rem;
-	border-color: var(--crimson-dark);
+	border-color: var(--action-dark);
 	content: '';
 	pointer-events: none;
 }
@@ -173,32 +179,11 @@ p {
 	gap: 1rem;
 }
 
-.card {
-	border: 1px solid #9a7e51;
-	border-radius: 1px;
-	background: rgb(255 249 230 / 70%);
-	box-shadow:
-		var(--shadow-small),
-		inset 0 0 0 2px rgb(122 85 39 / 8%);
-	padding: 1rem;
-}
-
-.card--dark {
-	border-color: #473226;
-	background: var(--ink);
-	color: var(--paper-light);
-}
-
-.card--dark h2,
-.card--dark h3 {
-	color: var(--paper-light);
-}
-
 .ornament {
 	display: flex;
 	align-items: center;
 	gap: 0.6rem;
-	color: var(--crimson-dark);
+	color: var(--action-dark);
 	font-family: var(--font-display);
 	font-size: 0.74rem;
 	letter-spacing: 0.18em;
@@ -215,7 +200,7 @@ p {
 }
 
 .eyebrow {
-	color: var(--crimson-dark);
+	color: var(--action-dark);
 	font-family: var(--font-display);
 	font-size: 0.7rem;
 	font-weight: 700;
@@ -244,8 +229,8 @@ p {
 }
 
 :focus-visible {
-	outline: 3px solid var(--focus);
-	outline-offset: 3px;
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-offset);
 }
 
 @media (max-width: 760px) {

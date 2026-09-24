@@ -396,8 +396,8 @@
 	}
 
 	nav a.active {
-		border-color: var(--crimson);
-		color: var(--crimson-dark);
+		border-color: var(--action);
+		color: var(--action-dark);
 	}
 
 	nav a > span {
@@ -438,7 +438,7 @@
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.7rem;
@@ -488,8 +488,8 @@
 	}
 
 	.outcome-choices button.active {
-		border: 2px solid var(--crimson-dark);
-		background: color-mix(in srgb, var(--crimson) 10%, transparent);
+		border: 2px solid var(--action-dark);
+		background: color-mix(in srgb, var(--action) 10%, transparent);
 		font-weight: 700;
 	}
 
@@ -510,7 +510,7 @@
 
 	.award-players > section {
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 58%);
+		background: var(--surface-paper-wash);
 	}
 
 	.award-players header {

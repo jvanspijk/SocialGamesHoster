@@ -138,9 +138,9 @@
 		min-height: var(--target-size);
 		align-items: center;
 		justify-content: center;
-		border: 1px solid var(--crimson-dark);
-		background: var(--crimson);
-		box-shadow: 0 3px 0 var(--crimson-dark);
+		border: 1px solid var(--action-dark);
+		background: var(--action);
+		box-shadow: 0 3px 0 var(--action-dark);
 		color: var(--paper-light);
 		font-family: var(--font-display);
 		font-size: 0.76rem;

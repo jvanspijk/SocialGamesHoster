@@ -131,7 +131,7 @@
 		gap: var(--space-1);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.72rem;

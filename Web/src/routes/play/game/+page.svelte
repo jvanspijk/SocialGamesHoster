@@ -122,7 +122,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 62%);
+		background: var(--surface-paper-wash);
 		color: var(--ink);
 		padding: var(--space-3);
 		text-decoration: none;

@@ -392,7 +392,7 @@
 		padding: var(--space-3) 0;
 	}
 	.phase-flow li.selected {
-		border-inline-start: 0.25rem solid var(--crimson);
+		border-inline-start: 0.25rem solid var(--action);
 		padding-inline-start: var(--space-3);
 	}
 	.chat-preview li {

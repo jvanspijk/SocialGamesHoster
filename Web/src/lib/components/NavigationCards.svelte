@@ -51,7 +51,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 62%);
+		background: var(--surface-paper-wash);
 		color: var(--ink);
 		cursor: pointer;
 		font: inherit;
@@ -87,7 +87,7 @@
 		height: 2.75rem;
 		place-items: center;
 		border: 1px solid var(--gold-dark);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 	}
 
 	strong,

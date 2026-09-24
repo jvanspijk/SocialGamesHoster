@@ -52,7 +52,7 @@
 		flex: 0 0 auto;
 		place-items: center;
 		border: var(--border-subtle);
-		border-radius: 1px;
+		border-radius: var(--control-radius);
 		background: var(--paper-light);
 		color: var(--ink);
 		cursor: pointer;
@@ -72,13 +72,13 @@
 	}
 
 	button:focus-visible {
-		outline: 3px solid var(--focus);
+		outline: var(--focus-ring);
 		outline-offset: 2px;
 	}
 
 	button:disabled {
 		cursor: not-allowed;
-		opacity: 0.56;
+		opacity: var(--action-disabled-opacity);
 	}
 
 	.ghost {

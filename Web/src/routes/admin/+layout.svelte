@@ -184,7 +184,9 @@
 		<ProfileRequestAttention oncountchange={(count) => (pendingProfileRequestCount = count)} />
 		<AppNav items={navigation} {current} label="Management" />
 		<header class="management-header">
-			<a class="product" href={resolve('/admin')}><Swords size={23} /> Social Games Hoster</a>
+			<a class="product" href={resolve('/admin')}
+				><Swords size={23} /><span>Social Games Hoster</span></a
+			>
 			<div class="header-actions">
 				<ConnectionBadge />
 				<IconButton label="Sign out" variant="ghost" onclick={logout}>
@@ -273,7 +275,7 @@
 		place-items: center;
 		border: 3px double var(--gold-light);
 		border-radius: 50%;
-		background: var(--crimson-dark);
+		background: var(--action-dark);
 		color: var(--paper-light);
 		margin: 0 auto var(--space-3);
 	}
@@ -293,7 +295,7 @@
 		min-height: 44px;
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.78rem;
@@ -307,7 +309,7 @@
 	}
 
 	.recovery-link:hover {
-		color: var(--crimson);
+		color: var(--action);
 	}
 
 	.recovery-link:focus-visible,
@@ -342,12 +344,13 @@
 		z-index: var(--layer-sticky);
 		inset-block-start: 0;
 		display: flex;
+		flex-wrap: wrap;
 		min-height: 4rem;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
 		border-block-end: var(--border-subtle);
-		background: rgb(247 231 196 / 94%);
+		background: var(--surface-shell);
 		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-4), env(safe-area-inset-left));
 		backdrop-filter: blur(8px);
@@ -355,6 +358,7 @@
 
 	.product {
 		display: inline-flex;
+		min-width: 0;
 		align-items: center;
 		gap: var(--space-2);
 		color: var(--ink);
@@ -363,6 +367,11 @@
 		font-weight: 700;
 		text-decoration: none;
 		text-transform: uppercase;
+	}
+
+	.product span {
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.header-actions {

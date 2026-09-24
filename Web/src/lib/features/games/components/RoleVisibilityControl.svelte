@@ -131,7 +131,7 @@
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.68rem;
@@ -143,7 +143,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 58%);
+		background: var(--surface-paper-wash);
 		padding: var(--space-2);
 	}
 

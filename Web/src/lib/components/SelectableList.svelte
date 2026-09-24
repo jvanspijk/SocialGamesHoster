@@ -97,13 +97,13 @@
 	}
 
 	.selectable-list button:hover:not(.selected) {
-		background: color-mix(in srgb, var(--crimson) 6%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 6%, var(--paper-light));
 	}
 
 	.selectable-list button.selected {
-		box-shadow: inset 0.25rem 0 var(--crimson);
-		background: color-mix(in srgb, var(--crimson) 12%, var(--paper-light));
-		color: var(--crimson-dark);
+		box-shadow: inset 0.25rem 0 var(--action);
+		background: color-mix(in srgb, var(--action) 12%, var(--paper-light));
+		color: var(--action-dark);
 	}
 
 	.selectable-list button:focus-visible {
@@ -158,7 +158,7 @@
 
 	.rich button:hover,
 	.rich button.selected {
-		background: color-mix(in srgb, var(--crimson-light) 13%, transparent);
+		background: color-mix(in srgb, var(--action-light) 13%, transparent);
 	}
 
 	.rich button.selected {
@@ -172,7 +172,7 @@
 		place-items: center;
 		border: 2px double var(--gold);
 		border-radius: 50%;
-		background: var(--crimson-dark);
+		background: var(--action-dark);
 		color: var(--gold-light);
 		font-family: var(--font-display);
 		font-weight: 700;
@@ -227,6 +227,6 @@
 		width: 0.55rem;
 		height: 0.55rem;
 		border-radius: 50%;
-		background: var(--crimson-light);
+		background: var(--action-light);
 	}
 </style>

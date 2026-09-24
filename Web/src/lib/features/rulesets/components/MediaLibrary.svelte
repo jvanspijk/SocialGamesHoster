@@ -408,17 +408,17 @@
 			box-shadow var(--speed-fast) ease-out;
 	}
 	.asset-list button:hover {
-		background: color-mix(in srgb, var(--crimson) 8%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 8%, var(--paper-light));
 	}
 	.asset-list button:focus-visible {
 		outline: var(--focus-ring);
 		outline-offset: 2px;
 	}
 	.asset-list button[aria-current='true'] {
-		background: color-mix(in srgb, var(--crimson) 10%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 10%, var(--paper-light));
 		box-shadow:
-			inset 4px 0 var(--crimson),
-			inset 0 0 0 1px var(--crimson);
+			inset 4px 0 var(--action),
+			inset 0 0 0 1px var(--action);
 	}
 	.asset-icon {
 		display: grid;
@@ -451,12 +451,12 @@
 		text-transform: uppercase;
 	}
 	.selection-label {
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 	}
 	.empty-frame,
 	.no-results {
 		border: 1px dashed var(--gold-dark);
-		background: rgb(255 249 230 / 30%);
+		background: var(--surface-paper-veil);
 	}
 	.no-results {
 		color: var(--ink-soft);
@@ -537,7 +537,7 @@
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		padding: 0;
 		text-align: start;
 		text-decoration: underline;

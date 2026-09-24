@@ -83,7 +83,7 @@
 		min-height: var(--target-size);
 		border: var(--border-subtle);
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.62rem;
@@ -144,7 +144,7 @@
 	.definition-editor :global(.empty),
 	.definition-editor :global(.hint) {
 		border: 1px dashed var(--gold-dark);
-		background: rgb(255 249 230 / 30%);
+		background: var(--surface-paper-veil);
 		margin: 0;
 		padding: var(--space-3);
 	}

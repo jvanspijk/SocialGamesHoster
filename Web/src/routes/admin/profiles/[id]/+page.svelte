@@ -156,7 +156,7 @@
 		min-height: var(--target-size);
 		align-items: center;
 		gap: var(--space-1);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;
@@ -275,7 +275,7 @@
 		min-height: var(--target-size);
 		border: var(--border-subtle);
 		background: var(--paper-light);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-weight: 700;

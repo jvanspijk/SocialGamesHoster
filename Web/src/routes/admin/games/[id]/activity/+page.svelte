@@ -248,7 +248,7 @@
 	progress {
 		width: 100%;
 		height: 0.35rem;
-		accent-color: var(--crimson);
+		accent-color: var(--action);
 	}
 
 	.empty {

@@ -160,7 +160,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		min-height: var(--target-size);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		text-decoration: none;
 	}
 	.create-form {

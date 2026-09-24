@@ -619,8 +619,8 @@
 		display: inline-flex;
 		min-height: var(--target-size);
 		align-items: center;
-		border: 1px solid var(--crimson-dark);
-		background: var(--crimson);
+		border: 1px solid var(--action-dark);
+		background: var(--action);
 		color: var(--paper-light);
 		font-family: var(--font-display);
 		font-weight: 700;
@@ -669,7 +669,7 @@
 		min-height: var(--target-size);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: 0.68rem;

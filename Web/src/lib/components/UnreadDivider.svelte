@@ -11,7 +11,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;
@@ -22,7 +22,7 @@
 	.unread-divider::after {
 		height: 1px;
 		flex: 1;
-		background: var(--crimson);
+		background: var(--action);
 		content: '';
 	}
 </style>

@@ -32,14 +32,14 @@
 <style>
 	button {
 		display: inline-flex;
-		min-height: 44px;
+		min-height: var(--target-size);
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		border: 1px solid var(--crimson-dark);
-		border-radius: 1px;
-		background: var(--crimson);
-		box-shadow: 0 3px 0 var(--crimson-dark);
+		border: 1px solid var(--action-dark);
+		border-radius: var(--control-radius);
+		background: var(--action);
+		box-shadow: 0 3px 0 var(--action-dark);
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
@@ -56,18 +56,18 @@
 	}
 
 	button:hover:not(:disabled) {
-		background: var(--crimson-dark);
+		background: var(--action-dark);
 		transform: translateY(-1px);
 	}
 
 	button:active:not(:disabled) {
-		box-shadow: 0 1px 0 var(--crimson-dark);
+		box-shadow: 0 1px 0 var(--action-dark);
 		transform: translateY(2px);
 	}
 
 	button:disabled {
 		cursor: not-allowed;
-		opacity: 0.56;
+		opacity: var(--action-disabled-opacity);
 	}
 
 	.secondary {
@@ -81,7 +81,7 @@
 		border-color: transparent;
 		background: transparent;
 		box-shadow: none;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 	}
 
 	.danger {

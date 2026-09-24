@@ -13,7 +13,7 @@
 <style>
 	.queue {
 		margin: 0;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;

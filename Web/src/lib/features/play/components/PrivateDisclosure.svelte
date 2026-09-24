@@ -63,7 +63,7 @@
 		border-radius: 50%;
 		background:
 			radial-gradient(circle at 35% 28%, rgb(255 255 255 / 13%), transparent 30%),
-			var(--crimson-dark);
+			var(--action-dark);
 		box-shadow: var(--shadow);
 		color: var(--paper-light);
 		margin-block-end: var(--space-4);

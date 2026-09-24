@@ -141,7 +141,7 @@
 	}
 
 	.profile-name:hover {
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		text-decoration: underline;
 		text-underline-offset: 0.2em;
 	}

@@ -392,9 +392,9 @@
 	}
 
 	nav a.active {
-		border-color: var(--crimson);
-		background: color-mix(in srgb, var(--crimson) 8%, transparent);
-		color: var(--crimson-dark);
+		border-color: var(--action);
+		background: color-mix(in srgb, var(--action) 8%, transparent);
+		color: var(--action-dark);
 	}
 
 	.form-stack {
@@ -476,7 +476,7 @@
 		gap: var(--space-1);
 		border: 0;
 		background: transparent;
-		color: var(--crimson-dark);
+		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-weight: 700;
