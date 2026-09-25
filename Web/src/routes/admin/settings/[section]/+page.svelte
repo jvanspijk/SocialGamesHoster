@@ -411,7 +411,6 @@
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	input[type='number'] {

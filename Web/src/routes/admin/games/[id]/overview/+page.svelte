@@ -606,7 +606,6 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		padding: var(--space-1) var(--space-2);
-		text-transform: uppercase;
 	}
 
 	.primary-actions {
@@ -709,7 +708,6 @@
 		font-family: var(--font-display);
 		font-size: 0.7rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	fieldset {
@@ -725,7 +723,6 @@
 		font-family: var(--font-display);
 		font-size: 0.7rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	fieldset > label {
@@ -780,7 +777,6 @@
 		font-family: var(--font-display);
 		font-size: 0.7rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	select {

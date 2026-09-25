@@ -86,7 +86,6 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		letter-spacing: 0.05em;
-		text-transform: uppercase;
 	}
 
 	@media (max-width: 47.99rem) {

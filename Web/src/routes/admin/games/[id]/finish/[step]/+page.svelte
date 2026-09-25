@@ -392,7 +392,6 @@
 		font-size: 0.74rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	nav a.active {

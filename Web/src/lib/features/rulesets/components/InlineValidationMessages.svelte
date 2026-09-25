@@ -29,7 +29,6 @@
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		letter-spacing: 0.06em;
-		text-transform: uppercase;
 	}
 
 	ul {

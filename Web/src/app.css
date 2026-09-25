@@ -163,7 +163,6 @@ p {
 	font-family: var(--font-display);
 	font-size: 0.78rem;
 	letter-spacing: 0.12em;
-	text-transform: uppercase;
 }
 
 .ornament::before,
@@ -181,7 +180,6 @@ p {
 	font-size: 0.78rem;
 	font-weight: 700;
 	letter-spacing: 0.1em;
-	text-transform: uppercase;
 }
 
 .muted {

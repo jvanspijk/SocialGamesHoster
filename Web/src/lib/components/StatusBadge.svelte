@@ -36,7 +36,6 @@
 		font-family: var(--font-display);
 		font-size: 0.65rem;
 		letter-spacing: 0.09em;
-		text-transform: uppercase;
 	}
 	i {
 		width: 0.5rem;

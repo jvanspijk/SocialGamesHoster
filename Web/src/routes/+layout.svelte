@@ -117,7 +117,6 @@
 		font-weight: 700;
 		letter-spacing: 0.07em;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	nav {
@@ -143,7 +142,6 @@
 		font-weight: 700;
 		letter-spacing: 0.03em;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	nav a:hover,

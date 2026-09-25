@@ -409,7 +409,6 @@
 		font-size: 0.65rem;
 		font-style: normal;
 		margin-inline-end: var(--space-2);
-		text-transform: uppercase;
 	}
 
 	.identity small {

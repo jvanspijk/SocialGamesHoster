@@ -93,7 +93,6 @@
 		letter-spacing: 0.06em;
 		padding: var(--space-2) var(--space-4);
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	.ruleset-grid {

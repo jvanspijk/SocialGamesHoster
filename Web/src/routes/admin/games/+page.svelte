@@ -349,7 +349,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 
 	select {

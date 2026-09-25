@@ -985,7 +985,6 @@
 	.eyebrow {
 		font-family: var(--font-display);
 		font-size: 0.7rem;
-		text-transform: uppercase;
 	}
 	.overview-content dl {
 		display: grid;
@@ -1058,7 +1057,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 	.limits input {
 		min-height: var(--target-size);

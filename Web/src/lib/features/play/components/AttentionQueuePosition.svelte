@@ -18,6 +18,5 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.09em;
-		text-transform: uppercase;
 	}
 </style>

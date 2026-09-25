@@ -67,7 +67,6 @@
 		font-size: 0.67rem;
 		font-weight: 700;
 		letter-spacing: 0.06em;
-		text-transform: uppercase;
 	}
 
 	.definition-editor :global(input:not([type='checkbox'])) {
@@ -90,7 +89,6 @@
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		padding: var(--space-1) var(--space-2);
-		text-transform: uppercase;
 	}
 
 	.definition-editor :global(.add-small) {

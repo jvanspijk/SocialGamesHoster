@@ -448,7 +448,6 @@
 		font-size: 0.65rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 	.selection-label {
 		color: var(--action-dark);

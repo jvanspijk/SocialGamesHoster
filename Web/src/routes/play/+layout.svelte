@@ -352,7 +352,6 @@
 		font-size: 0.78rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	.account-tools {

@@ -98,7 +98,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	.history-list article {

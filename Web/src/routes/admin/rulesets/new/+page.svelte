@@ -207,7 +207,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 	.source-select input {
 		min-height: var(--target-size);
@@ -228,7 +227,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 	.limits input {
 		min-height: var(--target-size);

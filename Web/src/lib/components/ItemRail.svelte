@@ -61,7 +61,6 @@
 		font-family: var(--font-display);
 		font-size: 0.64rem;
 		letter-spacing: 0.12em;
-		text-transform: uppercase;
 	}
 
 	.toolbar {

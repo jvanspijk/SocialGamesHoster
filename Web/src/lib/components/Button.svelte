@@ -48,7 +48,6 @@
 		letter-spacing: 0.04em;
 		line-height: 1.1;
 		padding: 0.72rem 1rem;
-		text-transform: uppercase;
 		transition:
 			transform var(--speed-fast) ease-out,
 			box-shadow var(--speed-fast) ease-out,

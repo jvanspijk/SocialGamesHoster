@@ -233,7 +233,6 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	.game-identity {
@@ -276,7 +275,6 @@
 		font-family: var(--font-display);
 		font-size: 0.68rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	.requests {
@@ -295,7 +293,6 @@
 		font-size: 0.68rem;
 		font-weight: 700;
 		padding: 0;
-		text-transform: uppercase;
 	}
 
 	.requests span {
@@ -335,7 +332,6 @@
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		font-weight: 700;
-		text-transform: uppercase;
 	}
 
 	.live-content {

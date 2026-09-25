@@ -72,7 +72,6 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	@media (max-width: 47.99rem) {

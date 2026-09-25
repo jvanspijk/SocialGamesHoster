@@ -114,7 +114,6 @@
 		font-size: 0.78rem;
 		font-weight: 700;
 		letter-spacing: 0.15em;
-		text-transform: uppercase;
 	}
 
 	.description {

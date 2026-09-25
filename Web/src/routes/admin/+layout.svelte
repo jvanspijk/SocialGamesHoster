@@ -305,7 +305,6 @@
 		text-decoration: underline;
 		text-decoration-thickness: 1px;
 		text-underline-offset: 0.18em;
-		text-transform: uppercase;
 	}
 
 	.recovery-link:hover {
@@ -365,7 +364,6 @@
 		font-size: 0.8rem;
 		font-weight: 700;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	.product span {

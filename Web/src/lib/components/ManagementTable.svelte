@@ -106,7 +106,6 @@
 		font-family: var(--font-display);
 		font-size: 0.72rem;
 		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 
 	thead th.align-end {
@@ -212,7 +211,6 @@
 			font-size: 0.65rem;
 			font-weight: 700;
 			letter-spacing: 0.08em;
-			text-transform: uppercase;
 		}
 
 		tbody :global(.row-actions) {

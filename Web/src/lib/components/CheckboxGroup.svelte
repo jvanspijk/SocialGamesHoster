@@ -85,7 +85,6 @@
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		padding: 0;
-		text-transform: uppercase;
 	}
 
 	i {

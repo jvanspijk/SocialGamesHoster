@@ -84,7 +84,6 @@
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
 	a.active {
