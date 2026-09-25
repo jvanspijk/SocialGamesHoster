@@ -353,7 +353,6 @@
 		background: var(--surface-shell);
 		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-4), env(safe-area-inset-left));
-		backdrop-filter: blur(8px);
 	}
 
 	.product {

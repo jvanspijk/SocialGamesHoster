@@ -58,9 +58,7 @@
 	.role-fallback {
 		display: grid;
 		place-items: center;
-		background:
-			radial-gradient(circle at 50% 40%, rgb(223 189 101 / 20%), transparent 26%),
-			linear-gradient(135deg, var(--navy), var(--action-dark) 62%, var(--ink));
+		background: linear-gradient(135deg, var(--navy), var(--action-dark) 62%, var(--ink));
 	}
 
 	.role-fallback::before,

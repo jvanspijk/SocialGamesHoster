@@ -124,13 +124,11 @@
 		display: grid;
 		place-items: center;
 		border-inline-end: 1px solid var(--gold-dark);
-		background:
-			radial-gradient(circle, transparent 36%, rgb(0 0 0 / 32%) 100%),
-			linear-gradient(
-				145deg,
-				var(--action-dark),
-				color-mix(in srgb, var(--action-dark) 45%, var(--wood))
-			);
+		background: linear-gradient(
+			145deg,
+			var(--action-dark),
+			color-mix(in srgb, var(--action-dark) 45%, var(--wood))
+		);
 		color: var(--gold-light);
 	}
 

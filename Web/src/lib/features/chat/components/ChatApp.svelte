@@ -437,12 +437,7 @@
 		min-width: 0;
 		min-height: 0;
 		grid-template-rows: auto minmax(0, 1fr) auto;
-		background:
-			radial-gradient(circle at 15% 22%, rgb(112 73 35 / 6%) 0 0.08rem, transparent 0.11rem),
-			var(--paper);
-		background-size:
-			1.8rem 2rem,
-			auto;
+		background: var(--paper);
 	}
 
 	.conversation-placeholder {
