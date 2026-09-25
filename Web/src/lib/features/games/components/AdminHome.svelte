@@ -34,36 +34,28 @@
 	const shortcuts = [
 		{
 			label: 'Games',
-			description: 'Create, resume, and review game sessions.',
 			href: resolve('/admin/games'),
 			icon: Gamepad2
 		},
 		{
 			label: 'Rulesets',
-			description: 'Manage reusable game rules and content.',
 			href: resolve('/admin/rulesets'),
 			icon: ScrollText
 		},
 		{
-			label: 'Profiles',
-			description: 'Approve requests and manage player profiles.',
+			label: 'Profiles & requests',
 			href: resolve('/admin/approvals'),
 			icon: UsersRound
 		},
 		{
 			label: 'Settings',
-			description: 'Configure the app and its display.',
 			href: resolve('/admin/settings/network'),
 			icon: Settings
 		}
 	];
 </script>
 
-<PageHeading
-	eyebrow="Management"
-	title="Home"
-	description="Open the current game or choose an area to manage."
-/>
+<PageHeading eyebrow="Management" title="Home" />
 
 <div class="home-content">
 	{#if loading}

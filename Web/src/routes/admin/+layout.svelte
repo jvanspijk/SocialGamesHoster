@@ -67,7 +67,7 @@
 		{ id: 'rulesets', label: 'Rulesets', href: resolve('/admin/rulesets'), icon: ScrollText },
 		{
 			id: 'profiles',
-			label: 'Profiles',
+			label: 'Profiles & requests',
 			href: resolve('/admin/approvals'),
 			icon: UsersRound,
 			attention: pendingProfileRequestCount > 0,

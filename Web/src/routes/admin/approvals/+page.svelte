@@ -62,12 +62,7 @@
 	}
 </script>
 
-<PageHeading
-	eyebrow="Management"
-	title="Profiles"
-	description="Approve new profile requests and manage player profiles."
-	variant="spacious"
-/>
+<PageHeading eyebrow="Management" title="Profiles & requests" variant="spacious" />
 
 <PendingProfileRequests onapproved={loadProfiles} />
 
