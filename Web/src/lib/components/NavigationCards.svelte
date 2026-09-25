@@ -52,7 +52,7 @@
 		display: grid;
 		width: 100%;
 		min-width: 0;
-		min-height: 6.5rem;
+		min-height: 5.75rem;
 		grid-template-columns: auto minmax(0, 1fr);
 		align-items: center;
 		gap: var(--space-3);
@@ -103,14 +103,13 @@
 
 	strong {
 		font-family: var(--font-display);
-		font-size: 0.8rem;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
+		font-size: 0.92rem;
+		letter-spacing: 0.05em;
 	}
 
 	small {
 		color: var(--ink-soft);
-		font-size: 0.88rem;
+		font-size: 0.92rem;
 	}
 
 	@media (max-width: 35rem) {
