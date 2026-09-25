@@ -298,7 +298,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: 0.84rem;
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		padding: var(--space-2);

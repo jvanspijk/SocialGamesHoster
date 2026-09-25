@@ -113,7 +113,7 @@
 		gap: 0.6rem;
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: clamp(0.72rem, 2.8vw, 1rem);
+		font-size: clamp(0.78rem, 2.8vw, 1rem);
 		font-weight: 700;
 		letter-spacing: 0.07em;
 		text-decoration: none;
@@ -139,9 +139,9 @@
 		color: var(--ink-soft);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: 0.78rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.03em;
 		text-decoration: none;
 		text-transform: uppercase;
 	}

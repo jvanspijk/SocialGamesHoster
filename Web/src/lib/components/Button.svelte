@@ -43,9 +43,9 @@
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: 0.84rem;
 		font-weight: 700;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.04em;
 		line-height: 1.1;
 		padding: 0.72rem 1rem;
 		text-transform: uppercase;

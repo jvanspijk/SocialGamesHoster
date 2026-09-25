@@ -1,7 +1,7 @@
-@import '@fontsource/cinzel/500.css';
-@import '@fontsource/cinzel/700.css';
-@import '@fontsource/im-fell-english/400.css';
-@import '@fontsource/im-fell-english/400-italic.css';
+@import '@fontsource/forum/400.css';
+@import '@fontsource/cardo/400.css';
+@import '@fontsource/cardo/700.css';
+@import '@fontsource/cardo/400-italic.css';
 @import './lib/styles/tokens.css';
 @import './lib/styles/forms.css';
 
@@ -15,12 +15,12 @@ html {
 	background: var(--wood);
 	color: var(--ink);
 	font-family: var(--font-body);
-	font-size: 18px;
+	font-size: 20px;
 	overflow-x: hidden;
 }
 
 html[data-text-size='large'] {
-	font-size: 21.375px;
+	font-size: 24px;
 }
 
 body {
@@ -64,7 +64,7 @@ h4,
 	color: var(--ink);
 	font-family: var(--font-display);
 	font-weight: 700;
-	letter-spacing: 0.045em;
+	letter-spacing: 0.015em;
 	line-height: 1.15;
 }
 
@@ -161,8 +161,8 @@ p {
 	gap: 0.6rem;
 	color: var(--action-dark);
 	font-family: var(--font-display);
-	font-size: 0.74rem;
-	letter-spacing: 0.18em;
+	font-size: 0.78rem;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
 }
 
@@ -178,9 +178,9 @@ p {
 .eyebrow {
 	color: var(--action-dark);
 	font-family: var(--font-display);
-	font-size: 0.7rem;
+	font-size: 0.78rem;
 	font-weight: 700;
-	letter-spacing: 0.14em;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 }
 

@@ -80,9 +80,9 @@
 		border-block-start: 3px solid transparent;
 		color: var(--paper-muted);
 		font-family: var(--font-display);
-		font-size: 0.64rem;
+		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.02em;
 		text-decoration: none;
 		text-transform: uppercase;
 	}
@@ -122,7 +122,7 @@
 		background: var(--action-light);
 		color: var(--wood);
 		font-family: var(--font-display);
-		font-size: 0.56rem;
+		font-size: 0.66rem;
 		font-style: normal;
 		font-weight: 700;
 		line-height: 1;
