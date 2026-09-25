@@ -159,6 +159,10 @@
 			padding-inline: var(--space-3);
 		}
 
+		.label {
+			text-align: start;
+		}
+
 		.attention-badge {
 			inset-inline: auto var(--space-3);
 			inset-block-start: 50%;

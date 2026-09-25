@@ -150,11 +150,7 @@
 	}
 </script>
 
-<PageHeading
-	eyebrow="Management"
-	title="Games"
-	description="Create a game, resume play, or revisit a finished game."
->
+<PageHeading eyebrow="Management" title="Games">
 	{#snippet actions()}
 		<div class="game-heading-actions">
 			<Button onclick={() => (createOpen = true)}><Plus size={18} /> New game</Button>

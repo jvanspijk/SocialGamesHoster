@@ -58,13 +58,13 @@
 		},
 		{
 			label: 'History',
-			description: 'Review completed games and achievements.',
+			description: 'See your past results and achievements.',
 			href: resolve('/play/history'),
 			icon: History
 		},
 		{
 			label: 'Settings',
-			description: 'Manage your profile, sound, display, and account.',
+			description: 'Adjust your app and account preferences.',
 			href: resolve('/play/settings'),
 			icon: Settings
 		}
@@ -72,11 +72,7 @@
 </script>
 
 <div class="home-page">
-	<PageHeading
-		eyebrow="Player"
-		title="Home"
-		description={`Signed in as ${displayName}. Choose where you want to go.`}
-	/>
+	<PageHeading eyebrow={displayName} title="Home" />
 
 	{#if loadError}
 		<div class="error-state">

@@ -6,7 +6,7 @@
 	}: {
 		items: Array<{
 			label: string;
-			description: string;
+			description?: string;
 			href?: string;
 			onclick?: () => void | Promise<void>;
 			disabled?: boolean;
@@ -23,12 +23,18 @@
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 			<a href={item.href} aria-disabled={item.disabled || undefined} class:disabled={item.disabled}>
 				<span class="icon" aria-hidden="true"><Icon size={25} strokeWidth={1.7} /></span>
-				<span><strong>{item.label}</strong><small>{item.description}</small></span>
+				<span>
+					<strong>{item.label}</strong>
+					{#if item.description}<small>{item.description}</small>{/if}
+				</span>
 			</a>
 		{:else}
 			<button type="button" onclick={item.onclick} disabled={item.disabled}>
 				<span class="icon" aria-hidden="true"><Icon size={25} strokeWidth={1.7} /></span>
-				<span><strong>{item.label}</strong><small>{item.description}</small></span>
+				<span>
+					<strong>{item.label}</strong>
+					{#if item.description}<small>{item.description}</small>{/if}
+				</span>
 			</button>
 		{/if}
 	{/each}

@@ -13,7 +13,7 @@
 		Gauge
 	} from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
+	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { api, pb } from '$lib/api/client';
@@ -153,7 +153,7 @@
 			</div>
 		{/if}
 		<div class="live-tools">
-			<ConnectionBadge />
+			<AdminJoinQrButton />
 			{#if view && !standalone}
 				<button
 					type="button"
@@ -373,12 +373,7 @@
 			justify-content: center;
 		}
 
-		.back span,
-		.live-tools :global(.connection-label) {
-			display: none;
-		}
-
-		.live-tools :global(> span) {
+		.back span {
 			display: none;
 		}
 
