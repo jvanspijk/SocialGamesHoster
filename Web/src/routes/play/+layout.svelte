@@ -20,7 +20,6 @@
 		type PlayerShellContext
 	} from '$lib/features/play/playerShellContext';
 	import Button from '$lib/components/Button.svelte';
-	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import { api, AppApiError, jsonBody, pb } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, Game, PlayerGameView, RealtimeEnvelope } from '$lib/api/types';
@@ -234,7 +233,6 @@
 				<Swords size={22} /> Player home
 			</a>
 			<div class="account-tools">
-				<ConnectionBadge />
 				<a href={resolve('/play/profile')} aria-label="Player profile">
 					<UserCircle size={22} />
 				</a>
@@ -252,7 +250,6 @@
 				>
 			</div>
 			<div class="player-tools">
-				<ConnectionBadge />
 				<button
 					class="sound"
 					type="button"
@@ -480,12 +477,6 @@
 		.player-shell {
 			padding-block-end: 0;
 			padding-inline-start: 13rem;
-		}
-	}
-
-	@media (max-width: 47.99rem) {
-		.player-tools :global(> span) {
-			display: none;
 		}
 	}
 </style>

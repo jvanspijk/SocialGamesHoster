@@ -15,7 +15,7 @@
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
-	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
+	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import ProfileRequestAttention from '$lib/features/profiles/components/ProfileRequestAttention.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
@@ -188,7 +188,7 @@
 				><Swords size={23} /><span>Social Games Hoster</span></a
 			>
 			<div class="header-actions">
-				<ConnectionBadge />
+				<AdminJoinQrButton />
 				<IconButton label="Sign out" variant="ghost" onclick={logout}>
 					{#snippet icon()}<LogOut size={20} />{/snippet}
 				</IconButton>
