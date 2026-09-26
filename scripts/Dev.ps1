@@ -4,6 +4,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$stopDevScript = Join-Path $PSScriptRoot "Stop-Dev.ps1"
+& $stopDevScript
+
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $arguments = @("run", "./Host/cmd/socialgameshoster", "--", "--no-tray")
 if ($Diagnostics) {
