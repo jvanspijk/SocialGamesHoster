@@ -73,7 +73,7 @@ h1 {
 }
 
 h2 {
-	font-size: clamp(var(--font-size-lg), 3vw, var(--font-size-2xl));
+	font-size: clamp(var(--font-size-base), 2vw, var(--font-size-lg));
 }
 
 h3 {
