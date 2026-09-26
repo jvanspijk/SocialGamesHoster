@@ -5,7 +5,6 @@
 		playerShellContextKey,
 		type PlayerShellContext
 	} from '$lib/features/play/playerShellContext';
-	import { auth } from '$lib/state/auth.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 
 	const shell = getContext<PlayerShellContext>(playerShellContextKey);
