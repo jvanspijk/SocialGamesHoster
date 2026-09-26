@@ -24,9 +24,8 @@ necessary. The medieval identity is visual, not verbal.
 - Ruleset-authored role names, descriptions, abilities, and instructions are
   displayed as authored.
 
-Forum is used for short headings, navigation labels, and important actions as a
-classical Roman inscriptional display face. Cardo is the readable scholarly
-antiqua for forms, instructions, statuses, and dense content. Components use
+Use Forum only for short headings, navigation labels, and important actions.
+Use Cardo for forms, instructions, statuses, and dense content. Components use
 semantic variables from `tokens.css`; hardcoded colors are reserved for media
 or a documented one-off contrast correction.
 
