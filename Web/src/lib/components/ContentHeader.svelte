@@ -73,6 +73,12 @@
 		margin: 0;
 	}
 
+	.copy :global(h1),
+	.copy :global(h2),
+	.copy :global(h3) {
+		font-weight: 700;
+	}
+
 	.copy .description {
 		margin-block-start: var(--space-1);
 		color: var(--header-description-color, var(--ink-soft));

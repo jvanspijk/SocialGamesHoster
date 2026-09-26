@@ -145,6 +145,10 @@
 		margin: 0;
 	}
 
+	.copy h2 {
+		font-weight: 700;
+	}
+
 	.status {
 		display: flex;
 		align-items: center;

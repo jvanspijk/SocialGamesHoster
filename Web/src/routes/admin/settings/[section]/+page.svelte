@@ -13,6 +13,7 @@
 		UserCog
 	} from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
+	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
 	import Field from '$lib/components/Field.svelte';
@@ -216,11 +217,12 @@
 			</Panel>
 		{:else if section === 'game-masters'}
 			<div class="section-header">
-				<div>
-					<h2>Game Masters</h2>
-					<p>People who can prepare and run games.</p>
-				</div>
-				<Button onclick={() => (addMasterOpen = true)}><Plus size={17} /> Add Game Master</Button>
+				<ContentHeader description="People who can prepare and run games." alignment="end">
+					{#snippet title()}<h2>Game Masters</h2>{/snippet}
+					{#snippet actions()}<Button onclick={() => (addMasterOpen = true)}
+							><Plus size={17} /> Add Game Master</Button
+						>{/snippet}
+				</ContentHeader>
 			</div>
 			<div class="record-list">
 				{#each gameMasters as master (master.id)}
@@ -235,13 +237,15 @@
 			</div>
 		{:else if section === 'backups' && settings}
 			<div class="section-header">
-				<div>
-					<h2>Backups</h2>
-					<p>Create a backup for your games, profiles and rulesets.</p>
-				</div>
-				<Button loading={busy} onclick={createBackup}
-					><DatabaseBackup size={17} /> Create backup</Button
+				<ContentHeader
+					description="Create a backup for your games, profiles and rulesets."
+					alignment="end"
 				>
+					{#snippet title()}<h2>Backups</h2>{/snippet}
+					{#snippet actions()}<Button loading={busy} onclick={createBackup}
+							><DatabaseBackup size={17} /> Create backup</Button
+						>{/snippet}
+				</ContentHeader>
 			</div>
 			<label class="check backup-toggle">
 				<input type="checkbox" bind:checked={settings.automaticBackups} onchange={saveSettings} />
@@ -270,11 +274,12 @@
 			</div>
 		{:else if section === 'diagnostics'}
 			<div class="section-header">
-				<div>
-					<h2>Diagnostics</h2>
-					<p>View app performance metrics.</p>
-				</div>
-				<Button variant="secondary" onclick={load}><RefreshCw size={17} /> Refresh</Button>
+				<ContentHeader description="View app performance metrics." alignment="end">
+					{#snippet title()}<h2>Diagnostics</h2>{/snippet}
+					{#snippet actions()}<Button variant="secondary" onclick={load}
+							><RefreshCw size={17} /> Refresh</Button
+						>{/snippet}
+				</ContentHeader>
 			</div>
 			<pre>{JSON.stringify(diagnostics, null, 2)}</pre>
 		{:else if section === 'display'}
@@ -447,11 +452,6 @@
 		gap: var(--space-3);
 		border-block-end: var(--border-strong);
 		padding-block-end: var(--space-3);
-	}
-
-	.section-header h2,
-	.section-header p {
-		margin: 0;
 	}
 
 	.record-list article {
