@@ -185,7 +185,6 @@
 
 {#if view}
 	<PageHeading
-		eyebrow="Roster and assignments"
 		title="Players"
 		description={`${activePlayers.length} active players · ${activePlayers.filter((player) => hasAssignedRole(player.roleKey, view.ruleset.roles)).length} roles assigned`}
 		variant="compact"

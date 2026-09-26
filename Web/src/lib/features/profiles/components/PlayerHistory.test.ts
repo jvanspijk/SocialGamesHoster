@@ -11,7 +11,6 @@ const history: PlayerHistoryView = {
 		displayName: 'Rowan',
 		avatar: '',
 		bio: '',
-		accent: 'crimson',
 		active: true
 	},
 	games: [

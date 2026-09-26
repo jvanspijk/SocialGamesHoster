@@ -163,7 +163,7 @@
 	}
 </script>
 
-<PageHeading eyebrow="App configuration" title="Settings" />
+<PageHeading title="Settings" />
 
 <div class="settings-layout">
 	<nav aria-label="Settings sections">

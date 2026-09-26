@@ -13,11 +13,10 @@
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { Profile } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
-	import { profilePreferences } from '$lib/state/profilePreferences.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let profile = $state<Profile | null>(null);
-	let form = $state({ displayName: '', bio: '', accent: 'crimson' });
+	let form = $state({ displayName: '', bio: '' });
 	let busy = $state(false);
 	let saveError = $state<FormError | null>(null);
 
@@ -28,10 +27,8 @@
 			profile = await api<Profile>('/profiles/me');
 			form = {
 				displayName: profile.displayName,
-				bio: profile.bio,
-				accent: profile.accent || 'crimson'
+				bio: profile.bio
 			};
-			profilePreferences.applyProfile(profile);
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Profile details could not be loaded.'), {
 				actionLabel: 'Retry',
@@ -48,7 +45,6 @@
 		try {
 			profile = await api<Profile>('/profiles/me', { method: 'PATCH', ...jsonBody(form) });
 			auth.updateDisplayName(profile.displayName);
-			profilePreferences.applyProfile(profile);
 			toasts.success('Profile saved.');
 		} catch (caught) {
 			const nextError = toFormError(caught, 'The profile could not be saved.');
@@ -65,7 +61,6 @@
 
 <div class="account-page">
 	<PageHeading
-		eyebrow="Player account"
 		title="Profile"
 		description="Your player details are shared across games."
 		variant="flush"
@@ -107,16 +102,6 @@
 					error={fieldError(saveError, 'bio')}
 					multiline
 				/>
-				<label>
-					<span>Accent colour</span>
-					<select bind:value={form.accent}>
-						<option value="crimson">Crimson</option>
-						<option value="forest">Forest</option>
-						<option value="navy">Navy</option>
-						<option value="gold">Gold</option>
-						<option value="plum">Plum</option>
-					</select>
-				</label>
 				<Button type="submit" loading={busy}><Save size={18} /> Save profile</Button>
 			</form>
 		</Panel>
@@ -188,23 +173,5 @@
 
 	.profile-heading span {
 		color: var(--ink-soft);
-	}
-
-	form > label {
-		display: grid;
-		gap: var(--space-1);
-	}
-
-	form > label > span {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-	}
-
-	select {
-		min-height: var(--target-size);
-		border: var(--border-subtle);
-		background: var(--paper-light);
-		padding: var(--space-2);
 	}
 </style>

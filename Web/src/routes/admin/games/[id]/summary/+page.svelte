@@ -28,11 +28,7 @@
 </script>
 
 <div class="summary-page">
-	<PageHeading
-		eyebrow="Archived game"
-		title="Game summary"
-		description="This finished game cannot be changed."
-	>
+	<PageHeading title="Game summary" description="This finished game cannot be changed.">
 		{#snippet actions()}
 			<div class="summary-actions">
 				<a href={resolve('/admin/games')}><ArrowLeft size={18} /> Back to Games</a>

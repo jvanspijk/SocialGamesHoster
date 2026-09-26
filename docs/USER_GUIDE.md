@@ -71,7 +71,7 @@ one.
 
 ## Profiles
 
-Players can edit their display name, short biography, accent, and a validated
+Players can edit their display name, short biography, and a validated
 JPEG/PNG/WebP avatar. Public party summaries contain aggregate statistics and
 achievement snapshots. Role-by-game history remains visible only to the profile
 owner and game masters where explicitly authorized.

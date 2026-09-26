@@ -66,7 +66,6 @@
 		<form class="create-form" onsubmit={create}>
 			<div class="form-heading">
 				<ContentHeader
-					eyebrow="Rulesets"
 					description="Choose a starting point, then add the game details in the editor."
 				>
 					{#snippet title()}<h1>Create ruleset</h1>{/snippet}

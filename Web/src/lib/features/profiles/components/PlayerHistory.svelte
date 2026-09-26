@@ -21,7 +21,6 @@
 
 <div class="account-page">
 	<PageHeading
-		eyebrow="Player account"
 		title="History"
 		description="Review your completed games and achievements."
 		variant="flush"

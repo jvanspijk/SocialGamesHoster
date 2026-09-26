@@ -18,7 +18,6 @@ export interface Profile {
 	displayName: string;
 	avatar: string;
 	bio: string;
-	accent: string;
 	active: boolean;
 }
 

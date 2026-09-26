@@ -54,7 +54,6 @@
 
 <div class="profile-layout">
 	<PageHeading
-		eyebrow="Player profile"
 		title={detail?.profile.displayName ?? 'Profile'}
 		description="Profile details and completed game history."
 		variant="flush"

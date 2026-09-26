@@ -57,8 +57,8 @@ The product is designed from 320 CSS px upward.
 
 `src/lib/styles/tokens.css` defines:
 
-- palette colors and configurable `--action`, `--action-dark`, and `--action-light`
-  roles; accent and high-contrast settings override the action roles;
+- palette colors and crimson `--action`, `--action-dark`, and `--action-light`
+  roles; high-contrast settings override the action roles;
 - display/body fonts and the shared seven-step font-size scale, including the
   root text-size setting;
 - shared control borders, focus ring, and recurring paper, shell, navigation,

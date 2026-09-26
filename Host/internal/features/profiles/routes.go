@@ -48,7 +48,6 @@ type rejectRequest struct {
 type updateProfileRequest struct {
 	DisplayName *string `json:"displayName"`
 	Biography   *string `json:"bio"`
-	Accent      *string `json:"accent"`
 }
 
 func Register(event *core.ServeEvent) {
@@ -390,9 +389,6 @@ func updateMe(event *core.RequestEvent) error {
 			return httpx.WriteError(event, result.Invalid("profile.invalid_bio", "Biography must be 280 characters or fewer.", nil))
 		}
 		event.Auth.Set("bio", biography)
-	}
-	if request.Accent != nil {
-		event.Auth.Set("accent", *request.Accent)
 	}
 	if err := event.App.Save(event.Auth); err != nil {
 		return httpx.WriteError(event, result.Invalid("profile.save_failed", "The profile could not be saved.", nil))
@@ -763,7 +759,6 @@ func projectPrivateProfile(record *core.Record) map[string]any {
 		"displayName": record.GetString("display_name"),
 		"avatar":      avatarURL(record),
 		"bio":         record.GetString("bio"),
-		"accent":      record.GetString("accent"),
 		"active":      record.GetBool("active"),
 	}
 }
@@ -816,7 +811,6 @@ func projectPublicProfile(app core.App, record *core.Record) (map[string]any, er
 		"displayName":  record.GetString("display_name"),
 		"avatar":       avatarURL(record),
 		"bio":          record.GetString("bio"),
-		"accent":       record.GetString("accent"),
 		"statistics":   statistics,
 		"achievements": projectedAwards,
 	}

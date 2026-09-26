@@ -12,7 +12,6 @@
 </script>
 
 <PlayerHome
-	displayName={auth.actor?.displayName ?? 'player'}
 	loading={shell.loading}
 	view={gameState.player}
 	availableLobby={shell.availableLobby}

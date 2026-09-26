@@ -55,7 +55,7 @@
 	];
 </script>
 
-<PageHeading eyebrow="Management" title="Home" />
+<PageHeading title="Home" />
 
 <div class="home-content">
 	{#if loading}

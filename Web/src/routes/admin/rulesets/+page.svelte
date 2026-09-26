@@ -28,7 +28,7 @@
 	}
 </script>
 
-<PageHeading eyebrow="Library" title="Rulesets" variant="spacious">
+<PageHeading title="Rulesets" variant="spacious">
 	{#snippet actions()}
 		<div class="heading-actions">
 			<a class="primary-link" href={resolve('/admin/rulesets/new')}

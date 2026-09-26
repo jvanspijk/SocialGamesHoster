@@ -62,7 +62,7 @@
 	}
 </script>
 
-<PageHeading eyebrow="Management" title="Profiles & requests" variant="spacious" />
+<PageHeading title="Profiles & requests" variant="spacious" />
 
 <PendingProfileRequests onapproved={loadProfiles} />
 

@@ -14,10 +14,10 @@ describe('PageHeading', () => {
 		expect(screen.queryByText('Manage your games.')).not.toBeInTheDocument();
 	});
 
-	it('renders eyebrow, description, and caller-provided actions', () => {
+	it('renders description and caller-provided actions', () => {
 		render(PageHeadingHarness);
 
-		expect(screen.getByText('Account')).toHaveClass('eyebrow');
+		expect(screen.queryByText('Account')).not.toBeInTheDocument();
 		expect(screen.getByText('Manage your player identity.')).toBeVisible();
 		expect(screen.getByRole('button', { name: 'Open settings' })).toBeVisible();
 	});

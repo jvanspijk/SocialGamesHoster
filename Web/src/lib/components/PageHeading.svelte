@@ -3,13 +3,11 @@
 	import ContentHeader from './ContentHeader.svelte';
 
 	let {
-		eyebrow,
 		title: pageTitle,
 		description = '',
 		variant = 'default',
 		actions
 	}: {
-		eyebrow?: string;
 		title: string;
 		description?: string;
 		variant?: 'default' | 'spacious' | 'compact' | 'flush';
@@ -23,7 +21,6 @@
 	class:flush={variant === 'flush'}
 >
 	<ContentHeader
-		{eyebrow}
 		{description}
 		{actions}
 		alignment="end"

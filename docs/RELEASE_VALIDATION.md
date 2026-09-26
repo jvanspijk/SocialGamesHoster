@@ -92,7 +92,7 @@ or application runtime dependencies installed.
 At iPhone Safari and common Android viewport sizes:
 
 1. request/approve a new profile and recover it on another browser;
-2. edit biography/accent/avatar;
+2. edit biography/avatar;
 3. create, preview, save as Valid, export, and re-import a ruleset with image/audio;
 4. create/open a game and join 30 profiles;
 5. manually assign, randomize, start, and verify private role/knowledge;

@@ -8,7 +8,6 @@
 	import type { Game, PlayerGameView } from '$lib/api/types';
 
 	let {
-		displayName,
 		loading,
 		view,
 		availableLobby,
@@ -18,7 +17,6 @@
 		join,
 		retry
 	}: {
-		displayName: string;
 		loading: boolean;
 		view: PlayerGameView | null;
 		availableLobby: Game | null;
@@ -72,7 +70,7 @@
 </script>
 
 <div class="home-page">
-	<PageHeading eyebrow={displayName} title="Home" />
+	<PageHeading title="Home" />
 
 	{#if loadError}
 		<div class="error-state">

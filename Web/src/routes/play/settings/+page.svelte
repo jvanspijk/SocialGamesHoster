@@ -24,7 +24,6 @@
 
 <div class="account-page">
 	<PageHeading
-		eyebrow="Player account"
 		title="Settings"
 		description="Accessibility and device preferences apply across every game."
 		variant="flush"

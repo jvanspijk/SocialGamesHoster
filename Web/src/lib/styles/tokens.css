@@ -12,9 +12,7 @@
 	--gold: #6c4c14;
 	--gold-dark: #54390f;
 	--gold-light: #dfbd65;
-	--forest: #365b43;
 	--navy: #354d6d;
-	--plum: #684168;
 	--danger: #8c2a3e;
 	--success: #315b3a;
 	--warning: #624116;
@@ -68,30 +66,6 @@
 	--layer-toast: 60;
 	--speed-fast: 100ms;
 	--speed-page: 180ms;
-}
-
-:root[data-accent='forest'] {
-	--action: var(--forest);
-	--action-dark: #284634;
-	--action-light: #5c8a69;
-}
-
-:root[data-accent='navy'] {
-	--action: var(--navy);
-	--action-dark: #263b58;
-	--action-light: #60799d;
-}
-
-:root[data-accent='gold'] {
-	--action: var(--gold);
-	--action-dark: var(--gold-dark);
-	--action-light: var(--gold-light);
-}
-
-:root[data-accent='plum'] {
-	--action: var(--plum);
-	--action-dark: #4c2d4c;
-	--action-light: #8c638c;
 }
 
 :root[data-contrast='high'] {
