@@ -138,7 +138,7 @@
 
 	footer {
 		border-top: var(--border-subtle);
-		color: var(--ink-faint);
+		color: var(--ink-soft);
 		font-size: var(--font-size-sm);
 		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
 		padding-block: 1rem;

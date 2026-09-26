@@ -318,7 +318,7 @@
 
 	.status {
 		display: inline-block;
-		border: 1px solid var(--ink-faint);
+		border: 1px solid var(--ink-soft);
 		color: var(--ink-soft);
 		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.45rem;

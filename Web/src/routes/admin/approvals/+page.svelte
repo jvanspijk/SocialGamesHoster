@@ -168,7 +168,7 @@
 	}
 
 	.status.disabled {
-		border-color: var(--ink-faint);
+		border-color: var(--ink-soft);
 		color: var(--ink-soft);
 	}
 </style>

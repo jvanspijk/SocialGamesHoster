@@ -72,7 +72,7 @@
 	}
 
 	.message-meta time {
-		color: var(--ink-faint);
+		color: var(--ink-soft);
 	}
 
 	p {

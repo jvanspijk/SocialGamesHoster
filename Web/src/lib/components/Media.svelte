@@ -89,7 +89,7 @@
 	}
 	.loading,
 	.unavailable {
-		color: var(--ink-faint);
+		color: var(--ink-soft);
 		font-size: var(--font-size-sm);
 	}
 </style>
