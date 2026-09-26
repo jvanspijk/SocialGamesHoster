@@ -9,6 +9,7 @@ $stopDevScript = Join-Path $PSScriptRoot "Stop-Dev.ps1"
 & $stopDevScript
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+Write-Host "Dev worktree: $projectRoot"
 $hostAddress = "127.0.0.1:8090"
 $hostStatusUrl = "http://$hostAddress/api/app/v1/setup/status"
 $arguments = @("run", "./Host/cmd/socialgameshoster", "--", "--no-tray", "--http=$hostAddress")

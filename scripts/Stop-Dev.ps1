@@ -4,7 +4,18 @@ param()
 # Dev.ps1 runs the Vite UI on 9091 and the Go host on 8090.
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path.TrimEnd('\')
-$webRoot = Join-Path $projectRoot "Web"
+$webRoots = @((Join-Path $projectRoot "Web"))
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $worktreeList = & git -C $projectRoot worktree list --porcelain 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        foreach ($line in $worktreeList) {
+            if ($line -match '^worktree (.+)$') {
+                $webRoots += Join-Path $Matches[1] "Web"
+            }
+        }
+    }
+}
+$webRoots = @($webRoots | ForEach-Object { [IO.Path]::GetFullPath($_) } | Select-Object -Unique)
 
 function Test-DevViteProcess {
     param(
@@ -12,10 +23,18 @@ function Test-DevViteProcess {
         $Process
     )
 
-    return ($Process.Name -ieq "node.exe") -and
-        ($Process.CommandLine -like "*$webRoot*") -and
-        ($Process.CommandLine -match "(?i)(^|[\\/])vite([\\/]bin)?([\\/]vite\.js)?\s+dev\b") -and
-        ($Process.CommandLine -match "(?i)--port\s+9091\b")
+    if (($Process.Name -ine "node.exe") -or
+        ($Process.CommandLine -notmatch '(?i)[\\/]vite[\\/]bin[\\/]vite\.js"?\s+dev\b') -or
+        ($Process.CommandLine -notmatch '(?i)--port\s+9091\b')) {
+        return $false
+    }
+
+    foreach ($webRoot in $webRoots) {
+        if ($Process.CommandLine.IndexOf($webRoot + '\', [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            return $true
+        }
+    }
+    return $false
 }
 
 function Test-DevHostProcess {
