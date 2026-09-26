@@ -87,7 +87,7 @@
 		border: 0;
 		border-block-end: var(--border-subtle);
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		cursor: pointer;
 		padding: var(--space-2) 0;
 		text-align: start;
@@ -97,12 +97,12 @@
 	}
 
 	.selectable-list button:hover:not(.selected) {
-		background: color-mix(in srgb, var(--action) 6%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 6%, var(--surface-raised));
 	}
 
 	.selectable-list button.selected {
 		box-shadow: inset 0.25rem 0 var(--action);
-		background: color-mix(in srgb, var(--action) 12%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 12%, var(--surface-raised));
 		color: var(--action-dark);
 	}
 
@@ -123,15 +123,15 @@
 		height: 2.5rem;
 		flex: 0 0 2.5rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 	}
 
 	.selectable-list small {
 		margin-inline-start: auto;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		text-align: end;
 	}
 
@@ -150,7 +150,7 @@
 		border: 0;
 		border-block-end: 1px solid rgb(223 189 101 / 18%);
 		background: transparent;
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		cursor: pointer;
 		padding: var(--space-3);
 		text-align: start;
@@ -162,7 +162,7 @@
 	}
 
 	.rich button.selected {
-		box-shadow: inset 3px 0 var(--gold-light);
+		box-shadow: inset 3px 0 var(--accent-light);
 	}
 
 	.rich .leading {
@@ -170,10 +170,10 @@
 		width: 2.8rem;
 		height: 2.8rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
 		background: var(--action-dark);
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
@@ -190,14 +190,14 @@
 
 	.rich .entry-title strong {
 		overflow: hidden;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.rich .entry-title time,
 	.rich .entry-copy small {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		font-size: var(--font-size-sm);
 	}
 
@@ -216,7 +216,7 @@
 
 	.rich button.unread .entry-title strong,
 	.rich button.unread .description {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-weight: 700;
 	}
 

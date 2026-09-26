@@ -197,6 +197,6 @@
 		padding: var(--space-2);
 	}
 	.error {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 </style>

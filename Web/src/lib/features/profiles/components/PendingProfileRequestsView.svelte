@@ -184,10 +184,10 @@
 		width: 2.8rem;
 		height: 2.8rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
@@ -205,7 +205,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-1);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.actions {
 		display: flex;

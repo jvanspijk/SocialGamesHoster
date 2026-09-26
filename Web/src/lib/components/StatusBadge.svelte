@@ -32,7 +32,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
-		color: var(--success);
+		color: var(--status-success);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 	}
@@ -46,12 +46,12 @@
 		display: inline-flex;
 	}
 	.tone-warning {
-		color: var(--gold);
+		color: var(--accent);
 	}
 	.tone-danger {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 	.tone-info {
-		color: var(--information);
+		color: var(--status-info);
 	}
 </style>

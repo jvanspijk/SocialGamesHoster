@@ -62,7 +62,7 @@
 		grid-template-columns: minmax(0, 1fr) auto;
 		gap: var(--space-2);
 		border-block-start: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-3);
 		padding-block-end: max(var(--space-3), env(safe-area-inset-bottom));
 	}
@@ -74,14 +74,14 @@
 		resize: vertical;
 		border: var(--border-subtle);
 		background: white;
-		color: var(--ink);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 
 	.message-restriction {
 		align-self: center;
 		margin: 0;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;

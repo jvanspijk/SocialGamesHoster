@@ -53,8 +53,8 @@
 		place-items: center;
 		border: var(--border-subtle);
 		border-radius: var(--control-radius);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		cursor: pointer;
 		transition:
 			background var(--speed-fast) ease-out,
@@ -63,7 +63,7 @@
 	}
 
 	button:hover:not(:disabled) {
-		background: var(--paper-deep);
+		background: var(--surface-muted);
 		transform: translateY(-1px);
 	}
 
@@ -92,13 +92,13 @@
 	}
 
 	.danger {
-		border-color: var(--danger);
-		background: var(--danger);
-		color: var(--paper-light);
+		border-color: var(--status-danger);
+		background: var(--status-danger);
+		color: var(--text-on-dark);
 	}
 
 	.danger:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--danger) 82%, var(--ink));
+		background: color-mix(in srgb, var(--status-danger) 82%, var(--text-primary));
 	}
 
 	.spinner {

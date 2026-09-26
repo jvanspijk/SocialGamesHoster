@@ -323,7 +323,7 @@
 	}
 
 	:global(html[data-contrast='high']) .card {
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		box-shadow: none;
 	}
 	.hero,
@@ -344,7 +344,7 @@
 
 	.lead {
 		max-width: 46rem;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: clamp(var(--font-size-base), 2.4vw, var(--font-size-lg));
 	}
 
@@ -355,7 +355,7 @@
 	.trust-notice {
 		display: grid;
 		gap: 0.4rem;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		background: rgb(255 249 230 / 55%);
 		padding: 0.8rem;
 	}
@@ -400,7 +400,7 @@
 
 	.field-error {
 		margin: 0;
-		color: var(--danger);
+		color: var(--status-danger);
 		font-size: var(--font-size-sm);
 	}
 

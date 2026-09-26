@@ -309,7 +309,7 @@
 		min-width: var(--target-size);
 		min-height: var(--target-size);
 		align-items: center;
-		color: var(--ink);
+		color: var(--text-primary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-base);
 		text-decoration-thickness: 1px;
@@ -318,15 +318,15 @@
 
 	.status {
 		display: inline-block;
-		border: 1px solid var(--ink-soft);
-		color: var(--ink-soft);
+		border: 1px solid var(--text-secondary);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.45rem;
 	}
 
 	.status.live {
-		border-color: var(--success);
-		color: var(--success);
+		border-color: var(--status-success);
+		color: var(--status-success);
 	}
 
 	.empty {
@@ -354,12 +354,12 @@
 		width: 100%;
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 
 	small {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 </style>

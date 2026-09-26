@@ -193,7 +193,7 @@
 	}
 
 	.section-heading p {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.timeline article {
@@ -209,10 +209,10 @@
 		width: 2.2rem;
 		height: 2.2rem;
 		place-items: center;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 	}
 
 	.timeline p {
@@ -221,7 +221,7 @@
 
 	.timeline time,
 	.meta time {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -234,7 +234,7 @@
 	}
 
 	.progress {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -253,7 +253,7 @@
 	.empty {
 		display: grid;
 		place-items: center;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		padding: var(--space-7);
 		text-align: center;
 	}

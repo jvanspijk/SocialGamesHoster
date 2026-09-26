@@ -117,7 +117,7 @@
 	.history-list p,
 	.history-list small {
 		display: block;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.history-list > article > strong {

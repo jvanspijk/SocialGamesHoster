@@ -216,9 +216,9 @@
 		min-height: 4.25rem;
 		align-items: center;
 		gap: var(--space-3);
-		border-block-end: 1px solid var(--gold-dark);
+		border-block-end: 1px solid var(--accent-strong);
 		background: var(--surface-nav);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-4), env(safe-area-inset-left));
 	}
@@ -228,7 +228,7 @@
 		min-height: var(--target-size);
 		align-items: center;
 		gap: var(--space-1);
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -243,14 +243,14 @@
 	.game-identity strong {
 		display: block;
 		overflow: hidden;
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.game-identity span {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		font-size: var(--font-size-sm);
 	}
 
@@ -268,9 +268,9 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-1);
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		background: rgb(255 255 255 / 4%);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
@@ -285,9 +285,9 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-1);
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		background: rgb(255 255 255 / 4%);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
@@ -303,10 +303,10 @@
 		position: absolute;
 		inset-block-start: -0.35rem;
 		inset-inline-end: -0.35rem;
-		border: 2px solid var(--wood);
+		border: 2px solid var(--surface-surround);
 		border-radius: 999px;
 		background: var(--action-dark);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		font-size: var(--font-size-xs);
 		font-style: normal;
 		line-height: 1;
@@ -321,7 +321,7 @@
 
 	.request-sheet > p {
 		margin: 0;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.request-sheet > a {

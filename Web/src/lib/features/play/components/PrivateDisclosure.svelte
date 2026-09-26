@@ -59,11 +59,11 @@
 		width: 7rem;
 		height: 7rem;
 		place-items: center;
-		border: 4px double var(--gold-light);
+		border: 4px double var(--accent-light);
 		border-radius: 50%;
 		background: var(--action-dark);
 		box-shadow: var(--shadow);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		margin-block-end: var(--space-4);
 	}
 

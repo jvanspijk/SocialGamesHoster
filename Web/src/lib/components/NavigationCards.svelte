@@ -57,8 +57,8 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: var(--surface-paper-wash);
-		color: var(--ink);
+		background: var(--surface-wash);
+		color: var(--text-primary);
 		cursor: pointer;
 		font: inherit;
 		padding: var(--space-4);
@@ -92,7 +92,7 @@
 		width: 2.75rem;
 		height: 2.75rem;
 		place-items: center;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		color: var(--action-dark);
 	}
 
@@ -107,7 +107,7 @@
 	}
 
 	small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-md);
 	}
 

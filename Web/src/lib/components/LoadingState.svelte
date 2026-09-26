@@ -28,7 +28,7 @@
 		justify-items: center;
 		gap: var(--space-2);
 		padding: var(--space-5);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		text-align: center;
 	}
 
@@ -39,7 +39,7 @@
 	.spinner {
 		width: 1.5rem;
 		height: 1.5rem;
-		border: 2px solid var(--gold-dark);
+		border: 2px solid var(--accent-strong);
 		border-right-color: transparent;
 		border-radius: 50%;
 		animation: spin 700ms linear infinite;

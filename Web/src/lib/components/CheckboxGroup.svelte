@@ -87,7 +87,7 @@
 	}
 
 	i {
-		color: var(--danger);
+		color: var(--status-danger);
 		font-style: normal;
 	}
 
@@ -123,10 +123,10 @@
 	}
 
 	small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	small.error {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 </style>

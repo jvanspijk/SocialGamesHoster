@@ -237,7 +237,7 @@
 		display: none;
 	}
 	.no-results {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		padding: var(--space-3);
 	}
 	.usage {

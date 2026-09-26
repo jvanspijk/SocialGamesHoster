@@ -151,24 +151,24 @@
 		width: 2.8rem;
 		height: 2.8rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
 
 	.status {
 		display: inline-block;
-		border: 1px solid var(--success);
-		color: var(--success);
+		border: 1px solid var(--status-success);
+		color: var(--status-success);
 		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.45rem;
 	}
 
 	.status.disabled {
-		border-color: var(--ink-soft);
-		color: var(--ink-soft);
+		border-color: var(--text-secondary);
+		color: var(--text-secondary);
 	}
 </style>

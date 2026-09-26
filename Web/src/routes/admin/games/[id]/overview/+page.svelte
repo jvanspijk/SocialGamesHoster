@@ -599,9 +599,9 @@
 	}
 
 	.lifecycle {
-		border: 1px solid var(--gold-dark);
-		background: var(--ink);
-		color: var(--gold-light);
+		border: 1px solid var(--accent-strong);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -620,7 +620,7 @@
 		align-items: center;
 		border: 1px solid var(--action-dark);
 		background: var(--action);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		font-family: var(--font-display);
 		font-weight: 700;
 		padding: var(--space-2) var(--space-4);
@@ -660,7 +660,7 @@
 	}
 
 	.readiness span {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -760,7 +760,7 @@
 	}
 
 	.ability-results span {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -782,7 +782,7 @@
 	select {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-2);
 	}
 

@@ -9,7 +9,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 		text-align: center;
 	}

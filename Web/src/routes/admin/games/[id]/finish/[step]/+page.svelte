@@ -387,7 +387,7 @@
 		justify-content: center;
 		gap: var(--space-2);
 		border-block-end: 3px solid transparent;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -458,10 +458,10 @@
 		width: 2.7rem;
 		height: 2.7rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
@@ -480,8 +480,8 @@
 	.outcome-choices button {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		cursor: pointer;
 		text-transform: capitalize;
 	}
@@ -509,7 +509,7 @@
 
 	.award-players > section {
 		border: var(--border-subtle);
-		background: var(--surface-paper-wash);
+		background: var(--surface-wash);
 	}
 
 	.award-players header {
@@ -534,7 +534,7 @@
 		border: 0;
 		border-block-end: var(--border-subtle);
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		cursor: pointer;
 		padding: var(--space-2) var(--space-3);
 		text-align: start;
@@ -542,7 +542,7 @@
 
 	.award-players button.awarded {
 		background: rgb(49 91 58 / 8%);
-		color: var(--success);
+		color: var(--status-success);
 	}
 
 	.check {
@@ -559,7 +559,7 @@
 	}
 
 	.award-players small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.completion-actions {

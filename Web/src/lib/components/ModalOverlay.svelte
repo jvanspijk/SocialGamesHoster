@@ -145,9 +145,9 @@
 		flex-direction: column;
 		max-width: none;
 		border: var(--border-strong);
-		background: var(--paper);
+		background: var(--surface-canvas);
 		box-shadow: var(--shadow);
-		color: var(--ink);
+		color: var(--text-primary);
 		overflow: hidden;
 		padding: 0;
 		opacity: 1;
@@ -233,7 +233,7 @@
 		z-index: 1;
 		inset-block-start: 0;
 		align-items: center;
-		background: var(--paper);
+		background: var(--surface-canvas);
 		padding: max(var(--space-3), env(safe-area-inset-top))
 			max(var(--space-3), env(safe-area-inset-right)) var(--space-3) var(--space-4);
 	}

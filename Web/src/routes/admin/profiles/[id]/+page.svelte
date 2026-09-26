@@ -182,10 +182,10 @@
 		overflow: hidden;
 		flex: 0 0 auto;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 	}
 
 	.avatar :global(img) {
@@ -220,7 +220,7 @@
 	}
 
 	dt {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
@@ -245,7 +245,7 @@
 
 	.history p,
 	.empty {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.achievements {
@@ -270,7 +270,7 @@
 	.load-failure button {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);

@@ -53,12 +53,26 @@ The product is designed from 320 CSS px upward.
 - Focused sheet content and composers remain visible when a software keyboard
   reduces the visual viewport.
 
-## Semantic tokens
+## Design tokens
 
-`src/lib/styles/tokens.css` defines:
+Use three tiers. `src/lib/styles/tokens.css` defines primitive colors with
+`--color-<family>-<step>` names (for example, `--color-amber-500`) and
+semantic roles such as `--text-primary`, `--surface-canvas`, and `--action`.
+Reusable primitives define component tokens for their own decisions, such as
+`--button-background` and `--panel-border`. The dependency flows from a
+component token to a semantic role to a primitive value. Components may also
+consume a semantic role directly when no component-specific decision is needed.
+Only `tokens.css` references primitive colors.
+
+For example, `--button-background` resolves through `--action` to
+`--color-crimson-500`. High-contrast mode remaps the semantic role to an
+alternate primitive, so components inherit the new value. Context-specific
+adjustments may override a semantic role or a component token.
+
+`tokens.css` provides:
 
 - palette colors and crimson `--action`, `--action-dark`, and `--action-light`
-  roles; high-contrast settings override the action roles;
+  roles; high-contrast settings remap the semantic roles;
 - display/body fonts and the shared seven-step font-size scale, including the
   root text-size setting;
 - shared control borders, focus ring, and recurring paper, shell, navigation,

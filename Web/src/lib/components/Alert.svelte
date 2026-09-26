@@ -51,10 +51,10 @@
 		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: var(--space-3);
-		border: 1px solid var(--information);
+		border: 1px solid var(--status-info);
 		border-inline-start-width: 4px;
-		background: color-mix(in srgb, var(--information) 9%, var(--paper-light));
-		color: var(--ink);
+		background: color-mix(in srgb, var(--status-info) 9%, var(--surface-raised));
+		color: var(--text-primary);
 		padding: var(--space-3);
 	}
 
@@ -77,33 +77,33 @@
 	}
 
 	p {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.danger {
-		border-color: var(--danger);
-		background: color-mix(in srgb, var(--danger) 9%, var(--paper-light));
-		color: var(--danger);
+		border-color: var(--status-danger);
+		background: color-mix(in srgb, var(--status-danger) 9%, var(--surface-raised));
+		color: var(--status-danger);
 	}
 
 	.success {
-		border-color: var(--success);
-		background: color-mix(in srgb, var(--success) 10%, var(--paper-light));
-		color: var(--success);
+		border-color: var(--status-success);
+		background: color-mix(in srgb, var(--status-success) 10%, var(--surface-raised));
+		color: var(--status-success);
 	}
 
 	.warning {
-		border-color: var(--warning);
-		background: color-mix(in srgb, var(--warning) 13%, var(--paper-light));
-		color: var(--warning);
+		border-color: var(--status-warning);
+		background: color-mix(in srgb, var(--status-warning) 13%, var(--surface-raised));
+		color: var(--status-warning);
 	}
 
 	.information {
-		color: var(--information);
+		color: var(--status-info);
 	}
 
 	.copy p {
-		color: var(--ink);
+		color: var(--text-primary);
 	}
 
 	@media (max-width: 31rem) {

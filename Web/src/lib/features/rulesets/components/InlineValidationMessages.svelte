@@ -20,8 +20,8 @@
 
 <style>
 	.inline-validation {
-		border-inline-start: 3px solid var(--danger);
-		color: var(--danger);
+		border-inline-start: 3px solid var(--status-danger);
+		color: var(--status-danger);
 		padding-inline-start: var(--space-2);
 	}
 

@@ -69,7 +69,7 @@
 		align-items: center;
 		gap: 0.1rem 0.5rem;
 		border: 1px solid #9a7e51;
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: 0.55rem 0.8rem;
 	}
 
@@ -86,7 +86,7 @@
 	}
 
 	small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 		text-transform: capitalize;
 	}
@@ -98,17 +98,17 @@
 	}
 
 	.completed {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 
 	.countdown-readout p {
 		margin: 0;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.countdown-readout strong {
 		display: block;
-		color: var(--ink);
+		color: var(--text-primary);
 		font-family: var(--font-display);
 		font-size: clamp(var(--font-size-2xl), 9vw, 5.5rem);
 		font-variant-numeric: tabular-nums;
@@ -117,6 +117,6 @@
 	}
 
 	.countdown-readout.completed strong {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 </style>

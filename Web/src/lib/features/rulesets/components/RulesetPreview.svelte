@@ -309,7 +309,7 @@
 	.cover-context {
 		grid-template-columns: 1fr;
 		border: var(--border-strong);
-		background: var(--paper-deep);
+		background: var(--surface-muted);
 		padding: var(--space-4);
 	}
 	.context-media :global(img) {
@@ -323,12 +323,12 @@
 	}
 	.source-status {
 		margin: 0;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.source-status.unsaved {
-		border-inline-start: 0.25rem solid var(--warning);
+		border-inline-start: 0.25rem solid var(--status-warning);
 		padding-inline-start: var(--space-2);
-		color: var(--ink);
+		color: var(--text-primary);
 	}
 	.mode-list {
 		display: flex;
@@ -355,13 +355,13 @@
 	.preview-controls select {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-2);
 	}
 	.preview-stage {
 		min-height: 20rem;
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-4);
 	}
 	.preview-stage h2,
@@ -401,10 +401,10 @@
 	}
 	.permissions,
 	small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.error {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 	@media (max-width: 47.99rem) {
 		.chat-preview li {

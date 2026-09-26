@@ -154,7 +154,7 @@
 		gap: var(--space-1);
 	}
 	.preview small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.upload-details {
 		display: grid;
@@ -173,7 +173,7 @@
 		clip: rect(0 0 0 0);
 	}
 	.error {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 	@media (max-width: 47.99rem) {
 		.preview {

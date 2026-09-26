@@ -34,8 +34,13 @@
 
 <style>
 	section {
+		--panel-border: 1px solid color-mix(in srgb, var(--accent-strong) 45%, transparent);
+		--panel-background: transparent;
+		--panel-shadow: none;
 		min-width: 0;
-		border-block-start: 1px solid color-mix(in srgb, var(--gold-dark) 45%, transparent);
+		border-block-start: var(--panel-border);
+		background: var(--panel-background);
+		box-shadow: var(--panel-shadow);
 		padding-block: var(--space-4);
 	}
 
@@ -44,18 +49,21 @@
 	}
 
 	.focal {
-		border: var(--border-strong);
-		background:
-			linear-gradient(135deg, rgb(255 255 255 / 20%), transparent 42%), var(--paper-light);
-		box-shadow: var(--shadow);
+		--panel-border: var(--border-strong);
+		--panel-background:
+			linear-gradient(135deg, rgb(255 255 255 / 20%), transparent 42%), var(--surface-raised);
+		--panel-shadow: var(--shadow);
+		border: var(--panel-border);
 		padding: var(--space-4);
 	}
 
 	.dark {
-		--header-description-color: var(--paper-muted);
-		border: 1px solid var(--gold-dark);
-		background: var(--ink);
-		color: var(--paper-light);
+		--panel-border: 1px solid var(--accent-strong);
+		--panel-background: var(--surface-dark);
+		--panel-foreground: var(--text-on-dark);
+		--header-description-color: var(--text-on-dark-muted);
+		border: var(--panel-border);
+		color: var(--panel-foreground);
 		padding: var(--space-4);
 	}
 </style>

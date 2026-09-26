@@ -73,17 +73,17 @@
 <style>
 	.rail-status,
 	.rail-empty {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		padding: var(--space-5);
 		text-align: center;
 	}
 
 	.rail-empty :global(.empty-state) {
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 	}
 
 	.rail-empty :global(.empty-state p),
 	.rail-empty :global(.empty-state .icon) {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 	}
 </style>

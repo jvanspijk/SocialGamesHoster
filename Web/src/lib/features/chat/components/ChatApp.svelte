@@ -437,7 +437,7 @@
 		min-width: 0;
 		min-height: 0;
 		grid-template-rows: auto minmax(0, 1fr) auto;
-		background: var(--paper);
+		background: var(--surface-canvas);
 	}
 
 	.conversation-placeholder {

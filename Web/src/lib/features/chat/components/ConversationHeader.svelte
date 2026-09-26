@@ -71,7 +71,7 @@
 	}
 
 	.conversation-header p {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -84,10 +84,10 @@
 		width: 2.8rem;
 		height: 2.8rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
 		background: var(--action-dark);
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}

@@ -154,10 +154,10 @@
 		height: 4rem;
 		overflow: hidden;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 	}
 
 	.avatar :global(img) {
@@ -172,6 +172,6 @@
 	}
 
 	.profile-heading span {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 </style>

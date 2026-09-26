@@ -792,8 +792,8 @@
 		gap: var(--space-6);
 	}
 	.reupload-warning {
-		border: 1px solid var(--warning);
-		background: var(--paper-deep);
+		border: 1px solid var(--status-warning);
+		background: var(--surface-muted);
 		padding: var(--space-3);
 	}
 	.reupload-warning p {
@@ -817,7 +817,7 @@
 	}
 	.status,
 	small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 	.actions,
@@ -840,7 +840,7 @@
 		gap: var(--space-5);
 	}
 	.section-rail {
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		border: var(--border-subtle);
 		padding: var(--space-4) var(--space-2);
 	}
@@ -858,7 +858,7 @@
 		line-height: 1.6;
 	}
 	.nav-group h2 span {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.section-nav button {
 		width: 100%;
@@ -872,17 +872,17 @@
 		border: 0;
 		border-inline-start: 3px solid transparent;
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		text-align: start;
 		cursor: pointer;
 	}
 	.section-nav button.active {
 		border-inline-start-color: var(--action);
-		background: color-mix(in srgb, var(--action) 12%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 12%, var(--surface-raised));
 		color: var(--action-dark);
 	}
 	.section-nav button:hover {
-		background: color-mix(in srgb, var(--action) 8%, var(--paper-light));
+		background: color-mix(in srgb, var(--action) 8%, var(--surface-raised));
 	}
 	.section-nav button:focus-visible {
 		outline: var(--focus-ring);
@@ -890,13 +890,13 @@
 	}
 	.step-icon {
 		display: flex;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.step-icon.complete {
-		color: var(--success);
+		color: var(--status-success);
 	}
 	.step-icon.attention {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 	.step-label {
 		font-weight: 700;
@@ -918,11 +918,11 @@
 		gap: var(--space-2);
 		border-top: var(--border-subtle);
 		padding-top: var(--space-4);
-		color: var(--danger);
+		color: var(--status-danger);
 		font-size: var(--font-size-base);
 	}
 	.readiness.ready {
-		color: var(--success);
+		color: var(--status-success);
 	}
 	.editor-section {
 		min-width: 0;
@@ -951,7 +951,7 @@
 	.setup-progress progress {
 		width: 100%;
 		height: 0.5rem;
-		accent-color: var(--success);
+		accent-color: var(--status-success);
 	}
 	.overview {
 		min-width: 0;
@@ -960,7 +960,7 @@
 		max-height: calc(100dvh - var(--space-6));
 		overflow: auto;
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-5);
 	}
 	.overview-content {
@@ -980,7 +980,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--warning);
+		color: var(--status-warning);
 	}
 	.eyebrow {
 		font-family: var(--font-display);
@@ -999,7 +999,7 @@
 		border-bottom: var(--border-subtle);
 	}
 	.overview-content dt {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.overview-content dd {
 		margin: 0;
@@ -1037,8 +1037,8 @@
 	.inline-issues {
 		display: grid;
 		gap: var(--space-2);
-		border-inline-start: 0.25rem solid var(--danger);
-		background: color-mix(in srgb, var(--danger) 8%, var(--paper-light));
+		border-inline-start: 0.25rem solid var(--status-danger);
+		background: color-mix(in srgb, var(--status-danger) 8%, var(--surface-raised));
 		padding: var(--space-3);
 	}
 	.inline-issues h2 {
@@ -1060,8 +1060,8 @@
 	.limits input {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 	.mobile-tools {

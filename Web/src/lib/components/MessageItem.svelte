@@ -42,7 +42,7 @@
 		align-self: flex-start;
 		border: 1px solid #bda574;
 		border-radius: 0 0.65rem 0.65rem 0.65rem;
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		box-shadow: var(--shadow-small);
 		padding: var(--space-2) var(--space-3);
 	}
@@ -56,7 +56,7 @@
 
 	article.deleted {
 		box-shadow: none;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-style: italic;
 	}
 
@@ -72,7 +72,7 @@
 	}
 
 	.message-meta time {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	p {
@@ -87,7 +87,7 @@
 		gap: 0.2rem;
 		border: 0;
 		background: transparent;
-		color: var(--danger);
+		color: var(--status-danger);
 		cursor: pointer;
 		font-size: var(--font-size-sm);
 		padding: 0;

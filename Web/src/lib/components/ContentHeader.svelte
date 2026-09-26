@@ -81,7 +81,7 @@
 
 	.copy .description {
 		margin-block-start: var(--space-1);
-		color: var(--header-description-color, var(--ink-soft));
+		color: var(--header-description-color, var(--text-secondary));
 	}
 
 	.actions {

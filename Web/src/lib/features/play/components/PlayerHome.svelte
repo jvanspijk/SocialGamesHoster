@@ -94,8 +94,8 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
-		border: 1px solid var(--danger);
-		background: color-mix(in srgb, var(--danger) 8%, var(--paper-light));
+		border: 1px solid var(--status-danger);
+		background: color-mix(in srgb, var(--status-danger) 8%, var(--surface-raised));
 		margin-block-end: var(--space-4);
 		padding: var(--space-3);
 	}

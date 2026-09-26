@@ -16,7 +16,7 @@
 		inset-block-end: calc(4rem + env(safe-area-inset-bottom));
 		display: flex;
 		justify-content: center;
-		background: linear-gradient(transparent, var(--paper) 38%);
+		background: linear-gradient(transparent, var(--surface-canvas) 38%);
 		padding: var(--space-5) var(--space-3) var(--space-3);
 	}
 

@@ -102,7 +102,7 @@
 	}
 
 	thead th {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 	}
@@ -139,12 +139,12 @@
 	}
 
 	tbody :global(.row-actions .danger) {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 
 	.empty {
 		border-block: var(--border-subtle);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		margin: 0;
 		padding: var(--space-5) var(--space-2);
 	}
@@ -204,7 +204,7 @@
 		tbody :global(td[data-label])::before {
 			display: block;
 			margin-block-end: var(--space-1);
-			color: var(--ink-soft);
+			color: var(--text-secondary);
 			content: attr(data-label);
 			font-family: var(--font-display);
 			font-size: var(--font-size-xs);

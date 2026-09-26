@@ -123,7 +123,7 @@
 	}
 
 	.visibility-description {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
@@ -143,7 +143,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: var(--surface-paper-wash);
+		background: var(--surface-wash);
 		padding: var(--space-2);
 	}
 

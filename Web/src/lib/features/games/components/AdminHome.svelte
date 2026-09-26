@@ -110,9 +110,9 @@
 		width: 3.5rem;
 		height: 3.5rem;
 		place-items: center;
-		border: 2px double var(--gold);
-		background: var(--ink);
-		color: var(--gold-light);
+		border: 2px double var(--accent);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 	}
 
 	h2,
@@ -122,7 +122,7 @@
 
 	.active-game p,
 	.empty {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.primary-link {
@@ -133,7 +133,7 @@
 		border: 1px solid var(--action-dark);
 		background: var(--action);
 		box-shadow: 0 3px 0 var(--action-dark);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;

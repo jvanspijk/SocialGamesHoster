@@ -86,7 +86,7 @@
 		border: 1px solid var(--action-dark);
 		background: var(--action);
 		box-shadow: 0 3px 0 var(--action-dark);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -105,8 +105,8 @@
 		grid-template-columns: 5.5rem minmax(0, 1fr);
 		min-height: 8rem;
 		border: var(--border-subtle);
-		background: var(--surface-paper-wash);
-		color: var(--ink);
+		background: var(--surface-wash);
+		color: var(--text-primary);
 		text-decoration: none;
 		transition:
 			transform var(--speed-fast) ease-out,
@@ -121,13 +121,13 @@
 	.cover {
 		display: grid;
 		place-items: center;
-		border-inline-end: 1px solid var(--gold-dark);
+		border-inline-end: 1px solid var(--accent-strong);
 		background: linear-gradient(
 			145deg,
 			var(--action-dark),
-			color-mix(in srgb, var(--action-dark) 45%, var(--wood))
+			color-mix(in srgb, var(--action-dark) 45%, var(--surface-surround))
 		);
-		color: var(--gold-light);
+		color: var(--accent-light);
 	}
 
 	.cover span {
@@ -157,15 +157,15 @@
 	}
 
 	.ready {
-		color: var(--success);
+		color: var(--status-success);
 	}
 
 	.invalid {
-		color: var(--danger);
+		color: var(--status-danger);
 	}
 
 	.hint {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.hint {

@@ -17,7 +17,7 @@
 		justify-content: center;
 		gap: var(--space-2);
 		border-block-start: var(--border-subtle);
-		background: var(--paper-deep);
-		color: var(--ink-soft);
+		background: var(--surface-muted);
+		color: var(--text-secondary);
 	}
 </style>

@@ -31,16 +31,22 @@
 
 <style>
 	button {
+		--button-background: var(--action);
+		--button-background-hover: var(--action-dark);
+		--button-border: var(--action-dark);
+		--button-foreground: var(--text-on-dark);
+		--button-shadow: 0 3px 0 var(--action-dark);
+		--button-shadow-active: 0 1px 0 var(--action-dark);
 		display: inline-flex;
 		min-height: var(--target-size);
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		border: 1px solid var(--action-dark);
+		border: 1px solid var(--button-border);
 		border-radius: var(--control-radius);
-		background: var(--action);
-		box-shadow: 0 3px 0 var(--action-dark);
-		color: var(--paper-light);
+		background: var(--button-background);
+		box-shadow: var(--button-shadow);
+		color: var(--button-foreground);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
@@ -54,12 +60,12 @@
 	}
 
 	button:hover:not(:disabled) {
-		background: var(--action-dark);
+		background: var(--button-background-hover);
 		transform: translateY(-1px);
 	}
 
 	button:active:not(:disabled) {
-		box-shadow: 0 1px 0 var(--action-dark);
+		box-shadow: var(--button-shadow-active);
 		transform: translateY(2px);
 	}
 
@@ -69,21 +75,21 @@
 	}
 
 	.secondary {
-		border-color: var(--ink);
-		background: var(--paper-light);
-		box-shadow: 0 3px 0 #9c8257;
-		color: var(--ink);
+		--button-border: var(--text-primary);
+		--button-background: var(--surface-raised);
+		--button-foreground: var(--text-primary);
+		--button-shadow: 0 3px 0 var(--control-secondary-shadow);
 	}
 
 	.ghost {
-		border-color: transparent;
-		background: transparent;
-		box-shadow: none;
-		color: var(--action-dark);
+		--button-border: transparent;
+		--button-background: transparent;
+		--button-foreground: var(--action-dark);
+		--button-shadow: none;
 	}
 
 	.danger {
-		background: var(--danger);
+		--button-background: var(--status-danger);
 	}
 
 	.spinner {

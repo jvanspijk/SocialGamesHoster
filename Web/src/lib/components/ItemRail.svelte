@@ -35,8 +35,8 @@
 		min-width: 0;
 		min-height: 0;
 		grid-template-rows: auto auto minmax(0, 1fr);
-		background: linear-gradient(rgb(27 18 12 / 96%), rgb(18 11 8 / 98%)), var(--wood);
-		color: var(--paper-light);
+		background: linear-gradient(rgb(27 18 12 / 96%), rgb(18 11 8 / 98%)), var(--surface-surround);
+		color: var(--text-on-dark);
 	}
 
 	header {
@@ -49,7 +49,7 @@
 	h1,
 	header p {
 		margin: 0;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 	}
 
 	h1 {
@@ -57,7 +57,7 @@
 	}
 
 	header p {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 	}

@@ -32,8 +32,8 @@
 		display: grid;
 		min-height: clamp(20rem, 54vh, 34rem);
 		overflow: hidden;
-		background: linear-gradient(145deg, var(--navy), var(--ink));
-		color: var(--paper-light);
+		background: linear-gradient(145deg, var(--accent-cool), var(--surface-dark));
+		color: var(--text-on-dark);
 		isolation: isolate;
 	}
 
@@ -58,7 +58,12 @@
 	.role-fallback {
 		display: grid;
 		place-items: center;
-		background: linear-gradient(135deg, var(--navy), var(--action-dark) 62%, var(--ink));
+		background: linear-gradient(
+			135deg,
+			var(--accent-cool),
+			var(--action-dark) 62%,
+			var(--surface-dark)
+		);
 	}
 
 	.role-fallback::before,
@@ -75,7 +80,7 @@
 	}
 
 	.role-fallback span {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-size: clamp(9rem, 35vw, 17rem);
 		opacity: 0.55;
@@ -100,7 +105,7 @@
 	.hero-copy h1,
 	.hero-copy p {
 		margin: 0;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		text-shadow: 0 2px 6px rgb(0 0 0 / 70%);
 	}
 
@@ -109,7 +114,7 @@
 	}
 
 	.hero-copy > p:first-child {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;

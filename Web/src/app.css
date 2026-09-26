@@ -12,8 +12,8 @@
 html {
 	min-width: 320px;
 	min-height: 100%;
-	background: var(--wood);
-	color: var(--ink);
+	background: var(--surface-surround);
+	color: var(--text-primary);
 	font-family: var(--font-body);
 	font-size: var(--font-size-root);
 	overflow-x: hidden;
@@ -27,13 +27,13 @@ body {
 	min-height: 100vh;
 	min-height: 100dvh;
 	margin: 0;
-	background: var(--wood);
+	background: var(--surface-surround);
 }
 
 html[data-contrast='high'] body,
 html[data-contrast='high'] .sheet,
 html[data-contrast='high'] .immersive-shell {
-	background: var(--paper);
+	background: var(--surface-canvas);
 }
 
 button,
@@ -59,7 +59,7 @@ h3,
 h4,
 .display {
 	margin-block: 0 0.65rem;
-	color: var(--ink);
+	color: var(--text-primary);
 	font-family: var(--font-display);
 	font-weight: 400;
 	line-height: 1.15;
@@ -88,7 +88,7 @@ p {
 	min-height: calc(100vh - 1.25rem);
 	margin: 0.625rem auto;
 	border: 1px solid #8a6c3e;
-	background: var(--paper);
+	background: var(--surface-canvas);
 	box-shadow:
 		var(--shadow),
 		inset 0 0 0 4px rgb(255 249 230 / 35%);
@@ -96,7 +96,7 @@ p {
 
 .immersive-shell {
 	min-height: 100dvh;
-	background: var(--paper);
+	background: var(--surface-canvas);
 }
 
 .immersive-page {
@@ -180,7 +180,7 @@ p {
 }
 
 .muted {
-	color: var(--ink-soft);
+	color: var(--text-secondary);
 }
 
 .small {

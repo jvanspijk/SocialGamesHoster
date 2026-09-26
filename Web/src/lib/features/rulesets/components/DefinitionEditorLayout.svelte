@@ -72,7 +72,7 @@
 		width: 100%;
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-2);
 	}
 
@@ -90,7 +90,7 @@
 	}
 
 	.definition-editor :global(.add-small) {
-		color: var(--ink);
+		color: var(--text-primary);
 	}
 
 	.definition-editor :global(.nested) {
@@ -139,14 +139,14 @@
 
 	.definition-editor :global(.empty),
 	.definition-editor :global(.hint) {
-		border: 1px dashed var(--gold-dark);
-		background: var(--surface-paper-veil);
+		border: 1px dashed var(--accent-strong);
+		background: var(--surface-veil);
 		margin: 0;
 		padding: var(--space-3);
 	}
 
 	.definition-editor :global(.hint) {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 

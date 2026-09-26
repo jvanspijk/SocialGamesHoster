@@ -365,7 +365,7 @@
 	}
 
 	.player-list article.inactive {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.player-open {
@@ -375,13 +375,13 @@
 		gap: var(--space-3);
 		border: 0;
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		cursor: pointer;
 		text-align: start;
 	}
 
 	.player-list article.inactive .player-open {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.avatar {
@@ -389,10 +389,10 @@
 		width: 3rem;
 		height: 3rem;
 		place-items: center;
-		border: 2px double var(--gold);
+		border: 2px double var(--accent);
 		border-radius: 50%;
-		background: var(--ink);
-		color: var(--gold-light);
+		background: var(--surface-dark);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
@@ -415,15 +415,15 @@
 	}
 
 	.identity small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.role-select select {
 		width: 100%;
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 
@@ -438,7 +438,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.4rem;
 		text-transform: capitalize;
@@ -469,8 +469,8 @@
 	.choice-grid button {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		cursor: pointer;
 		text-transform: capitalize;
 	}
@@ -493,14 +493,14 @@
 		border: 0;
 		border-block-end: var(--border-subtle);
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		cursor: pointer;
 		padding: var(--space-2) 0;
 		text-align: start;
 	}
 
 	.achievement-list button.awarded {
-		color: var(--success);
+		color: var(--status-success);
 	}
 
 	.achievement-list strong,
@@ -509,7 +509,7 @@
 	}
 
 	.achievement-list small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.achievement-list i {
@@ -526,7 +526,7 @@
 	}
 
 	.danger-zone {
-		border-block-start-color: var(--danger);
+		border-block-start-color: var(--status-danger);
 	}
 
 	@media (max-width: 47.99rem) {

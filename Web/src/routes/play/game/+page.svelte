@@ -122,8 +122,8 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: var(--surface-paper-wash);
-		color: var(--ink);
+		background: var(--surface-wash);
+		color: var(--text-primary);
 		padding: var(--space-3);
 		text-decoration: none;
 	}
@@ -136,7 +136,7 @@
 		display: block;
 	}
 	.quick-actions small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 	.attention-stage {
 		display: grid;

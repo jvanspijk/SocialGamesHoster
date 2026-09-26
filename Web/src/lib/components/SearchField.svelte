@@ -29,8 +29,8 @@
 		margin: 0 var(--space-3) var(--space-3);
 		border: 1px solid var(--control-border);
 		border-radius: var(--control-radius);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding-inline: var(--space-2);
 	}
 
@@ -49,16 +49,16 @@
 	}
 
 	.search-field input::placeholder {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.search-field.inverse {
 		border-color: var(--control-inverse-border);
 		background: rgb(255 255 255 / 7%);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 	}
 
 	.search-field.inverse input::placeholder {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 	}
 </style>

@@ -139,7 +139,7 @@
 		min-height: calc(100dvh - 7.75rem);
 		margin-inline: auto;
 		border-inline: var(--border-strong);
-		background: var(--paper);
+		background: var(--surface-canvas);
 		box-shadow: var(--shadow);
 	}
 
@@ -172,7 +172,7 @@
 	}
 
 	.ability-unavailable {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 

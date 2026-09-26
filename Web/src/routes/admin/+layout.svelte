@@ -262,7 +262,7 @@
 	.login-panel {
 		width: min(100%, 27rem);
 		border: var(--border-strong);
-		background: var(--paper);
+		background: var(--surface-canvas);
 		box-shadow: var(--shadow);
 		padding: var(--space-6);
 		text-align: center;
@@ -273,10 +273,10 @@
 		width: 4rem;
 		height: 4rem;
 		place-items: center;
-		border: 3px double var(--gold-light);
+		border: 3px double var(--accent-light);
 		border-radius: 50%;
 		background: var(--action-dark);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		margin: 0 auto var(--space-3);
 	}
 
@@ -323,12 +323,12 @@
 	}
 
 	.login-exit a {
-		color: var(--ink);
+		color: var(--text-primary);
 		font-size: var(--font-size-sm);
 	}
 
 	.field-error {
-		color: var(--danger);
+		color: var(--status-danger);
 		margin: 0;
 	}
 
@@ -358,7 +358,7 @@
 		min-width: 0;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--ink);
+		color: var(--text-primary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;

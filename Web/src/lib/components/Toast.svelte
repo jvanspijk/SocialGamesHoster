@@ -59,11 +59,11 @@
 		grid-template-columns: auto minmax(0, 1fr) auto auto;
 		align-items: center;
 		gap: var(--space-2);
-		border: 1px solid var(--information);
+		border: 1px solid var(--status-info);
 		border-inline-start-width: 4px;
-		background: var(--ink);
+		background: var(--surface-dark);
 		box-shadow: var(--shadow);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		padding: var(--space-3);
 	}
 
@@ -77,16 +77,16 @@
 	}
 
 	article.error {
-		border-color: var(--danger);
+		border-color: var(--status-danger);
 	}
 
 	article.success {
-		border-color: var(--success);
+		border-color: var(--status-success);
 	}
 
 	p {
 		margin: 0;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 	}
 
 	button {
@@ -98,7 +98,7 @@
 	}
 
 	.action {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}

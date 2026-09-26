@@ -14,7 +14,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		font-size: var(--font-size-sm);
 		padding: 0.2rem 0.4rem;
 	}

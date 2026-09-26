@@ -1,5 +1,12 @@
 /* Field and SelectField share presentation; native control behavior stays in each primitive. */
 .form-field {
+	--field-background: var(--surface-raised);
+	--field-background-disabled: var(--surface-muted);
+	--field-foreground: var(--text-primary);
+	--field-border: var(--control-border);
+	--field-border-active: var(--action);
+	--field-border-invalid: var(--status-danger);
+	--field-help-foreground: var(--text-secondary);
 	display: grid;
 	gap: 0.3rem;
 }
@@ -11,23 +18,23 @@
 }
 
 .form-field i {
-	color: var(--danger);
+	color: var(--status-danger);
 	font-style: normal;
 }
 
 .form-field :is(input, textarea, select) {
 	width: 100%;
 	min-height: var(--target-size);
-	border: 1px solid var(--control-border);
+	border: 1px solid var(--field-border);
 	border-radius: var(--control-radius);
-	background: var(--paper-light);
-	color: var(--ink);
+	background: var(--field-background);
+	color: var(--field-foreground);
 	padding: 0.65rem 0.75rem;
 	transition: border-color var(--speed-fast) ease-out;
 }
 
 .form-field :is(input, textarea, select):is(:hover, :focus) {
-	border-color: var(--action);
+	border-color: var(--field-border-active);
 }
 
 /* Preserve the native select's existing two-pixel ring. */
@@ -37,20 +44,20 @@
 }
 
 .form-field [aria-invalid='true'] {
-	border-color: var(--danger);
-	box-shadow: 0 0 0 1px var(--danger);
+	border-color: var(--field-border-invalid);
+	box-shadow: 0 0 0 1px var(--field-border-invalid);
 }
 
 .form-field :is(input, textarea, select):disabled {
-	background: var(--paper-deep);
+	background: var(--field-background-disabled);
 	cursor: not-allowed;
 	opacity: var(--control-disabled-opacity);
 }
 
 .form-field small {
-	color: var(--ink-soft);
+	color: var(--field-help-foreground);
 }
 
 .form-field small.error {
-	color: var(--danger);
+	color: var(--status-danger);
 }

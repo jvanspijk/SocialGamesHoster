@@ -79,10 +79,10 @@
 		width: 8rem;
 		height: 8rem;
 		place-items: center;
-		border: 4px double var(--gold-light);
+		border: 4px double var(--accent-light);
 		border-radius: 50%;
 		background: var(--action-dark);
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 		font-size: var(--font-size-3xl);
 	}
@@ -90,7 +90,7 @@
 	.summary-hero h2,
 	.summary-hero p {
 		margin: 0;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 	}
 
 	.participant h3,

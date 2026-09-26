@@ -99,7 +99,7 @@
 		min-height: var(--target-size);
 		align-items: center;
 		gap: 0.6rem;
-		color: var(--ink);
+		color: var(--text-primary);
 		font-family: var(--font-display);
 		font-size: clamp(var(--font-size-sm), 2.8vw, var(--font-size-base));
 		font-weight: 700;
@@ -122,7 +122,7 @@
 		border: 0;
 		border-bottom: 2px solid transparent;
 		background: transparent;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		cursor: pointer;
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
@@ -138,7 +138,7 @@
 
 	footer {
 		border-top: var(--border-subtle);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
 		padding-block: 1rem;

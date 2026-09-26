@@ -325,7 +325,7 @@
 
 	.account-shell {
 		min-height: 100dvh;
-		background: var(--paper);
+		background: var(--surface-canvas);
 	}
 
 	.account-header {
@@ -347,7 +347,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
-		color: var(--ink);
+		color: var(--text-primary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -365,7 +365,7 @@
 		width: var(--target-size);
 		height: var(--target-size);
 		place-items: center;
-		color: var(--ink);
+		color: var(--text-primary);
 	}
 
 	.player-header {
@@ -377,9 +377,9 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
-		border-block-end: 1px solid var(--gold-dark);
+		border-block-end: 1px solid var(--accent-strong);
 		background: var(--surface-nav);
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		padding: var(--space-2) max(var(--space-3), env(safe-area-inset-right)) var(--space-2)
 			max(var(--space-3), env(safe-area-inset-left));
 	}
@@ -397,12 +397,12 @@
 	}
 
 	.game-name strong {
-		color: var(--gold-light);
+		color: var(--accent-light);
 		font-family: var(--font-display);
 	}
 
 	.game-name span {
-		color: var(--paper-muted);
+		color: var(--text-on-dark-muted);
 		font-size: var(--font-size-sm);
 		text-transform: capitalize;
 	}
@@ -423,7 +423,7 @@
 		place-items: center;
 		border: 0;
 		background: transparent;
-		color: var(--paper-light);
+		color: var(--text-on-dark);
 		cursor: pointer;
 	}
 
@@ -433,7 +433,7 @@
 		inset-inline-end: 0.2rem;
 		width: 0.65rem;
 		height: 0.65rem;
-		border: 2px solid var(--wood);
+		border: 2px solid var(--surface-surround);
 		border-radius: 50%;
 		background: var(--action-light);
 	}

@@ -100,7 +100,7 @@
 		gap: var(--space-3);
 		border: 0;
 		background: transparent;
-		color: var(--ink);
+		color: var(--text-primary);
 		cursor: pointer;
 		text-align: start;
 	}
@@ -111,7 +111,7 @@
 	}
 
 	.setting-row small {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	.connection-row {

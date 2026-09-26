@@ -388,7 +388,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		border-inline-start: 3px solid transparent;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
@@ -421,7 +421,7 @@
 	input[type='number'] {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
+		background: var(--surface-raised);
 		padding: var(--space-2);
 	}
 
@@ -488,8 +488,8 @@
 	pre {
 		overflow: auto;
 		border: var(--border-subtle);
-		background: var(--ink);
-		color: var(--paper-light);
+		background: var(--surface-dark);
+		color: var(--text-on-dark);
 		padding: var(--space-4);
 	}
 

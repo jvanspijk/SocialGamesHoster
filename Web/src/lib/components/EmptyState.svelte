@@ -49,9 +49,9 @@
 		width: 3rem;
 		height: 3rem;
 		place-items: center;
-		border: 1px solid var(--gold-dark);
+		border: 1px solid var(--accent-strong);
 		border-radius: 50%;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	h2,
@@ -65,6 +65,6 @@
 
 	p {
 		max-width: 34rem;
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 </style>

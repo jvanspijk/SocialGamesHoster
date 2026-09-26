@@ -209,8 +209,8 @@
 	.source-select input {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 	.limits {
@@ -228,8 +228,8 @@
 	.limits input {
 		min-height: var(--target-size);
 		border: var(--border-subtle);
-		background: var(--paper-light);
-		color: var(--ink);
+		background: var(--surface-raised);
+		color: var(--text-primary);
 		padding: var(--space-2);
 	}
 	@media (max-width: 47.99rem) {

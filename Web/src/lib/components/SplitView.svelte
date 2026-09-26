@@ -26,8 +26,8 @@
 		min-height: 32rem;
 		grid-template-columns: minmax(18rem, 0.34fr) minmax(0, 1fr);
 		overflow: hidden;
-		border: 1px solid var(--gold-dark);
-		background: var(--paper);
+		border: 1px solid var(--accent-strong);
+		background: var(--surface-canvas);
 		box-shadow: var(--shadow-small);
 	}
 
@@ -50,7 +50,7 @@
 	}
 
 	.rail {
-		border-inline-end: 1px solid var(--gold-dark);
+		border-inline-end: 1px solid var(--accent-strong);
 	}
 
 	.detail {
