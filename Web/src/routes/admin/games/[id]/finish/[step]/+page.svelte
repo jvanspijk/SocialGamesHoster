@@ -389,7 +389,7 @@
 		border-block-end: 3px solid transparent;
 		color: var(--ink-soft);
 		font-family: var(--font-display);
-		font-size: 0.74rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
 	}
@@ -440,7 +440,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 
@@ -589,7 +589,7 @@
 		nav a {
 			flex-direction: column;
 			gap: 0.1rem;
-			font-size: 0.62rem;
+			font-size: var(--font-size-xs);
 		}
 
 		nav a :global(svg) {

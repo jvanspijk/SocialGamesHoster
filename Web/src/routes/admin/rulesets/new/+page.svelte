@@ -175,7 +175,7 @@
 	}
 	h1 {
 		margin: 0;
-		font-size: 1.6rem;
+		font-size: var(--font-size-xl);
 	}
 	fieldset {
 		display: grid;
@@ -186,7 +186,7 @@
 	}
 	legend {
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		padding: 0 0 var(--space-2);
 	}
@@ -204,7 +204,7 @@
 	}
 	.source-select span {
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}
@@ -224,7 +224,7 @@
 		display: grid;
 		gap: var(--space-1);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}

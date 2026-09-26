@@ -345,7 +345,7 @@
 	.lead {
 		max-width: 46rem;
 		color: var(--ink-soft);
-		font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+		font-size: clamp(var(--font-size-base), 2.4vw, var(--font-size-lg));
 	}
 
 	.setup form {
@@ -390,7 +390,7 @@
 
 	.game-master-link {
 		justify-self: center;
-		font-size: 0.9rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.game-line {
@@ -401,7 +401,7 @@
 	.field-error {
 		margin: 0;
 		color: var(--danger);
-		font-size: 0.88rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.qr-card img {

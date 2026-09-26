@@ -53,13 +53,13 @@
 	}
 
 	h1 {
-		font-size: 1.35rem;
+		font-size: var(--font-size-lg);
 	}
 
 	header p {
 		color: var(--gold-light);
 		font-family: var(--font-display);
-		font-size: 0.64rem;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.12em;
 	}
 

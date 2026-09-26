@@ -173,7 +173,7 @@
 
 	.ability-unavailable {
 		color: var(--ink-faint);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.role-content li {

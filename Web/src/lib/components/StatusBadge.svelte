@@ -34,7 +34,7 @@
 		gap: 0.35rem;
 		color: var(--success);
 		font-family: var(--font-display);
-		font-size: 0.65rem;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.09em;
 	}
 	i {

@@ -131,7 +131,7 @@
 		color: inherit;
 		gap: var(--space-2);
 		font-family: var(--font-display);
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 		text-decoration: none;
 	}
 
@@ -163,7 +163,7 @@
 		display: inline-block;
 		border: 1px solid var(--success);
 		color: var(--success);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.45rem;
 	}
 

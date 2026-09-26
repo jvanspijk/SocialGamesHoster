@@ -105,19 +105,19 @@
 	}
 
 	.hero-copy h1 {
-		font-size: clamp(2.5rem, 10vw, 5.5rem);
+		font-size: clamp(var(--font-size-2xl), 10vw, 5.5rem);
 	}
 
 	.hero-copy > p:first-child {
 		color: var(--gold-light);
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.15em;
 	}
 
 	.description {
 		max-width: 40rem;
-		font-size: clamp(1rem, 3vw, 1.25rem);
+		font-size: clamp(var(--font-size-base), 3vw, var(--font-size-lg));
 	}
 </style>

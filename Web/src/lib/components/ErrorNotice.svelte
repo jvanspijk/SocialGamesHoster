@@ -19,6 +19,6 @@
 <style>
 	details {
 		margin: var(--space-2) var(--space-3) 0;
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 	}
 </style>

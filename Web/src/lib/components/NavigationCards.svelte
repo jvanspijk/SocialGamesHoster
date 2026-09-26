@@ -103,13 +103,13 @@
 
 	strong {
 		font-family: var(--font-display);
-		font-size: 0.92rem;
+		font-size: var(--font-size-sm);
 		letter-spacing: 0.05em;
 	}
 
 	small {
 		color: var(--ink-soft);
-		font-size: 0.92rem;
+		font-size: var(--font-size-sm);
 	}
 
 	@media (max-width: 35rem) {

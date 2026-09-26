@@ -381,7 +381,7 @@
 	}
 	.section-heading h2,
 	.details > h2 {
-		font-size: 1.15rem;
+		font-size: var(--font-size-lg);
 	}
 	.asset-list {
 		display: grid;
@@ -445,7 +445,7 @@
 	.selection-label,
 	.detail-heading p {
 		font-family: var(--font-display);
-		font-size: 0.65rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}
@@ -569,7 +569,7 @@
 	}
 	.hint {
 		color: var(--ink-soft);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 	.error {
 		color: var(--danger);

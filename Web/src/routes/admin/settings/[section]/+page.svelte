@@ -385,7 +385,7 @@
 		border-inline-start: 3px solid transparent;
 		color: var(--ink-soft);
 		font-family: var(--font-display);
-		font-size: 0.875rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		padding-inline: var(--space-3);
 		text-decoration: none;
@@ -409,7 +409,7 @@
 
 	.form-stack label > span {
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 
@@ -525,7 +525,7 @@
 			flex: 0 0 auto;
 			border-inline-start: 0;
 			border-block-end: 3px solid transparent;
-			font-size: 0.75rem;
+			font-size: var(--font-size-sm);
 		}
 
 		.join-layout {

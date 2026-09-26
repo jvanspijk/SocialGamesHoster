@@ -30,6 +30,12 @@ antiqua for forms, instructions, statuses, and dense content. Components use
 semantic variables from `tokens.css`; hardcoded colors are reserved for media
 or a documented one-off contrast correction.
 
+Use the shared seven-step `--font-size-*` scale in `tokens.css` for fixed text
+sizes and the bounds in fluid `clamp()` rules. Keep viewport-based interpolation
+local to the component. Focal role and countdown displays may exceed `3xl` when
+needed. Raw sizes are otherwise reserved for zero-size icon-only control
+treatments and the oversized decorative role initial.
+
 ## Layout and responsive hierarchy
 
 The product is designed from 320 CSS px upward.
@@ -54,10 +60,12 @@ The product is designed from 320 CSS px upward.
 
 - palette colors and configurable `--action`, `--action-dark`, and `--action-light`
   roles; accent and high-contrast settings override the action roles;
+- display/body fonts and the shared seven-step font-size scale, including the
+  root text-size setting;
 - shared control borders, focus ring, and recurring paper, shell, navigation,
   and overlay surfaces;
-- display/body fonts, spacing (`--space-1` through `--space-8`), borders,
-  shadows, target size, layer order, and motion durations.
+- spacing (`--space-1` through `--space-8`), borders, shadows, target size,
+  layer order, and motion durations.
 
 `src/lib/styles/forms.css` owns the shared label, control, help/error, disabled,
 and invalid presentation of `Field` and `SelectField`. Each primitive retains

@@ -80,7 +80,7 @@
 		border-block-start: 3px solid transparent;
 		color: var(--paper-muted);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-decoration: none;
@@ -118,10 +118,10 @@
 		place-items: center;
 		border: 2px solid #1c120c;
 		border-radius: 50%;
-		background: var(--action-light);
-		color: var(--wood);
+		background: var(--action-dark);
+		color: var(--paper-light);
 		font-family: var(--font-display);
-		font-size: 0.66rem;
+		font-size: var(--font-size-xs);
 		font-style: normal;
 		font-weight: 700;
 		line-height: 1;
@@ -154,7 +154,7 @@
 			gap: var(--space-2);
 			border-block-start: 0;
 			border-inline-start: 3px solid transparent;
-			font-size: 0.72rem;
+			font-size: var(--font-size-sm);
 			padding-inline: var(--space-3);
 		}
 

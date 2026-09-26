@@ -113,7 +113,7 @@
 		gap: 0.6rem;
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: clamp(0.78rem, 2.8vw, 1rem);
+		font-size: clamp(var(--font-size-sm), 2.8vw, var(--font-size-base));
 		font-weight: 700;
 		letter-spacing: 0.07em;
 		text-decoration: none;
@@ -138,7 +138,7 @@
 		color: var(--ink-soft);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.03em;
 		text-decoration: none;
@@ -153,7 +153,7 @@
 	footer {
 		border-top: var(--border-subtle);
 		color: var(--ink-faint);
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 		margin: 2rem clamp(1rem, 4vw, 2.5rem) 0;
 		padding-block: 1rem;
 		text-align: center;

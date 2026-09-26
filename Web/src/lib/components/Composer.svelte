@@ -83,7 +83,7 @@
 		margin: 0;
 		color: var(--ink-soft);
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.05em;
 	}

@@ -88,7 +88,7 @@
 		box-shadow: 0 3px 0 var(--action-dark);
 		color: var(--paper-light);
 		font-family: var(--font-display);
-		font-size: 0.76rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		padding: var(--space-2) var(--space-4);
@@ -133,7 +133,7 @@
 
 	.cover span {
 		font-family: var(--font-display);
-		font-size: 2.4rem;
+		font-size: var(--font-size-2xl);
 	}
 
 	.copy {
@@ -150,7 +150,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-1);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.ready {
@@ -167,7 +167,7 @@
 
 	.hint {
 		margin-block-start: var(--space-2) !important;
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.empty {

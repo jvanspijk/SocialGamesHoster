@@ -223,7 +223,7 @@
 	.timeline time,
 	.meta time {
 		color: var(--ink-soft);
-		font-size: 0.75rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.meta,
@@ -236,7 +236,7 @@
 
 	.progress {
 		color: var(--ink-soft);
-		font-size: 0.75rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.progress span {

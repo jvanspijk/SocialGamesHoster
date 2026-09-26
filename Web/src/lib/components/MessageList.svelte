@@ -106,7 +106,7 @@
 		background: transparent;
 		color: var(--action-dark);
 		cursor: pointer;
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		padding: 0 var(--space-2);
 		text-decoration: underline;
 	}

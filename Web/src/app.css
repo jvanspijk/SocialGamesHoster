@@ -15,12 +15,12 @@ html {
 	background: var(--wood);
 	color: var(--ink);
 	font-family: var(--font-body);
-	font-size: 20px;
+	font-size: var(--font-size-root);
 	overflow-x: hidden;
 }
 
 html[data-text-size='large'] {
-	font-size: 24px;
+	font-size: calc(var(--font-size-root) * 1.2);
 }
 
 body {
@@ -69,15 +69,15 @@ h4,
 }
 
 h1 {
-	font-size: clamp(1.75rem, 5vw, 3rem);
+	font-size: clamp(var(--font-size-xl), 5vw, var(--font-size-3xl));
 }
 
 h2 {
-	font-size: clamp(1.35rem, 3vw, 2rem);
+	font-size: clamp(var(--font-size-lg), 3vw, var(--font-size-2xl));
 }
 
 h3 {
-	font-size: 1.08rem;
+	font-size: var(--font-size-lg);
 }
 
 p {
@@ -161,7 +161,7 @@ p {
 	gap: 0.6rem;
 	color: var(--action-dark);
 	font-family: var(--font-display);
-	font-size: 0.78rem;
+	font-size: var(--font-size-sm);
 	letter-spacing: 0.12em;
 }
 
@@ -177,7 +177,7 @@ p {
 .eyebrow {
 	color: var(--action-dark);
 	font-family: var(--font-display);
-	font-size: 0.78rem;
+	font-size: var(--font-size-sm);
 	font-weight: 700;
 	letter-spacing: 0.1em;
 }
@@ -187,7 +187,7 @@ p {
 }
 
 .small {
-	font-size: 0.88rem;
+	font-size: var(--font-size-sm);
 }
 
 .sr-only {

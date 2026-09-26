@@ -818,7 +818,7 @@
 	.status,
 	small {
 		color: var(--ink-soft);
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 	}
 	.actions,
 	.mobile-tools {
@@ -854,7 +854,7 @@
 	}
 	.nav-group h2 {
 		margin: 0 var(--space-3) var(--space-3);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		line-height: 1.6;
 	}
 	.nav-group h2 span {
@@ -919,7 +919,7 @@
 		border-top: var(--border-subtle);
 		padding-top: var(--space-4);
 		color: var(--danger);
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 	}
 	.readiness.ready {
 		color: var(--success);
@@ -938,7 +938,7 @@
 		margin-bottom: var(--space-6);
 	}
 	.section-heading h1 {
-		font-size: 1.6rem;
+		font-size: var(--font-size-xl);
 	}
 	.section-heading .eyebrow {
 		margin: 0 0 var(--space-1);
@@ -969,7 +969,7 @@
 		min-width: 0;
 	}
 	.overview-content h2 {
-		font-size: 1.2rem;
+		font-size: var(--font-size-lg);
 	}
 	.overview-content h2,
 	.overview-content h3,
@@ -984,7 +984,7 @@
 	}
 	.eyebrow {
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 	}
 	.overview-content dl {
 		display: grid;
@@ -1043,7 +1043,7 @@
 	}
 	.inline-issues h2 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 	}
 	.limits {
 		display: grid;
@@ -1054,7 +1054,7 @@
 		display: grid;
 		gap: var(--space-1);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}

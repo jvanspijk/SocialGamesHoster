@@ -151,7 +151,7 @@
 	.party-list i {
 		border: 1px solid var(--success);
 		color: var(--success);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-style: normal;
 		padding: 0.15rem 0.4rem;
 		text-transform: capitalize;

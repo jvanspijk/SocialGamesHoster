@@ -29,7 +29,7 @@
 
 	:global(strong) {
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 		letter-spacing: 0.04em;
 	}
 </style>

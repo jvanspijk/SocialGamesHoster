@@ -158,7 +158,7 @@
 		gap: var(--space-1);
 		color: var(--action-dark);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
 	}
@@ -223,7 +223,7 @@
 	dt {
 		color: var(--ink-soft);
 		font-family: var(--font-display);
-		font-size: 0.68rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}
@@ -252,7 +252,7 @@
 
 	.achievements {
 		margin-block-start: var(--space-1) !important;
-		font-size: 0.88rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.history strong {

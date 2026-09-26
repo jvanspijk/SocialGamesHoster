@@ -135,7 +135,7 @@
 		box-shadow: 0 3px 0 var(--action-dark);
 		color: var(--paper-light);
 		font-family: var(--font-display);
-		font-size: 0.76rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		padding: var(--space-2) var(--space-4);

@@ -56,7 +56,7 @@
 
 	article.deleted {
 		box-shadow: none;
-		opacity: 0.68;
+		color: var(--ink-soft);
 		font-style: italic;
 	}
 
@@ -64,7 +64,7 @@
 		display: flex;
 		justify-content: space-between;
 		gap: var(--space-4);
-		font-size: 0.74rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.message-meta strong {
@@ -89,7 +89,7 @@
 		background: transparent;
 		color: var(--danger);
 		cursor: pointer;
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		padding: 0;
 	}
 

@@ -230,7 +230,7 @@
 		gap: var(--space-1);
 		color: var(--paper-muted);
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
 	}
@@ -251,7 +251,7 @@
 
 	.game-identity span {
 		color: var(--paper-muted);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.live-tools {
@@ -273,7 +273,7 @@
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.68rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 	}
 
@@ -290,7 +290,7 @@
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.68rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		padding: 0;
 	}
@@ -305,9 +305,9 @@
 		inset-inline-end: -0.35rem;
 		border: 2px solid var(--wood);
 		border-radius: 999px;
-		background: var(--action-light);
-		color: var(--wood);
-		font-size: 0.54rem;
+		background: var(--action-dark);
+		color: var(--paper-light);
+		font-size: var(--font-size-xs);
 		font-style: normal;
 		line-height: 1;
 		padding: 0.2rem 0.3rem;
@@ -330,7 +330,7 @@
 		align-content: center;
 		color: var(--action-dark);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 

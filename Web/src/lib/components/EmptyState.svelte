@@ -60,7 +60,7 @@
 	}
 
 	h2 {
-		font-size: 1.1rem;
+		font-size: var(--font-size-lg);
 	}
 
 	p {

@@ -104,7 +104,7 @@
 	thead th {
 		color: var(--ink-soft);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		letter-spacing: 0.08em;
 	}
 
@@ -133,7 +133,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		padding-inline: var(--space-1);
 		text-decoration: none;
@@ -208,7 +208,7 @@
 			color: var(--ink-soft);
 			content: attr(data-label);
 			font-family: var(--font-display);
-			font-size: 0.65rem;
+			font-size: var(--font-size-xs);
 			font-weight: 700;
 			letter-spacing: 0.08em;
 		}

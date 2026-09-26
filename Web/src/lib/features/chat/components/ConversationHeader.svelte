@@ -67,12 +67,12 @@
 	}
 
 	.conversation-header h2 {
-		font-size: 1.2rem;
+		font-size: var(--font-size-lg);
 	}
 
 	.conversation-header p {
 		color: var(--ink-soft);
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.back {
@@ -97,7 +97,7 @@
 		min-height: var(--target-size);
 		align-items: center;
 		gap: var(--space-2);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	@media (max-width: 47.99rem) {

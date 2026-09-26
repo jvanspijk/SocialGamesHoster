@@ -84,7 +84,7 @@
 		background: var(--action-dark);
 		color: var(--gold-light);
 		font-family: var(--font-display);
-		font-size: 3.2rem;
+		font-size: var(--font-size-3xl);
 	}
 
 	.summary-hero h2,
@@ -107,7 +107,7 @@
 		.summary-mark {
 			width: 5rem;
 			height: 5rem;
-			font-size: 2rem;
+			font-size: var(--font-size-2xl);
 		}
 	}
 </style>

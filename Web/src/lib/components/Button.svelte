@@ -43,7 +43,7 @@
 		color: var(--paper-light);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.84rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		line-height: 1.1;

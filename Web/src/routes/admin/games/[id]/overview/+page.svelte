@@ -603,7 +603,7 @@
 		background: var(--ink);
 		color: var(--gold-light);
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		padding: var(--space-1) var(--space-2);
 	}
@@ -661,7 +661,7 @@
 
 	.readiness span {
 		color: var(--ink-soft);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.readiness a {
@@ -671,7 +671,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.68rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 	}
 
@@ -706,7 +706,7 @@
 
 	form > label > span {
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 
@@ -721,7 +721,7 @@
 	fieldset legend,
 	fieldset > label > span {
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 
@@ -761,7 +761,7 @@
 
 	.ability-results span {
 		color: var(--ink-soft);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	progress {
@@ -775,7 +775,7 @@
 
 	.dialog-stack > label > span {
 		font-family: var(--font-display);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 
@@ -809,7 +809,7 @@
 		}
 
 		.state-heading h1 {
-			font-size: 1.65rem;
+			font-size: var(--font-size-xl);
 		}
 
 		.primary-actions {

@@ -349,7 +349,7 @@
 	.preview-controls label > span,
 	.eyebrow {
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 	}
 	.preview-controls select {

@@ -311,7 +311,7 @@
 		align-items: center;
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 		text-decoration-thickness: 1px;
 		text-underline-offset: 0.2em;
 	}
@@ -320,7 +320,7 @@
 		display: inline-block;
 		border: 1px solid var(--ink-faint);
 		color: var(--ink-soft);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.45rem;
 	}
 
@@ -346,7 +346,7 @@
 
 	.dialog-form label > span {
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}

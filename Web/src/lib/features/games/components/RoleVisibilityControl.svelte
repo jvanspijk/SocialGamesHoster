@@ -124,7 +124,7 @@
 
 	.visibility-description {
 		color: var(--ink-soft);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.readiness-action {
@@ -134,7 +134,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.68rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 	}
 

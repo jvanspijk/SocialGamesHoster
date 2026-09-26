@@ -298,7 +298,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.84rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		padding: var(--space-2);
@@ -325,7 +325,7 @@
 
 	.login-exit a {
 		color: var(--ink);
-		font-size: 0.9rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.field-error {
@@ -361,7 +361,7 @@
 		gap: var(--space-2);
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
 	}

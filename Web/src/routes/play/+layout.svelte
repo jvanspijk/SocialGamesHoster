@@ -349,7 +349,7 @@
 		gap: var(--space-2);
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
 	}
@@ -403,7 +403,7 @@
 
 	.game-name span {
 		color: var(--paper-muted);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		text-transform: capitalize;
 	}
 

@@ -41,7 +41,7 @@
 	}
 
 	.definition-editor :global(.item-card h3) {
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 	}
 
 	.definition-editor :global(.form-grid) {
@@ -64,7 +64,7 @@
 	.definition-editor :global(.nested-heading strong),
 	.definition-editor :global(.override-room strong) {
 		font-family: var(--font-display);
-		font-size: 0.67rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		letter-spacing: 0.06em;
 	}
@@ -85,7 +85,7 @@
 		color: var(--action-dark);
 		cursor: pointer;
 		font-family: var(--font-display);
-		font-size: 0.62rem;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		padding: var(--space-1) var(--space-2);
@@ -123,7 +123,7 @@
 
 	.definition-editor :global(.phase-permissions b) {
 		font-family: var(--font-display);
-		font-size: 0.78rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.definition-editor :global(.hint.compact) {
@@ -149,7 +149,7 @@
 
 	.definition-editor :global(.hint) {
 		color: var(--ink-soft);
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	@media (max-width: 720px) {

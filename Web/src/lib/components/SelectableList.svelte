@@ -198,7 +198,7 @@
 	.rich .entry-title time,
 	.rich .entry-copy small {
 		color: var(--paper-muted);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.rich .description,
@@ -211,7 +211,7 @@
 
 	.rich .description {
 		margin-block: 0.1rem;
-		font-size: 0.82rem;
+		font-size: var(--font-size-sm);
 	}
 
 	.rich button.unread .entry-title strong,

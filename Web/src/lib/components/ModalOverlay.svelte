@@ -239,7 +239,7 @@
 	}
 
 	.sheet-presentation .overlay-header :global(h2) {
-		font-size: 1.15rem;
+		font-size: var(--font-size-lg);
 	}
 
 	.sheet-presentation .overlay-body {

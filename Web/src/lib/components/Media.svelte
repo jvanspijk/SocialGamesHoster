@@ -90,6 +90,6 @@
 	.loading,
 	.unavailable {
 		color: var(--ink-faint);
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 	}
 </style>

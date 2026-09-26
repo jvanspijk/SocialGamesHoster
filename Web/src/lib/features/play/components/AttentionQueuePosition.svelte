@@ -15,7 +15,7 @@
 		margin: 0;
 		color: var(--action-dark);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		letter-spacing: 0.09em;
 	}

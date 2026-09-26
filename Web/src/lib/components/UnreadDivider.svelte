@@ -13,7 +13,7 @@
 		gap: var(--space-2);
 		color: var(--action-dark);
 		font-family: var(--font-display);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-align: center;
 	}

@@ -366,7 +366,7 @@
 	}
 
 	.player-list article.inactive {
-		opacity: 0.58;
+		color: var(--ink-soft);
 	}
 
 	.player-open {
@@ -379,6 +379,10 @@
 		color: var(--ink);
 		cursor: pointer;
 		text-align: start;
+	}
+
+	.player-list article.inactive .player-open {
+		color: var(--ink-soft);
 	}
 
 	.avatar {
@@ -406,7 +410,7 @@
 		display: inline-block;
 		color: var(--action-dark);
 		font-family: var(--font-display);
-		font-size: 0.65rem;
+		font-size: var(--font-size-xs);
 		font-style: normal;
 		margin-inline-end: var(--space-2);
 	}
@@ -436,7 +440,7 @@
 		align-items: center;
 		gap: 0.2rem;
 		border: 1px solid var(--gold-dark);
-		font-size: 0.72rem;
+		font-size: var(--font-size-sm);
 		padding: 0.15rem 0.4rem;
 		text-transform: capitalize;
 	}
@@ -511,7 +515,7 @@
 
 	.achievement-list i {
 		font-family: var(--font-display);
-		font-size: 0.66rem;
+		font-size: var(--font-size-xs);
 		font-style: normal;
 		font-weight: 700;
 	}

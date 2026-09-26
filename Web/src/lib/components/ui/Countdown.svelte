@@ -80,7 +80,7 @@
 
 	.countdown strong {
 		font-family: var(--font-display);
-		font-size: 1.25rem;
+		font-size: var(--font-size-lg);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.08em;
 		line-height: 1;
@@ -88,7 +88,7 @@
 
 	small {
 		color: var(--ink-soft);
-		font-size: 0.7rem;
+		font-size: var(--font-size-sm);
 		text-transform: capitalize;
 	}
 
@@ -111,7 +111,7 @@
 		display: block;
 		color: var(--ink);
 		font-family: var(--font-display);
-		font-size: clamp(2.6rem, 9vw, 5rem);
+		font-size: clamp(var(--font-size-2xl), 9vw, 5.5rem);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.06em;
 		line-height: 1;
