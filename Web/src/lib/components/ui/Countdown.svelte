@@ -82,7 +82,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-lg);
 		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.08em;
 		line-height: 1;
 	}
 

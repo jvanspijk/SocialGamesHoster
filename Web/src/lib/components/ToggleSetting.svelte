@@ -30,6 +30,5 @@
 	:global(strong) {
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
-		letter-spacing: 0.04em;
 	}
 </style>

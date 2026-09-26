@@ -66,7 +66,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
-		letter-spacing: 0.06em;
 	}
 
 	.definition-editor :global(input:not([type='checkbox'])) {
@@ -87,7 +86,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
-		letter-spacing: 0.05em;
 		padding: var(--space-1) var(--space-2);
 	}
 

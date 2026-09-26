@@ -64,7 +64,6 @@ h4,
 	color: var(--ink);
 	font-family: var(--font-display);
 	font-weight: 400;
-	letter-spacing: 0.015em;
 	line-height: 1.15;
 }
 

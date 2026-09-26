@@ -1056,7 +1056,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.08em;
 	}
 	.limits input {
 		min-height: var(--target-size);

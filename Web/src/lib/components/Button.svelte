@@ -45,7 +45,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.04em;
 		line-height: 1.1;
 		padding: 0.72rem 1rem;
 		transition:

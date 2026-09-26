@@ -35,7 +35,6 @@
 		color: var(--success);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
-		letter-spacing: 0.09em;
 	}
 	i {
 		width: 0.5rem;

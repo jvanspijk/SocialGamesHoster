@@ -60,7 +60,6 @@
 		color: var(--gold-light);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
-		letter-spacing: 0.12em;
 	}
 
 	.toolbar {

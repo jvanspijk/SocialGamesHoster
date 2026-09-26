@@ -225,7 +225,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
-		letter-spacing: 0.08em;
 	}
 
 	dd {

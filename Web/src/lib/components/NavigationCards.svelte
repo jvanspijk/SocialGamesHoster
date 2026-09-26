@@ -104,7 +104,6 @@
 	strong {
 		font-family: var(--font-display);
 		font-size: var(--font-size-md);
-		letter-spacing: 0.05em;
 	}
 
 	small {

@@ -85,7 +85,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.05em;
 	}
 
 	@media (max-width: 47.99rem) {

@@ -17,6 +17,5 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.09em;
 	}
 </style>

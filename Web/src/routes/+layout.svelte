@@ -115,7 +115,6 @@
 		font-family: var(--font-display);
 		font-size: clamp(var(--font-size-sm), 2.8vw, var(--font-size-base));
 		font-weight: 700;
-		letter-spacing: 0.07em;
 		text-decoration: none;
 	}
 
@@ -140,7 +139,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.03em;
 		text-decoration: none;
 	}
 

@@ -300,7 +300,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.04em;
 		padding: var(--space-2);
 		text-decoration: underline;
 		text-decoration-thickness: 1px;

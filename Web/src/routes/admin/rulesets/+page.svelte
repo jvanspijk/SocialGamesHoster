@@ -90,7 +90,6 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		letter-spacing: 0.06em;
 		padding: var(--space-2) var(--space-4);
 		text-decoration: none;
 	}

@@ -105,7 +105,6 @@
 		color: var(--ink-soft);
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
-		letter-spacing: 0.08em;
 	}
 
 	thead th.align-end {
@@ -210,7 +209,6 @@
 			font-family: var(--font-display);
 			font-size: var(--font-size-xs);
 			font-weight: 700;
-			letter-spacing: 0.08em;
 		}
 
 		tbody :global(.row-actions) {
