@@ -52,7 +52,7 @@
 		--panel-border: var(--border-strong);
 		--panel-background:
 			linear-gradient(135deg, rgb(255 255 255 / 20%), transparent 42%), var(--surface-raised);
-		--panel-shadow: var(--shadow);
+		--panel-shadow: var(--shadow-small);
 		border: var(--panel-border);
 		padding: var(--space-4);
 	}
