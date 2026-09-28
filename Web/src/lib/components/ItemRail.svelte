@@ -35,7 +35,7 @@
 		min-width: 0;
 		min-height: 0;
 		grid-template-rows: auto auto minmax(0, 1fr);
-		background: linear-gradient(rgb(27 18 12 / 96%), rgb(18 11 8 / 98%)), var(--surface-surround);
+		background: var(--surface-surround);
 		color: var(--text-on-dark);
 	}
 

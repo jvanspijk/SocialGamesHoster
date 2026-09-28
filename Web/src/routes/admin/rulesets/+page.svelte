@@ -122,11 +122,7 @@
 		display: grid;
 		place-items: center;
 		border-inline-end: 1px solid var(--accent-strong);
-		background: linear-gradient(
-			145deg,
-			var(--action-dark),
-			color-mix(in srgb, var(--action-dark) 45%, var(--surface-surround))
-		);
+		background: var(--action-dark);
 		color: var(--accent-light);
 	}
 

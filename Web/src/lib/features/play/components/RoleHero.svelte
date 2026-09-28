@@ -32,7 +32,7 @@
 		display: grid;
 		min-height: clamp(20rem, 54vh, 34rem);
 		overflow: hidden;
-		background: linear-gradient(145deg, var(--accent-cool), var(--surface-dark));
+		background: var(--surface-dark);
 		color: var(--text-on-dark);
 		isolation: isolate;
 	}

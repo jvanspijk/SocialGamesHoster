@@ -28,8 +28,6 @@
 	--color-paper-veil: rgb(255 249 230 / 30%);
 	--color-backdrop: rgb(17 10 6 / 72%);
 	--color-shell: rgb(247 231 196 / 94%);
-	--color-nav-top: rgb(28 18 12 / 96%);
-	--color-nav-bottom: rgb(20 12 8 / 98%);
 	--shadow-reference-large: 0 8px 18px rgb(35 20 11 / 18%);
 	--shadow-reference-small: 0 4px 10px rgb(35 20 11 / 16%);
 
@@ -67,8 +65,7 @@
 	--surface-veil: var(--color-paper-veil);
 	--surface-backdrop: var(--color-backdrop);
 	--surface-shell: var(--color-shell);
-	--surface-nav:
-		linear-gradient(var(--color-nav-top), var(--color-nav-bottom)), var(--surface-surround);
+	--surface-nav: var(--surface-surround);
 	--choice-border: var(--color-sand-300);
 	--control-secondary-shadow: var(--color-sand-500);
 	--control-inverse-border: var(--color-sand-900);
