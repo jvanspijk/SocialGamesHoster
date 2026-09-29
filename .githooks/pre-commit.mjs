@@ -19,15 +19,14 @@ if (stagedWebFiles.length === 0) {
 	process.exit(0);
 }
 
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const relativeWebFiles = stagedWebFiles.map((file) => file.slice('Web/'.length));
+const prettierCli = join(repoRoot, 'Web', 'node_modules', 'prettier', 'bin', 'prettier.cjs');
 const formatResult = spawnSync(
-	npmCommand,
-	['run', 'format:staged', '--', ...relativeWebFiles],
+	process.execPath,
+	[prettierCli, '--write', '--ignore-unknown', ...relativeWebFiles],
 	{
 		cwd: join(repoRoot, 'Web'),
 		stdio: 'inherit',
-		shell: process.platform === 'win32',
 	},
 );
 
