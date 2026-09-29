@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { CheckCircle2, Plus, ScrollText, TriangleAlert } from '@lucide/svelte';
+	import { Plus, ScrollText } from '@lucide/svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
+	import RulesetOverviewCard from '$lib/features/rulesets/components/RulesetOverviewCard.svelte';
 	import { api } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { RulesetSummary } from '$lib/api/types';
@@ -50,22 +51,7 @@
 {:else}
 	<div class="ruleset-grid">
 		{#each rulesets as ruleset (ruleset.id)}
-			<a href={resolve(`/admin/rulesets/${ruleset.id}/edit/metadata`)}>
-				<div class="cover" aria-hidden="true">
-					<span>{ruleset.name.slice(0, 1).toUpperCase()}</span>
-				</div>
-				<div class="copy">
-					<h2>{ruleset.name}</h2>
-					{#if ruleset.status === 'valid'}
-						<p class="status ready"><CheckCircle2 size={16} /> Ready to use</p>
-					{:else}
-						<p class="status invalid">
-							<TriangleAlert size={16} /> Needs attention · {ruleset.issueCount} issues
-						</p>
-					{/if}
-					<p class="hint">Open editor</p>
-				</div>
-			</a>
+			<RulesetOverviewCard {ruleset} />
 		{/each}
 	</div>
 {/if}
@@ -98,75 +84,6 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
 		gap: var(--space-4);
-	}
-
-	.ruleset-grid > a {
-		display: grid;
-		grid-template-columns: 5.5rem minmax(0, 1fr);
-		min-height: 8rem;
-		border: var(--border-subtle);
-		background: var(--surface-wash);
-		color: var(--text-primary);
-		text-decoration: none;
-		transition:
-			transform var(--speed-fast) ease-out,
-			box-shadow var(--speed-fast) ease-out;
-	}
-
-	.ruleset-grid > a:hover {
-		box-shadow: var(--shadow-small);
-		transform: translateY(-2px);
-	}
-
-	.cover {
-		display: grid;
-		place-items: center;
-		border-inline-end: 1px solid var(--accent-strong);
-		background: var(--action-dark);
-		color: var(--accent-light);
-	}
-
-	.cover span {
-		font-family: var(--font-display);
-		font-size: var(--font-size-2xl);
-	}
-
-	.copy {
-		align-self: center;
-		padding: var(--space-3);
-	}
-
-	h2,
-	.copy p {
-		margin: 0;
-	}
-
-	.copy h2 {
-		font-weight: 700;
-	}
-
-	.status {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
-		font-size: var(--font-size-sm);
-	}
-
-	.ready {
-		color: var(--status-success);
-	}
-
-	.invalid {
-		color: var(--status-danger);
-	}
-
-	.hint {
-		color: var(--text-secondary);
-	}
-
-	.hint {
-		margin-block-start: var(--space-2) !important;
-		font-size: var(--font-size-sm);
 	}
 
 	.empty {

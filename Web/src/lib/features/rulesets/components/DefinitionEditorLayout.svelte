@@ -36,7 +36,7 @@
 		display: grid;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: rgb(255 249 230 / 34%);
+		background: var(--surface-raised);
 		padding: var(--space-3);
 	}
 
@@ -139,8 +139,8 @@
 
 	.definition-editor :global(.empty),
 	.definition-editor :global(.hint) {
-		border: 1px dashed var(--accent-strong);
-		background: var(--surface-veil);
+		border: 1px solid var(--accent-strong);
+		background: var(--surface-raised);
 		margin: 0;
 		padding: var(--space-3);
 	}

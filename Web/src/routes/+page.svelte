@@ -315,7 +315,7 @@
 	.card {
 		border: 1px solid #9a7e51;
 		border-radius: var(--control-radius);
-		background: rgb(255 249 230 / 70%);
+		background: var(--surface-raised);
 		box-shadow:
 			var(--shadow-small),
 			inset 0 0 0 2px rgb(122 85 39 / 8%);
@@ -356,7 +356,7 @@
 		display: grid;
 		gap: 0.4rem;
 		border: 1px solid var(--accent-strong);
-		background: rgb(255 249 230 / 55%);
+		background: var(--surface-raised);
 		padding: 0.8rem;
 	}
 

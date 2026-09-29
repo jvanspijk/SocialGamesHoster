@@ -143,7 +143,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: var(--surface-wash);
+		background: var(--surface-raised);
 		padding: var(--space-2);
 	}
 

@@ -53,7 +53,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border-block-end: var(--border-subtle);
-		background: rgb(255 249 230 / 82%);
+		background: var(--surface-raised);
 		padding: var(--space-3) var(--space-4);
 	}
 

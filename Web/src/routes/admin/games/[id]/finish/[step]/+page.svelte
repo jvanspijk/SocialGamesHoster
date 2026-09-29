@@ -509,7 +509,7 @@
 
 	.award-players > section {
 		border: var(--border-subtle);
-		background: var(--surface-wash);
+		background: var(--surface-raised);
 	}
 
 	.award-players header {

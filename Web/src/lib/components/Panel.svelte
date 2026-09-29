@@ -35,7 +35,7 @@
 <style>
 	section {
 		--panel-border: 1px solid color-mix(in srgb, var(--accent-strong) 45%, transparent);
-		--panel-background: transparent;
+		--panel-background: var(--surface-raised);
 		--panel-shadow: none;
 		min-width: 0;
 		border-block-start: var(--panel-border);

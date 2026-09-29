@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Clock3, Shield, Users } from '@lucide/svelte';
+	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import TimerDisplay from '$lib/features/games/components/TimerDisplay.svelte';
 	import { api } from '$lib/api/client';
@@ -60,26 +61,24 @@
 					revision={view.game.revision}
 				/>
 			</div>
-			<div class="quick-actions">
-				<!-- eslint-disable svelte/no-navigation-without-resolve -->
-				<a
-					href={view.roleAvailable ? resolve('/play/role') : undefined}
-					class:disabled={!view.roleAvailable}
-					aria-disabled={!view.roleAvailable}
-				>
-					<Shield size={23} /><span
-						><strong>{view.roleAvailable ? 'View role' : 'Role unavailable'}</strong><small
-							>{view.roleAvailable ? 'Open your private role screen' : 'Roles are hidden.'}</small
-						></span
-					>
-				</a>
-				<!-- eslint-enable svelte/no-navigation-without-resolve -->
-				<a href={resolve('/play/party')}
-					><Users size={23} /><span
-						><strong>View party</strong><small>{view.party.length} players</small></span
-					></a
-				>
-			</div>
+			<NavigationCards
+				label="Game actions"
+				items={[
+					{
+						label: view.roleAvailable ? 'View role' : 'Role unavailable',
+						description: view.roleAvailable ? 'Open your private role screen' : 'Roles are hidden.',
+						href: resolve('/play/role'),
+						disabled: !view.roleAvailable,
+						icon: Shield
+					},
+					{
+						label: 'View party',
+						description: `${view.party.length} players`,
+						href: resolve('/play/party'),
+						icon: Users
+					}
+				]}
+			/>
 		{/if}
 	</section>
 {/if}
@@ -109,42 +108,8 @@
 		justify-content: center;
 		gap: var(--space-2);
 	}
-	.quick-actions {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-3);
-		text-align: start;
-	}
-	.quick-actions a {
-		display: grid;
-		min-height: 5.5rem;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-items: center;
-		gap: var(--space-3);
-		border: var(--border-subtle);
-		background: var(--surface-wash);
-		color: var(--text-primary);
-		padding: var(--space-3);
-		text-decoration: none;
-	}
-	.quick-actions a.disabled {
-		cursor: not-allowed;
-		opacity: 0.55;
-	}
-	.quick-actions strong,
-	.quick-actions small {
-		display: block;
-	}
-	.quick-actions small {
-		color: var(--text-secondary);
-	}
 	.attention-stage {
 		display: grid;
 		place-items: center;
-	}
-	@media (max-width: 35rem) {
-		.quick-actions {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

@@ -398,7 +398,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: color-mix(in srgb, var(--surface-raised) 72%, transparent);
+		background: var(--surface-raised);
 		color: var(--text-primary);
 		padding: var(--space-3);
 		text-align: start;
@@ -453,8 +453,8 @@
 	}
 	.empty-frame,
 	.no-results {
-		border: 1px dashed var(--accent-strong);
-		background: var(--surface-veil);
+		border: 1px solid var(--accent-strong);
+		background: var(--surface-raised);
 	}
 	.no-results {
 		color: var(--text-secondary);
@@ -464,7 +464,7 @@
 	.details {
 		min-width: 0;
 		border: var(--border-subtle);
-		background: color-mix(in srgb, var(--surface-raised) 78%, transparent);
+		background: var(--surface-raised);
 		padding: var(--space-4);
 	}
 	.details > h2 {

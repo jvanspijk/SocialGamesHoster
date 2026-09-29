@@ -2,8 +2,10 @@
 	import type { Component } from 'svelte';
 
 	let {
-		items
+		items,
+		label = 'Home shortcuts'
 	}: {
+		label?: string;
 		items: Array<{
 			label: string;
 			description?: string;
@@ -15,19 +17,24 @@
 	} = $props();
 </script>
 
-<nav aria-label="Home shortcuts">
+<nav aria-label={label}>
 	{#each items as item (`${item.label}:${item.href ?? 'action'}`)}
 		{@const Icon = item.icon}
 		{#if item.href}
 			<!-- Destinations are resolved by the route that owns each shortcut. -->
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-			<a href={item.href} aria-disabled={item.disabled || undefined} class:disabled={item.disabled}>
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				href={item.disabled ? undefined : item.href}
+				aria-disabled={item.disabled || undefined}
+				class:disabled={item.disabled}
+			>
 				<span class="icon" aria-hidden="true"><Icon size={25} strokeWidth={1.7} /></span>
 				<span>
 					<strong>{item.label}</strong>
 					{#if item.description}<small>{item.description}</small>{/if}
 				</span>
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{:else}
 			<button type="button" onclick={item.onclick} disabled={item.disabled}>
 				<span class="icon" aria-hidden="true"><Icon size={25} strokeWidth={1.7} /></span>
@@ -57,7 +64,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		border: var(--border-subtle);
-		background: var(--surface-wash);
+		background: var(--surface-raised);
 		color: var(--text-primary);
 		cursor: pointer;
 		font: inherit;
@@ -69,7 +76,7 @@
 			box-shadow var(--speed-fast) ease-out;
 	}
 
-	a:hover,
+	a:hover:not(.disabled),
 	button:hover:not(:disabled) {
 		box-shadow: var(--shadow-small);
 		transform: translateY(-2px);
@@ -84,7 +91,7 @@
 	.disabled,
 	button:disabled {
 		cursor: not-allowed;
-		opacity: 0.58;
+		background: color-mix(in srgb, var(--surface-muted) 25%, var(--surface-raised));
 	}
 
 	.icon {

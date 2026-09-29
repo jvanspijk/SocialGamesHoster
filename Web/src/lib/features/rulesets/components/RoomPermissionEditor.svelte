@@ -90,6 +90,6 @@
 	}
 
 	:global(label) {
-		background: rgb(255 249 230 / 40%);
+		background: var(--surface-raised);
 	}
 </style>

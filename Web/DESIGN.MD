@@ -152,6 +152,7 @@ less clear.
 - Empty: explain the state and offer one relevant primary action.
 - Error: state what failed and provide an actionable recovery when possible.
 - Disabled: preserve readable contrast and explain unavailable actions nearby.
+- Use solid borders and dividers. Do not use dotted or dashed lines for states or decoration.
 - Selected: use shape/border and text in addition to color.
 - Destructive: danger styling, explicit object/action wording, and confirmation
   for irreversible changes.
