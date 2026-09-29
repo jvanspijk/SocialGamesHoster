@@ -37,17 +37,17 @@ func NewEventID() string {
 }
 
 func Publish[T any](app core.App, topic string, event Event[T], authorize Authorize) error {
+	return PublishProjected(app, topic, event, authorize, func(*core.Record) T { return event.Payload })
+}
+
+// PublishProjected builds a recipient-specific payload after authorization.
+func PublishProjected[T any](app core.App, topic string, event Event[T], authorize Authorize, project func(*core.Record) T) error {
 	if event.EventID == "" || event.Kind == "" {
 		return errors.New("realtime event requires an event id and kind")
 	}
 	if event.OccurredAt == "" {
 		event.OccurredAt = time.Now().UTC().Format(time.RFC3339Nano)
 	}
-	data, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-	message := subscriptions.Message{Name: topic, Data: data}
 	for _, chunk := range app.SubscriptionsBroker().ChunkedClients(100) {
 		for _, client := range chunk {
 			if !client.HasSubscription(topic) {
@@ -57,6 +57,12 @@ func Publish[T any](app core.App, topic string, event Event[T], authorize Author
 			if authorize != nil && !authorize(auth) {
 				continue
 			}
+			event.Payload = project(auth)
+			data, err := json.Marshal(event)
+			if err != nil {
+				return err
+			}
+			message := subscriptions.Message{Name: topic, Data: data}
 			client.Send(message)
 		}
 	}

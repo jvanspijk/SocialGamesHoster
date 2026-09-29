@@ -76,6 +76,26 @@ func TestMessageListingProjectsMessagesAndRejectsInvalidCursor(t *testing.T) {
 	})
 }
 
+func TestMessageProjectionMarksOnlyTheSenderAsOwn(t *testing.T) {
+	for _, senderType := range []string{"player", "game_master"} {
+		t.Run(senderType, func(t *testing.T) {
+			message := core.NewRecord(&core.Collection{})
+			message.Set("sender_type", senderType)
+			message.Set("sender_id", "sender")
+			owner := core.NewRecord(&core.Collection{})
+			owner.Id = "sender"
+			other := core.NewRecord(&core.Collection{})
+			other.Id = "other"
+			if projectMessage(message, owner, senderType == "game_master")["isOwn"] != true {
+				t.Fatal("sender's message should be marked as own")
+			}
+			if _, own := projectMessage(message, other, senderType == "game_master")["isOwn"]; own {
+				t.Fatal("another viewer's message should not be marked as own")
+			}
+		})
+	}
+}
+
 type chatRecordLookupApp struct {
 	core.App
 	records  map[string]*core.Record

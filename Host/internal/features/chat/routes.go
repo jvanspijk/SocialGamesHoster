@@ -276,7 +276,7 @@ func createMessage(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
-	publishRoom(event.App, resolved, "chat.message_created", projected)
+	publishRoomMessage(event.App, resolved, "chat.message_created", message)
 	return event.JSON(http.StatusCreated, projected)
 }
 
@@ -408,7 +408,7 @@ func deleteMessage(event *core.RequestEvent) error {
 		return httpx.WriteErrorFrom(event, err)
 	}
 	projected := projectMessage(message, event.Auth, resolved.IsGM)
-	publishRoom(event.App, resolved, "chat.message_deleted", projected)
+	publishRoomMessage(event.App, resolved, "chat.message_deleted", message)
 	return event.JSON(http.StatusOK, projected)
 }
 
@@ -613,7 +613,7 @@ func projectMessage(message, viewer *core.Record, isGM bool) map[string]any {
 	if isGM {
 		projected["senderParticipantId"] = message.GetString("sender_participant")
 	}
-	if viewer != nil && message.GetString("sender_type") == "player" && message.GetString("sender_id") == viewer.Id {
+	if viewer != nil && message.GetString("sender_id") == viewer.Id {
 		projected["isOwn"] = true
 	}
 	return projected
@@ -623,18 +623,30 @@ func publishRoom(app core.App, resolved access, kind string, payload any) {
 	_ = realtime.Publish(app, "room:"+resolved.Room.Id, realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: resolved.Game.Id, Revision: resolved.Game.GetInt("revision"),
 		Kind: kind, Payload: payload,
-	}, func(auth *core.Record) bool {
-		if auth == nil || !auth.GetBool("active") {
-			return false
-		}
-		if actorauth.IsGameMaster(auth) {
-			return true
-		}
-		if !actorauth.IsPlayer(auth) {
-			return false
-		}
-		return playerMayReceiveRoomEvent(app, resolved, auth.Id)
-	})
+	}, func(auth *core.Record) bool { return roomEventAuthorized(app, resolved, auth) })
+}
+
+func publishRoomMessage(app core.App, resolved access, kind string, message *core.Record) {
+	_ = realtime.PublishProjected(app, "room:"+resolved.Room.Id, realtime.Event[map[string]any]{
+		EventID: realtime.NewEventID(), GameID: resolved.Game.Id, Revision: resolved.Game.GetInt("revision"),
+		Kind: kind,
+	}, func(auth *core.Record) bool { return roomEventAuthorized(app, resolved, auth) },
+		func(auth *core.Record) map[string]any {
+			return projectMessage(message, auth, auth != nil && actorauth.IsGameMaster(auth))
+		})
+}
+
+func roomEventAuthorized(app core.App, resolved access, auth *core.Record) bool {
+	if auth == nil || !auth.GetBool("active") {
+		return false
+	}
+	if actorauth.IsGameMaster(auth) {
+		return true
+	}
+	if !actorauth.IsPlayer(auth) {
+		return false
+	}
+	return playerMayReceiveRoomEvent(app, resolved, auth.Id)
 }
 
 func playerMayReceiveRoomEvent(app core.App, resolved access, profileID string) bool {
