@@ -7,7 +7,6 @@
 		House,
 		MessageCircle,
 		Shield,
-		Swords,
 		UserCircle,
 		Users,
 		Volume2,
@@ -230,7 +229,7 @@
 	<div class="account-shell">
 		<header class="account-header">
 			<a class="account-product" href={resolve('/play')}>
-				<Swords size={22} /> Player home
+				<img src="/icons/logo.webp" alt="" width="48" height="48" /> Social Games Hoster
 			</a>
 			<div class="account-tools">
 				<a href={resolve('/play/profile')} aria-label="Player profile">

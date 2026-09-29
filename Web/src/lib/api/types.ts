@@ -55,6 +55,7 @@ export interface Game {
 	name: string;
 	status: 'draft' | 'lobby' | 'running' | 'paused' | 'review' | 'archived';
 	rulesetVersion: string;
+	coverAssetId?: string;
 	/** @deprecated Join codes are no longer part of reader projections. */
 	joinCode?: string;
 	joiningOpen: boolean;

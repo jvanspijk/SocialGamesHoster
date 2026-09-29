@@ -3,15 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		Gamepad2,
-		House,
-		LogOut,
-		ScrollText,
-		Settings,
-		Swords,
-		UsersRound
-	} from '@lucide/svelte';
+	import { Gamepad2, House, LogOut, ScrollText, Settings, UsersRound } from '@lucide/svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
@@ -144,7 +136,9 @@
 {#if !auth.isGameMaster}
 	<main class="login-page">
 		<section class="login-panel" aria-labelledby="login-heading">
-			<div class="seal" aria-hidden="true"><Swords size={32} /></div>
+			<div class="seal" aria-hidden="true">
+				<img src="/icons/logo.webp" alt="" width="48" height="48" />
+			</div>
 			<p class="eyebrow">Game Master</p>
 			<h1 id="login-heading">Sign in</h1>
 			<p class="muted">Sign in with a Game Master account.</p>
@@ -185,7 +179,8 @@
 		<AppNav items={navigation} {current} label="Management" />
 		<header class="management-header">
 			<a class="product" href={resolve('/admin')}
-				><Swords size={23} /><span>Social Games Hoster</span></a
+				><img src="/icons/logo.webp" alt="" width="48" height="48" /><span>Social Games Hoster</span
+				></a
 			>
 			<div class="header-actions">
 				<AdminJoinQrButton />

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Gamepad2, ScrollText, Settings, Swords, UsersRound } from '@lucide/svelte';
+	import { fetchBlob } from '$lib/api/client';
+	import { Gamepad2, ScrollText, Settings, UsersRound } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
@@ -24,6 +25,36 @@
 	const activeGame = $derived(
 		games.find((game) => ['lobby', 'running', 'paused', 'review'].includes(game.status)) ?? null
 	);
+	let coverImageSrc = $state('/icons/logo.webp');
+
+	$effect(() => {
+		const coverAssetId = activeGame?.coverAssetId;
+		if (!coverAssetId) {
+			coverImageSrc = '/icons/logo.webp';
+			return;
+		}
+
+		let cancelled = false;
+		let objectUrl = '';
+		coverImageSrc = '/icons/logo.webp';
+		void fetchBlob(`/ruleset-assets/${coverAssetId}`)
+			.then((blob) => {
+				objectUrl = URL.createObjectURL(blob);
+				if (cancelled) {
+					URL.revokeObjectURL(objectUrl);
+					return;
+				}
+				coverImageSrc = objectUrl;
+			})
+			.catch(() => {
+				if (!cancelled) coverImageSrc = '/icons/logo.webp';
+			});
+
+		return () => {
+			cancelled = true;
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
+		};
+	});
 	const activeHref = $derived(
 		activeGame?.status === 'review'
 			? resolve(`/admin/games/${activeGame.id}/finish/outcomes`)
@@ -70,7 +101,9 @@
 	{:else if activeGame}
 		<Panel title="Active game" variant="focal">
 			<div class="active-game">
-				<div class="seal" aria-hidden="true"><Swords size={29} /></div>
+				<div class="seal" aria-hidden="true">
+					<img src={coverImageSrc} alt="" width="48" height="48" />
+				</div>
 				<div>
 					<StatusBadge label={gameStatusLabel(activeGame.status)} />
 					<h2>{activeGame.name}</h2>
@@ -113,6 +146,12 @@
 		border: 2px double var(--accent);
 		background: var(--surface-dark);
 		color: var(--accent-light);
+	}
+
+	.seal img {
+		width: 48px;
+		height: 48px;
+		object-fit: cover;
 	}
 
 	h2,

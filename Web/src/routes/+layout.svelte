@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { LogOut, Shield, UserRound, Swords } from '@lucide/svelte';
+	import { LogOut, Shield, UserRound } from '@lucide/svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
 	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import ToastViewport from '$lib/features/shell/components/ToastViewport.svelte';
@@ -41,6 +41,7 @@
 
 <svelte:head>
 	<title>Social Games Hoster</title>
+	<link rel="icon" type="image/png" href="/icons/logo.webp" />
 </svelte:head>
 
 {#if page.url.pathname.startsWith('/play') || page.url.pathname.startsWith('/admin')}
@@ -57,7 +58,7 @@
 		<div class="canvas-noise-layer" aria-hidden="true"></div>
 		<header>
 			<a class="brand" href={resolve('/')} aria-label="Social Games Hoster home">
-				<Swords size={25} strokeWidth={1.7} />
+				<img src="/icons/logo.webp" alt="" width="48" height="48" />
 				<span>Social Games Hoster</span>
 			</a>
 			<nav aria-label="Main navigation">

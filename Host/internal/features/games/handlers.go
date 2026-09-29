@@ -51,6 +51,22 @@ func listGames(event *core.RequestEvent) error {
 		response[index] = projectGame(record)
 		response[index]["playerCount"] = playerCounts[record.Id]
 		response[index]["maxPlayers"] = definition.Metadata.MaxPlayers
+		if coverKey := definition.Metadata.CoverAssetKey; coverKey != "" {
+			assets, err := event.App.FindRecordsByFilter(
+				"ruleset_assets",
+				"ruleset_version = {:version} && asset_key = {:key} && storage_state = 'ready'",
+				"",
+				1,
+				0,
+				dbx.Params{"version": record.GetString("ruleset_version"), "key": coverKey},
+			)
+			if err != nil {
+				return httpx.WriteError(event, result.Internal(err))
+			}
+			if len(assets) > 0 {
+				response[index]["coverAssetId"] = assets[0].Id
+			}
+		}
 	}
 	return event.JSON(http.StatusOK, response)
 }
