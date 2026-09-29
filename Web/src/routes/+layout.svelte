@@ -45,12 +45,16 @@
 
 {#if page.url.pathname.startsWith('/play') || page.url.pathname.startsWith('/admin')}
 	<div class="immersive-shell">
+		<div class="canvas-blots-layer" aria-hidden="true"></div>
+		<div class="canvas-noise-layer" aria-hidden="true"></div>
 		<main class="immersive-page">
 			{@render children()}
 		</main>
 	</div>
 {:else}
 	<div class="sheet">
+		<div class="canvas-blots-layer" aria-hidden="true"></div>
+		<div class="canvas-noise-layer" aria-hidden="true"></div>
 		<header>
 			<a class="brand" href={resolve('/')} aria-label="Social Games Hoster home">
 				<Swords size={25} strokeWidth={1.7} />

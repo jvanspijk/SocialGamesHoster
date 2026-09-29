@@ -1,0 +1,4 @@
+Resource: 100 Noise Textures (high resolution)
+Source: https://resourceboy.com/textures/noise-textures/
+Author / creator: Resource Boy (Resource Boy team)
+License: Resource Boy License — royalty-free for personal and commercial projects. The page lists the license as “Personal & Commercial use.” Full terms are included in the downloaded bundle's License.txt. The license permits modification and use in works such as websites and applications; it prohibits reselling, sublicensing, or redistributing the files on their own or as a separate attachment.

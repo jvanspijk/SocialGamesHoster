@@ -84,6 +84,7 @@ p {
 
 .sheet {
 	position: relative;
+	isolation: isolate;
 	width: min(calc(100% - 1.25rem), var(--content-width));
 	min-height: calc(100vh - 1.25rem);
 	margin: 0.625rem auto;
@@ -95,8 +96,35 @@ p {
 }
 
 .immersive-shell {
+	position: relative;
+	isolation: isolate;
 	min-height: 100dvh;
 	background: var(--surface-canvas);
+}
+
+.canvas-blots-layer,
+.canvas-noise-layer {
+	position: absolute;
+	z-index: 0;
+	inset: 0;
+	background-size: 512px 512px;
+	pointer-events: none;
+}
+
+.canvas-blots-layer {
+	background-image: var(--surface-canvas-blots);
+	opacity: var(--surface-canvas-blots-opacity);
+}
+
+.canvas-noise-layer {
+	background-image: var(--surface-canvas-noise);
+	opacity: var(--surface-canvas-noise-opacity);
+}
+
+.immersive-page,
+.sheet > footer {
+	position: relative;
+	z-index: 1;
 }
 
 .immersive-page {
