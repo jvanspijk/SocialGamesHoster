@@ -388,6 +388,10 @@
 		text-align: left;
 	}
 
+	.player-action form.card {
+		background: var(--surface-raised);
+	}
+
 	.game-master-link {
 		justify-self: center;
 		font-size: var(--font-size-sm);

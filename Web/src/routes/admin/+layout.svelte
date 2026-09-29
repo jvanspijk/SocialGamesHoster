@@ -262,7 +262,7 @@
 	.login-panel {
 		width: min(100%, 27rem);
 		border: var(--border-strong);
-		background: var(--surface-canvas);
+		background: var(--surface-raised);
 		box-shadow: var(--shadow);
 		padding: var(--space-6);
 		text-align: center;
