@@ -7,6 +7,9 @@ This guide is normative for every route. The release sign-off matrix lives in
 
 The interface is rich medieval parchment: warm paper, dark ink, crimson actions,
 sharp frames, seals, and small illuminated details over a dark wood surround.
+Its overall design is flat: hierarchy comes mainly from color, typography,
+spacing, and borders. Parchment texture and shadows are selective supporting
+details, not the default treatment.
 Decoration concentrates on focal content and important transitions. Routine
 forms and dense host tools use quiet surfaces with minimal nesting.
 
