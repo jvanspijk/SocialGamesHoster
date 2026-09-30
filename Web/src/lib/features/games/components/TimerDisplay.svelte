@@ -36,12 +36,10 @@
 	}
 </script>
 
-{#if timer}
-	<Countdown
-		status={countdownStatus(timer.status)}
-		statusLabel={timer.status}
-		remainingMs={timer.remainingMs}
-		endsAt={timer.endsAt}
-		{compact}
-	/>
-{/if}
+<Countdown
+	status={timer ? countdownStatus(timer.status) : 'idle'}
+	statusLabel={timer?.status ?? 'inactive'}
+	remainingMs={timer?.remainingMs ?? 0}
+	endsAt={timer?.endsAt}
+	{compact}
+/>

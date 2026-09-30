@@ -37,6 +37,17 @@ describe('Countdown', () => {
 		vi.useRealTimers();
 	});
 
+	it.each(['display', 'readout'] as const)(
+		'shows an inactive placeholder in the %s variant',
+		(variant) => {
+			render(Countdown, {
+				props: { status: 'idle', statusLabel: 'No timer set', remainingMs: 0, variant }
+			});
+			expect(screen.getByLabelText('Timer inactive')).toHaveTextContent('--:--');
+			expect(screen.queryByLabelText('0 seconds remaining')).not.toBeInTheDocument();
+		}
+	);
+
 	it('updates a running countdown every 250 milliseconds from its end time', async () => {
 		render(Countdown, {
 			props: {

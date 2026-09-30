@@ -41,8 +41,10 @@
 	});
 
 	const remaining = $derived(remainingCountdownMs(status, remainingMs, endsAt, now));
-	const display = $derived(formatCountdown(remaining));
-	const timeLabel = $derived(countdownAccessibleLabel(remaining, accessibleLabel));
+	const display = $derived(status === 'idle' ? '--:--' : formatCountdown(remaining));
+	const timeLabel = $derived(
+		status === 'idle' ? 'Timer inactive' : countdownAccessibleLabel(remaining, accessibleLabel)
+	);
 </script>
 
 {#if variant === 'display'}
@@ -53,7 +55,7 @@
 				/>{:else}<TimerReset size={16} />{/if}
 		</span>
 		<strong aria-label={timeLabel}>{display}</strong>
-		<small aria-live="polite">{statusLabel}</small>
+		<small aria-live="polite"><span>{statusLabel}</span></small>
 	</div>
 {:else}
 	<div class:completed={status === 'completed'} class="countdown-readout">
@@ -65,7 +67,8 @@
 <style>
 	.countdown {
 		display: inline-grid;
-		grid-template-columns: auto auto;
+		box-sizing: border-box;
+		grid-template-columns: 1rem max-content;
 		align-items: center;
 		gap: 0.1rem 0.5rem;
 		border: 1px solid #9a7e51;
@@ -79,16 +82,33 @@
 	}
 
 	.countdown strong {
+		min-width: 4.5ch;
 		font-family: var(--font-display);
 		font-size: var(--font-size-lg);
 		font-variant-numeric: tabular-nums;
 		line-height: 1;
+		white-space: nowrap;
 	}
 
 	small {
+		position: relative;
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 		text-transform: capitalize;
+		line-height: 1.5;
+		white-space: nowrap;
+	}
+
+	/* Keep the original inactive footprint; longer labels can use the padding. */
+	small::after {
+		content: 'inactive';
+		visibility: hidden;
+	}
+
+	small span {
+		position: absolute;
+		inset-inline-start: 50%;
+		transform: translateX(-50%);
 	}
 
 	.compact {
@@ -104,6 +124,8 @@
 	.countdown-readout p {
 		margin: 0;
 		color: var(--text-secondary);
+		line-height: 1.5;
+		white-space: nowrap;
 	}
 
 	.countdown-readout strong {
@@ -114,6 +136,7 @@
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.06em;
 		line-height: 1;
+		white-space: nowrap;
 	}
 
 	.countdown-readout.completed strong {
