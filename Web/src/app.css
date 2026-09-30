@@ -103,6 +103,7 @@ p {
 }
 
 .canvas-blots-layer,
+.canvas-fractal-layer,
 .canvas-noise-layer {
 	position: absolute;
 	z-index: 0;
@@ -114,6 +115,14 @@ p {
 .canvas-blots-layer {
 	background-image: var(--surface-canvas-blots);
 	opacity: var(--surface-canvas-blots-opacity);
+}
+
+.canvas-fractal-layer {
+	background-image: var(--surface-canvas-fractal);
+	background-size: 256px 256px;
+	/* Fine, seamless grain adds paper detail without tinting the parchment. */
+	mix-blend-mode: soft-light;
+	opacity: var(--surface-canvas-fractal-opacity);
 }
 
 .canvas-noise-layer {

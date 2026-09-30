@@ -35,8 +35,10 @@
 	--surface-canvas: var(--color-paper-100);
 	--surface-canvas-blots: url('/canvas-pale-blots.png');
 	--surface-canvas-blots-opacity: 0.25;
-	--surface-canvas-noise: url('/textures/noise/080-overlay.png');
-	--surface-canvas-noise-opacity: 0.05;
+	--surface-canvas-fractal: url('/textures/noise/parchment-fractal.svg');
+	--surface-canvas-fractal-opacity: 0.15;
+	--surface-canvas-noise: url('/textures/noise/037-overlay.png');
+	--surface-canvas-noise-opacity: 0.04;
 	--surface-raised: var(--color-paper-50);
 	--surface-muted: var(--color-paper-400);
 	--surface-dark: var(--color-ink-900);
@@ -127,6 +129,8 @@
 	--surface-canvas: var(--color-paper-hc-100);
 	--surface-canvas-blots: none;
 	--surface-canvas-blots-opacity: 0;
+	--surface-canvas-fractal: none;
+	--surface-canvas-fractal-opacity: 0;
 	--surface-canvas-noise: none;
 	--surface-canvas-noise-opacity: 0;
 	--surface-raised: var(--color-paper-hc-50);
