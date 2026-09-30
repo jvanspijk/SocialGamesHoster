@@ -28,8 +28,8 @@
 	--color-paper-veil: rgb(254 248 231 / 30%);
 	--color-backdrop: rgb(17 10 6 / 72%);
 	--color-shell: rgb(244 230 199 / 94%);
-	--shadow-reference-large: 0 8px 18px rgb(35 20 11 / 18%);
-	--shadow-reference-small: 0 4px 10px rgb(35 20 11 / 16%);
+	--shadow-reference-large: 0 8px 12px rgb(35 20 11 / 14%);
+	--shadow-reference-small: 0 2px 5px rgb(35 20 11 / 10%);
 
 	/* Tier 2: semantic roles shared by layouts and components. */
 	--surface-canvas: var(--color-paper-100);
