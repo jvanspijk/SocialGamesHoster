@@ -38,22 +38,24 @@
 		--panel-background: var(--surface-raised);
 		--panel-shadow: none;
 		min-width: 0;
-		border-block-start: var(--panel-border);
+		border: var(--panel-border);
 		background: var(--panel-background);
 		box-shadow: var(--panel-shadow);
-		padding-block: var(--space-4);
+		padding: var(--space-4);
 	}
 
 	.panel-header {
-		margin-block-end: var(--space-3);
+		margin-block-end: var(--space-4);
+	}
+
+	h2 {
+		color: inherit;
 	}
 
 	.focal {
 		--panel-border: var(--border-strong);
 		--panel-background: var(--surface-raised);
 		--panel-shadow: var(--shadow-small);
-		border: var(--panel-border);
-		padding: var(--space-4);
 	}
 
 	.dark {
@@ -61,8 +63,6 @@
 		--panel-background: var(--surface-dark);
 		--panel-foreground: var(--text-on-dark);
 		--header-description-color: var(--text-on-dark-muted);
-		border: var(--panel-border);
 		color: var(--panel-foreground);
-		padding: var(--space-4);
 	}
 </style>

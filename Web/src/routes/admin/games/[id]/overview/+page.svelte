@@ -677,7 +677,7 @@
 
 	.invitation {
 		display: grid;
-		grid-template-columns: 8rem 1fr;
+		grid-template-columns: 8rem minmax(0, 1fr);
 		align-items: center;
 		gap: var(--space-4);
 	}
@@ -823,7 +823,11 @@
 		}
 
 		.invitation {
-			grid-template-columns: 6rem 1fr;
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.invitation img {
+			width: min(100%, 8rem);
 		}
 	}
 </style>
