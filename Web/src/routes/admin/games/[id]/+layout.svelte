@@ -335,7 +335,7 @@
 	}
 
 	.live-content {
-		width: min(100%, 84rem);
+		width: 100%;
 		margin-inline: auto;
 		padding: clamp(var(--space-3), 3vw, var(--space-6));
 	}

@@ -86,7 +86,7 @@
 <style>
 	.game-stage {
 		display: grid;
-		width: min(100%, 48rem);
+		width: 100%;
 		min-height: calc(100dvh - 7.75rem);
 		align-content: center;
 		gap: var(--space-5);
