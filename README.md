@@ -87,6 +87,12 @@ it separately, run `./scripts/Install-GitHooks.ps1`.
 web output, produces a console-free Windows x64 executable, builds the Inno
 Setup installer, and writes SHA-256 checksums.
 
+Formatting and lint checks cache successful results by file contents. Changing
+source or check configuration reruns the affected checks; changing either npm
+manifest starts a new cache. All test suites retain their existing execution.
+Generated frontend scratch data in `Web/.tmp` is excluded from formatting and
+linting.
+
 Tests assert user-visible and API contracts rather than component internals.
 Clean-VM installation, physical-phone QR joining, and a 30-player party
 rehearsal are optional field-validation guides. They are useful before wider

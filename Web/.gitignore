@@ -12,6 +12,7 @@ node_modules
 /.test-bin
 /playwright-report
 /test-results
+/.tmp
 
 # OS
 .DS_Store
