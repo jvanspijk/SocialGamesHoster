@@ -1,21 +1,17 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 let token: string;
 let actor: Record<string, unknown>;
 let id: string;
-test.beforeAll(async ({ request }) => {
+test.beforeEach(async ({ request, page }) => {
 	const base = '/api/app/v1';
-	const status = await (await request.get(`${base}/setup/status`)).json();
-	const auth = await request.post(
-		`${base}${status.needsOwner ? '/setup/owner' : '/auth/game-master/login'}`,
-		{
-			data: {
-				username: 'partyhost',
-				password: 'correct-horse-battery',
-				displayName: 'Party Host',
-				trustedLanAcknowledged: true
-			}
+	const auth = await request.post(`${base}/setup/owner`, {
+		data: {
+			username: 'partyhost',
+			password: 'correct-horse-battery',
+			displayName: 'Party Host',
+			trustedLanAcknowledged: true
 		}
-	);
+	});
 	expect(auth.ok()).toBeTruthy();
 	const login = await request.post(`${base}/auth/game-master/login`, {
 		data: { username: 'partyhost', password: 'correct-horse-battery' }
@@ -48,8 +44,6 @@ test.beforeAll(async ({ request }) => {
 		data: { definition }
 	});
 	expect(saved.ok()).toBeTruthy();
-});
-test.beforeEach(async ({ page }) => {
 	await page.addInitScript(
 		({ token, actor }) =>
 			localStorage.setItem(

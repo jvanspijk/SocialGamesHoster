@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 function oneSecondWav() {
 	const sampleRate = 8_000;
@@ -241,20 +241,17 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 }) => {
 	test.setTimeout(90_000);
 	await page.goto('/');
-	if (await page.getByRole('heading', { name: 'Set up the app' }).isVisible()) {
-		await page.getByLabel('Username').fill('partyhost');
-		await page.getByLabel('Display name').fill('Party Host');
-		await page.getByLabel('Password').fill('correct-horse-battery');
-		await page.getByLabel('I understand and trust this local network.').check();
-		await page.getByRole('button', { name: 'Create owner' }).click();
-	} else {
-		await page.getByRole('link', { name: 'Game Master sign in' }).click();
-		await page.getByRole('textbox', { name: /^Username$/ }).fill('partyhost');
-		await page.getByRole('textbox', { name: /^Password$/ }).fill('correct-horse-battery');
-		await page.getByRole('button', { name: 'Sign in' }).click();
-	}
+	await expect(page.getByRole('heading', { name: 'Set up the app' })).toBeVisible();
+	await page.getByLabel('Username').fill('partyhost');
+	await page.getByLabel('Display name').fill('Party Host');
+	await page.getByLabel('Password').fill('correct-horse-battery');
+	await page.getByLabel('I understand and trust this local network.').check();
+	await page.getByRole('button', { name: 'Create owner' }).click();
 
-	await page.getByRole('link', { name: 'Games', exact: true }).click();
+	await page
+		.getByRole('navigation', { name: 'Management' })
+		.getByRole('link', { name: 'Games', exact: true })
+		.click();
 	await page.getByRole('button', { name: 'New game' }).first().click();
 	const gameDialog = page.getByRole('dialog', { name: 'New game' });
 	await gameDialog.getByLabel('Game name').fill('Announcement Browser Test');

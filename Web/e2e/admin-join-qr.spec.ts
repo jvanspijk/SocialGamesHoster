@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('admin header shows the player join QR code on desktop and mobile', async ({ page }) => {
 	await page.goto('/');

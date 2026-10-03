@@ -59,6 +59,8 @@ embedded in the Go host, static frontend, or Windows installer.
 For isolated local Playwright functional tests, use the disposable owner account
 `playwrightadmin` with password `secret`. Never use these credentials outside a
 disposable local test data directory.
+Each Playwright test that mutates app data must use isolated app state and must
+not depend on state left by another test.
 
 ## Engineering style
 

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('ruleset workflow supports the accessibility display and keyboard matrix', async ({
 	page
@@ -7,31 +7,18 @@ test('ruleset workflow supports the accessibility display and keyboard matrix', 
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.setViewportSize({ width: 320, height: 720 });
 	await page.goto('/');
-	await expect(
-		page
-			.getByRole('heading', { name: 'Set up the app' })
-			.or(page.getByRole('link', { name: 'Game Master sign in' }))
-	).toBeVisible();
-
-	if (await page.getByRole('heading', { name: 'Set up the app' }).isVisible()) {
-		await expect
-			.poll(() =>
-				page.getByLabel('Username').evaluate((input) => input.getBoundingClientRect().height)
-			)
-			.toBeGreaterThanOrEqual(44);
-		await page.getByLabel('Username').fill('keyboardowner');
-		await page.getByLabel('Display name').fill('Keyboard Owner');
-		await page.getByLabel(/^Password/).fill('correct-horse-battery');
-		await page.getByLabel('I understand and trust this local network.').check();
-		await page.getByRole('button', { name: 'Create owner' }).click();
-		await expect(page.getByRole('navigation', { name: 'Management' })).toBeVisible();
-	} else {
-		await page.getByRole('link', { name: 'Game Master sign in' }).click();
-		await page.getByRole('textbox', { name: /^Username$/ }).fill('partyhost');
-		await page.getByLabel(/^Password/).fill('correct-horse-battery');
-		await page.getByRole('button', { name: 'Sign in' }).click();
-		await expect(page.getByRole('heading', { name: 'Sign in' })).not.toBeVisible();
-	}
+	await expect(page.getByRole('heading', { name: 'Set up the app' })).toBeVisible();
+	await expect
+		.poll(() =>
+			page.getByLabel('Username').evaluate((input) => input.getBoundingClientRect().height)
+		)
+		.toBeGreaterThanOrEqual(44);
+	await page.getByLabel('Username').fill('keyboardowner');
+	await page.getByLabel('Display name').fill('Keyboard Owner');
+	await page.getByLabel(/^Password/).fill('correct-horse-battery');
+	await page.getByLabel('I understand and trust this local network.').check();
+	await page.getByRole('button', { name: 'Create owner' }).click();
+	await expect(page.getByRole('navigation', { name: 'Management' })).toBeVisible();
 
 	await page.goto('/admin/approvals');
 	const search = page.getByRole('searchbox', { name: 'Search profiles' });

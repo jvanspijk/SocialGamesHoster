@@ -1,4 +1,5 @@
-import { expect, test, type Page, type Locator } from '@playwright/test';
+import { type Page, type Locator } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const game = {
 	id: 'clocktest',
