@@ -14,7 +14,7 @@
 	} = $props();
 </script>
 
-<div class="display-settings stack">
+<div class="display-settings">
 	<ToggleSetting
 		title="Large text"
 		description="Increase the base text size while keeping controls visible."
@@ -30,3 +30,15 @@
 		onchange={onHighContrastChange}
 	/>
 </div>
+
+<style>
+	.display-settings {
+		display: grid;
+		gap: var(--space-3);
+	}
+
+	.display-settings > :global(:not(:first-child)) {
+		border-block-start: var(--border-subtle);
+		padding-block-start: var(--space-4);
+	}
+</style>

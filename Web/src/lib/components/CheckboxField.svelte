@@ -7,6 +7,7 @@
 		required = false,
 		disabled = false,
 		error = '',
+		variant = 'choice',
 		onchange
 	}: {
 		label: string;
@@ -16,6 +17,7 @@
 		required?: boolean;
 		disabled?: boolean;
 		error?: string;
+		variant?: 'choice' | 'setting';
 		onchange?: (checked: boolean) => void;
 	} = $props();
 
@@ -24,7 +26,7 @@
 	const descriptionId = $derived(`${inputId}-description`);
 </script>
 
-<label for={inputId}>
+<label for={inputId} class:setting={variant === 'setting'}>
 	<input
 		id={inputId}
 		{name}
@@ -98,5 +100,27 @@
 
 	small.error {
 		color: var(--status-danger);
+	}
+
+	.setting {
+		grid-template-columns: minmax(0, 1fr) var(--target-size);
+		align-items: center;
+		gap: var(--space-3);
+		border: 0;
+		padding: var(--space-2) 0;
+	}
+
+	.setting span {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.setting strong {
+		font-weight: 700;
+	}
+
+	.setting input {
+		grid-column: 2;
+		grid-row: 1;
 	}
 </style>

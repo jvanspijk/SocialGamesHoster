@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, History, LogOut, UserRound, Volume2, VolumeX, Wifi } from '@lucide/svelte';
+	import { ArrowLeft, History, LogOut, UserRound, Wifi } from '@lucide/svelte';
 	import Button from '$lib/components/Button.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
 	import Panel from '$lib/components/Panel.svelte';
+	import ToggleSetting from '$lib/components/ToggleSetting.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
@@ -38,10 +39,12 @@
 	</PageHeading>
 
 	<Panel title="Sound">
-		<button class="setting-row" type="button" onclick={() => sound.toggle()}>
-			{#if sound.enabled}<Volume2 size={22} />{:else}<VolumeX size={22} />{/if}
-			<span><strong>Game sounds</strong><small>{sound.enabled ? 'On' : 'Off'}</small></span>
-		</button>
+		<ToggleSetting
+			title="Game sounds"
+			name="game-sounds"
+			checked={sound.enabled}
+			onchange={sound.set}
+		/>
 	</Panel>
 
 	<Panel title="Display">
@@ -67,8 +70,8 @@
 <style>
 	.account-page {
 		display: grid;
-		width: min(100%, 48rem);
-		gap: var(--space-5);
+		width: min(100%, 36rem);
+		gap: var(--space-4);
 		margin-inline: auto;
 		padding: clamp(var(--space-4), 5vw, var(--space-6));
 	}
@@ -89,29 +92,6 @@
 		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
-	}
-
-	.setting-row {
-		display: grid;
-		width: 100%;
-		min-height: var(--target-size);
-		grid-template-columns: auto 1fr;
-		align-items: center;
-		gap: var(--space-3);
-		border: 0;
-		background: transparent;
-		color: var(--text-primary);
-		cursor: pointer;
-		text-align: start;
-	}
-
-	.setting-row strong,
-	.setting-row small {
-		display: block;
-	}
-
-	.setting-row small {
-		color: var(--text-secondary);
 	}
 
 	.connection-row {
