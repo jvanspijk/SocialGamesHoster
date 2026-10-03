@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { CircleStop, Pause, Play, Plus, RotateCcw } from '@lucide/svelte';
+	import CircleStop from '@lucide/svelte/icons/circle-stop';
+	import Pause from '@lucide/svelte/icons/pause';
+	import Play from '@lucide/svelte/icons/play';
+	import Plus from '@lucide/svelte/icons/plus';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Button from '$lib/components/Button.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
 	import Countdown from '$lib/components/ui/Countdown.svelte';

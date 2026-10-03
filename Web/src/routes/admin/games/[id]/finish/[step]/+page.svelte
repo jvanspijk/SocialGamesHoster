@@ -3,16 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		Award,
-		Check,
-		ChevronLeft,
-		ChevronRight,
-		Flag,
-		RotateCcw,
-		Trophy,
-		Users
-	} from '@lucide/svelte';
+	import Award from '@lucide/svelte/icons/award';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Flag from '@lucide/svelte/icons/flag';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import Users from '@lucide/svelte/icons/users';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import GameSummaryCard from '$lib/features/games/components/GameSummaryCard.svelte';

@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ArrowLeft, UserRound } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import LoadingState from '$lib/components/LoadingState.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import Panel from '$lib/components/Panel.svelte';

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Eye, EyeOff, ShieldCheck } from '@lucide/svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { api, jsonBody } from '$lib/api/client';

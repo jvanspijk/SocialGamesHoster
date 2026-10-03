@@ -2,16 +2,14 @@
 	import { onMount, setContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		Gamepad2,
-		House,
-		MessageCircle,
-		Shield,
-		UserCircle,
-		Users,
-		Volume2,
-		VolumeX
-	} from '@lucide/svelte';
+	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
+	import House from '@lucide/svelte/icons/house';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import Shield from '@lucide/svelte/icons/shield';
+	import UserCircle from '@lucide/svelte/icons/user-circle';
+	import Users from '@lucide/svelte/icons/users';
+	import Volume2 from '@lucide/svelte/icons/volume-2';
+	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import {

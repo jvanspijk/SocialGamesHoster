@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, Settings, UserRound } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Settings from '@lucide/svelte/icons/settings';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import Button from '$lib/components/Button.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import Panel from '$lib/components/Panel.svelte';

@@ -2,7 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Crown, Hourglass, QrCode, ScrollText, UsersRound } from '@lucide/svelte';
+	import Crown from '@lucide/svelte/icons/crown';
+	import Hourglass from '@lucide/svelte/icons/hourglass';
+	import QrCode from '@lucide/svelte/icons/qr-code';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import Button from '$lib/components/Button.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';

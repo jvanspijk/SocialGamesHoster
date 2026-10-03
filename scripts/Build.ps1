@@ -78,26 +78,23 @@ Copy-Item -Path (Join-Path $webRoot "build\*") -Destination $embeddedRoot -Recur
 
 Push-Location $projectRoot
 try {
-    $previousGoCache = $env:GOCACHE
-    $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
     $previousGoOs = $env:GOOS
     $previousGoArch = $env:GOARCH
     $previousCgo = $env:CGO_ENABLED
     try {
-        if (-not $SkipTests) {
-            go test ./Host/...
-            Assert-NativeSuccess "Go tests"
-        }
         $env:GOOS = "windows"
         $env:GOARCH = "amd64"
         $env:CGO_ENABLED = "0"
+        if (-not $SkipTests) {
+            go test -trimpath ./Host/...
+            Assert-NativeSuccess "Go tests"
+        }
         go build -trimpath -ldflags "-s -w -H=windowsgui -X main.version=$Version" `
             -o (Join-Path $distRoot "SocialGamesHoster.exe") `
             ./Host/cmd/socialgameshoster
         Assert-NativeSuccess "Windows host build"
     }
     finally {
-        $env:GOCACHE = $previousGoCache
         $env:GOOS = $previousGoOs
         $env:GOARCH = $previousGoArch
         $env:CGO_ENABLED = $previousCgo

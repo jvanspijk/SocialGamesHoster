@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import {
-		Award,
-		Check,
-		MessageCircle,
-		ShieldAlert,
-		UserMinus,
-		UserRoundCheck
-	} from '@lucide/svelte';
+	import Award from '@lucide/svelte/icons/award';
+	import Check from '@lucide/svelte/icons/check';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import UserMinus from '@lucide/svelte/icons/user-minus';
+	import UserRoundCheck from '@lucide/svelte/icons/user-round-check';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';

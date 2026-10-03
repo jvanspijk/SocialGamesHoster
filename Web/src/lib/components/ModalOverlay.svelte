@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { X } from '@lucide/svelte';
+	import X from '@lucide/svelte/icons/x';
 	import { onDestroy, type Snippet } from 'svelte';
 	import ContentHeader from './ContentHeader.svelte';
 	import IconButton from './IconButton.svelte';

@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import {
-		CirclePause,
-		CirclePlay,
-		Flag,
-		Forward,
-		Megaphone,
-		Users,
-		XCircle
-	} from '@lucide/svelte';
+	import CirclePause from '@lucide/svelte/icons/circle-pause';
+	import CirclePlay from '@lucide/svelte/icons/circle-play';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Forward from '@lucide/svelte/icons/forward';
+	import Megaphone from '@lucide/svelte/icons/megaphone';
+	import Users from '@lucide/svelte/icons/users';
+	import XCircle from '@lucide/svelte/icons/x-circle';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';

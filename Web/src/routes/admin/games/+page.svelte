@@ -2,7 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { DoorOpen, Flag, Plus, Trash2, XCircle } from '@lucide/svelte';
+	import DoorOpen from '@lucide/svelte/icons/door-open';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import XCircle from '@lucide/svelte/icons/x-circle';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';

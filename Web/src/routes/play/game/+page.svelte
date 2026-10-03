@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Clock3, Shield, Users } from '@lucide/svelte';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import Shield from '@lucide/svelte/icons/shield';
+	import Users from '@lucide/svelte/icons/users';
 	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import TimerDisplay from '$lib/features/games/components/TimerDisplay.svelte';

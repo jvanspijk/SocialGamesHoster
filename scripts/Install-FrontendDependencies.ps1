@@ -14,7 +14,6 @@ function Install-FrontendDependencies {
     $packageLockPath = Join-Path $WebRoot "package-lock.json"
     $nodeModulesPath = Join-Path $WebRoot "node_modules"
     $stampPath = Join-Path $nodeModulesPath ".sgh-package-fingerprint"
-    $npmCachePath = Join-Path $WebRoot ".tmp\npm-cache"
 
     if (-not (Test-Path -LiteralPath $packageJsonPath -PathType Leaf)) {
         throw "Frontend package manifest was not found: $packageJsonPath"
@@ -36,7 +35,7 @@ function Install-FrontendDependencies {
 
     Push-Location $WebRoot
     try {
-        npm ci --no-audit --no-fund --cache $npmCachePath
+        npm ci --prefer-offline --no-audit --no-fund
         if ($LASTEXITCODE -ne 0) {
             throw "Frontend dependency installation failed with exit code $LASTEXITCODE."
         }

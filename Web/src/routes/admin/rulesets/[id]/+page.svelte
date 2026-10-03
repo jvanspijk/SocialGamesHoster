@@ -3,17 +3,15 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		ArrowLeft,
-		Eye,
-		ListChecks,
-		Menu,
-		Save,
-		Trash2,
-		Check,
-		Circle,
-		CircleAlert
-	} from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Eye from '@lucide/svelte/icons/eye';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import Menu from '@lucide/svelte/icons/menu';
+	import Save from '@lucide/svelte/icons/save';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Check from '@lucide/svelte/icons/check';
+	import Circle from '@lucide/svelte/icons/circle';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Panel from '$lib/components/Panel.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';

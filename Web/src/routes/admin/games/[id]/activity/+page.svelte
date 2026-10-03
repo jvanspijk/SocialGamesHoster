@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { Activity, CheckCheck, Megaphone } from '@lucide/svelte';
+	import Activity from '@lucide/svelte/icons/activity';
+	import CheckCheck from '@lucide/svelte/icons/check-check';
+	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import Button from '$lib/components/Button.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api, pb } from '$lib/api/client';

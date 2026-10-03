@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Pause, Play, TimerReset } from '@lucide/svelte';
+	import Pause from '@lucide/svelte/icons/pause';
+	import Play from '@lucide/svelte/icons/play';
+	import TimerReset from '@lucide/svelte/icons/timer-reset';
 	import {
 		countdownAccessibleLabel,
 		formatCountdown,

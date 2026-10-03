@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Shield } from '@lucide/svelte';
+	import Shield from '@lucide/svelte/icons/shield';
 
 	let { message }: { message: string } = $props();
 </script>

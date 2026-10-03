@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, History, LogOut, UserRound, Wifi } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import History from '@lucide/svelte/icons/history';
+	import LogOut from '@lucide/svelte/icons/log-out';
+	import UserRound from '@lucide/svelte/icons/user-round';
+	import Wifi from '@lucide/svelte/icons/wifi';
 	import Button from '$lib/components/Button.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
 	import Panel from '$lib/components/Panel.svelte';

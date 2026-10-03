@@ -2,16 +2,14 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		Activity,
-		ArrowLeft,
-		MessageCircle,
-		ShieldCheck,
-		Users,
-		Volume2,
-		VolumeX,
-		Gauge
-	} from '@lucide/svelte';
+	import Activity from '@lucide/svelte/icons/activity';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Users from '@lucide/svelte/icons/users';
+	import Volume2 from '@lucide/svelte/icons/volume-2';
+	import VolumeX from '@lucide/svelte/icons/volume-x';
+	import Gauge from '@lucide/svelte/icons/gauge';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';

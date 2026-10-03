@@ -3,7 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Gamepad2, House, LogOut, ScrollText, Settings, UsersRound } from '@lucide/svelte';
+	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
+	import House from '@lucide/svelte/icons/house';
+	import LogOut from '@lucide/svelte/icons/log-out';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
+	import Settings from '@lucide/svelte/icons/settings';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';

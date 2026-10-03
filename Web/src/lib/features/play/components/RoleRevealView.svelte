@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ArrowLeft, Shield } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Shield from '@lucide/svelte/icons/shield';
 	import Button from '$lib/components/Button.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';

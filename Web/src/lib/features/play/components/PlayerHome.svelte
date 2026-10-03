@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { DoorOpen, Gamepad2, History, Settings } from '@lucide/svelte';
+	import DoorOpen from '@lucide/svelte/icons/door-open';
+	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
+	import History from '@lucide/svelte/icons/history';
+	import Settings from '@lucide/svelte/icons/settings';
 	import Button from '$lib/components/Button.svelte';
 	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';

@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, History, Save, Settings, UserRound } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import History from '@lucide/svelte/icons/history';
+	import Save from '@lucide/svelte/icons/save';
+	import Settings from '@lucide/svelte/icons/settings';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import Button from '$lib/components/Button.svelte';
 	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Field from '$lib/components/Field.svelte';

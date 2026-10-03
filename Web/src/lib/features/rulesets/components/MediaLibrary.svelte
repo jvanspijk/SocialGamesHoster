@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Image as ImageIcon, Music2, Plus } from '@lucide/svelte';
+	import ImageIcon from '@lucide/svelte/icons/image';
+	import Music2 from '@lucide/svelte/icons/music-2';
+	import Plus from '@lucide/svelte/icons/plus';
 	import type { RulesetDefinition } from '$lib/api/types';
 	import Button from '$lib/components/Button.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';

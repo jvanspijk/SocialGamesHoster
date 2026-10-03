@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Award } from '@lucide/svelte';
+	import Award from '@lucide/svelte/icons/award';
 	import Panel from '$lib/components/Panel.svelte';
 	import RecordItem from '$lib/components/RecordItem.svelte';
 	import RecordList from '$lib/components/RecordList.svelte';

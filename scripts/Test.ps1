@@ -36,15 +36,15 @@ function Invoke-Check([string]$Step, [scriptblock]$Action, [string]$Remediation 
 
 Push-Location $projectRoot
 try {
-    $previousGoCache = $env:GOCACHE
-    $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
+    $previousCgo = $env:CGO_ENABLED
+    $env:CGO_ENABLED = "0"
     try {
-        Invoke-Check "Go tests" { go test ./Host/... }
-        Invoke-Check "Go vet" { go vet ./Host/... }
+        Invoke-Check "Go tests" { go test -trimpath ./Host/... }
+        Invoke-Check "Go vet" { go vet -trimpath ./Host/... }
         Invoke-Check "Architecture checks" { & (Join-Path $PSScriptRoot "Architecture.ps1") }
     }
     finally {
-        $env:GOCACHE = $previousGoCache
+        $env:CGO_ENABLED = $previousCgo
     }
 }
 finally {

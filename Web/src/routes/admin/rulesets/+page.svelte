@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { Plus, ScrollText } from '@lucide/svelte';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import RulesetOverviewCard from '$lib/features/rulesets/components/RulesetOverviewCard.svelte';
 	import { api } from '$lib/api/client';

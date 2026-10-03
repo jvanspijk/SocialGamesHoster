@@ -21,11 +21,15 @@ const goEnvironment = {
 
 export default function buildHost() {
 	mkdirSync(binaryDir, { recursive: true });
-	const build = spawnSync(go, ['build', '-o', hostBinary, './Host/cmd/socialgameshoster'], {
-		cwd: projectRoot,
-		stdio: 'inherit',
-		env: goEnvironment
-	});
+	const build = spawnSync(
+		go,
+		['build', '-trimpath', '-o', hostBinary, './Host/cmd/socialgameshoster'],
+		{
+			cwd: projectRoot,
+			stdio: 'inherit',
+			env: goEnvironment
+		}
+	);
 	if (build.error) throw build.error;
 	if (build.status !== 0) throw new Error(`E2E host build failed with exit code ${build.status}`);
 }

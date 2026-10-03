@@ -40,13 +40,13 @@ rules:
       - '^$modulePath/Host/cmd(/.*)?$'
 "@ | Set-Content -LiteralPath $configPath
 
-    $previousGocache = $env:GOCACHE
+    $previousCgo = $env:CGO_ENABLED
     try {
         Write-Host "Checking package boundaries with go-depcheck..."
-        $env:GOCACHE = Join-Path $projectRoot ".tmp\go-build-cache"
+        $env:CGO_ENABLED = "0"
         $depcheckTool = Join-Path (go env GOPATH) "bin\depcheck.exe"
         if (-not (Test-Path -LiteralPath $depcheckTool)) {
-            go install "github.com/v-standard/go-depcheck/cmd/depcheck@$goDepcheckVersion"
+            go install -trimpath "github.com/v-standard/go-depcheck/cmd/depcheck@$goDepcheckVersion"
             Assert-NativeSuccess "go-depcheck installation"
             if (-not (Test-Path -LiteralPath $depcheckTool)) {
                 throw "go-depcheck was installed but its executable was not found at $depcheckTool."
@@ -54,7 +54,7 @@ rules:
         }
         Push-Location $hostRoot
         try {
-            go vet ("-vettool={0}" -f $depcheckTool) ./...
+            go vet -trimpath ("-vettool={0}" -f $depcheckTool) ./...
         }
         finally {
             Pop-Location
@@ -62,7 +62,7 @@ rules:
         Assert-NativeSuccess "go-depcheck"
     }
     finally {
-        $env:GOCACHE = $previousGocache
+        $env:CGO_ENABLED = $previousCgo
         Remove-Item -LiteralPath $configPath -Force -ErrorAction SilentlyContinue
     }
 }

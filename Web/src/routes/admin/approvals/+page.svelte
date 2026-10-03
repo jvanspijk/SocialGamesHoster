@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { UserX, UserCheck } from '@lucide/svelte';
+	import UserX from '@lucide/svelte/icons/user-x';
+	import UserCheck from '@lucide/svelte/icons/user-check';
 	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import ManagementTable from '$lib/components/ManagementTable.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';

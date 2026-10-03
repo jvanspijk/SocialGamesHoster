@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { CheckCircle2, TriangleAlert } from '@lucide/svelte';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { RulesetSummary } from '$lib/api/types';
 
 	let { ruleset }: { ruleset: RulesetSummary } = $props();

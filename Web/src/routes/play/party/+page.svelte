@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { UserRound } from '@lucide/svelte';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import ProtectedMedia from '$lib/features/media/components/ProtectedMedia.svelte';
 	import { api } from '$lib/api/client';

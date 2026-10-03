@@ -8,7 +8,8 @@
 	import Panel from '$lib/components/Panel.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import SelectField from '$lib/components/SelectField.svelte';
-	import { ArrowLeft, Plus } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Plus from '@lucide/svelte/icons/plus';
 	import { api, jsonBody } from '$lib/api/client';
 	import { fieldError, toFormError, type FormError } from '$lib/forms/errors';
 	import type { RulesetSummary } from '$lib/api/types';

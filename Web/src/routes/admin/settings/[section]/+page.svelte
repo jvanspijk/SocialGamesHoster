@@ -2,16 +2,14 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import {
-		DatabaseBackup,
-		MonitorCog,
-		Network,
-		Plus,
-		QrCode,
-		RefreshCw,
-		Shield,
-		UserCog
-	} from '@lucide/svelte';
+	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
+	import MonitorCog from '@lucide/svelte/icons/monitor-cog';
+	import Network from '@lucide/svelte/icons/network';
+	import Plus from '@lucide/svelte/icons/plus';
+	import QrCode from '@lucide/svelte/icons/qr-code';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Shield from '@lucide/svelte/icons/shield';
+	import UserCog from '@lucide/svelte/icons/user-cog';
 	import Button from '$lib/components/Button.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';

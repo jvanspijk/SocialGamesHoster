@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { MessageCircle } from '@lucide/svelte';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import Composer from '$lib/components/Composer.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import MessageList, { type MessageListItem } from '$lib/components/MessageList.svelte';

@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Check, Clock3, UserCheck, X } from '@lucide/svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import UserCheck from '@lucide/svelte/icons/user-check';
+	import X from '@lucide/svelte/icons/x';
 	import type { ProfileRequest } from '$lib/api/types';
 	import Alert from '$lib/components/Alert.svelte';
 	import Button from '$lib/components/Button.svelte';

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { ArrowLeft, Eye, EyeOff } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import type { Snippet } from 'svelte';
 	import Button from '$lib/components/Button.svelte';
 	import ActionDock from './ActionDock.svelte';

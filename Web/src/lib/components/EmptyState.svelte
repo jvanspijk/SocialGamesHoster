@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Inbox } from '@lucide/svelte';
+	import Inbox from '@lucide/svelte/icons/inbox';
 	import type { Snippet } from 'svelte';
 	import Button from './Button.svelte';
 

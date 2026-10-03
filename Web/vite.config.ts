@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	build: {
+		reportCompressedSize: false
+	},
 	server: {
 		host: '0.0.0.0',
 		port: 9091,

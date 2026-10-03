@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { fetchBlob } from '$lib/api/client';
-	import { Gamepad2, ScrollText, Settings, UsersRound } from '@lucide/svelte';
+	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
+	import Settings from '@lucide/svelte/icons/settings';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import Button from '$lib/components/Button.svelte';
 	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';

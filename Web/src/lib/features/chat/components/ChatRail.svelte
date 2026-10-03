@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Hash, MessageCircle, Plus, Users } from '@lucide/svelte';
+	import Hash from '@lucide/svelte/icons/hash';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Users from '@lucide/svelte/icons/users';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
 	import ItemRail from '$lib/components/ItemRail.svelte';

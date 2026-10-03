@@ -4,7 +4,8 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
 const webRoot = resolve(import.meta.dirname, '..');
-// Tool caches account for source contents and check configuration. Include the
+// File caches do not track imported types; cached ESLint is a development shortcut.
+// Include the
 // manifests too so upgrading a parser or plugin cannot reuse its old results.
 const fingerprint = createHash('sha256')
 	.update(readFileSync(resolve(webRoot, 'package.json')))

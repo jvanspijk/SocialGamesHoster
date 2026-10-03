@@ -87,13 +87,21 @@ it separately, run `./scripts/Install-GitHooks.ps1`.
 web output, produces a console-free Windows x64 executable, builds the Inno
 Setup installer, and writes SHA-256 checksums.
 
-Formatting and lint checks cache successful results by file contents. Changing
-source or check configuration reruns the affected checks; changing either npm
-manifest starts a new cache. All test suites retain their existing execution.
+Formatting checks cache successful results by file contents and check configuration;
+changing either npm manifest starts a new cache. Release builds and full test gates
+run uncached ESLint, as does `npm run check`. The optional development command
+`npm run lint:eslint:cached` uses a file cache that can miss changes in imported
+types; run `npm run lint:eslint` for an authoritative lint check.
 Generated frontend scratch data in `Web/.tmp` is excluded from formatting and
 linting.
 
 Tests assert user-visible and API contracts rather than component internals.
+Frontend unit tests have separate `node` and `dom` Vitest projects. Browser-free
+suites listed in `Web/vitest.config.ts` run without DOM setup; other suites use
+jsdom with the existing browser matchers and storage/dialog setup. From `Web/`,
+run `npm run test:unit -- --project=node` or `--project=dom` to select one project;
+`npm run test:unit` runs both.
+
 Clean-VM installation, physical-phone QR joining, and a 30-player party
 rehearsal are optional field-validation guides. They are useful before wider
 distribution but do not block a friends-only release.

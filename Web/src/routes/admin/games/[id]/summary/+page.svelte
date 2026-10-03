@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ArrowLeft, MessageCircle } from '@lucide/svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import GameSummaryCard from '$lib/features/games/components/GameSummaryCard.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import { api } from '$lib/api/client';

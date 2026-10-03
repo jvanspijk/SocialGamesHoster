@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from '@lucide/svelte';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import Copy from '@lucide/svelte/icons/copy';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Button from '$lib/components/Button.svelte';
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';

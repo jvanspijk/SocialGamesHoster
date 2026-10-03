@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { QrCode } from '@lucide/svelte';
+	import QrCode from '@lucide/svelte/icons/qr-code';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
 
