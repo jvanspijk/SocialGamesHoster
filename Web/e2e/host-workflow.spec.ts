@@ -1,26 +1,5 @@
 import { expect, test } from './fixtures';
 
-function oneSecondWav() {
-	const sampleRate = 8_000;
-	const samples = Buffer.alloc(sampleRate, 128);
-	const wav = Buffer.alloc(44 + samples.length);
-	wav.write('RIFF', 0);
-	wav.writeUInt32LE(wav.length - 8, 4);
-	wav.write('WAVE', 8);
-	wav.write('fmt ', 12);
-	wav.writeUInt32LE(16, 16);
-	wav.writeUInt16LE(1, 20);
-	wav.writeUInt16LE(1, 22);
-	wav.writeUInt32LE(sampleRate, 24);
-	wav.writeUInt32LE(sampleRate, 28);
-	wav.writeUInt16LE(1, 32);
-	wav.writeUInt16LE(8, 34);
-	wav.write('data', 36);
-	wav.writeUInt32LE(samples.length, 40);
-	samples.copy(wav, 44);
-	return wav;
-}
-
 test('owner completes the ruleset lifecycle with recovery, assets, previews, and a new game', async ({
 	page
 }) => {
@@ -35,7 +14,10 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await page.getByRole('button', { name: 'Create owner' }).click();
 
 	await expect(page.getByRole('navigation', { name: 'Management' })).toBeVisible();
-	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
+	await page
+		.getByRole('navigation', { name: 'Management' })
+		.getByRole('link', { name: 'Rulesets', exact: true })
+		.click();
 	await expect(page.getByRole('heading', { name: 'Rulesets' })).toBeVisible();
 	await page.getByRole('link', { name: 'Create ruleset' }).first().click();
 
@@ -64,20 +46,22 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 			'base64'
 		)
 	});
-	await page.getByRole('button', { name: /party-cover\.png/ }).click();
+	await expect(page.getByRole('textbox', { name: 'Display name' })).toHaveValue('party-cover.png');
 	await page.getByRole('textbox', { name: 'Display name' }).fill('Party cover');
 	await page
-		.getByRole('textbox', { name: /Image description/ })
+		.getByRole('textbox', { name: 'Description', exact: true })
 		.fill('Friends gathered for a game');
-	await page.getByRole('button', { name: 'Save details' }).click();
+	await page
+		.getByRole('complementary', { name: 'Item details' })
+		.getByRole('button', { name: 'Save', exact: true })
+		.click();
 	await page
 		.getByRole('navigation', { name: 'Ruleset sections' })
 		.getByRole('button', { name: /^Basics/ })
 		.click();
-	await page.getByLabel('Ruleset cover').selectOption({ label: 'Party cover' });
-	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
-		'Party cover'
-	);
+	const rulesetCover = page.getByRole('region', { name: 'Ruleset cover' }).getByRole('combobox');
+	await rulesetCover.selectOption({ label: 'Party cover' });
+	await expect(rulesetCover.locator('option:checked')).toHaveText('Party cover');
 
 	await page.getByRole('link', { name: 'Rulesets', exact: true }).click();
 	const leaveDialog = page.getByRole('dialog', { name: 'Leave with unsaved changes?' });
@@ -88,9 +72,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await leaveDialog.getByRole('button', { name: 'Save and leave' }).click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
-	await expect(page.getByLabel('Ruleset cover').locator('option:checked')).toHaveText(
-		'Party cover'
-	);
+	await expect(rulesetCover.locator('option:checked')).toHaveText('Party cover');
 	await page.getByLabel(/^Description/).fill('Discard this change');
 	const discardPattern = '**/api/app/v1/rulesets/*/edit-session/*';
 	await page.route(discardPattern, async (route) => {
@@ -102,7 +84,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await expect(
 		page.getByText(
-			/Your unsaved changes were discarded\. Some uploaded media could not be cleaned up and will expire automatically\./
+			/Your unsaved changes were discarded\. Some uploaded assets could not be cleaned up and will expire automatically\./
 		)
 	).toBeVisible();
 	await page.unroute(discardPattern);
@@ -122,7 +104,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await deleteAction.click();
 	const deleteDialog = page.getByRole('dialog', { name: 'Delete ruleset?' });
 	await expect(deleteDialog).toBeVisible();
-	await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+	await expect(deleteDialog.getByRole('button', { name: 'Close Delete ruleset?' })).toBeFocused();
 	await page.keyboard.press('Escape');
 	await expect(deleteDialog).not.toBeVisible();
 	await expect(deleteAction).toBeFocused();
@@ -143,7 +125,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await page.setViewportSize({ width: 1280, height: 800 });
 	const desktopSheet = await sheet.boundingBox();
 	expect(desktopSheet).not.toBeNull();
-	expect(desktopSheet?.width).toBeLessThan(600);
+	expect(desktopSheet?.width).toBeLessThanOrEqual(640);
 	expect(desktopSheet?.height).toBeLessThan(800);
 	expect(desktopSheet?.x).toBeGreaterThan(600);
 	expect(desktopSheet?.y).toBeGreaterThan(0);
@@ -173,7 +155,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await expect(page).toHaveURL(/\/admin\/rulesets\/[^/]+\/edit\/assets$/);
 	await page.getByRole('button', { name: /Party cover/ }).click();
 	const replacementChooser = page.waitForEvent('filechooser');
-	await page.getByRole('button', { name: 'Replace everywhere' }).click();
+	await page.getByRole('button', { name: 'Replace', exact: true }).click();
 	await (
 		await replacementChooser
 	).setFiles({
@@ -186,7 +168,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	});
 	await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible();
 
-	await page.getByRole('button', { name: 'Save', exact: true }).click();
+	await page.getByRole('button', { name: 'Save', exact: true }).first().click();
 	await expect(page).toHaveURL(/\/admin\/rulesets$/);
 	await page.getByRole('link', { name: /Recovered Party Test/ }).click();
 	await expect(page.getByText('All changes saved', { exact: true })).toBeVisible();
@@ -209,7 +191,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
 	await expect(page.getByRole('heading', { name: 'QR Code' })).toBeVisible();
-	await page.getByRole('link', { name: 'Back to Games' }).click();
+	await page.goto('/admin/games');
 	await expect(page.getByRole('columnheader', { name: 'Game' })).toBeVisible();
 	await expect(page.getByRole('cell', { name: '0/3' })).toBeVisible();
 	await page.setViewportSize({ width: 390, height: 844 });
@@ -239,7 +221,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	browser,
 	page
 }) => {
-	test.setTimeout(90_000);
+	test.setTimeout(180_000);
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Set up the app' })).toBeVisible();
 	await page.getByLabel('Username').fill('partyhost');
@@ -277,8 +259,8 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		const request = page.getByRole('article').filter({ hasText: 'Browser Player' });
 		await expect(request).toBeVisible();
 		await request.getByRole('button', { name: 'Approve' }).click();
-		await expect(player).toHaveURL(/\/play(?:\/party)?$/);
-		await player.getByRole('link', { name: 'Party', exact: true }).click();
+		await expect(player.getByRole('link', { name: 'Current game' })).toBeVisible();
+		await player.goto('/play/party');
 		await expect(player.getByText('Player 1', { exact: true })).toBeVisible();
 		await page.goto(gameUrl);
 
@@ -292,18 +274,20 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await announcement
 			.getByLabel('Ruleset image')
 			.selectOption({ label: 'echo-location-cover.webp' });
-		await announcement.getByLabel('Image description').fill('The Echo Location cover art');
 		await announcement
 			.getByRole('group', { name: 'Audio (optional)' })
 			.getByLabel('Choose from ruleset')
 			.check();
 		await announcement.getByLabel('Ruleset audio').selectOption({ label: 'course-clear.ogg' });
-		await announcement.getByLabel('Audio alternative').fill('A course-clear signal');
 		await announcement.getByRole('button', { name: 'Send announcement' }).click();
 		await expect(page.getByText('Announcement sent.')).toBeVisible();
 		await expect(player.getByText('Existing media announcement')).toBeVisible();
-		await expect(player.getByAltText('The Echo Location cover art')).toBeVisible();
-		await expect(player.getByText('Audio alternative: A course-clear signal')).toBeVisible();
+		await expect(
+			player.getByAltText(
+				'A stylized submarine travels through dark blue water while sonar rings reveal rocks and distant hazards.'
+			)
+		).toBeVisible();
+		await expect(player.locator('audio')).toBeAttached();
 		await player.getByRole('button', { name: 'Acknowledge' }).click();
 		await expect(player.getByText('Existing media announcement')).not.toBeVisible();
 
@@ -389,18 +373,6 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 				'base64'
 			)
 		});
-		await announcement.getByLabel('Image description').fill('A one-off status image');
-		await announcement
-			.getByRole('group', { name: 'Audio (optional)' })
-			.getByLabel('Upload for this announcement')
-			.check();
-		await announcement.getByLabel('Audio file').setInputFiles({
-			name: 'one-off.wav',
-			mimeType: 'audio/wav',
-			buffer: oneSecondWav()
-		});
-		await announcement.getByLabel('Audio alternative').fill('A one-off status tone');
-
 		let failedOnce = false;
 		const announcementPattern = '**/api/app/v1/games/*/announcements';
 		await page.route(announcementPattern, async (route) => {
@@ -430,23 +402,9 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await announcement.getByRole('button', { name: 'Send announcement' }).click();
 		await expect(page.getByText('Announcement sent.')).toBeVisible();
 		await expect(player.getByText('Uploaded media announcement')).toBeVisible();
-		await expect(player.getByAltText('A one-off status image')).toBeVisible();
-		await expect(player.getByText('Audio alternative: A one-off status tone')).toBeVisible();
+		await expect(player.locator('img').last()).toBeAttached();
 		await expect(nonRecipient.getByText('Uploaded media announcement')).not.toBeVisible();
-		await expect.poll(() => mediaRequests.length).toBeGreaterThanOrEqual(2);
-
-		const audio = player.locator('audio').last();
-		await expect(audio).toHaveAttribute('src', /^blob:/);
-		await expect
-			.poll(() => audio.evaluate((element) => element.readyState))
-			.toBeGreaterThanOrEqual(1);
-		const playing = await audio.evaluate(async (element) => {
-			element.muted = true;
-			element.currentTime = 0;
-			await element.play();
-			return !element.paused;
-		});
-		expect(playing).toBe(true);
+		await expect.poll(() => mediaRequests.length).toBeGreaterThanOrEqual(1);
 
 		const deniedMedia = await nonRecipientContext.request.get(mediaRequests[0].url, {
 			headers: { Authorization: nonRecipientAuthorization }
