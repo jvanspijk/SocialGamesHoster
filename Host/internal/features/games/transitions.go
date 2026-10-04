@@ -56,6 +56,7 @@ func transition(command Transition) func(*core.RequestEvent) error {
 		if err != nil {
 			return httpx.WriteError(event, result.Conflict("game.transition_not_allowed", err.Error()))
 		}
+		var static *playerStaticData
 		if err := event.App.RunInTransaction(func(tx core.App) error {
 			game, err = tx.FindRecordById("games", game.Id)
 			if err != nil {
@@ -109,6 +110,10 @@ func transition(command Transition) func(*core.RequestEvent) error {
 				if err := chatfeature.PrepareRoleRooms(tx, game.Id, definition, participants); err != nil {
 					return err
 				}
+				static, err = loadPlayerStaticData(tx, game)
+				if err != nil {
+					return err
+				}
 			}
 			// A lifecycle command has one externally-visible game revision, even
 			// when it also finalizes ability choices or changes timer state.
@@ -119,6 +124,9 @@ func transition(command Transition) func(*core.RequestEvent) error {
 			return applicationaudit.Record(tx, event.Auth, game.Id, action, "game", game.Id, nil, event.Get(httpx.TraceIDKey))
 		}); err != nil {
 			return httpx.WriteErrorFrom(event, err)
+		}
+		if static != nil {
+			rememberPlayerStaticData(event.App, static)
 		}
 		action := "game." + string(command)
 		publishGame(event.App, game, action, projectGame(game))

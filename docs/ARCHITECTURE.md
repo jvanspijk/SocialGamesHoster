@@ -117,6 +117,13 @@ a game requires every active player to have a role from that ruleset. A partial 
 enforces one live game (`lobby`, `running`, or `paused`) even under concurrent
 requests. Archived game snapshots, sender labels, role/outcome history, and
 achievement titles remain stable when a later ruleset version changes.
+Player snapshots reuse one decoded ruleset and prepared asset-metadata set for
+the started game. Start prepares it transactionally and retains it only after
+commit; a resumed active game rebuilds it on first access. Another game replaces
+the retained set. Pre-start lobby views load directly. Only frozen data is
+retained: current roles, visibility, memberships and other player state are
+loaded and authorized for each request.
+
 Achievement point values and spoiler visibility are also snapshotted at award
 time. A hidden award is omitted from player events and profile totals until its
 game reaches Review or Archive.

@@ -464,10 +464,11 @@ func playerView(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.AppError{Code: "game.not_joined", Message: "Join the live game to view it.", Status: http.StatusForbidden})
 	}
-	definition, err := snapshot(game)
+	static, err := playerStaticForGame(event.App, game)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
+	definition := static.definition
 	roleAvailable := game.GetBool("roles_visible") && participant.GetString("role_key") != ""
 	var role any
 	knowledge := []map[string]any{}
@@ -505,27 +506,7 @@ func playerView(event *core.RequestEvent) error {
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
-	assetRecords, _ := event.App.FindRecordsByFilter(
-		"ruleset_assets", "ruleset_version = {:version} && storage_state = 'ready'", "asset_key", 100, 0,
-		dbx.Params{"version": game.GetString("ruleset_version")},
-	)
-	privateKeys := map[string]bool{}
-	if !roleAvailable {
-		for _, key := range privateRoleAssetKeys(definition) {
-			privateKeys[key] = true
-		}
-	}
-	assets := make([]map[string]any, 0, len(assetRecords))
-	for _, asset := range assetRecords {
-		if privateKeys[asset.GetString("asset_key")] {
-			continue
-		}
-		assets = append(assets, map[string]any{
-			"id": asset.Id, "assetKey": asset.GetString("asset_key"), "kind": asset.GetString("kind"),
-			"displayName": asset.GetString("display_name"), "accessibilityText": asset.GetString("accessibility_text"),
-			"checksum": asset.GetString("checksum"), "preview": "/api/app/v1/ruleset-assets/" + asset.Id,
-		})
-	}
+	assets := static.assetsForPlayer(roleAvailable)
 	return event.JSON(http.StatusOK, map[string]any{
 		"game": projectPlayerGame(game),
 		"participant": map[string]any{
