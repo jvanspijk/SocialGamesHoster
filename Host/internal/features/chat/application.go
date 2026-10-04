@@ -8,6 +8,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/realtime"
@@ -47,8 +48,8 @@ func AddParticipant(app core.App, gameID string, participant *core.Record) error
 	return nil
 }
 
-// PrepareRoleRooms materializes team and custom-channel membership from the
-// frozen ruleset snapshot. It never starts a transaction.
+// PrepareRoleRooms materializes initial team and custom-channel memberships.
+// Live access follows current assignments within the frozen ruleset snapshot. It never starts a transaction.
 func PrepareRoleRooms(app core.App, gameID string, definition rulesets.DefinitionV1, participants []*core.Record) error {
 	roleTeam := map[string]string{}
 	roles := map[string]rulesets.Role{}
@@ -116,19 +117,69 @@ func CloseParticipantMemberships(app core.App, participantID string, leftAt time
 // FreezeHistoricalAccess closes current memberships while retaining their
 // archived-history read grant. It never starts a transaction.
 func FreezeHistoricalAccess(app core.App, gameID string, leftAt time.Time) error {
-	memberships, err := app.FindRecordsByFilter(
-		"chat_memberships",
-		"room.game = {:game}",
-		"",
-		1000,
-		0,
-		dbx.Params{"game": gameID},
-	)
+	game, err := app.FindRecordById("games", gameID)
 	if err != nil {
 		return err
 	}
+	definition, err := definitionFromGame(game)
+	if err != nil {
+		return err
+	}
+	participants, err := app.FindRecordsByFilter("participants", "game = {:game}", "", 0, 0, dbx.Params{"game": gameID})
+	if err != nil {
+		return err
+	}
+	rooms, err := app.FindRecordsByFilter("chat_rooms", "game = {:game}", "", 0, 0, dbx.Params{"game": gameID})
+	if err != nil {
+		return err
+	}
+	memberships, err := app.FindRecordsByFilter("chat_memberships", "room.game = {:game}", "", 0, 0, dbx.Params{"game": gameID})
+	if err != nil {
+		return err
+	}
+	collection, err := app.FindCollectionByNameOrId("chat_memberships")
+	if err != nil {
+		return err
+	}
+	byParticipant := make(map[string]*core.Record, len(participants))
+	byRoom := make(map[string]*core.Record, len(rooms))
+	existing := make(map[string]bool, len(memberships))
 	for _, membership := range memberships {
-		membership.Set("historical_access", true)
+		existing[membership.GetString("room")+":"+membership.GetString("participant")] = true
+	}
+	for _, room := range rooms {
+		byRoom[room.Id] = room
+	}
+	for _, participant := range participants {
+		byParticipant[participant.Id] = participant
+		if !gamepolicy.IsCurrentMember(gamepolicy.ParticipantStatus(participant.GetString("status"))) {
+			continue
+		}
+		for _, room := range rooms {
+			if !rulesets.RoleControlsChatRoom(room.GetString("kind")) || existing[room.Id+":"+participant.Id] || !rulesets.ChatRoomReaderMatches(definition,
+				room.GetString("kind"), room.GetString("room_key"), room.GetString("team_key"), participant.GetString("role_key")) {
+				continue
+			}
+			// Live audiences need no membership synchronization. Persist newly gained
+			// grants only at the existing archive boundary to retain historical access.
+			membership := core.NewRecord(collection)
+			membership.Set("room", room.Id)
+			membership.Set("participant", participant.Id)
+			membership.Set("joined_at", participant.GetDateTime("joined_at"))
+			memberships = append(memberships, membership)
+		}
+	}
+
+	for _, membership := range memberships {
+		grant := true
+		room := byRoom[membership.GetString("room")]
+		participant := byParticipant[membership.GetString("participant")]
+		if room == nil || participant == nil {
+			grant = false
+		} else if rulesets.RoleControlsChatRoom(room.GetString("kind")) {
+			grant = rulesets.ChatRoomReaderMatches(definition, room.GetString("kind"), room.GetString("room_key"), room.GetString("team_key"), participant.GetString("role_key"))
+		}
+		membership.Set("historical_access", grant)
 		if membership.GetDateTime("left_at").IsZero() {
 			membership.Set("left_at", leftAt)
 		}

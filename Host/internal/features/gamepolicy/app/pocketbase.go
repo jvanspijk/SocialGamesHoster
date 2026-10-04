@@ -6,6 +6,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/gamecapacity"
+
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -20,7 +22,8 @@ const (
 	currentParticipantsByGameFilter          = "game = {:game} && " + CurrentParticipantStatusFilter
 	currentParticipantsByProfileFilter       = "profile = {:profile} && " + CurrentParticipantStatusFilter
 
-	RoomReadableByCurrentOrHistoricalParticipantFilter = "room = {:room} && participant.profile = {:profile} && ((left_at = '' && " + CurrentRelatedParticipantStatusFilter + ") || historical_access = true)"
+	RoomReadableMembershipFilter                       = "room = {:room} && ((left_at = '' && " + CurrentRelatedParticipantStatusFilter + ") || historical_access = true)"
+	RoomReadableByCurrentOrHistoricalParticipantFilter = RoomReadableMembershipFilter + " && participant.profile = {:profile}"
 )
 
 func CurrentParticipantByGameAndProfile(app core.App, gameID, profileID string) (*core.Record, error) {
@@ -46,7 +49,7 @@ func CurrentParticipantsByGame(app core.App, gameID string) ([]*core.Record, err
 		"participants",
 		currentParticipantsByGameFilter,
 		"player_number",
-		30,
+		gamecapacity.MaxPlayers,
 		0,
 		dbx.Params{"game": gameID},
 	)

@@ -18,6 +18,7 @@ import (
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/gamecapacity"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/httpx"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/platform/result"
 )
@@ -97,8 +98,8 @@ func createRuleset(event *core.RequestEvent) error {
 	if len([]rune(request.Name)) < 1 || len([]rune(request.Name)) > 120 {
 		return httpx.WriteError(event, result.Invalid("ruleset.invalid_name", "Enter a ruleset name between 1 and 120 characters.", nil))
 	}
-	if request.MinPlayers < 1 || request.MaxPlayers > 30 || request.MinPlayers > request.MaxPlayers {
-		return httpx.WriteError(event, result.Invalid("ruleset.invalid_players", "Choose a player range between 1 and 30.", nil))
+	if request.MinPlayers < 1 || request.MaxPlayers > gamecapacity.MaxPlayers || request.MinPlayers > request.MaxPlayers {
+		return httpx.WriteError(event, result.Invalid("ruleset.invalid_players", fmt.Sprintf("Choose a player range between 1 and %d.", gamecapacity.MaxPlayers), nil))
 	}
 	definition := blankDefinition(request.Name, request.Description, request.MinPlayers, request.MaxPlayers)
 	preparedAssets := []preparedVersionAsset(nil)

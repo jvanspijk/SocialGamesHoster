@@ -129,10 +129,18 @@ against the generic PocketBase realtime hook:
 - `game:<id>:public`: active participants and game masters;
 - `game:<id>:game-masters`: active game masters only;
 - `participant:<id>:private`: that profile or a game master;
-- `room:<id>`: current/historical room membership or a game master;
+- `room:<id>`: current room access or frozen historical membership, or a game master;
 - `profile:<id>`: that profile or a game master;
 - `profile-request:<id>:<capability-hash>`: exact request capability;
 - `profile-requests:game-masters`: active game masters only.
+
+Live team rooms follow the participant's current role/team. Custom rooms follow
+only their declared reader role/team restrictions; unrestricted custom rooms do
+not depend on assignment. Reads, room listings, subscriptions and publication use
+the same audience rule. Archiving freezes the final audience into historical
+membership grants. Chat publication loads a fresh game/room/membership/participant
+snapshot for each event and checks recipients in memory; no authorization cache
+survives between events or requires invalidation by role-changing endpoints.
 
 Events are reader-safe projections in an ID/kind/time/revision envelope. Clients
 deduplicate IDs, refresh a snapshot after gaps, and treat the database snapshot

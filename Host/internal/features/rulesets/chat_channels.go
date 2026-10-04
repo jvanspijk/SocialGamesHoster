@@ -79,3 +79,36 @@ func ApplyRoomOverride(base RoomPermission, override *PartialRoomPermission) Roo
 	}
 	return base
 }
+
+// RoleControlsChatRoom identifies rooms whose live audience follows assignments.
+func RoleControlsChatRoom(kind string) bool {
+	return kind == "team" || kind == "custom"
+}
+
+// ChatRoomReaderMatches evaluates only the current role/team audience. Explicit
+// membership, participant lifecycle and historical access are checked by callers.
+func ChatRoomReaderMatches(definition DefinitionV1, kind, roomKey, teamKey, roleKey string) bool {
+	if !RoleControlsChatRoom(kind) {
+		return true
+	}
+	var channel *ChatChannel
+	if kind == "custom" {
+		channel = FindChatChannel(definition, ChatChannelIDFromRoomKey(roomKey))
+		if channel == nil {
+			return false
+		}
+		if len(channel.ReaderRoleIDs) == 0 && len(channel.ReaderTeamIDs) == 0 {
+			return true
+		}
+	}
+	for _, role := range definition.Roles {
+		if role.ID != roleKey {
+			continue
+		}
+		if kind == "team" {
+			return teamKey != "" && role.TeamID == teamKey
+		}
+		return ChatChannelAudienceMatches(*channel, role, false)
+	}
+	return false
+}

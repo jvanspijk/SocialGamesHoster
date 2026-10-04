@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/testutil"
 )
 
@@ -247,4 +248,66 @@ func authorizationFixture(t *testing.T) (
 		}
 	}
 	return app, game, gameMaster, profiles, participants, room
+}
+
+func TestRoomSubscriptionsFollowCurrentRoleWithoutMembershipSynchronization(t *testing.T) {
+	app, game, _, profiles, participants, _ := authorizationFixture(t)
+	definition := rulesets.DefinitionV1{SchemaVersion: 1, Roles: []rulesets.Role{
+		{ID: "red", TeamID: "red"}, {ID: "blue", TeamID: "blue"},
+	}}
+	definition.Chat.Channels = []rulesets.ChatChannel{
+		{ID: "restricted", ReaderRoleIDs: []string{"red"}}, {ID: "open"},
+	}
+	game.Set("ruleset_snapshot", definition)
+	if err := app.Save(game); err != nil {
+		t.Fatal(err)
+	}
+	collection, _ := app.FindCollectionByNameOrId("chat_rooms")
+	var rooms []*core.Record
+	for _, spec := range []struct{ kind, key, team string }{
+		{kind: "team", key: "team:red", team: "red"},
+		{kind: "team", key: "team:blue", team: "blue"},
+		{kind: "custom", key: "custom:restricted"},
+		{kind: "custom", key: "custom:open"},
+	} {
+		room := core.NewRecord(collection)
+		room.Set("game", game.Id)
+		room.Set("kind", spec.kind)
+		room.Set("room_key", spec.key)
+		room.Set("team_key", spec.team)
+		room.Set("label", spec.key)
+		room.Set("manual_visibility_override", "default")
+		room.Set("sender_display", "profile_name")
+		if err := app.Save(room); err != nil {
+			t.Fatal(err)
+		}
+		rooms = append(rooms, room)
+	}
+	for _, test := range []struct {
+		role    string
+		allowed []bool
+	}{
+		{role: "red", allowed: []bool{true, false, true, true}},
+		{role: "blue", allowed: []bool{false, true, false, true}},
+		{role: "", allowed: []bool{false, false, false, true}},
+	} {
+		participants[0].Set("role_key", test.role)
+		if err := app.Save(participants[0]); err != nil {
+			t.Fatal(err)
+		}
+		for index, room := range rooms {
+			if got := canSubscribe(app, profiles[0], "room:"+room.Id); got != test.allowed[index] {
+				t.Fatalf("role %q room %s: allowed=%t, want %t", test.role, room.GetString("room_key"), got, test.allowed[index])
+			}
+		}
+	}
+	participants[0].Set("status", "kicked")
+	if err := app.Save(participants[0]); err != nil {
+		t.Fatal(err)
+	}
+	for _, room := range rooms {
+		if canSubscribe(app, profiles[0], "room:"+room.Id) {
+			t.Fatal("kicked player subscribed to role-controlled room")
+		}
+	}
 }

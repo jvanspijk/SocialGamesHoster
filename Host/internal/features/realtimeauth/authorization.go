@@ -9,7 +9,9 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 )
 
 func Register(app core.App) {
@@ -125,13 +127,24 @@ func recordExists(app core.App, collection, id string) bool {
 }
 
 func playerCanReadRoom(app core.App, roomID, profileID string) bool {
-	records, err := app.FindRecordsByFilter(
-		"chat_memberships",
-		gamepolicyapp.RoomReadableByCurrentOrHistoricalParticipantFilter,
-		"",
-		1,
-		0,
-		dbx.Params{"room": roomID, "profile": profileID},
-	)
+	room, err := app.FindRecordById("chat_rooms", roomID)
+	if err != nil {
+		return false
+	}
+	game, err := app.FindRecordById("games", room.GetString("game"))
+	if err != nil {
+		return false
+	}
+	if rulesets.RoleControlsChatRoom(room.GetString("kind")) && !gamepolicy.IsArchived(gamepolicy.GameStatus(game.GetString("status"))) {
+		participant, err := gamepolicyapp.CurrentParticipantByGameAndProfile(app, game.Id, profileID)
+		if err != nil {
+			return false
+		}
+		definition, err := rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
+		return err == nil && rulesets.ChatRoomReaderMatches(definition, room.GetString("kind"), room.GetString("room_key"), room.GetString("team_key"), participant.GetString("role_key"))
+	}
+	records, err := app.FindRecordsByFilter("chat_memberships",
+		gamepolicyapp.RoomReadableByCurrentOrHistoricalParticipantFilter+" && participant.game = {:game}",
+		"", 1, 0, dbx.Params{"room": roomID, "profile": profileID, "game": game.Id})
 	return err == nil && len(records) == 1
 }

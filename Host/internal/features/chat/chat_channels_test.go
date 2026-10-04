@@ -10,7 +10,7 @@ import (
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
 )
 
-func TestPrepareRoleRoomsFreezesCustomChannelReaders(t *testing.T) {
+func TestPrepareRoleRoomsMaterializesInitialCustomChannelReaders(t *testing.T) {
 	fixture := newAttentionFixture(t)
 	fixture.definition.Chat.Channels = []rulesets.ChatChannel{{
 		ID: "red_council", Name: "Red council",

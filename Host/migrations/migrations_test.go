@@ -228,6 +228,10 @@ func TestPlayerNumberMigrationPreservesExistingValues(t *testing.T) {
 	if participants.Fields.GetByName("player_number") == nil || participants.Fields.GetByName("seat_number") != nil {
 		t.Fatal("participant field was not renamed to player_number")
 	}
+	playerNumber := participants.Fields.GetByName("player_number").(*core.NumberField)
+	if playerNumber.Max == nil || *playerNumber.Max != 255 {
+		t.Fatal("migrated player numbers must permit player 255")
+	}
 	var indexSQL string
 	if err := app.DB().NewQuery("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_participants_game_player_number'").Row(&indexSQL); err != nil {
 		t.Fatal(err)

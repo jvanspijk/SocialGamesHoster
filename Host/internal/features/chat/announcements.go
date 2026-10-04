@@ -26,27 +26,37 @@ import (
 )
 
 func VisibleRoomsForPlayer(app core.App, game, participant *core.Record, definition rulesets.DefinitionV1) ([]map[string]any, error) {
-	memberships, err := app.FindRecordsByFilter("chat_memberships", "participant = {:participant}", "", 200, 0,
-		dbx.Params{"participant": participant.Id})
+	memberships, err := app.FindRecordsByFilter("chat_memberships", "participant = {:participant} && room.game = {:game}", "", 0, 0,
+		dbx.Params{"participant": participant.Id, "game": game.Id})
 	if err != nil {
 		return nil, err
 	}
-	result := make([]map[string]any, 0, len(memberships))
+	roomIDs := make([]any, 0, len(memberships))
 	for _, membership := range memberships {
-		room, err := app.FindRecordById("chat_rooms", membership.GetString("room"))
-		if err != nil || room.GetString("game") != game.Id || room.GetString("kind") == "announcements" {
-			continue
-		}
+		roomIDs = append(roomIDs, membership.GetString("room"))
+	}
+	var rooms []*core.Record
+	err = app.RecordQuery("chat_rooms").
+		AndWhere(dbx.HashExp{"game": game.Id}).
+		AndWhere(dbx.Not(dbx.HashExp{"kind": "announcements"})).
+		AndWhere(dbx.Or(dbx.In("id", roomIDs...), dbx.In("kind", "team", "custom"))).
+		OrderBy("kind", "label").All(&rooms)
+	if err != nil {
+		return nil, err
+	}
+	byRoom := make(map[string]*core.Record, len(memberships))
+	for _, membership := range memberships {
+		byRoom[membership.GetString("room")] = membership
+	}
+	result := make([]map[string]any, 0, len(rooms))
+	for _, room := range rooms {
+		membership := byRoom[room.Id]
 		base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
 		if room.GetString("kind") == "announcements" || room.GetString("kind") == "gm_dm" {
 			base = rulesets.RoomPermission{Visible: true, Readable: true, Sendable: room.GetString("kind") == "gm_dm", SenderDisplay: rulesets.SenderProfileName}
 			override = nil
 		}
-		state := ParticipantState{
-			IsMember:       membership.GetDateTime("left_at").IsZero(),
-			IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
-			HistoricalRead: membership.GetBool("historical_access"),
-		}
+		state := participantRoomState(definition, game, room, participant, membership)
 		policy := EffectivePolicy(base, override, state, RoomState{
 			ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 		})

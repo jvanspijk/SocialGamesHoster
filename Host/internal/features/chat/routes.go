@@ -45,6 +45,7 @@ type access struct {
 	Membership  *core.Record
 	Policy      rulesets.RoomPermission
 	IsGM        bool
+	Definition  *rulesets.DefinitionV1
 }
 
 func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
@@ -60,7 +61,11 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 		return access{}, err
 	}
 	if actorauth.IsGameMaster(event.Auth) {
-		return access{Game: game, Room: room, IsGM: true, Policy: policyForGM(game, room)}, nil
+		resolved := access{Game: game, Room: room, IsGM: true}
+		if definition, err := resolved.definition(); err == nil {
+			resolved.Policy = gameMasterRoomPolicy(definition, game, room)
+		}
+		return resolved, nil
 	}
 	if !actorauth.IsPlayer(event.Auth) {
 		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
@@ -73,10 +78,13 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	participant := participants[0]
 	memberships, err := event.App.FindRecordsByFilter("chat_memberships", "room = {:room} && participant = {:participant}", "", 1, 0,
 		dbx.Params{"room": room.Id, "participant": participant.Id})
-	if err != nil || len(memberships) == 0 {
-		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
+	if err != nil {
+		return access{}, err
 	}
-	membership := memberships[0]
+	var membership *core.Record
+	if len(memberships) > 0 {
+		membership = memberships[0]
+	}
 	definition, err := definitionFromGame(game)
 	if err != nil {
 		return access{}, err
@@ -89,11 +97,7 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 		}
 		override = nil
 	}
-	policy := EffectivePolicy(base, override, ParticipantState{
-		IsMember:       membership.GetDateTime("left_at").IsZero(),
-		IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
-		HistoricalRead: membership.GetBool("historical_access"),
-	}, RoomState{
+	policy := EffectivePolicy(base, override, participantRoomState(definition, game, room, participant, membership), RoomState{
 		ManuallyLocked: !room.GetBool("players_can_post"), ManualVisibilityOverride: room.GetString("manual_visibility_override"),
 	})
 	if room.GetString("kind") == "custom" && !customChannelSenderAllowed(definition, room, participant) {
@@ -112,7 +116,7 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	if !policy.Readable && !policy.Visible {
 		return access{}, result.Forbidden("chat.forbidden", "This room is not available.")
 	}
-	return access{Game: game, Room: room, Participant: participant, Membership: membership, Policy: policy}, nil
+	return access{Game: game, Room: room, Participant: participant, Membership: membership, Policy: policy, Definition: &definition}, nil
 }
 
 func listRooms(event *core.RequestEvent) error {
@@ -244,7 +248,7 @@ func createMessage(event *core.RequestEvent) error {
 	if len([]rune(request.Content)) < 1 || len([]rune(request.Content)) > 1000 || hasDisallowedControl(request.Content) {
 		return httpx.WriteError(event, result.Invalid("chat.invalid_message", "Enter a message of at most 1000 characters.", nil))
 	}
-	definition, err := definitionFromGame(resolved.Game)
+	definition, err := resolved.definition()
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
@@ -263,10 +267,7 @@ func createMessage(event *core.RequestEvent) error {
 		message.Set("sender_type", "game_master")
 		message.Set("sender_label_snapshot", event.Auth.GetString("display_name"))
 	} else {
-		label, err := playerSenderLabel(event.App, resolved, event.Auth)
-		if err != nil {
-			return httpx.WriteError(event, result.Internal(err))
-		}
+		label := playerSenderLabel(definition, resolved, event.Auth)
 		message.Set("sender_type", "player")
 		message.Set("sender_participant", resolved.Participant.Id)
 		message.Set("sender_label_snapshot", label)
@@ -344,7 +345,8 @@ func listMessages(event *core.RequestEvent) error {
 	filter := "room = {:room}"
 	params := dbx.Params{"room": resolved.Room.Id}
 	if !resolved.IsGM && resolved.Membership != nil &&
-		!resolved.Membership.GetDateTime("left_at").IsZero() {
+		!resolved.Membership.GetDateTime("left_at").IsZero() &&
+		!(rulesets.RoleControlsChatRoom(resolved.Room.GetString("kind")) && !gamepolicy.IsArchived(gamepolicy.GameStatus(resolved.Game.GetString("status")))) {
 		filter += " && created >= {:joined} && created <= {:left}"
 		params["joined"] = resolved.Membership.GetDateTime("joined_at").Time().UTC()
 		params["left"] = resolved.Membership.GetDateTime("left_at").Time().UTC()
@@ -451,6 +453,10 @@ func policyForGM(game, room *core.Record) rulesets.RoomPermission {
 	if err != nil {
 		return rulesets.RoomPermission{}
 	}
+	return gameMasterRoomPolicy(definition, game, room)
+}
+
+func gameMasterRoomPolicy(definition rulesets.DefinitionV1, game, room *core.Record) rulesets.RoomPermission {
 	base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
 	if override != nil && override.GameMasterMaySend != nil {
 		base.GameMasterMaySend = *override.GameMasterMaySend
@@ -518,11 +524,20 @@ func definitionFromGame(game *core.Record) (rulesets.DefinitionV1, error) {
 	return rulesets.DecodeSnapshot(game.Get("ruleset_snapshot"))
 }
 
-func playerSenderLabel(app core.App, resolved access, profile *core.Record) (string, error) {
+// definition reuses the frozen snapshot only within this request or publication.
+func (resolved *access) definition() (rulesets.DefinitionV1, error) {
+	if resolved.Definition != nil {
+		return *resolved.Definition, nil
+	}
 	definition, err := definitionFromGame(resolved.Game)
 	if err != nil {
-		return "", err
+		return rulesets.DefinitionV1{}, err
 	}
+	resolved.Definition = &definition
+	return definition, nil
+}
+
+func playerSenderLabel(definition rulesets.DefinitionV1, resolved access, profile *core.Record) string {
 	roleName := ""
 	teamName := ""
 	for _, role := range definition.Roles {
@@ -543,7 +558,7 @@ func playerSenderLabel(app core.App, resolved access, profile *core.Record) (str
 	return SenderLabel(Sender{
 		ProfileName: profile.GetString("display_name"), GameAlias: resolved.Participant.GetString("game_alias"),
 		PlayerNumber: resolved.Participant.GetInt("player_number"), RoleLabel: roleName, TeamLabel: teamName,
-	}, display), nil
+	}, display)
 }
 
 func projectRoom(app core.App, resolved access) map[string]any {
@@ -623,63 +638,92 @@ func publishRoom(app core.App, resolved access, kind string, payload any) {
 	_ = realtime.Publish(app, "room:"+resolved.Room.Id, realtime.Event[any]{
 		EventID: realtime.NewEventID(), GameID: resolved.Game.Id, Revision: resolved.Game.GetInt("revision"),
 		Kind: kind, Payload: payload,
-	}, func(auth *core.Record) bool { return roomEventAuthorized(app, resolved, auth) })
+	}, roomEventAuthorization(app, resolved, false))
 }
 
 func publishRoomMessage(app core.App, resolved access, kind string, message *core.Record) {
 	_ = realtime.PublishProjected(app, "room:"+resolved.Room.Id, realtime.Event[map[string]any]{
 		EventID: realtime.NewEventID(), GameID: resolved.Game.Id, Revision: resolved.Game.GetInt("revision"),
 		Kind: kind,
-	}, func(auth *core.Record) bool { return roomEventAuthorized(app, resolved, auth) },
+	}, roomEventAuthorization(app, resolved, true),
 		func(auth *core.Record) map[string]any {
 			return projectMessage(message, auth, auth != nil && actorauth.IsGameMaster(auth))
 		})
 }
 
-func roomEventAuthorized(app core.App, resolved access, auth *core.Record) bool {
-	if auth == nil || !auth.GetBool("active") {
-		return false
+// roomEventAuthorization takes a fresh, publication-local access snapshot. Recipient
+// checks perform no database reads, and no permissions survive into the next event.
+func roomEventAuthorization(app core.App, resolved access, requireReadable bool) func(*core.Record) bool {
+	deny := func(*core.Record) bool { return false }
+	room, err := app.FindRecordById("chat_rooms", resolved.Room.Id)
+	if err != nil || room.GetString("game") != resolved.Game.Id {
+		return deny
 	}
-	if actorauth.IsGameMaster(auth) {
-		return true
-	}
-	if !actorauth.IsPlayer(auth) {
-		return false
-	}
-	return playerMayReceiveRoomEvent(app, resolved, auth.Id)
-}
-
-func playerMayReceiveRoomEvent(app core.App, resolved access, profileID string) bool {
-	memberships, err := app.FindRecordsByFilter("chat_memberships",
-		gamepolicyapp.RoomReadableByCurrentOrHistoricalParticipantFilter,
-		"", 1, 0, dbx.Params{"room": resolved.Room.Id, "profile": profileID})
-	if err != nil || len(memberships) != 1 {
-		return false
-	}
-	participant, err := app.FindRecordById("participants", memberships[0].GetString("participant"))
+	game, err := app.FindRecordById("games", resolved.Game.Id)
 	if err != nil {
-		return false
+		return deny
 	}
-	definition, err := definitionFromGame(resolved.Game)
-	if err != nil {
-		return false
-	}
-	base, override := resolveRoomPolicy(definition, resolved.Game.GetString("phase_key"), resolved.Room)
-	if resolved.Room.GetString("kind") == "gm_dm" {
+	definition, definitionErr := definitionFromGame(game)
+	base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
+	if room.GetString("kind") == "gm_dm" {
 		base = rulesets.RoomPermission{
 			Visible: true, Readable: true, Sendable: true, SenderDisplay: rulesets.SenderProfileName,
 		}
 		override = nil
 	}
-	policy := EffectivePolicy(base, override, ParticipantState{
-		IsMember:       memberships[0].GetDateTime("left_at").IsZero(),
-		IsActive:       gamepolicy.IsActivePlayer(gamepolicy.ParticipantStatus(participant.GetString("status"))),
-		HistoricalRead: memberships[0].GetBool("historical_access"),
-	}, RoomState{
-		ManuallyLocked:           !resolved.Room.GetBool("players_can_post"),
-		ManualVisibilityOverride: resolved.Room.GetString("manual_visibility_override"),
-	})
-	return policy.Visible || policy.Readable
+	roomState := RoomState{
+		ManuallyLocked:           !room.GetBool("players_can_post"),
+		ManualVisibilityOverride: room.GetString("manual_visibility_override"),
+	}
+	allowed := make(map[string]bool)
+	if definitionErr == nil {
+		memberships, membershipErr := app.FindRecordsByFilter("chat_memberships",
+			gamepolicyapp.RoomReadableMembershipFilter+" && participant.game = {:game}",
+			"", 0, 0, dbx.Params{"room": room.Id, "game": game.Id})
+		participants, participantErr := app.FindRecordsByFilter("participants", "game = {:game}",
+			"", 0, 0, dbx.Params{"game": game.Id})
+		// Fail closed for players if either bulk read fails; never use partial data.
+		if membershipErr == nil && participantErr == nil {
+			byParticipant := make(map[string]*core.Record, len(memberships))
+			for _, membership := range memberships {
+				byParticipant[membership.GetString("participant")] = membership
+			}
+			for _, participant := range participants {
+				policy := EffectivePolicy(base, override,
+					participantRoomState(definition, game, room, participant, byParticipant[participant.Id]), roomState)
+				if policy.Readable || (!requireReadable && policy.Visible) {
+					allowed[participant.GetString("profile")] = true
+				}
+			}
+		}
+	}
+	return func(auth *core.Record) bool {
+		if auth == nil || !auth.GetBool("active") {
+			return false
+		}
+		if actorauth.IsGameMaster(auth) {
+			return true
+		}
+		return actorauth.IsPlayer(auth) && allowed[auth.Id]
+	}
+}
+
+// Live role-controlled audiences are derived from current assignments, so role
+// changes need neither membership synchronization nor cache invalidation.
+// Archived rooms retain their explicit historical membership grants.
+func participantRoomState(definition rulesets.DefinitionV1, game, room, participant, membership *core.Record) ParticipantState {
+	status := gamepolicy.ParticipantStatus(participant.GetString("status"))
+	state := ParticipantState{IsActive: gamepolicy.IsActivePlayer(status)}
+	if membership != nil {
+		state.IsMember = membership.GetDateTime("left_at").IsZero() && gamepolicy.IsCurrentMember(status)
+		state.HistoricalRead = membership.GetBool("historical_access")
+	}
+	if rulesets.RoleControlsChatRoom(room.GetString("kind")) && !gamepolicy.IsArchived(gamepolicy.GameStatus(game.GetString("status"))) {
+		state.IsMember = gamepolicy.IsCurrentMember(status) && rulesets.ChatRoomReaderMatches(definition,
+			room.GetString("kind"), room.GetString("room_key"), room.GetString("team_key"), participant.GetString("role_key"))
+		state.HistoricalRead = false
+	}
+	return state
 }
 
 func findRoomByKey(app core.App, gameID, key string) (*core.Record, error) {

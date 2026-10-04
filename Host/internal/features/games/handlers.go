@@ -8,6 +8,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/gamecapacity"
+
 	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/abilities"
 	chatfeature "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/chat"
@@ -336,7 +338,7 @@ func joinGame(event *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
-		if len(participants) >= definition.Metadata.MaxPlayers || len(participants) >= 30 {
+		if len(participants) >= definition.Metadata.MaxPlayers || len(participants) >= gamecapacity.MaxPlayers {
 			return result.AppError{Code: "game.full", Message: "This lobby is full.", Status: http.StatusConflict}
 		}
 		collection, err := tx.FindCollectionByNameOrId("participants")

@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/gamecapacity"
 )
 
 var StableIDPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,63}$`)
@@ -39,8 +41,8 @@ func Validate(def DefinitionV1, assetKeys map[string]struct{}) ValidationReport 
 	if strings.TrimSpace(def.Metadata.Name) == "" {
 		addError("metadata.name", "required", "Name is required.")
 	}
-	if def.Metadata.MinPlayers < 1 || def.Metadata.MaxPlayers > 30 || def.Metadata.MinPlayers > def.Metadata.MaxPlayers {
-		addError("metadata", "players.invalid_range", "Player range must be between 1 and 30.")
+	if def.Metadata.MinPlayers < 1 || def.Metadata.MaxPlayers > gamecapacity.MaxPlayers || def.Metadata.MinPlayers > def.Metadata.MaxPlayers {
+		addError("metadata", "players.invalid_range", fmt.Sprintf("Player range must be between 1 and %d.", gamecapacity.MaxPlayers))
 	}
 
 	teamIDs := validateIDs("teams", teamIDValues(def.Teams), addError)

@@ -130,3 +130,64 @@ func countRecords(t *testing.T, app core.App, collection, filter string, params 
 	}
 	return len(records)
 }
+
+func TestArchiveFreezesFinalRoleAudienceWithoutRestoringOldTeamAccess(t *testing.T) {
+	fixture := newAttentionFixture(t)
+	fixture.definition.Chat.DefaultPolicy.Teams = map[string]rulesets.RoomPermission{
+		"red": {Visible: true, Readable: true}, "blue": {Visible: true, Readable: true},
+	}
+	fixture.game.Set("ruleset_snapshot", fixture.definition)
+	if err := fixture.app.Save(fixture.game); err != nil {
+		t.Fatal(err)
+	}
+	if err := PrepareRoleRooms(fixture.app, fixture.game.Id, fixture.definition, fixture.participants); err != nil {
+		t.Fatal(err)
+	}
+	red, err := findRoomByKey(fixture.app, fixture.game.Id, "team:red")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blue, err := findRoomByKey(fixture.app, fixture.game.Id, "team:blue")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture.participants[0].Set("role_key", "blue-role")
+	if err := fixture.app.Save(fixture.participants[0]); err != nil {
+		t.Fatal(err)
+	}
+	// Match the game aggregate: archive status and grants are written together.
+	if err := fixture.app.RunInTransaction(func(tx core.App) error {
+		fixture.game.Set("status", "archived")
+		if err := tx.Save(fixture.game); err != nil {
+			return err
+		}
+		return FreezeHistoricalAccess(tx, fixture.game.Id, time.Now().UTC())
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		room    *core.Record
+		allowed bool
+	}{
+		{room: red}, {room: blue, allowed: true},
+	} {
+		resolved, err := resolveAccess(&core.RequestEvent{App: fixture.app, Auth: fixture.profiles[0]}, test.room.Id)
+		if (err == nil) != test.allowed {
+			t.Fatalf("archived room %s: access=%t, want %t", test.room.GetString("room_key"), err == nil, test.allowed)
+		}
+		authorize := roomEventAuthorization(fixture.app, access{Game: fixture.game, Room: test.room}, true)
+		if authorize(fixture.profiles[0]) != test.allowed {
+			t.Fatal("archived publication disagrees with read access")
+		}
+		if test.allowed && (!resolved.Policy.Readable || resolved.Policy.Sendable) {
+			t.Fatal("historical grant must be read-only")
+		}
+	}
+	membership, err := findMembership(fixture.app, blue.Id, fixture.participants[0].Id)
+	if err != nil || !membership.GetBool("historical_access") {
+		t.Fatalf("newly gained team audience not preserved: %v", err)
+	}
+	if !membership.GetDateTime("joined_at").Time().Equal(fixture.participants[0].GetDateTime("joined_at").Time().Truncate(time.Millisecond)) {
+		t.Fatal("new archive membership would hide messages accessible during live play")
+	}
+}

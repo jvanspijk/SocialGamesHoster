@@ -8,6 +8,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 
+	"github.com/jvanspijk/SocialGamesHoster/Host/internal/domain/gamecapacity"
+
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	gamepolicyapp "github.com/jvanspijk/SocialGamesHoster/Host/internal/features/gamepolicy/app"
 	"github.com/jvanspijk/SocialGamesHoster/Host/internal/features/rulesets"
@@ -87,7 +89,9 @@ func dateValue(record *core.Record, field string) any {
 }
 
 func gameParticipants(app core.App, gameID string) ([]*core.Record, error) {
-	return app.FindRecordsByFilter("participants", "game = {:game}", "player_number", 30, 0, dbx.Params{"game": gameID})
+	// Include historical seats too: joins must count the full roster and never
+	// reuse a player number or silently omit later participants.
+	return app.FindRecordsByFilter("participants", "game = {:game}", "player_number", gamecapacity.MaxPlayers, 0, dbx.Params{"game": gameID})
 }
 
 func currentParticipants(app core.App, gameID string) ([]*core.Record, error) {
