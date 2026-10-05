@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
+	import AttentionBadge from './AttentionBadge.svelte';
 
 	let {
 		items,
@@ -14,6 +15,7 @@
 			attention?: boolean;
 			attentionLabel?: string;
 			attentionCount?: number;
+			accessibleLabel?: string;
 			disabled?: boolean;
 			disabledDescription?: string;
 		}>;
@@ -32,9 +34,10 @@
 			class:active={current === item.id}
 			class:disabled={item.disabled}
 			aria-current={current === item.id ? 'page' : undefined}
-			aria-label={item.attention
-				? `${item.label}, ${item.attentionCount ?? ''} ${item.attentionLabel ?? 'new activity'}`.trim()
-				: undefined}
+			aria-label={item.accessibleLabel ??
+				(item.attention
+					? `${item.label}, ${item.attentionCount ?? ''} ${item.attentionLabel ?? 'new activity'}`.trim()
+					: undefined)}
 			aria-disabled={item.disabled || undefined}
 			aria-describedby={item.disabled ? `nav-description-${item.id}` : undefined}
 			tabindex={item.disabled ? -1 : undefined}
@@ -42,9 +45,7 @@
 			<span class="icon"><Icon size={21} strokeWidth={1.8} /></span>
 			<span class="label">{item.label}</span>
 			{#if item.attention}
-				<span class:count={item.attentionCount} class="attention-badge" aria-hidden="true"
-					>{item.attentionCount === 99 ? '99+' : (item.attentionCount ?? 'New')}</span
-				>
+				<AttentionBadge count={item.attentionCount} placement="navigation" />
 			{/if}
 			{#if item.disabled && item.disabledDescription}
 				<em class="sr-only" id={`nav-description-${item.id}`}>{item.disabledDescription}</em>
@@ -107,31 +108,6 @@
 		place-items: center;
 	}
 
-	.attention-badge {
-		position: absolute;
-		inset-block-start: 0.45rem;
-		inset-inline-end: calc(50% - 1.7rem);
-		display: grid;
-		min-width: 1rem;
-		height: 1rem;
-		place-items: center;
-		border: 2px solid #1c120c;
-		border-radius: 50%;
-		background: var(--action-dark);
-		color: var(--text-on-dark);
-		font-family: var(--font-display);
-		font-size: var(--font-size-xs);
-		font-style: normal;
-		font-weight: 700;
-		line-height: 1;
-	}
-
-	.attention-badge.count {
-		min-width: 1.3rem;
-		border-radius: 999px;
-		padding-inline: 0.15rem;
-	}
-
 	@media (min-width: 64rem) {
 		nav {
 			inset: 0 auto 0 0;
@@ -159,12 +135,6 @@
 
 		.label {
 			text-align: start;
-		}
-
-		.attention-badge {
-			inset-inline: auto var(--space-3);
-			inset-block-start: 50%;
-			transform: translateY(-50%);
 		}
 	}
 </style>

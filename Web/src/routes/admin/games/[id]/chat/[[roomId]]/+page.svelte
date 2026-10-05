@@ -3,4 +3,4 @@
 	import AdminChatPage from '$lib/features/chat/components/AdminChatPage.svelte';
 </script>
 
-<AdminChatPage roomId={page.params.roomId} />
+<AdminChatPage roomId={page.params.roomId ?? ''} />

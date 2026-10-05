@@ -10,6 +10,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/types"
 
 	actorauth "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/actors"
 	applicationaudit "github.com/jvanspijk/SocialGamesHoster/Host/internal/application/audit"
@@ -25,6 +26,7 @@ import (
 func Register(event *core.ServeEvent) {
 	group := event.Router.Group("/api/app/v1")
 	group.GET("/games/{id}/rooms", listRooms)
+	group.POST("/games/{id}/unread-counts", unreadCounts).Bind(apis.BodyLimit(64 << 10))
 	group.POST("/games/{id}/rooms/player-dm", createPlayerDM)
 	group.GET("/rooms/{roomId}/messages", listMessages)
 	group.POST("/rooms/{roomId}/messages", createMessage)
@@ -60,6 +62,12 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	if err != nil {
 		return access{}, err
 	}
+	return resolveRoomAccess(event, game, room)
+}
+
+// Room listings and counts already load these records. Keep authorization in one
+// owner while avoiding a second lookup of each room and its game.
+func resolveRoomAccess(event *core.RequestEvent, game, room *core.Record) (access, error) {
 	if actorauth.IsGameMaster(event.Auth) {
 		resolved := access{Game: game, Room: room, IsGM: true}
 		if definition, err := resolved.definition(); err == nil {
@@ -89,6 +97,10 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	if err != nil {
 		return access{}, err
 	}
+	return resolvePlayerRoomAccess(game, room, participant, membership, definition)
+}
+
+func resolvePlayerRoomAccess(game, room, participant, membership *core.Record, definition rulesets.DefinitionV1) (access, error) {
 	base, override := resolveRoomPolicy(definition, game.GetString("phase_key"), room)
 	if room.GetString("kind") == "announcements" || room.GetString("kind") == "gm_dm" {
 		base = rulesets.RoomPermission{
@@ -119,6 +131,57 @@ func resolveAccess(event *core.RequestEvent, roomID string) (access, error) {
 	return access{Game: game, Room: room, Participant: participant, Membership: membership, Policy: policy, Definition: &definition}, nil
 }
 
+// Bulk reads reuse only this request's current ruleset, participant and
+// memberships. They evaluate each room through the same policy as history.
+func resolveGameRoomAccess(event *core.RequestEvent, game *core.Record, rooms []*core.Record) ([]access, error) {
+	resolved := make([]access, 0, len(rooms))
+	if len(rooms) == 0 {
+		return resolved, nil
+	}
+	definition, definitionErr := definitionFromGame(game)
+	if actorauth.IsGameMaster(event.Auth) {
+		for _, room := range rooms {
+			item := access{Game: game, Room: room, IsGM: true}
+			if definitionErr == nil {
+				item.Definition = &definition
+				item.Policy = gameMasterRoomPolicy(definition, game, room)
+			}
+			resolved = append(resolved, item)
+		}
+		return resolved, nil
+	}
+	if !actorauth.IsPlayer(event.Auth) {
+		return resolved, nil
+	}
+	if definitionErr != nil {
+		return nil, definitionErr
+	}
+	participants, err := event.App.FindRecordsByFilter("participants", "game = {:game} && profile = {:profile}", "", 1, 0, dbx.Params{"game": game.Id, "profile": event.Auth.Id})
+	if err != nil {
+		return nil, err
+	}
+	if len(participants) == 0 {
+		return resolved, nil
+	}
+	participant := participants[0]
+	memberships, err := event.App.FindRecordsByFilter("chat_memberships", "participant = {:participant} && room.game = {:game}", "", 0, 0, dbx.Params{"participant": participant.Id, "game": game.Id})
+	if err != nil {
+		return nil, err
+	}
+	byRoom := make(map[string]*core.Record, len(memberships))
+	for _, membership := range memberships {
+		byRoom[membership.GetString("room")] = membership
+	}
+	for _, room := range rooms {
+		item, err := resolvePlayerRoomAccess(game, room, participant, byRoom[room.Id], definition)
+		if err != nil {
+			continue
+		}
+		resolved = append(resolved, item)
+	}
+	return resolved, nil
+}
+
 func listRooms(event *core.RequestEvent) error {
 	game, err := event.App.FindRecordById("games", event.Request.PathValue("id"))
 	if err != nil {
@@ -132,11 +195,11 @@ func listRooms(event *core.RequestEvent) error {
 		return httpx.WriteError(event, result.Internal(err))
 	}
 	response := make([]map[string]any, 0, len(rooms))
-	for _, room := range rooms {
-		resolved, err := resolveAccess(event, room.Id)
-		if err != nil {
-			continue
-		}
+	accesses, err := resolveGameRoomAccess(event, game, rooms)
+	if err != nil {
+		return httpx.WriteErrorFrom(event, err)
+	}
+	for _, resolved := range accesses {
 		response = append(response, projectRoom(event.App, resolved))
 	}
 	return event.JSON(http.StatusOK, response)
@@ -344,12 +407,10 @@ func listMessages(event *core.RequestEvent) error {
 	}
 	filter := "room = {:room}"
 	params := dbx.Params{"room": resolved.Room.Id}
-	if !resolved.IsGM && resolved.Membership != nil &&
-		!resolved.Membership.GetDateTime("left_at").IsZero() &&
-		!(rulesets.RoleControlsChatRoom(resolved.Room.GetString("kind")) && !gamepolicy.IsArchived(gamepolicy.GameStatus(resolved.Game.GetString("status")))) {
+	if joined, left, bounded := messageHistoryWindow(resolved); bounded {
 		filter += " && created >= {:joined} && created <= {:left}"
-		params["joined"] = resolved.Membership.GetDateTime("joined_at").Time().UTC()
-		params["left"] = resolved.Membership.GetDateTime("left_at").Time().UTC()
+		params["joined"] = joined.Format(types.DefaultDateLayout)
+		params["left"] = left.Format(types.DefaultDateLayout)
 	}
 	if cursor := event.Request.URL.Query().Get("cursor"); cursor != "" {
 		position, err := pagination.Decode(cursor)
@@ -357,7 +418,7 @@ func listMessages(event *core.RequestEvent) error {
 			return httpx.WriteError(event, result.Invalid("chat.invalid_cursor", "The message cursor is invalid.", nil))
 		}
 		filter += " && " + pagination.DescendingCreatedIDPredicate
-		params["created"] = position.Created
+		params["created"] = position.Created.UTC().Format(types.DefaultDateLayout)
 		params["id"] = position.ID
 	}
 	records, err := event.App.FindRecordsByFilter("chat_messages", filter, pagination.DescendingCreatedIDSort, pagination.QueryLimit, 0, params)

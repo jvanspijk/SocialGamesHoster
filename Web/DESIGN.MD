@@ -192,4 +192,5 @@ on phones. Forms are one column on phones; related short fields may share a row
 only when they still fit at 320 px and 200% zoom.
 
 Icons reinforce a text label unless the action is universally understood and has
-an accessible name. Badges use a dot or `New`, never numeric unread counts.
+an accessible name. Chat badges use shared numeric unread counts, capped at `99+`.
+Other attention badges may use a dot or `New`.

@@ -11,6 +11,7 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import AppNav from '$lib/components/AppNav.svelte';
+	import AttentionBadge from '$lib/components/AttentionBadge.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import {
 		playerShellContextKey,
@@ -21,12 +22,7 @@
 	import { errorMessage } from '$lib/api/errors';
 	import type { ChatMessage, Game, PlayerGameView, RealtimeEnvelope } from '$lib/api/types';
 	import { auth } from '$lib/state/auth.svelte';
-	import {
-		chatReadMarkersChanged,
-		cursorIsAfter,
-		hasUnreadMessages,
-		readMarkers
-	} from '$lib/state/chatReadMarkers';
+	import { createChatUnreadController } from '$lib/features/chat/unread.svelte';
 	import { gameState } from '$lib/state/game.svelte';
 	import { sound } from '$lib/state/sound.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
@@ -38,7 +34,7 @@
 	let joiningLobby = $state(false);
 	let loadError = $state('');
 	let acknowledging = $state(false);
-	let hasUnreadChat = $state(false);
+	const unreadChat = createChatUnreadController();
 	let unsubscribers: Array<() => void> = [];
 	let unsubscribeLobbyOpened: (() => void) | null = null;
 
@@ -91,17 +87,16 @@
 	});
 
 	$effect(() => {
-		void view;
-		refreshUnreadChat();
+		unreadChat.setContext(auth.actor?.id ?? '', view?.game.id ?? '', view?.game.revision ?? 0);
 	});
 
 	onMount(() => {
 		void initialize();
-		window.addEventListener(chatReadMarkersChanged, refreshUnreadChat);
+		const stopUnread = unreadChat.start();
 		return () => {
 			for (const unsubscribe of unsubscribers) unsubscribe();
 			unsubscribeLobbyOpened?.();
-			window.removeEventListener(chatReadMarkersChanged, refreshUnreadChat);
+			stopUnread();
 		};
 	});
 
@@ -146,13 +141,12 @@
 				...loaded.rooms.map((room) =>
 					pb.realtime.subscribe(`room:${room.id}`, (raw) => {
 						const event = raw as unknown as RealtimeEnvelope<ChatMessage>;
-						if (event.kind !== 'chat.message_created') return;
-						const markers = readMarkers(auth.actor?.id ?? '', loaded.game.id);
-						if (cursorIsAfter(event.payload, markers[room.id])) hasUnreadChat = true;
+						if (event.kind === 'chat.message_created' || event.kind === 'chat.message_deleted')
+							unreadChat.refresh();
 					})
 				)
 			]);
-			refreshUnreadChat();
+			unreadChat.refresh();
 		} catch (caught) {
 			loadError = errorMessage(caught, 'The game could not be loaded.');
 			if (!hubRoute) {
@@ -165,14 +159,6 @@
 		} finally {
 			loading = false;
 		}
-	}
-
-	function refreshUnreadChat() {
-		if (!view || typeof localStorage === 'undefined') {
-			hasUnreadChat = false;
-			return;
-		}
-		hasUnreadChat = hasUnreadMessages(view.rooms, readMarkers(auth.actor?.id ?? '', view.game.id));
 	}
 
 	async function subscribeToLobbyOpening() {
@@ -257,13 +243,9 @@
 					{#if sound.enabled}<Volume2 size={19} />{:else}<VolumeX size={19} />{/if}
 				</button>
 				{#if view}
-					<a
-						class="chat-action"
-						href={resolve('/play/chat')}
-						aria-label={hasUnreadChat ? 'Chat, new messages' : 'Chat'}
-					>
+					<a class="chat-action" href={resolve('/play/chat')} aria-label={unreadChat.label}>
 						<MessageCircle size={21} />
-						{#if hasUnreadChat}<i></i>{/if}
+						{#if unreadChat.total > 0}<AttentionBadge count={unreadChat.total} />{/if}
 					</a>
 				{/if}
 				<a
@@ -422,17 +404,6 @@
 		background: transparent;
 		color: var(--text-on-dark);
 		cursor: pointer;
-	}
-
-	.chat-action i {
-		position: absolute;
-		inset-block-start: 0.25rem;
-		inset-inline-end: 0.2rem;
-		width: 0.65rem;
-		height: 0.65rem;
-		border: 2px solid var(--surface-surround);
-		border-radius: 50%;
-		background: var(--action-light);
 	}
 
 	.player-content {

@@ -155,6 +155,15 @@ as authoritative. The platform realtime package owns broker interaction,
 publication, envelopes, and callback execution. Feature/application policy owns
 topic meaning and reader eligibility.
 
+Chat read markers remain local to each device, actor, and game. Both shells use
+one unread-count controller and badge component. A single chat query accepts
+the device's markers and returns counts only for currently readable rooms,
+using the same authorization and historical membership windows as message
+history. Indexed counts and their displayed total are capped at 99. Badge
+refreshes coalesce realtime and read-marker events without downloading history.
+Room lists and counts load participant and membership state once per request;
+their access snapshot is never retained between requests.
+
 ## Transactions and concurrency
 
 State-changing handlers keep SQLite transactions short: validate, write,
