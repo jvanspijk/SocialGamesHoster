@@ -11,7 +11,7 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import ChatUnreadBadge from '$lib/features/chat/components/ChatUnreadBadge.svelte';
+	import AttentionBadge from '$lib/components/AttentionBadge.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import {
 		playerShellContextKey,
@@ -249,7 +249,7 @@
 				{#if view}
 					<a class="chat-action" href={resolve('/play/chat')} aria-label={unreadChat.label}>
 						<MessageCircle size={21} />
-						<ChatUnreadBadge counts={unreadChat.promise} />
+						{#if unreadChat.total > 0}<AttentionBadge count={unreadChat.total} />{/if}
 					</a>
 				{/if}
 				<a

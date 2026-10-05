@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Component, Snippet } from 'svelte';
+	import type { Component } from 'svelte';
 	import AttentionBadge from './AttentionBadge.svelte';
 
 	let {
@@ -15,7 +15,6 @@
 			attention?: boolean;
 			attentionLabel?: string;
 			attentionCount?: number;
-			badge?: Snippet;
 			accessibleLabel?: string;
 			disabled?: boolean;
 			disabledDescription?: string;
@@ -45,9 +44,7 @@
 		>
 			<span class="icon"><Icon size={21} strokeWidth={1.8} /></span>
 			<span class="label">{item.label}</span>
-			{#if item.badge}
-				{@render item.badge()}
-			{:else if item.attention}
+			{#if item.attention}
 				<AttentionBadge count={item.attentionCount} placement="navigation" />
 			{/if}
 			{#if item.disabled && item.disabledDescription}

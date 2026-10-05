@@ -19,7 +19,6 @@ export function unreadChatLabel(total: number) {
 // Each shell owns one controller. Coalesce triggers and allow only one request in flight.
 export function createChatUnreadController() {
 	let result = $state<UnreadCounts>({ counts: {}, total: 0 });
-	let promise = $state.raw<Promise<UnreadCounts> | null>(null);
 	let actorId = '';
 	let gameId = '';
 	let revision = -1;
@@ -30,7 +29,7 @@ export function createChatUnreadController() {
 	let ready = false;
 
 	async function drain() {
-		if (running || disposed || !ready) return result;
+		if (running || disposed || !ready) return;
 		running = true;
 		try {
 			while (dirty && gameId && actorId && !disposed && ready) {
@@ -49,16 +48,13 @@ export function createChatUnreadController() {
 		} finally {
 			running = false;
 		}
-		return result;
 	}
 
 	function refresh() {
 		if (disposed) return;
 		generation += 1;
 		dirty = true;
-		queueMicrotask(() => {
-			if (!running && !disposed && ready && actorId && gameId) promise = drain();
-		});
+		queueMicrotask(() => void drain());
 	}
 
 	function storageChanged(event: StorageEvent) {
@@ -66,9 +62,6 @@ export function createChatUnreadController() {
 	}
 
 	return {
-		get promise() {
-			return promise;
-		},
 		get total() {
 			return result.total;
 		},
@@ -82,10 +75,7 @@ export function createChatUnreadController() {
 		setContext(actor: string, game: string, nextRevision: number, nextReady = true) {
 			if (actor === actorId && game === gameId && nextRevision === revision && nextReady === ready)
 				return;
-			if (actor !== actorId || game !== gameId) {
-				result = { counts: {}, total: 0 };
-				if (!running) promise = null;
-			}
+			if (actor !== actorId || game !== gameId) result = { counts: {}, total: 0 };
 			actorId = actor;
 			gameId = game;
 			revision = nextRevision;

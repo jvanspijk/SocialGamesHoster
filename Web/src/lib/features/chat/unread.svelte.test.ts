@@ -37,7 +37,6 @@ describe('shared chat unread counts', () => {
 		window.dispatchEvent(new Event(chatReadMarkersChanged));
 		await Promise.resolve();
 		expect(api).not.toHaveBeenCalled();
-		expect(unread.promise).toBeNull();
 		expect(unread.total).toBe(0);
 		expect(unread.label).toBe('Chat');
 
@@ -46,7 +45,6 @@ describe('shared chat unread counts', () => {
 		expect(unread.total).toBe(0);
 		response.resolve({ counts: { general: 3 }, total: 3 });
 		await vi.waitFor(() => expect(unread.total).toBe(3));
-		await expect(unread.promise).resolves.toEqual({ counts: { general: 3 }, total: 3 });
 		unread.setContext('actor', 'game', 1, true);
 		await Promise.resolve();
 		expect(api).toHaveBeenCalledTimes(1);
@@ -74,16 +72,13 @@ describe('shared chat unread counts', () => {
 		unread.setContext('actor', 'game', 1);
 		unread.refresh();
 		await vi.waitFor(() => expect(api).toHaveBeenCalledTimes(1));
-		const pending = unread.promise;
 		for (let i = 0; i < 5; i++) window.dispatchEvent(new Event(chatReadMarkersChanged));
 		expect(api).toHaveBeenCalledTimes(1);
 		first.resolve({ counts: { general: 5 }, total: 5 });
 		await vi.waitFor(() => expect(api).toHaveBeenCalledTimes(2));
-		expect(unread.promise).toBe(pending);
 		expect(unread.total).toBe(0);
 		second.resolve({ counts: { general: 0 }, total: 0 });
 		await vi.waitFor(() => expect(unread.total).toBe(0));
-		await expect(pending).resolves.toEqual({ counts: { general: 0 }, total: 0 });
 	});
 
 	it('clears counts on account/game changes and ignores an old in-flight result', async () => {
@@ -96,7 +91,6 @@ describe('shared chat unread counts', () => {
 		old.resolve({ counts: { private: 9 }, total: 9 });
 		await vi.waitFor(() => expect(unread.total).toBe(2));
 		expect(unread.counts).toEqual({ room: 2 });
-		await expect(unread.promise).resolves.toEqual({ counts: { room: 2 }, total: 2 });
 		expect(api.mock.calls[1][0]).toBe('/games/other-game/unread-counts');
 	});
 

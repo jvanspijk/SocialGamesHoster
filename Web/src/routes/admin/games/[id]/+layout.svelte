@@ -11,7 +11,6 @@
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import ChatUnreadBadge from '$lib/features/chat/components/ChatUnreadBadge.svelte';
 	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
@@ -61,7 +60,9 @@
 			label: 'Chat',
 			href: resolve(`/admin/games/${page.params.id}/chat`),
 			icon: MessageCircle,
-			badge: chatBadge,
+			attention: unreadChat.total > 0,
+			attentionCount: unreadChat.total,
+			attentionLabel: unreadChat.total === 1 ? 'unread message' : 'unread messages',
 			accessibleLabel: unreadChat.label
 		},
 		{
@@ -121,10 +122,6 @@
 		);
 	});
 </script>
-
-{#snippet chatBadge()}
-	<ChatUnreadBadge counts={unreadChat.promise} placement="navigation" />
-{/snippet}
 
 <div class:standalone class="live-shell">
 	{#if view && !standalone}
