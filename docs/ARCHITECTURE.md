@@ -161,6 +161,9 @@ the device's markers and returns counts only for currently readable rooms,
 using the same authorization and historical membership windows as message
 history. Indexed counts and their displayed total are capped at 99. Badge
 refreshes coalesce realtime and read-marker events without downloading history.
+The shells start the first count in a background effect after game initialization
+and realtime subscriptions finish. The shared badge renders that promise with
+Svelte's `{#await}` block, showing nothing until a positive count arrives.
 Room lists and counts load participant and membership state once per request;
 their access snapshot is never retained between requests.
 

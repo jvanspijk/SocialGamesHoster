@@ -37,6 +37,10 @@ for (const admin of [true, false]) {
 		let roomLoads = 0;
 		let messageLoads = 0;
 		let countLoads = 0;
+		let releaseCounts!: () => void;
+		const countsReady = new Promise<void>((resolve) => {
+			releaseCounts = resolve;
+		});
 		await page.route('**/api/realtime', (route) =>
 			route.request().method() === 'GET'
 				? route.fulfill({
@@ -69,6 +73,7 @@ for (const admin of [true, false]) {
 				});
 			if (path.endsWith('/unread-counts')) {
 				countLoads++;
+				await countsReady;
 				const markers = route.request().postDataJSON().markers;
 				const counts = Object.fromEntries(
 					rooms.map((room) => [room.id, markers[room.id] ? 0 : room.id === 'general' ? 2 : 1])
@@ -105,13 +110,20 @@ for (const admin of [true, false]) {
 		});
 		const route = admin ? '/admin/games/chat-test/chat' : '/play/chat';
 		await page.goto(route);
+		await expect(page.getByRole('searchbox', { name: 'Search conversations' })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'Chat', exact: true })).toBeVisible();
+		await expect(
+			page.getByRole('link', { name: 'Chat, 3 unread messages', exact: true })
+		).toHaveCount(0);
+		await expect.poll(() => countLoads).toBe(1);
+		releaseCounts();
 		await expect(
 			page.getByRole('link', { name: 'Chat, 3 unread messages', exact: true })
 		).toBeVisible();
 		await expect(
 			page.getByRole('button', { name: 'General, New messages', exact: true })
 		).toBeVisible();
-		expect(countLoads).toBeGreaterThan(0);
+		expect(countLoads).toBe(1);
 		expect(messageLoads).toBe(0);
 		expect(roomLoads).toBe(1);
 		await page.getByRole('searchbox', { name: 'Search conversations' }).fill('General');

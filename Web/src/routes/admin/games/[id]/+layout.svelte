@@ -11,6 +11,7 @@
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import Gauge from '@lucide/svelte/icons/gauge';
 	import AppNav from '$lib/components/AppNav.svelte';
+	import ChatUnreadBadge from '$lib/features/chat/components/ChatUnreadBadge.svelte';
 	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
@@ -60,9 +61,7 @@
 			label: 'Chat',
 			href: resolve(`/admin/games/${page.params.id}/chat`),
 			icon: MessageCircle,
-			attention: unreadChat.total > 0,
-			attentionCount: unreadChat.total,
-			attentionLabel: unreadChat.total === 1 ? 'unread message' : 'unread messages',
+			badge: chatBadge,
 			accessibleLabel: unreadChat.label
 		},
 		{
@@ -102,7 +101,6 @@
 					})
 				)
 			]);
-			unreadChat.refresh();
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'The game could not be loaded.'), {
 				actionLabel: 'Retry',
@@ -115,9 +113,18 @@
 	}
 
 	$effect(() => {
-		unreadChat.setContext(auth.actor?.id ?? '', view?.game.id ?? '', view?.game.revision ?? 0);
+		unreadChat.setContext(
+			auth.actor?.id ?? '',
+			view?.game.id ?? '',
+			view?.game.revision ?? 0,
+			!loading
+		);
 	});
 </script>
+
+{#snippet chatBadge()}
+	<ChatUnreadBadge counts={unreadChat.promise} placement="navigation" />
+{/snippet}
 
 <div class:standalone class="live-shell">
 	{#if view && !standalone}

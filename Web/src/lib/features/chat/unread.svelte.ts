@@ -19,6 +19,7 @@ export function unreadChatLabel(total: number) {
 // Each shell owns one controller. Coalesce triggers and allow only one request in flight.
 export function createChatUnreadController() {
 	let result = $state<UnreadCounts>({ counts: {}, total: 0 });
+	let promise = $state.raw<Promise<UnreadCounts> | null>(null);
 	let actorId = '';
 	let gameId = '';
 	let revision = -1;
@@ -26,12 +27,13 @@ export function createChatUnreadController() {
 	let dirty = false;
 	let running = false;
 	let disposed = false;
+	let ready = false;
 
 	async function drain() {
-		if (running || disposed) return;
+		if (running || disposed || !ready) return result;
 		running = true;
 		try {
-			while (dirty && gameId && actorId && !disposed) {
+			while (dirty && gameId && actorId && !disposed && ready) {
 				dirty = false;
 				const request = generation;
 				try {
@@ -47,13 +49,16 @@ export function createChatUnreadController() {
 		} finally {
 			running = false;
 		}
+		return result;
 	}
 
 	function refresh() {
 		if (disposed) return;
 		generation += 1;
 		dirty = true;
-		queueMicrotask(() => void drain());
+		queueMicrotask(() => {
+			if (!running && !disposed && ready && actorId && gameId) promise = drain();
+		});
 	}
 
 	function storageChanged(event: StorageEvent) {
@@ -61,6 +66,9 @@ export function createChatUnreadController() {
 	}
 
 	return {
+		get promise() {
+			return promise;
+		},
 		get total() {
 			return result.total;
 		},
@@ -71,12 +79,17 @@ export function createChatUnreadController() {
 			return unreadChatLabel(result.total);
 		},
 		refresh,
-		setContext(actor: string, game: string, nextRevision: number) {
-			if (actor === actorId && game === gameId && nextRevision === revision) return;
-			if (actor !== actorId || game !== gameId) result = { counts: {}, total: 0 };
+		setContext(actor: string, game: string, nextRevision: number, nextReady = true) {
+			if (actor === actorId && game === gameId && nextRevision === revision && nextReady === ready)
+				return;
+			if (actor !== actorId || game !== gameId) {
+				result = { counts: {}, total: 0 };
+				if (!running) promise = null;
+			}
 			actorId = actor;
 			gameId = game;
 			revision = nextRevision;
+			ready = nextReady;
 			refresh();
 		},
 		start() {

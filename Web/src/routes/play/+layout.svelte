@@ -11,7 +11,7 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import AppNav from '$lib/components/AppNav.svelte';
-	import AttentionBadge from '$lib/components/AttentionBadge.svelte';
+	import ChatUnreadBadge from '$lib/features/chat/components/ChatUnreadBadge.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import {
 		playerShellContextKey,
@@ -87,7 +87,12 @@
 	});
 
 	$effect(() => {
-		unreadChat.setContext(auth.actor?.id ?? '', view?.game.id ?? '', view?.game.revision ?? 0);
+		unreadChat.setContext(
+			auth.actor?.id ?? '',
+			view?.game.id ?? '',
+			view?.game.revision ?? 0,
+			!loading
+		);
 	});
 
 	onMount(() => {
@@ -146,7 +151,6 @@
 					})
 				)
 			]);
-			unreadChat.refresh();
 		} catch (caught) {
 			loadError = errorMessage(caught, 'The game could not be loaded.');
 			if (!hubRoute) {
@@ -245,7 +249,7 @@
 				{#if view}
 					<a class="chat-action" href={resolve('/play/chat')} aria-label={unreadChat.label}>
 						<MessageCircle size={21} />
-						{#if unreadChat.total > 0}<AttentionBadge count={unreadChat.total} />{/if}
+						<ChatUnreadBadge counts={unreadChat.promise} />
 					</a>
 				{/if}
 				<a
