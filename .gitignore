@@ -39,3 +39,4 @@ Thumbs.db
 /docs/visual-audit
 /screenshots
 /Web/.tmp
+/test-results/.playwright-artifacts-0
