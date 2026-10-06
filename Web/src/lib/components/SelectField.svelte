@@ -16,6 +16,8 @@
 		name,
 		value = $bindable<T>(),
 		options,
+		layout = 'stacked',
+		density = 'default',
 		required = false,
 		disabled = false,
 		help = '',
@@ -27,6 +29,8 @@
 		name: string;
 		value?: T;
 		options: readonly (SelectOption<T> | SelectOptionGroup<T>)[];
+		layout?: 'stacked' | 'inline';
+		density?: 'default' | 'compact';
 		required?: boolean;
 		disabled?: boolean;
 		help?: string;
@@ -44,7 +48,12 @@
 	}
 </script>
 
-<label class="form-field" for={inputId}>
+<label
+	class="form-field"
+	class:inline={layout === 'inline'}
+	class:compact={density === 'compact'}
+	for={inputId}
+>
 	<span
 		>{label}{#if required}<i aria-hidden="true"> *</i>{/if}</span
 	>

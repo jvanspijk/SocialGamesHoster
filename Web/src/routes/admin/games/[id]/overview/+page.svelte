@@ -250,9 +250,11 @@
 			</div>
 
 			{#if ['running', 'paused'].includes(view.game.status)}
-				<Panel variant="focal">
-					<TimerControl gameId={view.game.id} {timer} onchange={(updated) => (timer = updated)} />
-				</Panel>
+				<div class="timer-card">
+					<Panel>
+						<TimerControl gameId={view.game.id} {timer} onchange={(updated) => (timer = updated)} />
+					</Panel>
+				</div>
 			{/if}
 
 			<div class="primary-actions">
@@ -587,6 +589,11 @@
 		display: grid;
 		align-content: start;
 		gap: var(--space-5);
+	}
+
+	.timer-card {
+		container: timer-card / inline-size;
+		width: min(100%, 28rem);
 	}
 
 	.state-heading {

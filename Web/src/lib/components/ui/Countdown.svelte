@@ -123,20 +123,26 @@
 		color: var(--status-danger);
 	}
 
+	.countdown-readout {
+		display: grid;
+		gap: var(--space-1);
+	}
+
 	.countdown-readout p {
 		margin: 0;
 		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
 		line-height: 1.5;
 		white-space: nowrap;
 	}
 
 	.countdown-readout strong {
 		display: block;
+		min-width: 5ch;
 		color: var(--text-primary);
 		font-family: var(--font-display);
-		font-size: clamp(var(--font-size-2xl), 9vw, 5.5rem);
+		font-size: var(--font-size-3xl);
 		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.06em;
 		line-height: 1;
 		white-space: nowrap;
 	}

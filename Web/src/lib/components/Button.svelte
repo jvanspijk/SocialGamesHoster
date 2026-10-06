@@ -2,6 +2,7 @@
 	let {
 		children,
 		variant = 'primary',
+		density = 'default',
 		type = 'button',
 		disabled = false,
 		loading = false,
@@ -9,6 +10,7 @@
 	}: {
 		children: import('svelte').Snippet;
 		variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+		density?: 'default' | 'compact';
 		type?: 'button' | 'submit';
 		disabled?: boolean;
 		loading?: boolean;
@@ -18,6 +20,7 @@
 
 <button
 	class:loading
+	class:compact={density === 'compact'}
 	class:danger={variant === 'danger'}
 	class:ghost={variant === 'ghost'}
 	class:secondary={variant === 'secondary'}
@@ -62,6 +65,12 @@
 	button:hover:not(:disabled) {
 		background: var(--button-background-hover);
 		transform: translateY(-1px);
+	}
+
+	.compact {
+		gap: var(--space-1);
+		padding: var(--space-2);
+		white-space: nowrap;
 	}
 
 	button:active:not(:disabled) {

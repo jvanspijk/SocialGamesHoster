@@ -21,12 +21,12 @@ describe('TimerControl', () => {
 		['running', 'Pause timer', ['Start timer', 'Resume timer']],
 		['paused', 'Resume timer', ['Start timer', 'Pause timer']],
 		['completed', 'Start again', ['Pause timer', 'Resume timer']]
-	] as const)('shows only valid actions while %s', (status, expected, absent) => {
+	] as const)('enables the appropriate action while %s', (status, expected, absent) => {
 		render(TimerControl, {
 			props: { gameId: 'game', timer: timer(status), onchange: () => undefined }
 		});
 
-		expect(screen.getByRole('button', { name: expected })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: expected })).toBeEnabled();
 		for (const label of absent) {
 			expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
 		}
