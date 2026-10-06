@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
+	import Info from '@lucide/svelte/icons/info';
 	import MonitorCog from '@lucide/svelte/icons/monitor-cog';
 	import Network from '@lucide/svelte/icons/network';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -47,7 +48,8 @@
 		{ id: 'backups', label: 'Backups', icon: DatabaseBackup },
 		{ id: 'diagnostics', label: 'Diagnostics', icon: MonitorCog },
 		{ id: 'display', label: 'Display', icon: UserCog },
-		{ id: 'account', label: 'Account', icon: UserCog }
+		{ id: 'account', label: 'Account', icon: UserCog },
+		{ id: 'app-info', label: 'App info', icon: Info }
 	];
 
 	let settings = $state<HostSettings | null>(null);
@@ -176,7 +178,6 @@
 	</nav>
 
 	<div class="settings-content">
-		<VersionMention />
 		{#if loading}
 			<p role="status">Loading settings…</p>
 		{:else if !auth.isOwner && ['network', 'phone-join', 'game-masters', 'backups'].includes(section)}
@@ -290,6 +291,8 @@
 			>
 				<DisplayPreferencesSettings />
 			</Panel>
+		{:else if section === 'app-info'}
+			<VersionMention />
 		{:else if section === 'account'}
 			<Panel title="Account" variant="focal">
 				<dl>
