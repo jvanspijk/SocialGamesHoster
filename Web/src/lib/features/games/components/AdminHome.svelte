@@ -9,7 +9,6 @@
 	import NavigationCards from '$lib/components/NavigationCards.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
 	import Panel from '$lib/components/Panel.svelte';
-	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import { gameStatusLabel } from '$lib/gamePresentation';
 	import type { Game } from '$lib/api/types';
 
@@ -108,8 +107,10 @@
 					<img src={coverImageSrc} alt="" width="48" height="48" />
 				</div>
 				<div>
-					<StatusBadge label={gameStatusLabel(activeGame.status)} />
-					<h2>{activeGame.name}</h2>
+					<div class="game-heading">
+						<h2>{activeGame.name}</h2>
+						<span class="game-status">{gameStatusLabel(activeGame.status)}</span>
+					</div>
 					<p>{activeGame.playerCount ?? 0} players</p>
 				</div>
 				<!-- The destination is derived from the active game's status. -->
@@ -149,6 +150,23 @@
 		border: 2px double var(--accent);
 		background: var(--surface-dark);
 		color: var(--accent-light);
+	}
+
+	.game-heading {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.game-status {
+		border: 1px solid var(--control-border);
+		background: var(--surface-muted);
+		color: var(--text-primary);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		line-height: 1.2;
+		padding: var(--space-1) var(--space-2);
 	}
 
 	.seal img {
