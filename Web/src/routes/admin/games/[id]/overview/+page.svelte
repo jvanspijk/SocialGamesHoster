@@ -48,6 +48,7 @@
 	let joinUrl = $state('');
 
 	const view = $derived(gameState.admin);
+	const hasPhases = $derived((view?.ruleset.phases.length ?? 0) > 0);
 	const activePlayers = $derived(
 		view?.participants.filter((player) => !['kicked', 'left'].includes(player.status)) ?? []
 	);
@@ -270,9 +271,11 @@
 					<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
 						<CirclePause size={19} /> Pause game
 					</Button>
-					<Button variant="secondary" onclick={() => (phaseOpen = true)}
-						><Forward size={19} /> Change phase</Button
-					>
+					{#if hasPhases}
+						<Button variant="secondary" onclick={() => (phaseOpen = true)}
+							><Forward size={19} /> Change phase</Button
+						>
+					{/if}
 					<Button variant="secondary" onclick={() => (announcementOpen = true)}
 						><Megaphone size={19} /> Announce</Button
 					>
@@ -281,9 +284,11 @@
 					<Button loading={busy} onclick={() => gameCommand('resume', 'Game resumed.')}>
 						<CirclePlay size={19} /> Resume game
 					</Button>
-					<Button variant="secondary" onclick={() => (phaseOpen = true)}
-						><Forward size={19} /> Change phase</Button
-					>
+					{#if hasPhases}
+						<Button variant="secondary" onclick={() => (phaseOpen = true)}
+							><Forward size={19} /> Change phase</Button
+						>
+					{/if}
 					<Button variant="secondary" onclick={() => (announcementOpen = true)}
 						><Megaphone size={19} /> Announce</Button
 					>
