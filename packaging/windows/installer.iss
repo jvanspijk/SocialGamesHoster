@@ -35,7 +35,9 @@ RestartApplications=no
 AppMutex=Local\SocialGamesHoster
 UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoProductName={#AppName}
+VersionInfoVersion={#WindowsVersion}
 VersionInfoProductVersion={#WindowsVersion}
+VersionInfoProductTextVersion={#AppVersion}
 VersionInfoDescription=Local-first social games app
 
 [Files]

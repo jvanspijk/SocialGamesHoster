@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "",
     [switch]$SkipTests,
     [switch]$SkipInstaller
 )
@@ -15,27 +14,22 @@ try {
 & {
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$versionFile = Join-Path $projectRoot "VERSION"
-if ([string]::IsNullOrWhiteSpace($Version)) {
-    if (-not (Test-Path -LiteralPath $versionFile -PathType Leaf)) {
-        throw "Version file was not found: $versionFile"
-    }
-    $Version = (Get-Content -LiteralPath $versionFile -Raw).Trim()
+$git = Get-Command "git" -ErrorAction SilentlyContinue
+if (-not $git) {
+    throw "Git is required to build a release version. Run this script from a Git checkout with commit metadata."
 }
+$commitHash = & $git.Source -C $projectRoot rev-parse --short=7 HEAD
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($commitHash)) {
+    throw "Could not determine the Git commit for the release version. Run this script from a Git checkout with commit metadata."
+}
+$utcDate = [DateTime]::UtcNow.ToString("yyyy.MM.dd", [Globalization.CultureInfo]::InvariantCulture)
+$Version = "$utcDate-$($commitHash.Trim())"
 $webRoot = Join-Path $projectRoot "Web"
 $embeddedRoot = Join-Path $projectRoot "Host\embedded\web"
 $distRoot = Join-Path $projectRoot "dist"
 $frontendDependencyInstaller = Join-Path $PSScriptRoot "Install-FrontendDependencies.ps1"
 . $frontendDependencyInstaller
-$versionMatch = [regex]::Match($Version, "^\d+(?:\.\d+){0,3}")
-if (-not $versionMatch.Success) {
-    throw "Version must begin with one to four numeric components, for example 1.2.3 or 1.2.3-beta.1."
-}
-$windowsVersionParts = @($versionMatch.Value.Split("."))
-while ($windowsVersionParts.Count -lt 4) {
-    $windowsVersionParts += "0"
-}
-$windowsVersion = $windowsVersionParts -join "."
+$windowsVersion = "$utcDate.0"
 
 function Assert-NativeSuccess([string]$Step) {
     if ($LASTEXITCODE -ne 0) {
@@ -81,6 +75,9 @@ try {
     $previousGoOs = $env:GOOS
     $previousGoArch = $env:GOARCH
     $previousCgo = $env:CGO_ENABLED
+    $mainPackageRoot = Join-Path $projectRoot "Host\cmd\socialgameshoster"
+    $versionResourcePath = Join-Path $mainPackageRoot "versioninfo.syso"
+    $versionResourceGenerated = $false
     try {
         $env:GOOS = "windows"
         $env:GOARCH = "amd64"
@@ -89,12 +86,32 @@ try {
             go test -trimpath ./Host/...
             Assert-NativeSuccess "Go tests"
         }
+        if (Test-Path -LiteralPath $versionResourcePath) {
+            throw "Temporary Windows version resource already exists: $versionResourcePath"
+        }
+        $versionResourceGenerated = $true
+        $versionParts = @($utcDate.Split("."))
+        & go run "github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.7.0" `
+            "-64" "-o=$versionResourcePath" `
+            "-ver-major=$($versionParts[0])" "-ver-minor=$($versionParts[1])" `
+            "-ver-patch=$($versionParts[2])" "-ver-build=0" `
+            "-product-ver-major=$($versionParts[0])" "-product-ver-minor=$($versionParts[1])" `
+            "-product-ver-patch=$($versionParts[2])" "-product-ver-build=0" `
+            "-file-version=$windowsVersion" "-product-version=$Version" `
+            "-company=Social Games Hoster contributors" "-description=Local-first social games app" `
+            "-internal-name=SocialGamesHoster" "-original-name=SocialGamesHoster.exe" `
+            "-product-name=Social Games Hoster" `
+            (Join-Path $projectRoot "packaging\windows\versioninfo.json")
+        Assert-NativeSuccess "Windows executable version resource generation"
         go build -trimpath -ldflags "-s -w -H=windowsgui -X main.version=$Version" `
             -o (Join-Path $distRoot "SocialGamesHoster.exe") `
             ./Host/cmd/socialgameshoster
         Assert-NativeSuccess "Windows host build"
     }
     finally {
+        if ($versionResourceGenerated) {
+            Remove-Item -LiteralPath $versionResourcePath -Force -ErrorAction SilentlyContinue
+        }
         $env:GOOS = $previousGoOs
         $env:GOARCH = $previousGoArch
         $env:CGO_ENABLED = $previousCgo

@@ -3,7 +3,7 @@ name: build-and-release
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ["v????.??.??"]
   pull_request:
   workflow_dispatch:
 
@@ -48,8 +48,7 @@ jobs:
         env:
           SGH_SIGN_CERT_THUMBPRINT: ${{ secrets.SGH_SIGN_CERT_THUMBPRINT }}
         run: |
-          $version = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart("v") } else { "0.1.0-${{ github.run_number }}" }
-          ./scripts/Build.ps1 -Version $version -SkipTests
+          ./scripts/Build.ps1 -SkipTests
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:

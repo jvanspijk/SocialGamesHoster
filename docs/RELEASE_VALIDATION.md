@@ -11,8 +11,11 @@ Run:
 
 ```powershell
 ./scripts/Test.ps1
-./scripts/Build.ps1 -Version <version>
+./scripts/Build.ps1
 ```
+
+The build version is generated as `YYYY.MM.DD-<7-character-commit-hash>` using
+the UTC build date. Create release tags as `vYYYY.MM.DD`.
 
 Required outcomes:
 
