@@ -27,7 +27,6 @@
 	--color-paper-wash: rgb(254 248 231 / 62%);
 	--color-paper-veil: rgb(254 248 231 / 30%);
 	--color-backdrop: rgb(17 10 6 / 72%);
-	--color-shell: rgb(244 230 199 / 94%);
 	--shadow-reference-large: 0 8px 12px rgb(35 20 11 / 14%);
 	--shadow-reference-small: 0 2px 5px rgb(35 20 11 / 10%);
 
@@ -70,7 +69,7 @@
 	--surface-wash: var(--color-paper-wash);
 	--surface-veil: var(--color-paper-veil);
 	--surface-backdrop: var(--color-backdrop);
-	--surface-shell: var(--color-shell);
+	--surface-shell: var(--surface-canvas);
 	--surface-nav: var(--surface-surround);
 	--choice-border: var(--color-sand-300);
 	--control-secondary-shadow: var(--color-sand-500);
