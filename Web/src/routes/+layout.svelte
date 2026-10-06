@@ -8,7 +8,6 @@
 	import Shield from '@lucide/svelte/icons/shield';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import IconButton from '$lib/components/IconButton.svelte';
-	import ConnectionBadge from '$lib/features/shell/components/ConnectionBadge.svelte';
 	import ToastViewport from '$lib/features/shell/components/ToastViewport.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
@@ -78,7 +77,6 @@
 					</IconButton>
 				{/if}
 			</nav>
-			<ConnectionBadge />
 		</header>
 		<main class="page">
 			{@render children()}

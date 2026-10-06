@@ -1,6 +1,5 @@
 import { api, pb } from '$lib/api/client';
 import type { AdminGameView, PlayerGameView, RealtimeEnvelope } from '$lib/api/types';
-import { connection } from './connection.svelte';
 
 let playerView = $state<PlayerGameView | null>(null);
 let adminView = $state<AdminGameView | null>(null);
@@ -34,14 +33,8 @@ async function subscribe(topic: string, refresh: () => Promise<unknown>) {
 				assets: []
 			};
 		}
-		const currentRevision = playerView?.game.revision ?? adminView?.game.revision ?? 0;
-		if (envelope.revision && envelope.revision > currentRevision + 1) {
-			connection.set('reconnecting');
-		}
 		await refresh();
-		connection.set('connected');
 	});
-	connection.set('connected');
 	return unsubscribe;
 }
 

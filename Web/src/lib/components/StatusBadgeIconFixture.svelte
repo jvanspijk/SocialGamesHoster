@@ -3,7 +3,7 @@
 </script>
 
 {#snippet icon()}
-	<svg data-testid="connection-icon"></svg>
+	<svg data-testid="status-icon"></svg>
 {/snippet}
 
-<StatusBadge label="Connected" dot={true} {icon} />
+<StatusBadge label="Ready" dot={true} {icon} />

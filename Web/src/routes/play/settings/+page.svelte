@@ -5,9 +5,9 @@
 	import History from '@lucide/svelte/icons/history';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import UserRound from '@lucide/svelte/icons/user-round';
-	import Wifi from '@lucide/svelte/icons/wifi';
 	import Button from '$lib/components/Button.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
+	import VersionMention from '$lib/features/settings/components/VersionMention.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import ToggleSetting from '$lib/components/ToggleSetting.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
@@ -55,12 +55,7 @@
 		<DisplayPreferencesSettings />
 	</Panel>
 
-	<Panel title="Connection">
-		<div class="connection-row">
-			<Wifi size={21} />
-			<span>Connected to this game</span>
-		</div>
-	</Panel>
+	<VersionMention />
 
 	<Panel title="Account">
 		<p>
@@ -96,11 +91,5 @@
 		font-size: var(--font-size-sm);
 		font-weight: 700;
 		text-decoration: none;
-	}
-
-	.connection-row {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
 	}
 </style>

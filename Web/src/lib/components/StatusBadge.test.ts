@@ -22,7 +22,7 @@ describe('StatusBadge', () => {
 	it('renders an optional icon instead of the status dot', () => {
 		const view = render(StatusBadgeIconFixture);
 
-		expect(screen.getByTestId('connection-icon')).toBeVisible();
+		expect(screen.getByTestId('status-icon')).toBeVisible();
 		expect(view.container.querySelector('i')).not.toBeInTheDocument();
 	});
 });

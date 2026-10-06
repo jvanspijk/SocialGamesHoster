@@ -7,7 +7,7 @@ const prohibitedImport = /\$lib\/(?:api|state|forms)(?:\/|['"])/;
 
 describe('shared UI boundaries', () => {
 	it('recognizes both quote styles for prohibited application imports', () => {
-		expect(`import { connection } from "$lib/state/connection.svelte";`).toMatch(prohibitedImport);
+		expect(`import { auth } from "$lib/state/auth.svelte";`).toMatch(prohibitedImport);
 		expect(`import { api } from '$lib/api/client';`).toMatch(prohibitedImport);
 	});
 

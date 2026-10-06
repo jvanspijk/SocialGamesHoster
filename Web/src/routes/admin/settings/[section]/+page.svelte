@@ -14,6 +14,7 @@
 	import ContentHeader from '$lib/components/ContentHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
+	import VersionMention from '$lib/features/settings/components/VersionMention.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
@@ -175,6 +176,7 @@
 	</nav>
 
 	<div class="settings-content">
+		<VersionMention />
 		{#if loading}
 			<p role="status">Loading settings…</p>
 		{:else if !auth.isOwner && ['network', 'phone-join', 'game-masters', 'backups'].includes(section)}
