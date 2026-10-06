@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
 	import House from '@lucide/svelte/icons/house';
-	import LogOut from '@lucide/svelte/icons/log-out';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
 	import Settings from '@lucide/svelte/icons/settings';
 	import UsersRound from '@lucide/svelte/icons/users-round';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import IconButton from '$lib/components/IconButton.svelte';
+	import SignOutButton from '$lib/features/shell/components/SignOutButton.svelte';
 	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import ProfileRequestAttention from '$lib/features/profiles/components/ProfileRequestAttention.svelte';
 	import Field from '$lib/components/Field.svelte';
@@ -109,15 +107,6 @@
 		}
 	}
 
-	async function logout() {
-		try {
-			await api('/auth/logout', { method: 'POST' });
-		} finally {
-			auth.clear();
-			await goto(resolve('/'));
-		}
-	}
-
 	async function recoverOwnership(event: SubmitEvent) {
 		event.preventDefault();
 		busy = true;
@@ -189,9 +178,7 @@
 			>
 			<div class="header-actions">
 				<AdminJoinQrButton />
-				<IconButton label="Sign out" variant="ghost" onclick={logout}>
-					{#snippet icon()}<LogOut size={20} />{/snippet}
-				</IconButton>
+				<SignOutButton />
 			</div>
 		</header>
 		<main class="management-content">

@@ -1,30 +1,14 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import History from '@lucide/svelte/icons/history';
-	import LogOut from '@lucide/svelte/icons/log-out';
 	import UserRound from '@lucide/svelte/icons/user-round';
-	import Button from '$lib/components/Button.svelte';
 	import DisplayPreferencesSettings from '$lib/features/settings/components/DisplayPreferencesSettings.svelte';
 	import VersionMention from '$lib/features/settings/components/VersionMention.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import ToggleSetting from '$lib/components/ToggleSetting.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
-	import { api } from '$lib/api/client';
-	import { auth } from '$lib/state/auth.svelte';
-	import { gameState } from '$lib/state/game.svelte';
 	import { sound } from '$lib/state/sound.svelte';
-
-	async function signOut() {
-		try {
-			await api('/auth/logout', { method: 'POST' });
-		} finally {
-			gameState.clear();
-			auth.clear();
-			await goto(resolve('/'));
-		}
-	}
 </script>
 
 <div class="account-page">
@@ -56,14 +40,6 @@
 	</Panel>
 
 	<VersionMention />
-
-	<Panel title="Account">
-		<p>
-			Signing out removes this profile from the current device. Your game history stays with this
-			game.
-		</p>
-		<Button variant="danger" onclick={signOut}><LogOut size={18} /> Sign out</Button>
-	</Panel>
 </div>
 
 <style>

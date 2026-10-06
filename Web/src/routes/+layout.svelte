@@ -1,13 +1,11 @@
 <script lang="ts">
 	import '../app.css';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import LogOut from '@lucide/svelte/icons/log-out';
 	import Shield from '@lucide/svelte/icons/shield';
 	import UserRound from '@lucide/svelte/icons/user-round';
-	import IconButton from '$lib/components/IconButton.svelte';
+	import SignOutButton from '$lib/features/shell/components/SignOutButton.svelte';
 	import ToastViewport from '$lib/features/shell/components/ToastViewport.svelte';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/state/auth.svelte';
@@ -27,15 +25,6 @@
 			applicationVersion = status.version;
 		} catch {
 			applicationVersion = '';
-		}
-	}
-
-	async function logout() {
-		try {
-			await api('/auth/logout', { method: 'POST' });
-		} finally {
-			auth.clear();
-			await goto(resolve('/'));
 		}
 	}
 </script>
@@ -72,9 +61,7 @@
 					<Shield size={17} /> Manage
 				</a>
 				{#if auth.authenticated}
-					<IconButton label="Sign out" variant="ghost" onclick={logout}>
-						{#snippet icon()}<LogOut size={18} />{/snippet}
-					</IconButton>
+					<SignOutButton />
 				{/if}
 			</nav>
 		</header>

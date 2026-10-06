@@ -12,6 +12,7 @@
 	import VolumeX from '@lucide/svelte/icons/volume-x';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import AttentionBadge from '$lib/components/AttentionBadge.svelte';
+	import SignOutButton from '$lib/features/shell/components/SignOutButton.svelte';
 	import AttentionCard from '$lib/features/play/components/AttentionCard.svelte';
 	import {
 		playerShellContextKey,
@@ -223,6 +224,7 @@
 				<a href={resolve('/play/profile')} aria-label="Player profile">
 					<UserCircle size={22} />
 				</a>
+				<SignOutButton />
 			</div>
 		</header>
 		<main class="account-content">{@render children()}</main>
