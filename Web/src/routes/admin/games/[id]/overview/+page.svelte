@@ -269,20 +269,16 @@
 					<Button variant="ghost" disabled={busy} onclick={() => (cancelConfirmOpen = true)}>
 						<XCircle size={19} /> Cancel game
 					</Button>
-				{:else if view.game.status === 'running'}
-					<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
-						<CirclePause size={19} /> Pause game
-					</Button>
-					{#if hasPhases}
-						<Button variant="secondary" onclick={() => (phaseOpen = true)}
-							><Forward size={19} /> Change phase</Button
-						>
+				{:else if ['running', 'paused'].includes(view.game.status)}
+					{#if view.game.status === 'running'}
+						<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
+							<CirclePause size={19} /> Pause game
+						</Button>
+					{:else}
+						<Button loading={busy} onclick={() => gameCommand('resume', 'Game resumed.')}>
+							<CirclePlay size={19} /> Resume game
+						</Button>
 					{/if}
-					<Button variant="ghost" onclick={startCompletion}><Flag size={19} /> End game</Button>
-				{:else if view.game.status === 'paused'}
-					<Button loading={busy} onclick={() => gameCommand('resume', 'Game resumed.')}>
-						<CirclePlay size={19} /> Resume game
-					</Button>
 					{#if hasPhases}
 						<Button variant="secondary" onclick={() => (phaseOpen = true)}
 							><Forward size={19} /> Change phase</Button
