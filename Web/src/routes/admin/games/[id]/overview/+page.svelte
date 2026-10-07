@@ -278,9 +278,6 @@
 							><Forward size={19} /> Change phase</Button
 						>
 					{/if}
-					<Button variant="secondary" onclick={() => (announcementOpen = true)}
-						><Megaphone size={19} /> Announce</Button
-					>
 					<Button variant="ghost" onclick={startCompletion}><Flag size={19} /> End game</Button>
 				{:else if view.game.status === 'paused'}
 					<Button loading={busy} onclick={() => gameCommand('resume', 'Game resumed.')}>
@@ -291,9 +288,6 @@
 							><Forward size={19} /> Change phase</Button
 						>
 					{/if}
-					<Button variant="secondary" onclick={() => (announcementOpen = true)}
-						><Megaphone size={19} /> Announce</Button
-					>
 					<Button variant="ghost" onclick={startCompletion}><Flag size={19} /> End game</Button>
 				{:else if view.game.status === 'review'}
 					<a class="primary-link" href={resolve(`/admin/games/${view.game.id}/finish/outcomes`)}>
