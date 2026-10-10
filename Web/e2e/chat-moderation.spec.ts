@@ -208,6 +208,8 @@ for (const admin of [true, false]) {
 					subscriptions = topics;
 				}
 			});
+			// The shell subscribes to rooms too; wait for chat to load before sending an update.
+			await expect(page.getByRole('button', { name: 'General', exact: true })).toBeEnabled();
 			await expect.poll(() => subscriptions).toContain('room:general');
 			connection!.write(
 				`event: room:general\ndata: ${JSON.stringify({ kind: 'chat.room_updated', payload: { id: 'general', playersCanPost: false } })}\n\n`

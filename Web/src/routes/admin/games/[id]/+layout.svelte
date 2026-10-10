@@ -171,7 +171,7 @@
 		</div>
 	</header>
 	<main class="live-content">
-		{#if loading && !view}
+		{#if loading}
 			<p role="status">Loading game…</p>
 		{:else if view}
 			{@render children()}
