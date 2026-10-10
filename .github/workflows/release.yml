@@ -2,8 +2,8 @@ name: build-and-release
 
 on:
   push:
-    branches: [main]
-    tags: ["v????.??.??"]
+    branches: ["**"]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -29,6 +29,7 @@ jobs:
           cache: npm
           cache-dependency-path: Web/package-lock.json
       - name: Install Inno Setup
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         shell: pwsh
         run: choco install innosetup --no-progress -y
       - name: Install frontend and browser test dependencies
@@ -43,13 +44,15 @@ jobs:
       - name: Run correctness, browser, and security gates
         shell: pwsh
         run: ./scripts/Test.ps1
-      - name: Build, test, and package
+      - name: Build release packages
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         shell: pwsh
         env:
           SGH_SIGN_CERT_THUMBPRINT: ${{ secrets.SGH_SIGN_CERT_THUMBPRINT }}
         run: |
           ./scripts/Build.ps1 -SkipTests
       - name: Upload Windows artifacts
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         uses: actions/upload-artifact@v4
         with:
           name: social-games-hoster-windows-x64
@@ -59,7 +62,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.ref_type == 'tag'
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     needs: windows
     runs-on: ubuntu-latest
     permissions:

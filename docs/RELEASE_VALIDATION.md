@@ -30,6 +30,32 @@ Required outcomes:
 - `SocialGamesHoster.exe`, one setup executable, and `SHA256SUMS.txt` exist;
 - no external runtime files are packaged.
 
+## GitHub Actions and Desktop releases
+
+Pushing a commit on any branch, opening or updating a pull request, or manually
+running the workflow runs `scripts/Test.ps1`. Normal runs do not package or
+publish a release.
+
+Pushing a tag beginning with `v` runs the same tests, then builds the Windows x64
+application and installer. If all steps succeed, the workflow publishes a GitHub
+release containing `SocialGamesHoster.exe`, the `*-setup.exe` installer, and
+`SHA256SUMS.txt`, with GitHub-generated release notes.
+
+To release from GitHub Desktop:
+
+1. Commit and push the changes you want to release, including the release workflow.
+2. Open **History**, right-click the desired commit, and choose **Create Tag...**.
+3. Enter a unique version tag such as `v2026.10.12` and click **Create Tag**.
+   For another release on the same day, use a suffix such as `v2026.10.12-2`.
+4. Push the tag to GitHub using **Push origin** if it has not already been pushed.
+5. Check the repository's **Actions** tab, then **Releases** for the downloads.
+
+The tagged commit must contain the corrected release workflow. Tags on older
+commits with an invalid workflow cannot use a fix from a newer commit. The tag
+names the release; the executable version still uses the UTC build date and
+commit hash. Generated notes list merged pull requests and contributors and link
+to the full changelog; you can edit the published release notes afterward.
+
 ## Signing and reputation
 
 For a public Windows release:
