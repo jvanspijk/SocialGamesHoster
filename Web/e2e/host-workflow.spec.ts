@@ -190,7 +190,7 @@ test('owner completes the ruleset lifecycle with recovery, assets, previews, and
 	await gameDialog.getByLabel('Ruleset').selectOption({ label: 'Recovered Party Test' });
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
-	await expect(page.getByRole('heading', { name: 'QR Code' })).toBeVisible();
+	await expect(page.getByRole('img', { name: 'QR code for the player join page' })).toBeVisible();
 	await page.goto('/admin/games');
 	await expect(page.getByRole('columnheader', { name: 'Game' })).toBeVisible();
 	await expect(page.getByRole('cell', { name: '0/3' })).toBeVisible();
@@ -241,7 +241,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 	await gameDialog.getByRole('button', { name: 'Create game' }).click();
 	await expect(page).toHaveURL(/\/admin\/games\/[^/]+\/overview$/);
 	const gameUrl = page.url();
-	await expect(page.getByRole('heading', { name: 'QR Code' })).toBeVisible();
+	await expect(page.getByRole('img', { name: 'QR code for the player join page' })).toBeVisible();
 
 	const playerContext = await browser.newContext();
 	const player = await playerContext.newPage();
@@ -264,23 +264,19 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await expect(player.getByText('Player 1', { exact: true })).toBeVisible();
 		await page.goto(gameUrl);
 
-		await page.getByRole('button', { name: 'New announcement' }).first().click();
-		let announcement = page.getByRole('dialog', { name: 'New announcement' });
+		await page.getByRole('link', { name: 'Announcements', exact: true }).click();
+		await page.getByRole('button', { name: 'Send announcement', exact: true }).click();
+		let announcement = page.getByRole('dialog', { name: 'Send announcement' });
 		await announcement.getByLabel('Announcement message').fill('Existing media announcement');
-		await announcement
-			.getByRole('group', { name: 'Image (optional)' })
-			.getByLabel('Choose from ruleset')
-			.check();
+		await announcement.getByText('Images, audio and sound cues', { exact: true }).click();
+		await announcement.getByLabel('Image source').selectOption('ruleset');
 		await announcement
 			.getByLabel('Ruleset image')
 			.selectOption({ label: 'echo-location-cover.webp' });
-		await announcement
-			.getByRole('group', { name: 'Audio (optional)' })
-			.getByLabel('Choose from ruleset')
-			.check();
+		await announcement.getByLabel('Audio source').selectOption('ruleset');
 		await announcement.getByLabel('Ruleset audio').selectOption({ label: 'course-clear.ogg' });
-		await announcement.getByRole('button', { name: 'Send announcement' }).click();
-		await expect(page.getByText('Announcement sent.')).toBeVisible();
+		await announcement.getByRole('button', { name: 'Send to everyone' }).click();
+		await expect(page.getByText('Sent to 1 player.')).toBeVisible();
 		await expect(player.getByText('Existing media announcement')).toBeVisible();
 		await expect(
 			player.getByAltText(
@@ -324,7 +320,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await expect(roleAssignmentPlayer).toHaveURL(/\/play(?:\/party)?$/);
 		await page.goto(gameUrl);
 
-		await page.getByRole('link', { name: 'Players', exact: true }).click();
+		await page.getByRole('link', { name: 'Players & roles', exact: true }).click();
 		await page.getByLabel('Role for Browser Player').selectOption({ label: 'Lookout' });
 		await page
 			.getByLabel('Role for Other Browser Player')
@@ -336,8 +332,8 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
 		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
 		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');
-		await page.getByRole('link', { name: 'Overview', exact: true }).click();
-		await page.getByRole('link', { name: 'Players', exact: true }).click();
+		await page.getByRole('link', { name: 'Game', exact: true }).click();
+		await page.getByRole('link', { name: 'Players & roles', exact: true }).click();
 		await expect(page.getByLabel('Role for Browser Player')).toHaveValue('lookout');
 		await expect(page.getByLabel('Role for Other Browser Player')).toHaveValue('sonar_operator');
 		await expect(page.getByLabel('Role for Role Assignment Player')).toHaveValue('');
@@ -348,9 +344,11 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 
 		await page.goto(gameUrl);
 
-		await page.getByRole('button', { name: 'New announcement' }).first().click();
-		announcement = page.getByRole('dialog', { name: 'New announcement' });
+		await page.getByRole('link', { name: 'Announcements', exact: true }).click();
+		await page.getByRole('button', { name: 'Send announcement', exact: true }).click();
+		announcement = page.getByRole('dialog', { name: 'Send announcement' });
 		await announcement.getByLabel('Announcement message').fill('Uploaded media announcement');
+		await announcement.getByText('Images, audio and sound cues', { exact: true }).click();
 		await announcement.getByLabel('Recipients').selectOption('player');
 		const browserPlayerId = await announcement
 			.getByLabel('Player')
@@ -361,10 +359,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 		await announcement
 			.getByRole('combobox', { name: 'Player', exact: true })
 			.selectOption(browserPlayerId!);
-		await announcement
-			.getByRole('group', { name: 'Image (optional)' })
-			.getByLabel('Upload for this announcement')
-			.check();
+		await announcement.getByLabel('Image source').selectOption('upload');
 		await announcement.getByLabel('Image file').setInputFiles({
 			name: 'one-off.png',
 			mimeType: 'image/png',
@@ -373,6 +368,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 				'base64'
 			)
 		});
+		await announcement.getByLabel('Image description').fill('A red dot.');
 		let failedOnce = false;
 		const announcementPattern = '**/api/app/v1/games/*/announcements';
 		await page.route(announcementPattern, async (route) => {
@@ -383,7 +379,7 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 			}
 			await route.continue();
 		});
-		await announcement.getByRole('button', { name: 'Send announcement' }).click();
+		await announcement.getByRole('button', { name: 'Send to Browser Player' }).click();
 		await expect(page.getByText('The app returned an unexpected response.')).toBeVisible();
 		await expect(announcement).toBeVisible();
 		await expect(announcement.getByLabel('Announcement message')).toHaveValue(
@@ -399,8 +395,8 @@ test('announcement composer sends ruleset and one-off media to a recipient', asy
 				});
 			}
 		});
-		await announcement.getByRole('button', { name: 'Send announcement' }).click();
-		await expect(page.getByText('Announcement sent.')).toBeVisible();
+		await announcement.getByRole('button', { name: 'Send to Browser Player' }).click();
+		await expect(page.getByText('Sent to 1 player.')).toBeVisible();
 		await expect(player.getByText('Uploaded media announcement')).toBeVisible();
 		await expect(player.locator('img').last()).toBeAttached();
 		await expect(nonRecipient.getByText('Uploaded media announcement')).not.toBeVisible();

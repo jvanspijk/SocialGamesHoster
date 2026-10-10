@@ -6,18 +6,20 @@
 		title,
 		description = '',
 		variant = 'quiet',
+		fill = false,
 		children,
 		actions
 	}: {
 		title?: string;
 		description?: string;
 		variant?: 'quiet' | 'focal' | 'dark';
+		fill?: boolean;
 		children: Snippet;
 		actions?: Snippet;
 	} = $props();
 </script>
 
-<section class:focal={variant === 'focal'} class:dark={variant === 'dark'}>
+<section class:focal={variant === 'focal'} class:dark={variant === 'dark'} class:fill>
 	{#if title || actions}
 		<header class="panel-header">
 			<ContentHeader {description} {actions} density="compact">
@@ -46,6 +48,16 @@
 
 	.panel-header {
 		margin-block-end: var(--space-4);
+	}
+	.fill {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	.fill > .body {
+		flex: 1;
+		min-height: 0;
+		display: grid;
 	}
 
 	h2 {

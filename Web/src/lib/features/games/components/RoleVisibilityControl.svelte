@@ -33,7 +33,9 @@
 			await gameState.refreshAdmin(gameId);
 			revealConfirmOpen = false;
 			hideConfirmOpen = false;
-			toasts.success(visible ? 'Roles are available.' : 'Roles are hidden.');
+			toasts.success(
+				visible ? 'Players can see their own roles.' : 'Roles are hidden from players.'
+			);
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Role visibility could not be changed.'));
 		} finally {
@@ -43,10 +45,9 @@
 </script>
 
 {#snippet status()}
-	<strong>{rolesVisible ? 'Roles revealed' : 'Roles hidden'}</strong>
-	<span class="visibility-description">
-		{rolesVisible ? 'Players can see their own role.' : 'Roles are hidden from players.'}
-	</span>
+	<strong
+		>{rolesVisible ? 'Players can see their own roles' : 'Roles are hidden from players'}</strong
+	>
 {/snippet}
 
 {#snippet dialogs()}
@@ -69,7 +70,10 @@
 		description=""
 		close={() => (hideConfirmOpen = false)}
 	>
-		<p>Roles will be hidden on all player screens immediately.</p>
+		<p>
+			Roles will be hidden on all player screens immediately. Players may already have read their
+			role.
+		</p>
 		{#snippet actions()}
 			<Button variant="ghost" onclick={() => (hideConfirmOpen = false)}>Cancel</Button>
 			<Button variant="danger" loading={busy} onclick={() => setRoleVisibility(false)}
@@ -85,7 +89,7 @@
 		<div>{@render status()}</div>
 		{#if rolesVisible}
 			<button class="readiness-action" type="button" onclick={() => (hideConfirmOpen = true)}
-				>Hide</button
+				>Hide roles</button
 			>
 		{:else}
 			<button class="readiness-action" type="button" onclick={() => (revealConfirmOpen = true)}
@@ -101,9 +105,9 @@
 			<span>{@render status()}</span>
 		</div>
 		{#if rolesVisible}
-			<Button variant="secondary" onclick={() => (hideConfirmOpen = true)}>Hide roles</Button>
+			<Button variant="ghost" onclick={() => (hideConfirmOpen = true)}>Hide roles</Button>
 		{:else}
-			<Button onclick={() => (revealConfirmOpen = true)}>Reveal roles</Button>
+			<Button variant="secondary" onclick={() => (revealConfirmOpen = true)}>Reveal roles</Button>
 		{/if}
 		{@render dialogs()}
 	</div>
@@ -119,14 +123,8 @@
 		padding: var(--space-3) 0;
 	}
 
-	.readiness-control strong,
-	.visibility-description {
+	.readiness-control strong {
 		display: block;
-	}
-
-	.visibility-description {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
 	}
 
 	.readiness-action {
@@ -143,6 +141,7 @@
 	.heading-control {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: var(--space-3);
 		border: var(--border-subtle);
 		background: var(--surface-raised);

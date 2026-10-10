@@ -2,6 +2,9 @@
 	import { onMount, tick } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import Lock from '@lucide/svelte/icons/lock';
+	import LockOpen from '@lucide/svelte/icons/lock-open';
+	import Button from '$lib/components/Button.svelte';
 	import Composer from '$lib/components/Composer.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import MessageList, { type MessageListItem } from '$lib/components/MessageList.svelte';
@@ -50,6 +53,7 @@
 	let loadingRooms = $state(true);
 	let loadingMessages = $state(false);
 	let sending = $state(false);
+	let changingPosting = $state(false);
 	let firstUnreadId = $state('');
 	let messagesElement = $state<HTMLDivElement>();
 	let subscriptions: Array<() => void> = [];
@@ -60,6 +64,9 @@
 	const scrollPositions = new SvelteMap<string, number>();
 
 	const selectedRoom = $derived(rooms.find((room) => room.id === selectedRoomId) ?? null);
+	const allChannelsLocked = $derived(
+		rooms.length > 0 && rooms.every((room) => !room.playersCanPost)
+	);
 	const filteredRooms = $derived.by(() => {
 		const query = search.trim().toLocaleLowerCase();
 		return rooms
@@ -76,14 +83,21 @@
 		filteredRooms.map((room) => ({
 			id: room.id,
 			label: room.label,
-			accessibleLabel: `${room.label}${unread(room) ? ', New messages' : ''}`,
+			accessibleLabel: `${room.label}${!room.playersCanPost ? ', Players read-only' : ''}${unread(room) ? ', New messages' : ''}`,
+			muted: !room.playersCanPost,
 			description: room.latestMessage
 				? `${room.latestMessage.senderLabel}: ${room.latestMessage.preview}`
 				: 'No messages yet',
 			supportingLabel: roomType(room),
 			metaLabel: timeLabel(room.latestMessage?.createdAt),
 			leadingText: room.label.slice(0, 1).toUpperCase(),
-			leadingVariant: room.kind === 'team' ? 'people' : room.kind === 'general' ? 'hash' : 'text',
+			leadingVariant: !room.playersCanPost
+				? 'lock'
+				: room.kind === 'team'
+					? 'people'
+					: room.kind === 'general'
+						? 'hash'
+						: 'text',
 			unread: unread(room)
 		}))
 	);
@@ -309,7 +323,8 @@
 	}
 
 	async function togglePosting() {
-		if (!selectedRoom) return;
+		if (!selectedRoom || !canModerate || archived || changingPosting) return;
+		changingPosting = true;
 		try {
 			const updated = await api<Room>(`/rooms/${selectedRoom.id}`, {
 				method: 'PATCH',
@@ -323,6 +338,31 @@
 			);
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'Posting access could not be updated.'));
+		} finally {
+			changingPosting = false;
+		}
+	}
+
+	async function toggleAllChannels() {
+		if (!canModerate || archived || changingPosting || !rooms.length) return;
+		const playersCanPost = allChannelsLocked;
+		const channels = rooms.filter((room) => room.playersCanPost !== playersCanPost);
+		changingPosting = true;
+		try {
+			for (const channel of channels) {
+				const updated = await api<Room>(`/rooms/${channel.id}`, {
+					method: 'PATCH',
+					...jsonBody({ playersCanPost })
+				});
+				rooms = rooms.map((room) => (room.id === updated.id ? { ...room, ...updated } : room));
+			}
+			toasts.success(
+				playersCanPost ? 'Players can post.' : 'Players cannot post. They can still read messages.'
+			);
+		} catch (caught) {
+			toasts.error(errorMessage(caught, 'Posting access could not be updated.'));
+		} finally {
+			changingPosting = false;
 		}
 	}
 
@@ -361,7 +401,17 @@
 	}
 </script>
 
-<SplitView detailOpen={Boolean(selectedRoom)}>
+{#snippet channelActions()}
+	<Button disabled={changingPosting} loading={changingPosting} onclick={toggleAllChannels}>
+		{#if allChannelsLocked}<LockOpen size={18} /> Unlock all channels{:else}<Lock size={18} /> Lock all
+			channels{/if}
+	</Button>
+{/snippet}
+
+<SplitView
+	detailOpen={Boolean(selectedRoom)}
+	actions={canModerate && !archived && rooms.length ? channelActions : undefined}
+>
 	{#snippet rail()}
 		<ChatRail
 			entries={conversationEntries}
@@ -382,6 +432,7 @@
 					playersCanPost={selectedRoom.playersCanPost}
 					{canModerate}
 					{archived}
+					postingDisabled={changingPosting}
 					onback={() => selectRoom('')}
 					ontoggleposting={togglePosting}
 				/>

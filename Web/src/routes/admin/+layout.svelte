@@ -37,7 +37,7 @@
 	let pendingProfileRequestCount = $state(0);
 
 	const liveRoute = $derived(
-		/^\/admin\/games\/[^/]+\/(overview|players|chat|activity|finish|summary)/.test(
+		/^\/admin\/games\/[^/]+\/(overview|players|chat|announcements|activity|finish|summary)/.test(
 			page.url.pathname
 		)
 	);

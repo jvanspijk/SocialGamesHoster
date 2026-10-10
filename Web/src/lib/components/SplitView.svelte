@@ -5,25 +5,43 @@
 		rail,
 		detail,
 		detailOpen = false,
-		compact = false
+		compact = false,
+		actions
 	}: {
 		rail: Snippet;
 		detail: Snippet;
 		detailOpen?: boolean;
 		compact?: boolean;
+		actions?: Snippet;
 	} = $props();
+
+	let actionsHeight = $state(0);
 </script>
 
-<div class="split-view" class:detail-open={detailOpen} class:compact>
+{#if actions}
+	<div class="split-actions" bind:clientHeight={actionsHeight}>{@render actions()}</div>
+{/if}
+
+<div
+	class="split-view"
+	class:detail-open={detailOpen}
+	class:compact
+	style:--split-actions-height={`${actions ? actionsHeight : 0}px`}
+>
 	<div class="rail">{@render rail()}</div>
 	<section class="detail">{@render detail()}</section>
 </div>
 
 <style>
+	.split-actions {
+		display: flex;
+		padding-block-end: var(--space-3);
+	}
+
 	.split-view {
 		display: grid;
-		height: calc(100dvh - 7.25rem);
-		min-height: 32rem;
+		height: calc(100dvh - 7.25rem - var(--split-actions-height));
+		min-height: calc(32rem - var(--split-actions-height));
 		grid-template-columns: minmax(18rem, 0.34fr) minmax(0, 1fr);
 		overflow: hidden;
 		border: 1px solid var(--accent-strong);
@@ -60,7 +78,7 @@
 
 	@media (max-width: 47.99rem) {
 		.split-view {
-			height: calc(100dvh - 7.75rem - env(safe-area-inset-bottom));
+			height: calc(100dvh - 7.75rem - env(safe-area-inset-bottom) - var(--split-actions-height));
 			min-height: 0;
 			grid-template-columns: 1fr;
 			border-inline: 0;

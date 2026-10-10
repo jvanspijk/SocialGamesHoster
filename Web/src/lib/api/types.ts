@@ -143,6 +143,12 @@ export interface AdminAttentionSummary extends AnnouncementAttentionItem {
 	targetId?: string;
 	recipientTotal: number;
 	acknowledgementCount: number;
+	trackingCleared?: boolean;
+	unacknowledgedPlayers?: Array<{
+		participantId: string;
+		displayName: string;
+		playerNumber: number;
+	}>;
 }
 
 export interface TimerProjection {

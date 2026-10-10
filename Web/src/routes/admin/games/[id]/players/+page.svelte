@@ -11,6 +11,8 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Field from '$lib/components/Field.svelte';
 	import PageHeading from '$lib/components/PageHeading.svelte';
+	import PlayerActionSheet from '$lib/features/games/components/PlayerActionSheet.svelte';
+	import { playerActionOptions } from '$lib/features/games/playerActions';
 	import RoleVisibilityControl from '$lib/features/games/components/RoleVisibilityControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
@@ -20,6 +22,7 @@
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let selectedId = $state('');
+	let actionPlayerId = $state('');
 	let kickConfirmOpen = $state(false);
 	let busy = $state(false);
 	let assignments = $state<Record<string, string>>({});
@@ -59,10 +62,6 @@
 		return (
 			{ active: 'Active', eliminated: 'Eliminated', kicked: 'Kicked', left: 'Left' } as const
 		)[status];
-	}
-
-	function awardedCount(player: Participant) {
-		return view?.awards.filter((award) => award.profileId === player.profileId).length ?? 0;
 	}
 
 	async function saveAssignments() {
@@ -183,7 +182,7 @@
 
 {#if view}
 	<PageHeading
-		title="Players"
+		title="Players & roles"
 		description={`${activePlayers.length} active players · ${activePlayers.filter((player) => hasAssignedRole(player.roleKey, view.ruleset.roles)).length} roles assigned`}
 		variant="compact"
 	>
@@ -203,6 +202,7 @@
 
 		<div class="player-list" role="list" aria-label="Players">
 			{#each view.participants as player (player.id)}
+				{@const actions = playerActionOptions(view, player)}
 				<article role="listitem" class:inactive={['kicked', 'left'].includes(player.status)}>
 					<button class="player-open" type="button" onclick={() => (selectedId = player.id)}>
 						<span class="avatar">{playerName(player).slice(0, 1).toUpperCase()}</span>
@@ -238,12 +238,24 @@
 						{#if player.outcome !== 'unset'}
 							<span>{player.outcome}</span>
 						{/if}
-						{#if awardedCount(player) > 0}<span><Award size={15} /> Awarded</span>{/if}
 					</div>
+					{#if actions.length > 0}
+						<div class="player-actions">
+							<Button variant="secondary" onclick={() => (actionPlayerId = player.id)}
+								>Actions</Button
+							>
+						</div>
+					{/if}
 				</article>
 			{/each}
 		</div>
 	{/if}
+	<PlayerActionSheet
+		open={actionPlayerId !== ''}
+		{view}
+		participantId={actionPlayerId}
+		close={() => (actionPlayerId = '')}
+	/>
 {/if}
 
 <Dialog
@@ -355,11 +367,16 @@
 
 	.player-list article {
 		display: grid;
-		grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 0.65fr) minmax(8rem, auto);
+		grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.65fr) auto auto;
 		align-items: center;
 		gap: var(--space-3);
 		border-block-end: var(--border-subtle);
 		padding: var(--space-3) 0;
+	}
+
+	.player-actions {
+		grid-column: 4;
+		justify-self: end;
 	}
 
 	.player-list article.inactive {
@@ -528,6 +545,9 @@
 	}
 
 	@media (max-width: 47.99rem) {
+		.player-actions {
+			grid-column: 1 / -1;
+		}
 		.assignment-actions {
 			display: grid;
 			grid-template-columns: 1fr 1fr;

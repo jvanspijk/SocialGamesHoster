@@ -237,12 +237,13 @@ func createAnnouncement(event *core.RequestEvent) error {
 		return actorHasAttentionReceipt(event.App, item.Id, auth)
 	})
 	if cue != nil {
-		publishAttentionCue(event.App, game, *cue, item.Id)
+		publishAttentionCue(event.App, game, *cue, item.Id, false)
 	}
 	summary, err := projectAdminAttentionSummary(event.App, item)
 	if err != nil {
 		return httpx.WriteError(event, result.Internal(err))
 	}
+	publishAnnouncementGameMasters(event.App, game, "attention.announcement_created", summary)
 	return event.JSON(http.StatusCreated, summary)
 }
 
@@ -507,18 +508,38 @@ func projectAdminAttentionSummary(app core.App, item *core.Record) (map[string]a
 		return nil, err
 	}
 	acknowledged := 0
+	pending := make([]map[string]any, 0, len(receipts))
 	for _, receipt := range receipts {
 		if !receipt.GetDateTime("acknowledged_at").IsZero() {
 			acknowledged++
+			continue
 		}
+		participant, findErr := app.FindRecordById("participants", receipt.GetString("participant"))
+		if findErr != nil {
+			return nil, findErr
+		}
+		if !gamepolicy.IsCurrentMember(gamepolicy.ParticipantStatus(participant.GetString("status"))) {
+			continue
+		}
+		label := participant.GetString("game_alias")
+		if label == "" {
+			label = participant.GetString("display_name_snapshot")
+		}
+		pending = append(pending, map[string]any{
+			"participantId": participant.Id, "displayName": label, "playerNumber": participant.GetInt("player_number"),
+		})
 	}
+	sort.Slice(pending, func(i, j int) bool {
+		return pending[i]["playerNumber"].(int) < pending[j]["playerNumber"].(int)
+	})
 	projected := map[string]any{
 		"id": item.Id, "kind": "announcement",
 		"senderLabel": item.GetString("sender_label_snapshot"),
 		"content":     item.GetString("content"), "audience": item.GetString("audience"),
 		"targetId": item.GetString("target_id"), "cueKey": item.GetString("cue_key"),
 		"createdAt": recordDateValue(item, "created"), "recipientTotal": len(receipts),
-		"acknowledgementCount": acknowledged,
+		"acknowledgementCount":  acknowledged,
+		"unacknowledgedPlayers": pending, "trackingCleared": item.GetBool("tracking_cleared"),
 	}
 	projectAnnouncementMedia(item, projected)
 	return projected, nil
@@ -643,12 +664,20 @@ func announcementMedia(event *core.RequestEvent) error {
 }
 
 func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bool {
+	return actorHasAnnouncementReceipt(app, itemID, auth, false)
+}
+
+func actorHasAnnouncementReceipt(app core.App, itemID string, auth *core.Record, unacknowledgedOnly bool) bool {
 	if !actorauth.IsActivePlayer(auth) {
 		return false
 	}
+	filter := "attention_item = {:item} && participant.profile = {:profile} && " + gamepolicyapp.CurrentRelatedParticipantStatusFilter
+	if unacknowledgedOnly {
+		filter += " && acknowledged_at = ''"
+	}
 	receipts, err := app.FindRecordsByFilter(
 		"attention_receipts",
-		"attention_item = {:item} && participant.profile = {:profile} && "+gamepolicyapp.CurrentRelatedParticipantStatusFilter,
+		filter,
 		"",
 		1,
 		0,
@@ -657,7 +686,7 @@ func actorHasAttentionReceipt(app core.App, itemID string, auth *core.Record) bo
 	return err == nil && len(receipts) == 1
 }
 
-func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue, itemID string) {
+func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue, itemID string, unacknowledgedOnly bool) {
 	payload, err := resolveAudioCuePayload(app, game, cue)
 	if err != nil || payload == nil {
 		return
@@ -666,7 +695,7 @@ func publishAttentionCue(app core.App, game *core.Record, cue rulesets.AudioCue,
 		EventID: realtime.NewEventID(), GameID: game.Id, Revision: game.GetInt("revision"),
 		Kind: "audio.cue", Payload: payload,
 	}, func(auth *core.Record) bool {
-		return actorHasAttentionReceipt(app, itemID, auth)
+		return actorHasAnnouncementReceipt(app, itemID, auth, unacknowledgedOnly)
 	})
 }
 

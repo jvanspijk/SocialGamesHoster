@@ -10,6 +10,7 @@
 		description?: string;
 		metaLabel?: string;
 		unread?: boolean;
+		muted?: boolean;
 		leadingVariant?: string;
 	}
 </script>
@@ -40,6 +41,7 @@
 			type="button"
 			class:selected={selectedId === entry.id}
 			class:unread={entry.unread}
+			class:muted={entry.muted}
 			aria-label={entry.accessibleLabel}
 			aria-current={selectedId === entry.id ? 'page' : undefined}
 			onclick={() => onselect(entry.id)}
@@ -228,5 +230,19 @@
 		height: 0.55rem;
 		border-radius: 50%;
 		background: var(--action-light);
+	}
+
+	.rich button.muted .leading {
+		border-color: var(--text-on-dark-muted);
+		background: var(--surface-dark);
+		color: var(--text-on-dark-muted);
+	}
+
+	.rich button.muted .entry-title strong {
+		color: var(--text-on-dark-muted);
+	}
+
+	.rich button.muted.selected {
+		background: color-mix(in srgb, var(--text-on-dark-muted) 13%, transparent);
 	}
 </style>

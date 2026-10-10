@@ -29,6 +29,7 @@ for (const status of ['running', 'paused']) {
 						json: {
 							game: { id: 'phasetest', name: 'Phase test', status, revision: 1 },
 							ruleset: {
+								metadata: { minPlayers: 2, maxPlayers: 30 },
 								phases: hasPhases ? [{ id: 'discussion', name: 'Discussion' }] : [],
 								roles: [],
 								teams: []
@@ -36,6 +37,8 @@ for (const status of ['running', 'paused']) {
 							participants: [],
 							rooms: [],
 							assets: [],
+							attentionItems: [],
+							awards: [],
 							abilityProgress: { eligiblePlayerCount: 0 },
 							abilityResults: []
 						}
@@ -44,9 +47,8 @@ for (const status of ['running', 'paused']) {
 				return route.fulfill({ json: { version: 'test', items: [], pendingCount: 0 } });
 			});
 			await page.goto('/admin/games/phasetest/overview');
-			await expect(
-				page.getByRole('button', { name: status === 'running' ? 'Pause game' : 'Resume game' })
-			).toBeVisible();
+			await expect(page.getByRole('link', { name: 'Game', exact: true })).toBeVisible();
+			await expect(page.getByRole('button', { name: /^(Pause|Resume) game$/ })).toHaveCount(0);
 			const changePhase = page.getByRole('button', { name: 'Change phase', exact: true });
 			if (hasPhases) {
 				await expect(changePhase).toBeVisible();

@@ -1,43 +1,34 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import CirclePause from '@lucide/svelte/icons/circle-pause';
 	import CirclePlay from '@lucide/svelte/icons/circle-play';
 	import Flag from '@lucide/svelte/icons/flag';
 	import Forward from '@lucide/svelte/icons/forward';
-	import Megaphone from '@lucide/svelte/icons/megaphone';
-	import Users from '@lucide/svelte/icons/users';
-	import XCircle from '@lucide/svelte/icons/x-circle';
 	import Button from '$lib/components/Button.svelte';
+	import CheckboxField from '$lib/components/CheckboxField.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import Field from '$lib/components/Field.svelte';
+	import ErrorNotice from '$lib/components/ErrorNotice.svelte';
 	import Panel from '$lib/components/Panel.svelte';
-	import RoleVisibilityControl from '$lib/features/games/components/RoleVisibilityControl.svelte';
+	import RecordItem from '$lib/components/RecordItem.svelte';
+	import RecordList from '$lib/components/RecordList.svelte';
+	import SelectField from '$lib/components/SelectField.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import TimerControl from '$lib/features/games/components/TimerControl.svelte';
 	import { api, jsonBody } from '$lib/api/client';
 	import { errorMessage } from '$lib/api/errors';
 	import type { Game, TimerProjection } from '$lib/api/types';
 	import { hasAssignedRole } from '$lib/features/games/roleAssignments';
+	import { gameStatusLabel } from '$lib/gamePresentation';
 	import { gameState } from '$lib/state/game.svelte';
 	import { toasts } from '$lib/state/toasts.svelte';
 
 	let phaseOpen = $state(false);
-	let announcementOpen = $state(false);
+	let choicesOpen = $state(false);
 	let cancelConfirmOpen = $state(false);
-	let busy = $state(false);
+	let pending = $state('');
 	let selectedPhase = $state('');
 	let startSuggestedTimer = $state(true);
-	let announcementMessage = $state('');
-	let announcementAudience = $state<'all' | 'team' | 'player'>('all');
-	let announcementTarget = $state('');
-	let announcementImage = $state('');
-	let announcementImageDescription = $state('');
-	let announcementImageSource = $state<'none' | 'ruleset' | 'upload'>('none');
-	let announcementImageFile = $state<File | null>(null);
-	let announcementAudio = $state('');
-	let announcementAudioAlternative = $state('');
-	let announcementAudioSource = $state<'none' | 'ruleset' | 'upload'>('none');
-	let announcementAudioFile = $state<File | null>(null);
+	let phaseError = $state('');
 	let timer = $state<TimerProjection>({
 		status: 'inactive',
 		totalMs: 0,
@@ -48,175 +39,129 @@
 	let joinUrl = $state('');
 
 	const view = $derived(gameState.admin);
-	const hasPhases = $derived((view?.ruleset.phases.length ?? 0) > 0);
-	const activePlayers = $derived(
+	const playing = $derived(!!view && ['running', 'paused'].includes(view.game.status));
+	const currentPlayers = $derived(
 		view?.participants.filter((player) => !['kicked', 'left'].includes(player.status)) ?? []
 	);
+	const activePlayers = $derived(currentPlayers.filter((player) => player.status === 'active'));
+	const eliminatedPlayers = $derived(
+		currentPlayers.filter((player) => player.status === 'eliminated')
+	);
 	const unassignedPlayers = $derived(
-		activePlayers.filter((player) => !hasAssignedRole(player.roleKey, view?.ruleset.roles ?? []))
+		currentPlayers.filter((player) => !hasAssignedRole(player.roleKey, view?.ruleset.roles ?? []))
 			.length
 	);
-	const currentPhase = $derived(
-		view?.ruleset.phases.find((phase) => phase.id === view?.game.phaseKey)
+	const validPlayerCount = $derived(
+		!!view &&
+			currentPlayers.length >= view.ruleset.metadata.minPlayers &&
+			currentPlayers.length <= view.ruleset.metadata.maxPlayers
 	);
-	const selectedPhaseDefinition = $derived(
-		view?.ruleset.phases.find((phase) => phase.id === selectedPhase)
+	const readyToStart = $derived(validPlayerCount && unassignedPlayers === 0);
+	const phases = $derived([...(view?.ruleset.phases ?? [])].sort((a, b) => a.order - b.order));
+	const currentPhase = $derived(phases.find((phase) => phase.id === view?.game.phaseKey));
+	const selectedPhaseDefinition = $derived(phases.find((phase) => phase.id === selectedPhase));
+	const hasChoices = $derived(
+		!!view && (view.abilityProgress.eligiblePlayerCount > 0 || view.abilityResults.length > 0)
 	);
-	const imageAssets = $derived(view?.assets.filter((asset) => asset.kind === 'image') ?? []);
-	const audioAssets = $derived(view?.assets.filter((asset) => asset.kind === 'audio') ?? []);
+	const busy = $derived(pending !== '');
 
 	$effect(() => {
 		if (view?.timer && view.timer.revision >= timer.revision) timer = view.timer;
-		selectedPhase ||= view?.ruleset.phases[0]?.id ?? '';
 	});
-
 	$effect(() => {
 		if (view?.game.joiningOpen && !joinUrl) {
-			void api<{ joinUrl: string }>('/setup/status').then((status) => (joinUrl = status.joinUrl));
+			void api<{ joinUrl: string }>('/setup/status')
+				.then((status) => (joinUrl = status.joinUrl))
+				.catch(() => {});
 		}
 	});
 
-	$effect(() => {
-		if (announcementImageSource === 'none') {
-			announcementImage = '';
-			announcementImageFile = null;
-			announcementImageDescription = '';
-		} else if (announcementImageSource === 'ruleset') announcementImageFile = null;
-		else announcementImage = '';
-	});
-
-	$effect(() => {
-		if (announcementAudioSource === 'none') {
-			announcementAudio = '';
-			announcementAudioFile = null;
-			announcementAudioAlternative = '';
-		} else if (announcementAudioSource === 'ruleset') announcementAudioFile = null;
-		else announcementAudio = '';
-	});
+	function openPhase() {
+		selectedPhase =
+			phases.find((phase) => phase.id !== currentPhase?.id)?.id ?? phases[0]?.id ?? '';
+		startSuggestedTimer = true;
+		phaseError = '';
+		phaseOpen = true;
+	}
 
 	async function gameCommand(path: string, success: string) {
-		if (!view) return;
-		busy = true;
+		if (!view || busy) return;
+		const gameId = view.game.id;
+		pending = path;
 		try {
-			await api<Game>(`/games/${view.game.id}/${path}`, { method: 'POST', ...jsonBody({}) });
-			await gameState.refreshAdmin(view.game.id);
+			await api<Game>(`/games/${gameId}/${path}`, { method: 'POST', ...jsonBody({}) });
+			await gameState.refreshAdmin(gameId);
 			toasts.success(success);
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'The game could not be updated.'));
 		} finally {
-			busy = false;
+			pending = '';
 		}
 	}
 
 	async function changePhase() {
-		if (!view || !selectedPhaseDefinition) return;
-		busy = true;
+		if (!view || !selectedPhaseDefinition || busy || !playing) return;
+		const phase = selectedPhaseDefinition;
+		const gameId = view.game.id;
+		pending = 'phase';
+		phaseError = '';
 		try {
-			await api(`/games/${view.game.id}/phase`, {
-				method: 'POST',
-				...jsonBody({ phaseKey: selectedPhase })
-			});
+			await api(`/games/${gameId}/phase`, { method: 'POST', ...jsonBody({ phaseKey: phase.id }) });
 			phaseOpen = false;
-			await gameState.refreshAdmin(view.game.id);
-			toasts.success(`Phase changed to ${selectedPhaseDefinition.name}.`);
-			if (startSuggestedTimer && selectedPhaseDefinition.suggestedDurationSeconds) {
+			await gameState.refreshAdmin(gameId);
+			toasts.success(`${phase.name} started.`);
+			if (startSuggestedTimer && phase.suggestedDurationSeconds) {
+				const durationMs = phase.suggestedDurationSeconds * 1000;
 				try {
-					timer = await api<TimerProjection>(`/games/${view.game.id}/timer/start`, {
+					timer = await api<TimerProjection>(`/games/${gameId}/timer/start`, {
 						method: 'POST',
-						...jsonBody({ durationMs: selectedPhaseDefinition.suggestedDurationSeconds * 1000 })
+						...jsonBody({ durationMs })
 					});
 				} catch (caught) {
 					toasts.error(
 						`Phase changed, but the timer did not start. ${errorMessage(caught, '')}`.trim(),
 						{
 							actionLabel: 'Retry timer',
-							action: () => void retrySuggestedTimer(),
-							persistent: true
+							persistent: true,
+							action: () =>
+								void api<TimerProjection>(`/games/${gameId}/timer/start`, {
+									method: 'POST',
+									...jsonBody({ durationMs })
+								})
+									.then((updated) => {
+										timer = updated;
+										toasts.success('Timer started.');
+									})
+									.catch((error) =>
+										toasts.error(errorMessage(error, 'The timer could not be started.'))
+									)
 						}
 					);
 				}
 			}
 		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The phase could not be changed.'));
+			phaseError = errorMessage(caught, 'The phase could not be changed.');
 		} finally {
-			busy = false;
-		}
-	}
-
-	async function retrySuggestedTimer() {
-		if (!view || !selectedPhaseDefinition?.suggestedDurationSeconds) return;
-		timer = await api<TimerProjection>(`/games/${view.game.id}/timer/start`, {
-			method: 'POST',
-			...jsonBody({ durationMs: selectedPhaseDefinition.suggestedDurationSeconds * 1000 })
-		});
-		toasts.success('Timer started.');
-	}
-
-	async function sendAnnouncement(event: SubmitEvent) {
-		event.preventDefault();
-		if (!view) return;
-		busy = true;
-		try {
-			const uploaded = announcementImageSource === 'upload' || announcementAudioSource === 'upload';
-			const request = {
-				content: announcementMessage,
-				audience: announcementAudience,
-				targetId: announcementAudience === 'all' ? '' : announcementTarget,
-				imageAssetKey: announcementImageSource === 'ruleset' ? announcementImage : '',
-				imageDescription: announcementImageDescription,
-				audioAssetKey: announcementAudioSource === 'ruleset' ? announcementAudio : '',
-				audioAlternative: announcementAudioAlternative
-			};
-			let body: ReturnType<typeof jsonBody> | { body: FormData } = jsonBody(request);
-			if (uploaded) {
-				const form = new FormData();
-				for (const [key, value] of Object.entries(request)) form.set(key, value);
-				if (announcementImageSource === 'upload' && announcementImageFile)
-					form.set('imageFile', announcementImageFile);
-				if (announcementAudioSource === 'upload' && announcementAudioFile)
-					form.set('audioFile', announcementAudioFile);
-				body = { body: form };
-			}
-			await api(`/games/${view.game.id}/announcements`, {
-				method: 'POST',
-				...body
-			});
-			announcementMessage = '';
-			announcementAudience = 'all';
-			announcementTarget = '';
-			announcementImage = '';
-			announcementImageDescription = '';
-			announcementImageSource = 'none';
-			announcementImageFile = null;
-			announcementAudio = '';
-			announcementAudioAlternative = '';
-			announcementAudioSource = 'none';
-			announcementAudioFile = null;
-			announcementOpen = false;
-			toasts.success('Announcement sent.');
-		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The announcement could not be sent.'));
-		} finally {
-			busy = false;
+			pending = '';
 		}
 	}
 
 	async function startCompletion() {
-		if (!view) return;
-		busy = true;
+		if (!view || busy) return;
+		pending = 'finish';
 		try {
 			await api(`/games/${view.game.id}/completion/start`, { method: 'POST', ...jsonBody({}) });
 			await goto(resolve(`/admin/games/${view.game.id}/finish/outcomes`));
 		} catch (caught) {
-			toasts.error(errorMessage(caught, 'The completion flow could not be started.'));
+			toasts.error(errorMessage(caught, 'The game could not be finished.'));
 		} finally {
-			busy = false;
+			pending = '';
 		}
 	}
 
 	async function cancelGame() {
-		if (!view) return;
-		busy = true;
+		if (!view || busy) return;
+		pending = 'cancel';
 		try {
 			await api(`/games/${view.game.id}/cancel`, { method: 'POST', ...jsonBody({}) });
 			toasts.success('Game cancelled.');
@@ -224,610 +169,373 @@
 		} catch (caught) {
 			toasts.error(errorMessage(caught, 'The game could not be cancelled.'));
 		} finally {
-			busy = false;
+			pending = '';
 		}
 	}
 </script>
 
 {#if view}
-	<div class="overview-grid">
-		<section class="state-column">
-			<div class="state-heading">
-				<div>
-					<p class="eyebrow">Current game state</p>
-					<h1>
-						{currentPhase?.name ?? (view.game.status === 'lobby' ? 'Lobby' : 'No phase selected')}
-					</h1>
-					<p>
-						{#if currentPhase}
-							Round {view.game.roundNumber || 1} · {currentPhase.description}
-						{:else if view.game.status === 'draft'}
-							Open the lobby when you are ready for players to join.
-						{/if}
-					</p>
-				</div>
-				<span class="lifecycle">{view.game.status}</span>
-			</div>
-
-			{#if ['running', 'paused'].includes(view.game.status)}
-				<div class="timer-card">
-					<Panel>
-						<TimerControl gameId={view.game.id} {timer} onchange={(updated) => (timer = updated)} />
+	<div class="actions-page">
+		<div class="actions-workspace" class:with-finish={playing}>
+			<div class="actions-content">
+				{#if playing}
+					<Panel variant="focal">
+						<div class="live-status">
+							<div>
+								<strong>{gameStatusLabel(view.game.status)}</strong>
+								<p>
+									{activePlayers.length} in play · {eliminatedPlayers.length} eliminated{view.game
+										.roundNumber
+										? ` · Round ${view.game.roundNumber}`
+										: ''}
+								</p>
+							</div>
+						</div>
+						<div class="game-controls" class:with-context={phases.length > 0 || hasChoices}>
+							{#if phases.length > 0 || hasChoices}
+								<div class="phase-content">
+									{#if phases.length}
+										<h2 class="phase-name">{currentPhase?.name ?? 'No phase selected'}</h2>
+										{#if currentPhase?.description}<p>{currentPhase.description}</p>{/if}
+										<div class="button-row">
+											<Button variant="secondary" disabled={busy} onclick={openPhase}
+												><Forward size={18} /> Change phase</Button
+											>
+										</div>
+									{/if}
+									{#if hasChoices}
+										<div class="choice-progress">
+											<div>
+												<strong>Ability choices</strong>
+												{#if view.abilityProgress.eligiblePlayerCount > 0}
+													<p>
+														{view.abilityProgress.locked
+															? view.abilityProgress.finalizedPlayerCount
+															: view.abilityProgress.activatedPlayerCount} / {view.abilityProgress
+															.eligiblePlayerCount} players · {view.abilityProgress.locked
+															? 'Finalized'
+															: 'Submitted'}
+													</p>
+												{/if}
+											</div>
+											<Button variant="ghost" onclick={() => (choicesOpen = true)}
+												>View choices</Button
+											>
+										</div>
+									{/if}
+								</div>
+							{/if}
+							<div class="timer-card">
+								<TimerControl
+									gameId={view.game.id}
+									{timer}
+									onchange={(updated) => (timer = updated)}
+								/>
+							</div>
+						</div>
 					</Panel>
-				</div>
-			{/if}
+				{:else if ['draft', 'lobby'].includes(view.game.status)}
+					<Panel
+						title={view.game.status === 'draft' ? 'Open the lobby' : 'Prepare to play'}
+						variant="focal"
+					>
+						<div class="preparation">
+							<div class="stack">
+								<p>
+									{currentPlayers.length} players joined · {currentPlayers.length -
+										unassignedPlayers} roles assigned
+								</p>
+								{#if view.game.status === 'draft'}
+									<p>Open the lobby when you are ready for players to join.</p>
+									<Button
+										loading={pending === 'open-lobby'}
+										disabled={busy}
+										onclick={() => gameCommand('open-lobby', 'Lobby opened.')}>Open lobby</Button
+									>
+								{:else}
+									{#if !validPlayerCount}<p>
+											Needs {view.ruleset.metadata.minPlayers}–{view.ruleset.metadata.maxPlayers} players.
+										</p>{/if}
+									{#if unassignedPlayers}<p>
+											Assign a role to {unassignedPlayers === 1
+												? 'the remaining player'
+												: `the remaining ${unassignedPlayers} players`} before starting.
+										</p>{/if}
+									<div class="button-row">
+										<Button
+											disabled={busy || !readyToStart}
+											loading={pending === 'start'}
+											onclick={() => gameCommand('start', 'Game started.')}
+											><CirclePlay size={18} /> Start game</Button
+										>
+										<a href={resolve(`/admin/games/${view.game.id}/players`)}>Assign roles</a>
+									</div>
+								{/if}
+							</div>
+							{#if view.game.joiningOpen}
+								<div class="invitation">
+									<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
+									<div>
+										<strong>Scan to join</strong>
+										<p>Connect to the same Wi-Fi network.</p>
+										{#if joinUrl}<code>{joinUrl}</code>{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
+					</Panel>
+				{:else}
+					<Panel
+						title={view.game.status === 'review' ? 'Review the game' : 'Game archived'}
+						variant="focal"
+					>
+						<div class="stack">
+							<p>
+								{view.game.status === 'review'
+									? 'Check outcomes and achievements before archiving.'
+									: 'The game and its history are read-only.'}
+							</p>
+							<a
+								href={resolve(
+									view.game.status === 'review'
+										? `/admin/games/${view.game.id}/finish/outcomes`
+										: `/admin/games/${view.game.id}/summary`
+								)}>{view.game.status === 'review' ? 'Continue finishing' : 'View summary'}</a
+							>
+						</div>
+					</Panel>
+				{/if}
 
-			<div class="primary-actions">
-				{#if view.game.status === 'draft'}
-					<Button loading={busy} onclick={() => gameCommand('open-lobby', 'Lobby opened.')}>
-						<Users size={19} /> Open lobby
-					</Button>
-				{:else if view.game.status === 'lobby'}
-					<Button loading={busy} onclick={() => gameCommand('start', 'Game started.')}>
-						<CirclePlay size={19} /> Start game
-					</Button>
-					<Button variant="ghost" disabled={busy} onclick={() => (cancelConfirmOpen = true)}>
-						<XCircle size={19} /> Cancel game
-					</Button>
-				{:else if ['running', 'paused'].includes(view.game.status)}
-					{#if view.game.status === 'running'}
-						<Button loading={busy} onclick={() => gameCommand('pause', 'Game paused.')}>
-							<CirclePause size={19} /> Pause game
-						</Button>
-					{:else}
-						<Button loading={busy} onclick={() => gameCommand('resume', 'Game resumed.')}>
-							<CirclePlay size={19} /> Resume game
-						</Button>
-					{/if}
-					{#if hasPhases}
-						<Button variant="secondary" onclick={() => (phaseOpen = true)}
-							><Forward size={19} /> Change phase</Button
+				{#if view.game.status === 'lobby'}
+					<Panel
+						title="Cancel game"
+						description="Permanently removes this lobby, its players and chat."
+					>
+						<Button variant="ghost" disabled={busy} onclick={() => (cancelConfirmOpen = true)}
+							>Cancel game</Button
 						>
-					{/if}
-					<Button variant="ghost" onclick={startCompletion}><Flag size={19} /> End game</Button>
-				{:else if view.game.status === 'review'}
-					<a class="primary-link" href={resolve(`/admin/games/${view.game.id}/finish/outcomes`)}>
-						Continue finishing
-					</a>
+					</Panel>
 				{/if}
 			</div>
-
-			{#if view.game.joiningOpen}
-				<Panel title="QR Code">
-					<div class="invitation">
-						<img src="/api/app/v1/setup/join-qr" alt="QR code for the player join page" />
-						<div>
-							<h3>Scan to join</h3>
-							<p>Players must be connected to the same Wi-Fi network to join.</p>
-							{#if joinUrl}Or navigate to: <code>{joinUrl}</code>{/if}
-						</div>
-					</div>
-				</Panel>
+			{#if playing}
+				<div class="finish-control">
+					<p></p>
+					<Button
+						variant="ghost"
+						disabled={busy}
+						loading={pending === 'finish'}
+						onclick={startCompletion}><Flag size={18} /> Finish game</Button
+					>
+				</div>
 			{/if}
-		</section>
-
-		<aside>
-			<Panel title="Readiness">
-				<ul class="readiness">
-					<li>
-						<Users size={20} />
-						<div>
-							<strong>{activePlayers.length} players</strong>
-							<span>
-								{#if unassignedPlayers === 0}
-									Everyone has a role
-								{:else}
-									{unassignedPlayers}
-									{unassignedPlayers === 1 ? 'player' : 'players'} without a role
-								{/if}
-							</span>
-						</div>
-						<a href={resolve(`/admin/games/${view.game.id}/players`)}>Open</a>
-					</li>
-					<RoleVisibilityControl
-						gameId={view.game.id}
-						rolesVisible={view.game.rolesVisible}
-						presentation="readiness"
-					/>
-				</ul>
-			</Panel>
-
-			<Panel title="Announcement">
-				<p>Shows a popup to all selected players.</p>
-				<Button variant="secondary" onclick={() => (announcementOpen = true)}>
-					<Megaphone size={18} /> New announcement
-				</Button>
-			</Panel>
-
-			{#if view.abilityProgress.eligiblePlayerCount > 0 || view.abilityResults.length > 0}
-				<Panel title="Ability choices">
-					{#if view.abilityProgress.eligiblePlayerCount > 0}
-						{#if view.abilityProgress.locked}
-							<p>
-								Choices finalized for {view.abilityProgress.finalizedPlayerCount} of
-								{view.abilityProgress.eligiblePlayerCount} eligible players.
-							</p>
-						{:else}
-							<p>
-								{view.abilityProgress.activatedPlayerCount} of
-								{view.abilityProgress.eligiblePlayerCount} eligible players have activated an ability.
-								Individual choices stay hidden until the phase locks.
-							</p>
-							<progress
-								value={view.abilityProgress.activatedPlayerCount}
-								max={Math.max(view.abilityProgress.eligiblePlayerCount, 1)}
-								aria-label={`${view.abilityProgress.activatedPlayerCount} of ${view.abilityProgress.eligiblePlayerCount} eligible players activated`}
-							></progress>
-						{/if}
-					{/if}
-					{#if view.abilityResults.length > 0}
-						<ul class="ability-results">
-							{#each view.abilityResults as result (`${result.participantId}-${result.roundNumber}-${result.phaseKey}`)}
-								<li>
-									<strong>Player {result.playerNumber} · {result.displayName}</strong>
-									<span>
-										Round {result.roundNumber || 1}, {view.ruleset.phases.find(
-											(phase) => phase.id === result.phaseKey
-										)?.name ?? result.phaseKey}:
-										{result.abilities.map((ability) => ability.name).join(', ')}
-									</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</Panel>
-			{/if}
-		</aside>
+		</div>
 	</div>
+
+	<Sheet
+		open={phaseOpen}
+		title="Change phase"
+		close={() => {
+			phaseOpen = false;
+		}}
+	>
+		<div class="stack">
+			<ErrorNotice message={phaseError} />
+			<SelectField
+				label="Phase"
+				name="game-phase"
+				bind:value={selectedPhase}
+				disabled={busy}
+				options={phases.map((phase) => ({ value: phase.id, label: phase.name }))}
+			/>
+			{#if selectedPhaseDefinition?.description}<p>{selectedPhaseDefinition.description}</p>{/if}
+			{#if selectedPhase === currentPhase?.id}<p>This restarts the current phase.</p>{/if}
+			{#if selectedPhaseDefinition?.startsRound}<p>
+					Starts round {view.game.roundNumber + 1}.
+				</p>{/if}
+			{#if view.abilityProgress.eligiblePlayerCount > 0 && !view.abilityProgress.locked}<p>
+					Current ability choices will be finalized.
+				</p>{/if}
+			{#if selectedPhaseDefinition?.suggestedDurationSeconds}
+				<CheckboxField
+					name="phase-timer"
+					label={`Start the suggested timer (${selectedPhaseDefinition.suggestedDurationSeconds} seconds)`}
+					bind:checked={startSuggestedTimer}
+					disabled={busy}
+					description={timer.status !== 'inactive' ? 'Replaces the current timer.' : ''}
+				/>
+			{/if}
+		</div>
+		{#snippet actions()}
+			<Button variant="ghost" disabled={busy} onclick={() => (phaseOpen = false)}>Cancel</Button>
+			<Button
+				loading={pending === 'phase'}
+				disabled={busy || !selectedPhaseDefinition || !playing}
+				onclick={changePhase}
+				>{selectedPhase === currentPhase?.id ? 'Restart' : 'Start'}
+				{selectedPhaseDefinition?.name ?? 'phase'}</Button
+			>
+		{/snippet}
+	</Sheet>
+
+	<Sheet open={choicesOpen} title="Ability choices" close={() => (choicesOpen = false)}>
+		<div class="stack">
+			{#if view.abilityProgress.eligiblePlayerCount > 0 && !view.abilityProgress.locked}<p>
+					Individual choices stay hidden until the phase ends or the timer runs out.
+				</p>{/if}
+			<RecordList
+				>{#each view.abilityResults as result (`${result.participantId}-${result.roundNumber}-${result.phaseKey}`)}
+					<RecordItem
+						><strong>Player {result.playerNumber} · {result.displayName}</strong>
+						<p>
+							Round {result.roundNumber || 1} · {phases.find(
+								(phase) => phase.id === result.phaseKey
+							)?.name ?? result.phaseKey}: {result.abilities
+								.map((ability) => ability.name)
+								.join(', ')}
+						</p></RecordItem
+					>
+				{/each}</RecordList
+			>
+		</div>
+	</Sheet>
 {/if}
 
 <Dialog
 	open={cancelConfirmOpen}
 	title="Cancel game?"
 	description={view ? `"${view.game.name}" will be permanently removed.` : ''}
-	close={() => (cancelConfirmOpen = false)}
+	close={() => {
+		cancelConfirmOpen = false;
+	}}
 >
 	<p>The player roster and lobby chat will also be deleted. This action cannot be undone.</p>
 	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (cancelConfirmOpen = false)}>Keep game</Button>
-		<Button variant="danger" loading={busy} onclick={cancelGame}>Cancel game</Button>
-	{/snippet}
-</Dialog>
-
-<Dialog
-	open={phaseOpen}
-	title="Change phase"
-	description="Choose the next phase and optionally start its suggested timer."
-	close={() => (phaseOpen = false)}
->
-	<div class="dialog-stack">
-		<label>
-			<span>Phase</span>
-			<select bind:value={selectedPhase}>
-				{#each view?.ruleset.phases ?? [] as phase (phase.id)}
-					<option value={phase.id}>{phase.name}</option>
-				{/each}
-			</select>
-		</label>
-		{#if selectedPhaseDefinition?.description}<p>{selectedPhaseDefinition.description}</p>{/if}
-		{#if selectedPhaseDefinition?.suggestedDurationSeconds}
-			<label class="check">
-				<input type="checkbox" bind:checked={startSuggestedTimer} />
-				Start the {Math.round(selectedPhaseDefinition.suggestedDurationSeconds / 60)} minute suggested
-				timer
-			</label>
-		{/if}
-	</div>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (phaseOpen = false)}>Cancel</Button>
-		<Button loading={busy} onclick={changePhase}>Change phase</Button>
-	{/snippet}
-</Dialog>
-
-<Dialog open={announcementOpen} title="New announcement" close={() => (announcementOpen = false)}>
-	<form id="announcement-form" onsubmit={sendAnnouncement}>
-		<Field
-			label="Announcement message"
-			name="announcement"
-			bind:value={announcementMessage}
-			multiline
-			required
-		/>
-		<label>
-			<span>Recipients</span>
-			<select bind:value={announcementAudience} onchange={() => (announcementTarget = '')}>
-				<option value="all">All players</option>
-				<option value="team">Selected team</option>
-				<option value="player">Selected player</option>
-			</select>
-		</label>
-		{#if announcementAudience === 'team'}
-			<label>
-				<span>Team</span>
-				<select bind:value={announcementTarget} required>
-					<option value="">Choose a team</option>
-					{#each view?.ruleset.teams ?? [] as team (team.id)}
-						<option value={team.id}>{team.name}</option>
-					{/each}
-				</select>
-			</label>
-		{:else if announcementAudience === 'player'}
-			<label>
-				<span>Player</span>
-				<select bind:value={announcementTarget} required>
-					<option value="">Choose a player</option>
-					{#each activePlayers as player (player.id)}
-						<option value={player.id}
-							>Player {player.playerNumber} · {player.displayNameSnapshot}</option
-						>
-					{/each}
-				</select>
-			</label>
-		{/if}
-		<fieldset>
-			<legend>Image (optional)</legend>
-			<div class="source-options">
-				<label
-					><input type="radio" bind:group={announcementImageSource} value="none" /> No image</label
-				>
-				<label
-					><input type="radio" bind:group={announcementImageSource} value="ruleset" /> Choose from ruleset</label
-				>
-				<label
-					><input type="radio" bind:group={announcementImageSource} value="upload" /> Upload for this
-					announcement</label
-				>
-			</div>
-			{#if announcementImageSource === 'ruleset'}
-				<label>
-					<span>Ruleset image</span>
-					<select
-						bind:value={announcementImage}
-						required
-						onchange={() =>
-							(announcementImageDescription =
-								imageAssets.find((asset) => asset.assetKey === announcementImage)
-									?.accessibilityText ?? '')}
-					>
-						<option value="">Choose an image</option>
-						{#each imageAssets as asset (asset.id)}
-							<option value={asset.assetKey}>{asset.displayName}</option>
-						{/each}
-					</select>
-				</label>
-			{:else if announcementImageSource === 'upload'}
-				<label>
-					<span>Image file</span>
-					<input
-						type="file"
-						accept="image/jpeg,image/png,image/webp"
-						required
-						onchange={(event) =>
-							(announcementImageFile =
-								(event.currentTarget as HTMLInputElement).files?.[0] ?? null)}
-					/>
-				</label>
-			{/if}
-		</fieldset>
-		<fieldset>
-			<legend>Audio (optional)</legend>
-			<div class="source-options">
-				<label
-					><input type="radio" bind:group={announcementAudioSource} value="none" /> No audio</label
-				>
-				<label
-					><input type="radio" bind:group={announcementAudioSource} value="ruleset" /> Choose from ruleset</label
-				>
-				<label
-					><input type="radio" bind:group={announcementAudioSource} value="upload" /> Upload for this
-					announcement</label
-				>
-			</div>
-			{#if announcementAudioSource === 'ruleset'}
-				<label>
-					<span>Ruleset audio</span>
-					<select
-						bind:value={announcementAudio}
-						required
-						onchange={() =>
-							(announcementAudioAlternative =
-								audioAssets.find((asset) => asset.assetKey === announcementAudio)
-									?.accessibilityText ?? '')}
-					>
-						<option value="">Choose audio</option>
-						{#each audioAssets as asset (asset.id)}
-							<option value={asset.assetKey}>{asset.displayName}</option>
-						{/each}
-					</select>
-				</label>
-			{:else if announcementAudioSource === 'upload'}
-				<label>
-					<span>Audio file</span>
-					<input
-						type="file"
-						accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav"
-						required
-						onchange={(event) =>
-							(announcementAudioFile =
-								(event.currentTarget as HTMLInputElement).files?.[0] ?? null)}
-					/>
-				</label>
-			{/if}
-		</fieldset>
-	</form>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (announcementOpen = false)}>Cancel</Button>
-		<Button
-			loading={busy}
-			disabled={!announcementMessage.trim()}
-			onclick={() =>
-				(document.getElementById('announcement-form') as HTMLFormElement)?.requestSubmit()}
+		<Button variant="ghost" disabled={busy} onclick={() => (cancelConfirmOpen = false)}
+			>Keep game</Button
 		>
-			Send announcement
-		</Button>
+		<Button variant="danger" loading={pending === 'cancel'} onclick={cancelGame}>Cancel game</Button
+		>
 	{/snippet}
 </Dialog>
 
 <style>
-	.overview-grid {
+	.actions-page {
+		max-width: 76rem;
+		margin-inline: auto;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.36fr);
-		gap: var(--space-6);
+		gap: var(--space-4);
 	}
-
-	.state-column {
+	.actions-workspace,
+	.actions-content {
+		display: grid;
+		gap: var(--space-4);
+		min-width: 0;
+		align-content: start;
+	}
+	.actions-content {
+		container: actions-content / inline-size;
+	}
+	.game-controls {
+		display: grid;
+		gap: var(--space-4);
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.live-status,
+	.finish-control {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+	}
+	.live-status {
+		padding-block-end: var(--space-3);
+		margin-block-end: var(--space-3);
+		border-block-end: var(--border-subtle);
+	}
+	.finish-control {
+		border-block-start: var(--border-subtle);
+		padding-block-start: var(--space-3);
+	}
+	.phase-content,
+	.stack {
 		display: grid;
 		align-content: start;
-		gap: var(--space-5);
+		gap: var(--space-3);
+		min-width: 0;
 	}
-
+	.phase-name {
+		margin: 0;
+		font-size: var(--font-size-xl);
+		overflow-wrap: anywhere;
+	}
+	p {
+		margin: 0;
+		color: var(--text-secondary);
+		overflow-wrap: anywhere;
+	}
+	a {
+		display: inline-flex;
+		min-height: var(--target-size);
+		align-items: center;
+		color: var(--action-dark);
+		font-weight: 700;
+	}
+	.stack > a {
+		justify-self: start;
+	}
 	.timer-card {
 		container: timer-card / inline-size;
 		width: min(100%, 28rem);
 	}
-
-	.state-heading {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: var(--space-3);
-	}
-
-	.state-heading h1,
-	.state-heading p {
-		margin: 0;
-	}
-
-	.lifecycle {
-		border: 1px solid var(--accent-strong);
-		background: var(--surface-dark);
-		color: var(--accent-light);
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-		padding: var(--space-1) var(--space-2);
-	}
-
-	.primary-actions {
+	.button-row {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-2);
+		gap: var(--space-3);
 	}
-
-	.primary-link {
-		display: inline-flex;
-		min-height: var(--target-size);
+	.choice-progress {
+		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		border: 1px solid var(--action-dark);
-		background: var(--action);
-		color: var(--text-on-dark);
-		font-family: var(--font-display);
-		font-weight: 700;
-		padding: var(--space-2) var(--space-4);
-		text-decoration: none;
+		justify-content: space-between;
+		gap: var(--space-2);
+		border-block-start: var(--border-subtle);
+		padding-block-start: var(--space-3);
 	}
-
-	aside {
+	.preparation {
 		display: grid;
-		align-content: start;
 		gap: var(--space-5);
 	}
-
-	.readiness {
-		display: grid;
-		gap: 0;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.readiness li {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-2);
-		border-block-end: var(--border-subtle);
-		padding: var(--space-3) 0;
-	}
-
-	.readiness li:last-child {
-		border: 0;
-	}
-
-	.readiness strong,
-	.readiness span {
-		display: block;
-	}
-
-	.readiness span {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
-	}
-
-	.readiness a {
-		min-height: var(--target-size);
-		border: 0;
-		background: transparent;
-		color: var(--action-dark);
-		cursor: pointer;
-		font-family: var(--font-display);
-		font-size: var(--font-size-xs);
-		font-weight: 700;
-	}
-
 	.invitation {
 		display: grid;
-		grid-template-columns: 8rem minmax(0, 1fr);
+		grid-template-columns: 6rem minmax(0, 1fr);
+		gap: var(--space-3);
 		align-items: center;
-		gap: var(--space-4);
 	}
-
 	.invitation img {
 		width: 100%;
-		border: var(--border-subtle);
-		background: white;
-		padding: var(--space-1);
 	}
-
 	code {
 		overflow-wrap: anywhere;
 	}
-
-	.dialog-stack,
-	form {
-		display: grid;
-		gap: var(--space-3);
-	}
-
-	form > label {
-		display: grid;
-		gap: var(--space-1);
-	}
-
-	form > label > span {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-	}
-
-	fieldset {
-		display: grid;
-		gap: var(--space-2);
-		margin: 0;
-		border: var(--border-subtle);
-		padding: var(--space-3);
-	}
-
-	fieldset legend,
-	fieldset > label > span {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-	}
-
-	fieldset > label {
-		display: grid;
-		gap: var(--space-1);
-	}
-
-	.source-options {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2) var(--space-4);
-	}
-
-	.source-options label {
-		display: flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	input[type='file'] {
-		max-width: 100%;
-	}
-
-	.ability-results {
-		display: grid;
-		gap: var(--space-2);
-		list-style: none;
-		padding: 0;
-	}
-
-	.ability-results li,
-	.ability-results span {
-		display: grid;
-	}
-
-	.ability-results span {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
-	}
-
-	progress {
-		width: 100%;
-	}
-
-	.dialog-stack > label:not(.check) {
-		display: grid;
-		gap: var(--space-1);
-	}
-
-	.dialog-stack > label > span {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-	}
-
-	select {
-		min-height: var(--target-size);
-		border: var(--border-subtle);
-		background: var(--surface-raised);
-		padding: var(--space-2);
-	}
-
-	.check {
-		display: flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-2);
-	}
-
-	@media (max-width: 63.99rem) {
-		.overview-grid {
-			grid-template-columns: 1fr;
+	@media (min-width: 48rem) {
+		.preparation {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			align-items: center;
 		}
 	}
-
-	@media (max-width: 47.99rem) {
-		.overview-grid {
-			gap: var(--space-4);
+	@media (min-width: 64rem) {
+		.with-finish > .actions-content {
+			padding-block-end: var(--space-4);
 		}
-
-		.state-column {
-			gap: var(--space-4);
+		.finish-control {
+			grid-column: 1;
 		}
-
-		.state-heading h1 {
-			font-size: var(--font-size-xl);
-		}
-
-		.primary-actions {
-			display: grid;
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		.primary-actions :global(button:first-child),
-		.primary-actions .primary-link {
-			grid-column: 1 / -1;
-		}
-
-		.invitation {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.invitation img {
-			width: min(100%, 8rem);
+	}
+	@container actions-content (min-width: 48rem) {
+		.game-controls.with-context {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			align-items: start;
 		}
 	}
 </style>

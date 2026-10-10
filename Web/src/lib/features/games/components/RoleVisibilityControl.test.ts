@@ -6,19 +6,18 @@ afterEach(cleanup);
 
 describe('RoleVisibilityControl', () => {
 	it.each([
-		['readiness', false, 'Roles hidden', 'Roles are hidden from players.', 'Reveal roles'],
-		['readiness', true, 'Roles revealed', 'Players can see their own role.', 'Hide'],
-		['heading', false, 'Roles hidden', 'Roles are hidden from players.', 'Reveal roles'],
-		['heading', true, 'Roles revealed', 'Players can see their own role.', 'Hide roles']
+		['readiness', false, 'Roles are hidden from players', 'Reveal roles'],
+		['readiness', true, 'Players can see their own roles', 'Hide roles'],
+		['heading', false, 'Roles are hidden from players', 'Reveal roles'],
+		['heading', true, 'Players can see their own roles', 'Hide roles']
 	] as const)(
 		'presents the %s control when role visibility is %s',
-		(presentation, rolesVisible, status, description, action) => {
+		(presentation, rolesVisible, status, action) => {
 			render(RoleVisibilityControl, {
 				props: { gameId: 'game-1', rolesVisible, presentation }
 			});
 
 			expect(screen.getByText(status)).toBeVisible();
-			expect(screen.getByText(description)).toBeVisible();
 			expect(screen.getByRole('button', { name: action })).toBeVisible();
 		}
 	);

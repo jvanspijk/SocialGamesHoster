@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Hash from '@lucide/svelte/icons/hash';
+	import Lock from '@lucide/svelte/icons/lock';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Users from '@lucide/svelte/icons/users';
@@ -61,7 +62,9 @@
 	{:else}
 		<SelectableList {entries} {selectedId} variant="rich" {onselect}>
 			{#snippet leading(entry)}
-				{#if entry.leadingVariant === 'people'}
+				{#if entry.leadingVariant === 'lock'}
+					<Lock size={20} />
+				{:else if entry.leadingVariant === 'people'}
 					<Users size={20} />
 				{:else if entry.leadingVariant === 'hash'}
 					<Hash size={20} />

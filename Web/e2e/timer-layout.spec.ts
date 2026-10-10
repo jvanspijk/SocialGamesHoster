@@ -55,7 +55,12 @@ async function mockGame(page: Page, admin = false, timerState = { status: 'inact
 				json: {
 					game,
 					timer: timer(timerState.status),
-					ruleset: { phases: [{ id: 'discussion', name: 'Discussion' }], roles: [], teams: [] },
+					ruleset: {
+						metadata: { minPlayers: 2, maxPlayers: 30 },
+						phases: [{ id: 'discussion', name: 'Discussion' }],
+						roles: [],
+						teams: []
+					},
 					participants: [],
 					rooms: [],
 					attentionItems: [],
@@ -142,7 +147,7 @@ for (const width of [320, 390, 1280, 1920]) {
 		await expect(page.getByLabel('Timer inactive')).toHaveText('--:--');
 		await page.evaluate(() => document.fonts.ready);
 		const timerRegion = page.getByRole('region', { name: 'Game timer', exact: true });
-		const card = timerRegion.locator('..').locator('..');
+		const card = timerRegion;
 		const cardSize = await dimensions(card);
 		expect(cardSize.width).toBeLessThanOrEqual(560);
 		expect(cardSize.height).toBeLessThan(width < 768 ? 250 : 200);
@@ -168,11 +173,10 @@ for (const width of [320, 390, 1280, 1920]) {
 		await duration.selectOption('3');
 		const startBox = await start.boundingBox();
 		expect(startBox!.height).toBe(44);
-		if (width >= 1280) {
-			expect(
-				Math.abs(startBox!.y + startBox!.height - durationBox!.y - durationBox!.height)
-			).toBeLessThanOrEqual(1);
-		}
+		const aligned =
+			Math.abs(startBox!.y + startBox!.height - durationBox!.y - durationBox!.height) <= 1;
+		const stacked = startBox!.y + startBox!.height <= durationBox!.y;
+		expect(aligned || stacked).toBe(true);
 		async function expectContainedControls() {
 			const bounds = await card.boundingBox();
 			const controls: { x: number; width: number }[] = [];
@@ -200,9 +204,6 @@ for (const width of [320, 390, 1280, 1920]) {
 		await expectContainedControls();
 		const size = await dimensions(page.getByLabel('Timer inactive').locator('..'));
 		const cardBox = await card.boundingBox();
-		const gamePauseBox = await page
-			.getByRole('button', { name: 'Pause game', exact: true })
-			.boundingBox();
 		for (const name of ['Start timer', 'Pause timer', 'Resume timer', 'Clear']) {
 			await page.getByRole('button', { name, exact: true }).click();
 			await page.mouse.move(0, 0);
@@ -226,10 +227,7 @@ for (const width of [320, 390, 1280, 1920]) {
 			await expect.poll(() => nextPrimary.boundingBox()).toEqual(startBox);
 			if (name !== 'Clear') await expect(nextPrimary).toBeFocused();
 			await expectContainedControls();
-			await expect(page.getByRole('button', { name: 'Pause game', exact: true })).toBeVisible();
-			expect(
-				await page.getByRole('button', { name: 'Pause game', exact: true }).boundingBox()
-			).toEqual(gamePauseBox);
+			await expect(page.getByRole('button', { name: 'Pause game', exact: true })).toHaveCount(0);
 		}
 		expect(commands).toEqual([
 			{ command: 'start', body: { durationMs: 180_000 } },
@@ -263,10 +261,11 @@ test('admin timer reflows without overlapping at 320px with large text', async (
 	const time = page.getByLabel('Timer inactive');
 	await expect(time).toHaveText('--:--');
 	await page.evaluate(() => document.fonts.ready);
+	const start = page.getByRole('button', { name: 'Start timer', exact: true });
+	await start.scrollIntoViewIfNeeded();
 	const duration = page.getByRole('combobox', { name: 'Duration', exact: true });
 	const readoutBox = await time.boundingBox();
 	const durationBox = await duration.boundingBox();
-	const start = page.getByRole('button', { name: 'Start timer', exact: true });
 	const startBox = await start.boundingBox();
 	await expect(start).toBeEnabled();
 	await expect(page.getByRole('button', { name: 'Pause timer', exact: true })).toHaveCount(0);
@@ -276,7 +275,7 @@ test('admin timer reflows without overlapping at 320px with large text', async (
 	expect(startBox!.height).toBeLessThanOrEqual(48);
 	expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 	const region = page.getByRole('region', { name: 'Game timer', exact: true });
-	const card = region.locator('..').locator('..');
+	const card = region;
 	const cardBox = await card.boundingBox();
 	await start.focus();
 	for (const name of ['Pause timer', 'Resume timer', 'Pause timer']) {

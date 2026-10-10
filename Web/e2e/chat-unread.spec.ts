@@ -24,9 +24,9 @@ for (const admin of [true, false]) {
 			key: id,
 			kind: 'general',
 			label: id === 'general' ? 'General' : 'Team',
-			playersCanPost: true,
+			playersCanPost: id !== 'team',
 			readable: true,
-			sendable: true,
+			sendable: admin || id !== 'team',
 			latestMessage: {
 				id: `${id}-message`,
 				createdAt: '2026-10-05T12:00:00Z',
@@ -126,6 +126,11 @@ for (const admin of [true, false]) {
 		expect(countLoads).toBe(1);
 		expect(messageLoads).toBe(0);
 		expect(roomLoads).toBe(1);
+		const lockedChannel = page.getByRole('button', {
+			name: 'Team, Players read-only, New messages',
+			exact: true
+		});
+		await expect(lockedChannel).toBeEnabled();
 		await page.getByRole('searchbox', { name: 'Search conversations' }).fill('General');
 		await page.getByRole('button', { name: 'General, New messages', exact: true }).click();
 		await expect(
@@ -140,5 +145,17 @@ for (const admin of [true, false]) {
 		);
 		expect(messageLoads).toBe(1);
 		expect(roomLoads).toBe(1);
+		await page.getByRole('searchbox', { name: 'Search conversations' }).fill('');
+		await lockedChannel.click();
+		await expect(page.getByRole('log', { name: 'Messages' }).getByText('team hello')).toBeVisible();
+		if (!admin) {
+			await expect(
+				page.getByText('You cannot post in this conversation', { exact: true })
+			).toBeVisible();
+			await expect(page.getByRole('textbox', { name: 'Message' })).toHaveCount(0);
+			await expect(
+				page.getByRole('button', { name: 'Lock all channels', exact: true })
+			).toHaveCount(0);
+		}
 	});
 }

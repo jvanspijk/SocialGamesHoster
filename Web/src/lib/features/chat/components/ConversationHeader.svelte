@@ -1,5 +1,8 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Lock from '@lucide/svelte/icons/lock';
+	import LockOpen from '@lucide/svelte/icons/lock-open';
+	import Button from '$lib/components/Button.svelte';
 	import IconButton from '$lib/components/IconButton.svelte';
 
 	let {
@@ -9,6 +12,7 @@
 		playersCanPost,
 		canModerate = false,
 		archived = false,
+		postingDisabled = false,
 		onback,
 		ontoggleposting
 	}: {
@@ -18,6 +22,7 @@
 		playersCanPost: boolean;
 		canModerate?: boolean;
 		archived?: boolean;
+		postingDisabled?: boolean;
 		onback: () => void;
 		ontoggleposting?: () => void;
 	} = $props();
@@ -30,19 +35,23 @@
 		</IconButton>
 	</div>
 	<span class="conversation-avatar">{initial}</span>
-	<div>
+	<div class="conversation-title">
 		<h2>{label}</h2>
 		<p>
 			{typeLabel}
-			{#if !playersCanPost}
-				· Players read-only{/if}
+			<span class:concealed={playersCanPost} aria-hidden={playersCanPost}>· Players read-only</span>
 		</p>
 	</div>
 	{#if canModerate && !archived}
-		<label class="posting-toggle">
-			<input type="checkbox" checked={playersCanPost} onchange={() => ontoggleposting?.()} />
-			Players can post
-		</label>
+		<div class="posting-action">
+			<Button disabled={postingDisabled} onclick={() => ontoggleposting?.()}>
+				{#if playersCanPost}<Lock size={18} />{:else}<LockOpen size={18} />{/if}
+				<span class="posting-label">
+					<span class:concealed={!playersCanPost} aria-hidden={!playersCanPost}>Lock channel</span>
+					<span class:concealed={playersCanPost} aria-hidden={playersCanPost}>Unlock channel</span>
+				</span>
+			</Button>
+		</div>
 	{/if}
 </header>
 
@@ -68,6 +77,7 @@
 
 	.conversation-header h2 {
 		font-size: var(--font-size-lg);
+		overflow-wrap: anywhere;
 	}
 
 	.conversation-header p {
@@ -92,17 +102,25 @@
 		font-weight: 700;
 	}
 
-	.posting-toggle {
-		display: flex;
-		min-height: var(--target-size);
-		align-items: center;
-		gap: var(--space-2);
-		font-size: var(--font-size-sm);
+	.conversation-title {
+		min-width: 0;
+	}
+
+	.posting-label {
+		display: grid;
+	}
+
+	.posting-label span {
+		grid-area: 1 / 1;
+	}
+
+	.concealed {
+		visibility: hidden;
 	}
 
 	@media (max-width: 47.99rem) {
 		.conversation-header {
-			grid-template-columns: auto auto minmax(0, 1fr) auto;
+			grid-template-columns: auto auto minmax(0, 1fr);
 			padding-inline: var(--space-2);
 		}
 
@@ -111,10 +129,9 @@
 			display: grid;
 		}
 
-		.posting-toggle {
-			width: var(--target-size);
-			overflow: hidden;
-			font-size: 0;
+		.posting-action {
+			grid-column: 2 / -1;
+			justify-self: start;
 		}
 	}
 </style>

@@ -370,42 +370,6 @@ describe('ChatApp', () => {
 		expect(messages.scrollTop).toBe(137);
 	});
 
-	it('updates posting access through the named moderation control', async () => {
-		api.mockImplementation((path: string, options?: { method?: string }) => {
-			if (path === '/games/game-1/rooms') return Promise.resolve([generalRoom]);
-			if (path === '/rooms/general/messages') {
-				return Promise.resolve({ items: [firstMessage], nextCursor: '' });
-			}
-			if (path === '/rooms/general' && options?.method === 'PATCH') {
-				return Promise.resolve({ ...generalRoom, playersCanPost: false });
-			}
-			throw new Error(`Unexpected request: ${path}`);
-		});
-
-		render(ChatApp, {
-			props: {
-				gameId: 'game-1',
-				selectedRoomId: 'general',
-				policyRevision: 'running:day',
-				canModerate: true,
-				selectRoom: vi.fn()
-			}
-		});
-
-		const posting = await screen.findByRole('checkbox', { name: 'Players can post' });
-		expect(posting).toBeChecked();
-		await fireEvent.click(posting);
-
-		await waitFor(() =>
-			expect(api).toHaveBeenCalledWith('/rooms/general', {
-				method: 'PATCH',
-				body: { playersCanPost: false }
-			})
-		);
-		expect(posting).not.toBeChecked();
-		expect(screen.getByText(/Players read-only/)).toBeInTheDocument();
-	});
-
 	it('keeps the newest room permissions when a phase changes during loading', async () => {
 		const observationRooms = deferred<Room[]>();
 		api

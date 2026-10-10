@@ -222,6 +222,13 @@ func TestAttentionProjectionRequiresFrozenReceiptAndHidesRecipientIdentities(t *
 	if _, exposesIdentities := summary["recipients"]; exposesIdentities {
 		t.Fatal("admin aggregate exposed receipt identities")
 	}
+	pending := summary["unacknowledgedPlayers"].([]map[string]any)
+	if len(pending) != 1 || pending[0]["participantId"] != fixture.participants[1].Id || pending[0]["displayName"] != "Boris" {
+		t.Fatalf("admin pending players = %#v", pending)
+	}
+	if _, exposed := projectPlayerAttention(item)["unacknowledgedPlayers"]; exposed {
+		t.Fatal("player projection exposed other recipients")
+	}
 	playerImage := projectedAnnouncementMedia(t, projectPlayerAttention(item), "image")
 	if playerImage["description"] != "A map marking the red team's meeting point." {
 		t.Fatalf("player media description missing: %#v", playerImage)

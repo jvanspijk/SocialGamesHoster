@@ -5,11 +5,12 @@
 	import Activity from '@lucide/svelte/icons/activity';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
+	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Users from '@lucide/svelte/icons/users';
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import VolumeX from '@lucide/svelte/icons/volume-x';
-	import Gauge from '@lucide/svelte/icons/gauge';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import AdminJoinQrButton from '$lib/features/shell/components/AdminJoinQrButton.svelte';
 	import PendingProfileRequests from '$lib/features/profiles/components/PendingProfileRequests.svelte';
@@ -39,19 +40,20 @@
 		const path = page.url.pathname;
 		if (path.includes('/players')) return 'players';
 		if (path.includes('/chat')) return 'chat';
+		if (path.includes('/announcements')) return 'announcements';
 		if (path.includes('/activity')) return 'activity';
 		return 'overview';
 	});
 	const navigation = $derived([
 		{
 			id: 'overview',
-			label: 'Overview',
+			label: 'Game',
 			href: resolve(`/admin/games/${page.params.id}/overview`),
-			icon: Gauge
+			icon: LayoutDashboard
 		},
 		{
 			id: 'players',
-			label: 'Players',
+			label: 'Players & roles',
 			href: resolve(`/admin/games/${page.params.id}/players`),
 			icon: Users
 		},
@@ -64,6 +66,12 @@
 			attentionCount: unreadChat.total,
 			attentionLabel: unreadChat.total === 1 ? 'unread message' : 'unread messages',
 			accessibleLabel: unreadChat.label
+		},
+		{
+			id: 'announcements',
+			label: 'Announcements',
+			href: resolve(`/admin/games/${page.params.id}/announcements`),
+			icon: Megaphone
 		},
 		{
 			id: 'activity',

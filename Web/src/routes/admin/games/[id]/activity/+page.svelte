@@ -85,11 +85,7 @@
 	}
 </script>
 
-<PageHeading
-	title="Activity"
-	description="Review announcements and Game Master actions. Chat and private role information stay private."
-	variant="spacious"
-/>
+<PageHeading title="Activity" variant="spacious" />
 
 {#if loading}
 	<p role="status">Loading activity…</p>
